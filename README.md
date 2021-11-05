@@ -3,7 +3,17 @@
 
 [![img](https://img.shields.io/badge/Lifecycle-Experimental-339999)](https://github.com/bcgov/repomountie/blob/master/doc/lifecycle-badges.md)
 
-A Shiny app to analyze, summarize, and visualize daily streamflow data 💧
+A Shiny app to analyze, summarize, and visualize daily streamflow data
+💧.
+
+This app takes advantage of bcgov’s
+[{tidyhydat}](https://cran.r-project.org/package=tidyhydat) and
+[{fasstr}](https://cran.r-project.org/package=fasstr) packages to allow
+for an interactive way to view and customize the statistics, tables, and
+plots created from {fasstr}’s streamflow analysis functions. More
+information on {fasstr} and its functions can be found on its [GitHub
+Page](https://bcgov.github.io/fasstr/) and [GitHub
+repository](https://github.com/bcgov/fasstr).
 
 ### Project Status
 
@@ -39,5 +49,8 @@ to abide by its terms.
 
 ------------------------------------------------------------------------
 
-*This project was created using the
-[bcgovr](https://github.com/bcgov/bcgovr) package.*
+This repository is maintained by the [Water Protection and
+Sustainability
+Branch](https://www2.gov.bc.ca/gov/content/environment/air-land-water/water)
+of the British Columbia Ministry of Environment and Climate Change
+Strategy.
