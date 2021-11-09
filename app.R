@@ -48,9 +48,8 @@ stations <- left_join(stations, station_parameters %>% select(STATION_NUMBER, PA
 
 
 ui <- navbarPage(
-  title = "fasstr shiny", #img(src='BCLogo.png', align = "right"),
-  theme = shinytheme('flatly'), #flatly, cerulean, paper, simplex, spacelab, united, sandstone
-  #themeSelector(),
+  title = "fasstr shiny",
+  theme = shinytheme('flatly'),
 
   #### Data Selection #####
 
@@ -74,10 +73,8 @@ ui <- navbarPage(
       helpText("Station Information:"),
       fluidRow(column(width = 6, uiOutput("station_name")),
                column(width = 6, uiOutput("basinarea"))),
-      #textInput('station_name', "Stream Name/Number:", placeholder = "ex. Carnation Creek"),
-      #br(),
-      helpText("Data Filtering:"),
-      #helpText(" Review the data and select the years of interest to be analzyed."),
+      helpText("Dates Filtering:"),
+      #helpText("Review the data and select the years of interest to be analyzed."),
       selectInput("year_start",
                   label = "Select a year period:",
                   choices = list("Jan-Dec" = 1, "Feb-Jan" = 2,
@@ -92,6 +89,7 @@ ui <- navbarPage(
       # conditionalPanel("input.data_select%2>0",
       uiOutput("years_range"),
       uiOutput("years_exclude"),
+      helpText("Session Settings:"),
       fluidRow(actionButton("save_session","Save Settings"),
       actionButton("load_session","Load Settings"))
       #)
@@ -1588,6 +1586,19 @@ server <- function(input, output) {
   })
 
 
+  output$hydat_stations_table <- renderDataTable(
+    stations,
+    rownames = FALSE,
+    selection = list(mode = "single"),
+    filter = 'top',
+    extensions = c("Scroller","ColReorder","Buttons"),
+    options = list(scrollX = TRUE,
+                   scrollY = 450, deferRender = TRUE, scroller = TRUE,
+                   dom = 'Bfrtip',
+                   colReorder = TRUE,
+                   buttons= list(list(extend = 'colvis', columns = c(1:10))))
+  )
+
 
   ##### OLDER CODE #####
 
@@ -1694,18 +1705,7 @@ server <- function(input, output) {
 
 
 
-  output$hydat_stations_table <- renderDataTable(
-    stations,
-    rownames = FALSE,
-    selection = list(mode = "single"),
-    filter = 'top',
-    extensions = c("Scroller","ColReorder","Buttons"),
-    options = list(scrollX = TRUE,
-                   scrollY = 450, deferRender = TRUE, scroller = TRUE,
-                   dom = 'Bfrtip',
-                   colReorder = TRUE,
-                   buttons= list(list(extend = 'colvis', columns = c(1:10))))
-  )
+
 
 
 
