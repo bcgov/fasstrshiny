@@ -8,13 +8,23 @@ A Shiny app to analyze, summarize, and visualize daily streamflow data
 💧.
 
 This app takes advantage of bcgov’s
-[{tidyhydat}](https://cran.r-project.org/package=tidyhydat) and
-[{fasstr}](https://cran.r-project.org/package=fasstr) packages to allow
-for an interactive way to view and customize the statistics, tables, and
-plots created from {fasstr}’s streamflow analysis functions. More
-information on {fasstr} and its functions can be found on its [GitHub
-Page](https://bcgov.github.io/fasstr/) and [GitHub
+[{fasstr}](https://cran.r-project.org/package=fasstr) and
+[{tidyhydat}](https://cran.r-project.org/package=tidyhydat) packages to
+allow for an interactive way to view and customize the statistics,
+tables, and plots created from {fasstr}’s streamflow analysis functions.
+More information on {fasstr} and its functions can be found on its
+[GitHub Page](https://bcgov.github.io/fasstr/) and [GitHub
 repository](https://github.com/bcgov/fasstr).
+
+Also see the Excel version, [FASSTX](https://github.com/bcgov/FASSTX/),
+on [GitHub](https://github.com/bcgov/FASSTX/).
+
+To use the app, a Environment and Climate Change Canada’s HYDAT database
+must be downloaded using the following code:
+
+``` r
+tidyhydat::download_hydat()
+```
 
 ### Project Status
 
