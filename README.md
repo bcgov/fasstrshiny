@@ -28,7 +28,8 @@ tidyhydat::download_hydat()
 
 ### Project Status
 
-This project is under development.
+This project is under development and many of the widgets and outputs of
+the app do not currently work appropriately or at all.
 
 ### Getting Help or Reporting an Issue
 
