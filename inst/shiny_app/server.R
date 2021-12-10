@@ -12,50 +12,84 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-server <- function(input, output) {
+server <- function(input, output, session) {
 
-  ##### Data Selection #####
+  # UI elements ---------------------------------------
+  output$ui_opts <- build_ui(id = "opts", input, define_options = TRUE,
+                             include = c("discharge", "rolling", "months",
+                                         "percentiles", "missing"))
 
-  # HYDAT station number UI
-  output$station_num <- renderUI({
-    selectizeInput("station_num", label = "Station Number:",
-                   choices = stations_list, ### see top of script
-                   selected = "08HB048",
-                   options = list(placeholder = "type or select station number", maxOptions = 2420 ))
+  output$ui_data_station_num <- renderUI({
+    textInput("data_station_num", label = "Station Number",
+              value = "08HB048",
+              placeholder = "type station number or select from map")
   })
+
+  observeEvent(input$data_map_station, {
+    req(input$data_map_marker_click)
+
+    updateTextInput(session, "data_station_num",
+                    value = input$data_map_marker_click$id)
+
+  })
+
+  output$ui_sum <- build_ui(id = "sum", input,
+                             include = c("discharge", "rolling", "months",
+                                         "percentiles", "missing"))
+
+  output$ui_sum_flow <- build_ui(id = "sum_flow", input,
+                                 include = c("discharge", "rolling", "months",
+                                             "missing"))
+
+
+  # Data - Loading ---------------
+
+
+  ## Map -------------------------
+  output$data_map <- renderLeaflet({
+    leaflet() %>%
+      addProviderTiles(providers$Stamen.TonerLite,
+                       options = providerTileOptions(noWrap = TRUE)
+      ) %>%
+      addCircleMarkers(data = stations, lng = ~LONGITUDE, lat = ~LATITUDE,
+                       layerId = ~ STATION_NUMBER,
+                       radius = 4, fillOpacity = 1, stroke = FALSE,
+                       label = ~ STATION_NUMBER,
+                       popup = ~glue("Station Name: {STATION_NAME}<br>",
+                                     "Station Number: {STATION_NUMBER}"))
+  })
+
 
   # Raw daily discharge data
-  raw_data <- reactive({
+  data_raw <- eventReactive(input$data_select, {
+    req(input$year_start)
 
-    input$data_select
+    if (input$data_source == "HYDAT") {
+      d <- fill_missing_dates(station_number = input$data_station_num) %>%
+        add_date_variables(water_year_start = as.numeric(input$year_start))
+    } else {
+      inFile <- input$file1
+      if (is.null(inFile))
+        return(NULL)
 
-    isolate(
+      csv_file <- as.data.frame(read.csv(inFile$datapath, header = T, sep = ","))
 
-      if (input$data_source == "HYDAT") {
-        fill_missing_dates(station_number = input$station_num) %>%
-          add_date_variables(water_year_start = as.numeric(input$year_start))
-      } else {
-        inFile <- input$file1
-        if (is.null(inFile))
-          return(NULL)
+      d <- fill_missing_dates(data = csv_file) %>%
+        add_date_variables(water_year_start = as.numeric(input$year_start))
+    }
 
-        csv_file <- as.data.frame(read.csv(inFile$datapath, header = T, sep = ","))
-
-        fill_missing_dates(data = csv_file) %>%
-          add_date_variables(water_year_start = as.numeric(input$year_start))
-      }
-
-    )
+    updateTabsetPanel(session, inputId = "data_tabs", selected = "data_plot")
+    d
   })
 
-  # Station name UI
-  output$station_name <- renderUI({
-    textInput('station_name', label = "Station/stream name:", placeholder = "ex. Mission Creek",
-              value = ifelse(input$data_source == "HYDAT",
-                             paste0(suppressMessages(tidyhydat::hy_stations(station_number = input$station_num)) %>% pull(STATION_NAME),
-                                    " (",input$station_num,")"),
-                             ""))
-  })
+# Station name UI
+output$station_name <- renderUI({
+  textInput('station_name', label = "Station/stream name:", placeholder = "ex. Mission Creek",
+            value = ifelse(input$data_source == "HYDAT",
+                           paste0(suppressMessages(tidyhydat::hy_stations(station_number = input$station_num)) %>% pull(STATION_NAME),
+                                  " (",input$station_num,")"),
+                           ""))
+})
 
   # Basin area UI
   output$basinarea <- renderUI({
@@ -70,9 +104,9 @@ server <- function(input, output) {
   # Year selection/slider UI
   output$years_range <- renderUI({
     sliderInput("years_range", label = "Select start and end years to summarize:",
-                min = min(raw_data()$WaterYear),
-                max = max(raw_data()$WaterYear),
-                value = c(min(raw_data()$WaterYear), max(raw_data()$WaterYear)),
+                min = min(data_raw()$WaterYear),
+                max = max(data_raw()$WaterYear),
+                value = c(min(data_raw()$WaterYear), max(data_raw()$WaterYear)),
                 dragRange = TRUE, sep = "")
   })
 
@@ -88,23 +122,12 @@ server <- function(input, output) {
   # Daily timeseries outputs
   output$dateRange <- renderUI({
     dateRangeInput("dateRange", "Select start and end date of plot:", format = "yyyy-mm-dd", startview = "month",
-                   start = min(raw_data()$Date), end = max(raw_data()$Date))#"1950-01-01",end = "2000-12-31")
+                   start = min(data_raw()$Date), end = max(data_raw()$Date))#"1950-01-01",end = "2000-12-31")
   })
 
-  timeseries_plot <- function(){
-    plot_flow_data(data = raw_data(),
-                   log_discharge = input$logTimeSeries,
-                   start_date = input$dateRange[1],
-                   end_date = input$dateRange[2],
-                   start_year = as.numeric(input$years_range[1]),
-                   end_year = as.numeric(input$years_range[2]),
-                   exclude_years = as.numeric(input$years_exclude),
-                   water_year_start = as.numeric(input$year_start))[[1]] +
-      scale_color_manual(values = "dodgerblue4")
-  }
-
-  output$timeseries_plot <- renderPlotly({
-    ggplotly(timeseries_plot())
+  output$data_timeseries <- renderPlotly({
+    req(data_raw())
+    ggplotly(plot_timeseries(data = data_raw(), input))
   })
 
   output$downloadtimeseries_plot <- downloadHandler(
@@ -116,11 +139,11 @@ server <- function(input, output) {
     })
 
   output$timeseries_data <- DT::renderDataTable({
-    # raw_data() %>%
+    # data_raw() %>%
     #   select(-dplyr::contains("STATION_NUMBER"), -dplyr::contains("Parameter"), -Month, Month = MonthName) %>%
     #   rename("Day of Year" = DayofYear, "Water Year" = WaterYear, "Day of Water Year" = WaterDayofYear) %>%
     #   mutate(Value = round(Value, 4))
-    data <- raw_data()
+    data <- data_raw()
     data <- select(data,-dplyr::contains("STATION_NUMBER"), -dplyr::contains("Parameter"), -Month, Month = MonthName)
     data <- rename(data,"Day of Year" = DayofYear, "Water Year" = WaterYear, "Day of Water Year" = WaterDayofYear)
     data <- mutate(data,Value = round(Value, 4))
@@ -139,7 +162,7 @@ server <- function(input, output) {
 
   ##### Summary plot
   summaryData <- reactive({
-    screen_flow_data(data = raw_data(),
+    screen_flow_data(data = data_raw(),
                      start_year = input$years_range[1],
                      end_year = input$years_range[2],
                      water_year_start = as.numeric(input$year_start))
@@ -206,7 +229,7 @@ server <- function(input, output) {
 
   missing_plot <- function(){
 
-    plot_missing_dates(data = raw_data(),
+    plot_missing_dates(data = data_raw(),
                        start_year = input$years_range[1],
                        end_year = input$years_range[2],
                        water_year_start = as.numeric(input$year_start),
@@ -291,7 +314,7 @@ server <- function(input, output) {
   # Summary Statistics
   lt_data <- reactive({
 
-    lt_data <- raw_data()
+    lt_data <- data_raw()
 
     if (input$lt_datatype == 2) {
       lt_data <- add_daily_volume(lt_data) %>%
@@ -398,7 +421,7 @@ server <- function(input, output) {
 
   ptile_data <- reactive({
 
-    ptile_data <- raw_data()
+    ptile_data <- data_raw()
 
     if (input$ptile_datatype == 2) {
       ptile_data <- add_daily_volume(ptile_data) %>%
@@ -480,7 +503,7 @@ server <- function(input, output) {
 
   ptile_plot <- function(){
 
-    ptile_data <- raw_data()
+    ptile_data <- data_raw()
 
     if (input$ptile_datatype == 2) {
       ptile_data <- add_daily_volume(ptile_data) %>%
@@ -540,7 +563,7 @@ server <- function(input, output) {
 
   annual_data <- reactive({
 
-    ann_data <- raw_data()
+    ann_data <- data_raw()
 
     if (input$ann_datatype == 2) {
       ann_data <- add_daily_volume(ann_data) %>%
@@ -655,7 +678,7 @@ server <- function(input, output) {
 
     input$trends_compute
 
-    data <- raw_data()
+    data <- data_raw()
     isolate(compute_annual_trends(data = data,
                                   zyp_method = input$trends_zyp_method,
                                   zyp_alpha = as.numeric(input$trends_alpha),
@@ -786,7 +809,7 @@ server <- function(input, output) {
   #
   #
   #
-  # freq_raw_data <- reactive({
+  # freq_data_raw <- reactive({
   #   fill_missing_dates(station_number = input$freq_station_num) %>%
   #     add_date_variables(water_year = TRUE,
   #                                water_year_start = as.numeric(input$freq_year_start))
@@ -843,7 +866,7 @@ server <- function(input, output) {
 
     input$freq_compute
 
-    isolate(compute_annual_frequencies(data = raw_data(),
+    isolate(compute_annual_frequencies(data = data_raw(),
                                        roll_days = input$freq_roll_days,
                                        roll_align = input$freq_roll_align,
                                        use_max = input$freq_usemax,
@@ -864,10 +887,10 @@ server <- function(input, output) {
   output$freq_slider <- renderUI({
     sliderInput("freq_slider",
                 label = "Start and end years:",
-                min = ifelse(as.numeric(input$freq_year_start) == 1, min(freq_raw_data()$Year), min(freq_raw_data()$WaterYear)),
-                max = ifelse(as.numeric(input$freq_year_start) == 1, max(freq_raw_data()$Year), max(freq_raw_data()$WaterYear)),
-                value = c(ifelse(as.numeric(input$freq_year_start) == 1, min(freq_raw_data()$Year), min(freq_raw_data()$WaterYear)),
-                          ifelse(as.numeric(input$freq_year_start) == 1, max(freq_raw_data()$Year), max(freq_raw_data()$WaterYear))),
+                min = ifelse(as.numeric(input$freq_year_start) == 1, min(freq_data_raw()$Year), min(freq_data_raw()$WaterYear)),
+                max = ifelse(as.numeric(input$freq_year_start) == 1, max(freq_data_raw()$Year), max(freq_data_raw()$WaterYear)),
+                value = c(ifelse(as.numeric(input$freq_year_start) == 1, min(freq_data_raw()$Year), min(freq_data_raw()$WaterYear)),
+                          ifelse(as.numeric(input$freq_year_start) == 1, max(freq_data_raw()$Year), max(freq_data_raw()$WaterYear))),
                 dragRange = TRUE,
                 sep = "")
   })
@@ -932,7 +955,7 @@ server <- function(input, output) {
   dailyData <- reactive({
 
     #timeseries <- timeseriesData()
-    daily.data <- raw_data() %>%
+    daily.data <- data_raw() %>%
       group_by(DayofYear)%>%
       filter(DayofYear < 366) %>% # removes any day 366 during leap years; i.e. only the first 365 days of each year are summarized
       summarize(Mean=mean(Value, na.rm=TRUE),
@@ -945,7 +968,7 @@ server <- function(input, output) {
                 Maximum=max(Value, na.rm=TRUE))
 
     if (input$yearCheckDaily) {
-      flow.Year <- raw_data() %>% filter(analysisYear==input$yearDaily & analysisDOY <366) %>% select(analysisDOY,Value) %>% rename("yearValue"=Value)
+      flow.Year <- data_raw() %>% filter(analysisYear==input$yearDaily & analysisDOY <366) %>% select(analysisDOY,Value) %>% rename("yearValue"=Value)
       daily.data <- merge(daily.data,flow.Year, by = "analysisDOY", all.x = TRUE)
     }
     daily.data <- as.data.frame(daily.data)
@@ -953,7 +976,7 @@ server <- function(input, output) {
 
   output$yearSelectDaily <- renderUI({
     sliderInput("yearDaily", label = "Select year of daily discharge to plot:",value=yearData()$minYear,
-                min=min(raw_data()$analysisYear), max=max(raw_data()$analysisYear),sep = "")#yearData()$minYear
+                min=min(data_raw()$analysisYear), max=max(data_raw()$analysisYear),sep = "")#yearData()$minYear
   })
 
   dailyPlot <- function(){
@@ -1045,7 +1068,7 @@ server <- function(input, output) {
   #
 
 
-  # raw_data <- reactive({
+  # data_raw <- reactive({
   #   fill_missing_dates(station_number = input$station_num) %>%
   #     add_date_variables(water_year = TRUE,
   #                                water_year_start = as.numeric(input$ann_year_start))

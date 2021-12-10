@@ -19,75 +19,86 @@ ui_home <- fluidRow(
 
 # Settings ---------------------
 ui_settings <- fluidRow(
-  column(width = 12)
+  column(width = 12,
+         uiOutput("ui_opts")
+         )
 )
 
 # Data -------------------------
 
 ## Data Loading ------------------
 ui_data_load <- fluidRow(
-  column(width = 12, h2("Loading Data"),
-         box(width = 4,
-             helpText("Data Source:"),
-             radioGroupButtons(inputId = "data_source",
-                               label = NULL, choices = c("HYDAT", "CSV File"),
-                               selected = "HYDAT"),
-             conditionalPanel("input.data_source == 'HYDAT'",
-                              uiOutput("station_num")),
-             conditionalPanel("input.data_source != 'HYDAT'",
-                              fileInput('file1', label = NULL,
-                                        accept=c('text/csv',
-                                                 'text/comma-separated-values,text/plain',
-                                                 '.csv'))),
-             actionButton("data_select", "Select"),
-             hr(),
-             helpText("Station Information:"),
-             fluidRow(column(width = 6, uiOutput("station_name")),
-                      column(width = 6, uiOutput("basinarea"))),
-             helpText("Dates Filtering:"),
-             #helpText("Review the data and select the years of interest to be analyzed."),
-             selectInput("year_start",
-                         label = "Select a year period:",
-                         choices = list("Jan-Dec" = 1, "Feb-Jan" = 2,
-                                        "Mar-Feb" = 3, "Apr-Mar" = 4,
-                                        "May-Apr" = 5, "Jun-May" = 6,
-                                        "Jul-Jun" = 7, "Aug-Jul" = 8,
-                                        "Sep-Aug" = 9, "Oct-Sep" = 10,
-                                        "Nov-Oct" = 11, "Dec-Nov" = 12),
-                         selected = 1),
-             #h4("Analysis Options"),
-             #  selectInput("yearType",label = "Select a year type:", c("Calendar Year (Jan-Dec)"=1,"Water Year (Oct-Sep)"=2)),
-             # conditionalPanel("input.data_select%2>0",
-             uiOutput("years_range"),
-             uiOutput("years_exclude"),
-             helpText("Session Settings:"),
-             fluidRow(actionButton("save_session","Save Settings"),
-                      actionButton("load_session","Load Settings"))
-             #)
-         ),
-         box(width = 8,
-             tabBox(
-               tabPanel(
-                 title = "Plot",
-                 plotlyOutput('timeseries_plot'),
-                 fluidRow(column(4, br(),uiOutput("dateRange")),
-                          column(5, br(),checkboxInput("logTimeSeries", label = "Plot Discharge axis on log scale", value= FALSE)),
-                          column(2, br(),downloadButton('downloadtimeseries_plot', 'Download Plot'))),
-                 selectInput("data_datatype", label = "Discharge type:",
-                             choices = list("Discharge (cms)" = 1,
-                                            "Volumetric Discharge (m3)" = 2,
-                                            "Runoff Yield (mm)" = 3))
-               ),
-               tabPanel(
-                 title = "Table", br(),
-                 DT::dataTableOutput("timeseries_data")
-               ),
-               tabPanel(
-                 title = "R Code")#data
-             )
-         )
+  column(
+    width = 12, h2("Loading Data"),
+    box(
+      width = 4,
+      radioGroupButtons(inputId = "data_source",
+                        label = "Source", choices = c("HYDAT", "CSV File"),
+                        selected = "HYDAT"),
+      conditionalPanel("input.data_source == 'HYDAT'",
+                       uiOutput("ui_data_station_num")),
+      conditionalPanel("input.data_source != 'HYDAT'",
+                       fileInput('file1', label = NULL,
+                                 accept=c('text/csv',
+                                          'text/comma-separated-values,text/plain',
+                                          '.csv'))),
+      bsButton("data_select", "Select", style = "primary"),
+      hr(),
+      h4("Station Information"),
+      fluidRow(column(width = 6, uiOutput("station_name")),
+               column(width = 6, uiOutput("basinarea"))),
+      h4("Filter Dates"),
+      selectInput("year_start",
+                  label = "Select a year period:",
+                  choices = list("Jan-Dec" = 1, "Feb-Jan" = 2,
+                                 "Mar-Feb" = 3, "Apr-Mar" = 4,
+                                 "May-Apr" = 5, "Jun-May" = 6,
+                                 "Jul-Jun" = 7, "Aug-Jul" = 8,
+                                 "Sep-Aug" = 9, "Oct-Sep" = 10,
+                                 "Nov-Oct" = 11, "Dec-Nov" = 12),
+                  selected = 1),
+      #h4("Analysis Options"),
+      #  selectInput("yearType",label = "Select a year type:", c("Calendar Year (Jan-Dec)"=1,"Water Year (Oct-Sep)"=2)),
+      # conditionalPanel("input.data_select%2>0",
+      uiOutput("years_range"),
+      uiOutput("years_exclude"),
+    ),
+
+    tabBox(
+      width = 8, id = "data_tabs",
+
+      ### Map --------
+      tabPanel(
+        width = 12,
+        "HYDAT Map",
+        leafletOutput("data_map", width = "100%", height = "500px"),
+        bsButton("data_map_station", "Use selected station", style = "primary"),
+      ),
+
+      ### Plot --------
+      tabPanel(
+        title = "Plot", value = "data_plot",
+        plotlyOutput('data_timeseries'),
+        fluidRow(column(4, br(),uiOutput("dateRange")),
+                 column(5, br(),checkboxInput("logTimeSeries", label = "Plot Discharge axis on log scale", value= FALSE)),
+                 column(2, br(),downloadButton('downloadtimeseries_plot', 'Download Plot'))),
+        selectInput("data_datatype", label = "Discharge type:",
+                    choices = list("Discharge (cms)" = 1,
+                                   "Volumetric Discharge (m3)" = 2,
+                                   "Runoff Yield (mm)" = 3))
+      ),
+
+      tabPanel(
+        title = "Table", br(),
+        DT::dataTableOutput("timeseries_data")
+      ),
+
+      tabPanel(
+        title = "R Code")#data
+    )
   )
 )
+
 
 ## Data Screening ---------------------
 ui_data_screen <- fluidRow(
@@ -129,38 +140,14 @@ ui_data_screen <- fluidRow(
 
 
 # Stats Summary ----------------
-ui_stats_summary <- fluidRow(
+ui_summary <- fluidRow(
   column(
     width = 12, h2("Summary Statistics"),
     box(
       width = 3,
-      selectInput("summary_type", label = "Summary type:",
-                  choices = list("Lont-term", "Annual", "Monthly", "Daily")),
-      selectInput("lt_datatype", label = "Discharge type:",
-                  choices = list("Discharge (cms)" = 1,
-                                 "Volumetric Discharge (m3)" = 2,
-                                 "Runoff Yield (mm)" = 3),
-                  selected = 1),
-      fluidRow(column(6, numericInput("lt_roll_days", label = "Rolling average days:", value = 1, min = 1, max = 180, step = 1)),
-               column(6, selectInput("lt_roll_align", label = "Rolling alignment:",
-                                     choices = list("Right" = "right", "Left" = "left", "Center" = "center"), selected = "Right"))),
-      selectizeInput("lt_months",
-                     label = "Custom Months:",
-                     choices = list("Jan" = 1, "Feb" = 2,
-                                    "Mar" = 3, "Apr" = 4,
-                                    "May" = 5, "Jun" = 6,
-                                    "Jul" = 7, "Aug" = 8,
-                                    "Sep" = 9, "Oct" = 10,
-                                    "Nov" = 11, "Dec" = 12),
-                     selected = NULL,
-                     multiple = TRUE),
-      textInput('lt_months_label', label = "Custom Months Label:", placeholder = "ex. Jun-Aug"),
-      selectizeInput("lt_ptiles",
-                     label = "Percentiles to calculate:",
-                     choices = c(1:99),
-                     selected = c(10,90),
-                     multiple = TRUE),
-      checkboxInput("lt_ign_missing_box", "Calculate statistics despite missing values", value = FALSE)
+      radioButtons("summary_type", label = "Summary type",
+                   choices = list("Long-term", "Annual", "Monthly", "Daily")),
+      uiOutput("ui_sum"),
     ),
     tabBox(
       width = 9,
@@ -189,35 +176,6 @@ ui_stats_summary <- fluidRow(
 ### Annual Summary Stats --------------------------
 # tabPanel(
 #   title = "Summary Statistics",
-#   box(
-#     width = 3,
-#     selectInput("ann_datatype", label = "Discharge type:",
-#                 choices = list("Discharge (cms)" = 1,
-#                                "Volumetric Discharge (m3)" = 2,
-#                                "Runoff Yield (mm)" = 3),
-#                 selected = 1),
-#     fluidRow(
-#       column(6,numericInput("ann_roll_days",
-#                             label = "Rolling average days:", value = 1, min = 1, max = 180, step = 1)),
-#       column(6,selectInput("ann_roll_align", label = "Rolling alignment:",
-#                            choices = list("Right" = "right", "Left" = "left", "Center" = "center"), selected = "Right"))),
-#     selectizeInput("annual_months",
-#                    label = "Months:",
-#                    choices = list("Jan" = 1, "Feb" = 2,
-#                                   "Mar" = 3, "Apr" = 4,
-#                                   "May" = 5, "Jun" = 6,
-#                                   "Jul" = 7, "Aug" = 8,
-#                                   "Sep" = 9, "Oct" = 10,
-#                                   "Nov" = 11, "Dec" = 12),
-#                    selected = c(1:12),
-#                    multiple = TRUE),
-#     selectizeInput("ann_ptiles",
-#                    label = "Percentiles to calculate:",
-#                    choices = c(1:99),
-#                    selected = c(10,90),
-#                    multiple = TRUE),
-#     checkboxInput("ign_missing_box", "Calculate statistics despite missing values", value = FALSE)
-#   ),
 #
 #   tabBox(
 #     width = 9,
@@ -249,31 +207,12 @@ ui_stats_summary <- fluidRow(
 
 
 ## Flow duration and Percentiles --------------
-ui_stats_sum_flow <- fluidRow(
+ui_sum_flow <- fluidRow(
   column(
-    width = 12, h2("Flor duration and Percentiles"),
+    width = 12, h2("Flow duration and Percentiles"),
     box(
       width = 3,
-      selectInput("ptile_datatype", label = "Discharge type:",
-                  choices = list("Discharge (cms)" = 1,
-                                 "Volumetric Discharge (m3)" = 2,
-                                 "Runoff Yield (mm)" = 3),
-                  selected = 1),
-      fluidRow(column(6,numericInput("ptile_roll_days", label = "Rolling average days:", value = 1, min = 1, max = 180, step = 1)),
-               column(6,selectInput("ptile_roll_align", label = "Rolling alignment:",
-                                    choices = list("Right" = "right", "Left" = "left", "Center" = "center"), selected = "Right"))),
-      selectizeInput("ptile_months_cust",
-                     label = "Custom Months:",
-                     choices = list("Jan" = 1, "Feb" = 2,
-                                    "Mar" = 3, "Apr" = 4,
-                                    "May" = 5, "Jun" = 6,
-                                    "Jul" = 7, "Aug" = 8,
-                                    "Sep" = 9, "Oct" = 10,
-                                    "Nov" = 11, "Dec" = 12),
-                     selected = NULL,
-                     multiple = TRUE),
-      textInput('ptile_months_cust_label', label = "Custom Months Label:", placeholder = "ex. Jun-Aug"),
-      checkboxInput("ptile_ign_missing_box", "Calculate statistics despite missing values", value = FALSE)
+      uiOutput("ui_sum_flow")
     ),
     column(width = 9,
            tabsetPanel(
@@ -302,7 +241,7 @@ ui_stats_sum_flow <- fluidRow(
 
 
 ## Single stats --------------
-ui_stats_sum_single <- fluidRow(
+ui_sum_single <- fluidRow(
   column(
     width = 12, h2("Single Statistics"),
     box(
@@ -329,7 +268,7 @@ ui_stats_sum_single <- fluidRow(
 # Annual Hydrograph ------------------------------
 
 ## Flows low ------------------------
-ui_stats_annual_flow_low <- fluidRow(
+ui_annual_flow_low <- fluidRow(
   column(
     width = 12, h2("Low flows"),
     box(width = 3),
@@ -349,7 +288,7 @@ ui_stats_annual_flow_low <- fluidRow(
 )
 
 ## Flow timing ------------------------
-ui_stats_annual_flow_timing <- fluidRow(
+ui_annual_flow_timing <- fluidRow(
   column(
     width = 12, h2("Flow timing"),
     box(width = 3),
@@ -369,7 +308,7 @@ ui_stats_annual_flow_timing <- fluidRow(
 )
 
 ## Flow peak ------------------------
-ui_stats_annual_flow_peak <- fluidRow(
+ui_annual_flow_peak <- fluidRow(
   column(
     width = 12, h2("Flow peak"),
     box(width = 3),
@@ -389,7 +328,7 @@ ui_stats_annual_flow_peak <- fluidRow(
 )
 
 ## Days outside normal ------------------------
-ui_stats_annual_outside_normal <- fluidRow(
+ui_annual_outside_normal <- fluidRow(
   column(
     width = 12, h2("Days outside normal"),
     box(width = 3),
@@ -408,37 +347,9 @@ ui_stats_annual_outside_normal <- fluidRow(
   )
 )
 
-## Monthly ----------------------------
-
-ui_stats_sum_monthly <- fluidRow(
-  column(
-    width = 12,
-    h2("Monthly"),
-    tabBox(
-
-      ### Summary Stats -------------------------
-      tabPanel(
-        title = "Summary Statistics", width = 12,
-        tabBox(width = 12,
-               tabPanel(
-                 title = "Plot"
-               ),
-               tabPanel(
-                 title = "Table"
-               ),
-               tabPanel(
-                 title = "Info"
-               )
-        )
-      )
-    )
-
-  )
-)
-
 
 ## Daily ------------------------
-ui_stats_sum_daily <- fluidRow(
+ui_sum_daily <- fluidRow(
   column(
     width = 12,
     h2("Daily"),
@@ -502,7 +413,7 @@ ui_stats_sum_daily <- fluidRow(
 
 ## Long Term ---------------------------------
 
-ui_stats_cum_lt <- fluidRow(
+ui_cum_lt <- fluidRow(
 
   column(
     width = 12, h2("Long Term Cumulative Statistics"),
@@ -524,7 +435,7 @@ ui_stats_cum_lt <- fluidRow(
 )
 
 ## Monthly -------------------------
-ui_stats_cum_monthly <-  fluidRow(
+ui_cum_monthly <-  fluidRow(
   column(
     width = 12, h2("Monthly Cumulative Statistics"),
     box(width = 3),
@@ -544,7 +455,7 @@ ui_stats_cum_monthly <-  fluidRow(
 )
 
 ## Daily -------------------
-ui_stats_cum_daily <- fluidRow(
+ui_cum_daily <- fluidRow(
   column(
     width = 12, h2("Daily Cumulative Statistics"),
     box(width = 3),
@@ -567,7 +478,7 @@ ui_stats_cum_daily <- fluidRow(
 # Stats Computed ---------------
 
 ## Annual Trends -----------------------
-ui_stats_comp_annual <- fluidRow(
+ui_comp_annual <- fluidRow(
   column(
     width = 12, h2("Annual Trends"),
     box(width = 3,
@@ -639,7 +550,7 @@ ui_stats_comp_annual <- fluidRow(
 
 ## Flow Frequency ------------------
 
-ui_stats_comp_flow <- fluidRow(
+ui_comp_flow <- fluidRow(
   column(
     width = 12, h2("Flow Frequency"),
     box(width = 3,
@@ -727,29 +638,29 @@ dashboardPage(skin = "green",
       menuItem("Data", tabName = "data", icon = icon("table"),
                menuSubItem("Loading", tabName = "data_load"),
                menuSubItem("Screening", tabName = "data_screen")),
-      menuItem("Summary statistics", tabName = "stats_summary",
+      menuItem("Summary statistics", tabName = "summary",
                icon=icon("chart-bar"),
-               menuSubItem("General", tabName = "stats_summary"),
+               menuSubItem("General", tabName = "summary"),
                menuSubItem("Flow duration and percentiles",
-                           tabName = "stats_sum_flow"),
-               menuSubItem("Single stats", tabName = "stats_sum_single")),
-      menuItem("Cumulative Stats", tabName = "stats_cumulative",
+                           tabName = "sum_flow"),
+               menuSubItem("Single stats", tabName = "sum_single")),
+      menuItem("Cumulative Stats", tabName = "cumulative",
                icon = icon("chart-area"),
-               menuSubItem("Long-term", tabName = "stats_cum_lt"),
-               menuSubItem("Annual", tabName = "stats_cum_annual"),
-               menuSubItem("Monthly", tabName = "stats_cum_monthly"),
-               menuSubItem("Daily", tabName = "stats_cum_daily")),
-      menuItem("Annual Hydrograph Stats", tabName = "stats_annual",
+               menuSubItem("Long-term", tabName = "cum_lt"),
+               menuSubItem("Annual", tabName = "cum_annual"),
+               menuSubItem("Monthly", tabName = "cum_monthly"),
+               menuSubItem("Daily", tabName = "cum_daily")),
+      menuItem("Annual Hydrograph Stats", tabName = "annual",
                icon = icon("calendar"),
-               menuSubItem("Low Flows", tabName = "stats_annual_flow_low"),
-               menuSubItem("Flow timing", tabName = "stats_annual_flow_timing"),
-               menuSubItem("Peak Flows", tabName = "stats_annual_flow_peak"),
+               menuSubItem("Low Flows", tabName = "annual_flow_low"),
+               menuSubItem("Flow timing", tabName = "annual_flow_timing"),
+               menuSubItem("Peak Flows", tabName = "annual_flow_peak"),
                menuSubItem("Days outside normal",
-                           tabName = "stats_annual_outside_normal")),
-      menuItem("Computations", tabName = "stats_computed",
+                           tabName = "annual_outside_normal")),
+      menuItem("Computations", tabName = "computed",
                icon = icon("chart-line"),
-               menuSubItem("Annual Trends", tabName = "stats_comp_annual"),
-               menuSubItem("Flow Frequency", tabName = "stats_comp_flow"))
+               menuSubItem("Annual Trends", tabName = "comp_annual"),
+               menuSubItem("Flow Frequency", tabName = "comp_flow"))
     )
   ),
   dashboardBody(
@@ -758,21 +669,21 @@ dashboardPage(skin = "green",
       tabItem("settings", ui_settings),
       tabItem("data_load", ui_data_load),
       tabItem("data_screen", ui_data_screen),
-      tabItem("stats_summary", ui_stats_summary),
-      tabItem("stats_sum_flow", ui_stats_sum_flow),
-      tabItem("stats_sum_single", ui_stats_sum_single),
-      ##tabItem("stats_sum_annual", ui_stats_sum_annual),
-      #tabItem("stats_sum_monthly", ui_stats_sum_monthly),
-      #tabItem("stats_sum_daily", ui_stats_sum_daily),
-      tabItem("stats_cum_lt", ui_stats_cum_lt),
-      tabItem("stats_cum_monthly", ui_stats_cum_monthly),
-      tabItem("stats_cum_daily", ui_stats_cum_daily),
-      tabItem("stats_annual_flow_low", ui_stats_annual_flow_low),
-      tabItem("stats_annual_flow_timing", ui_stats_annual_flow_timing),
-      tabItem("stats_annual_flow_peak", ui_stats_annual_flow_peak),
-      tabItem("stats_annual_outside_normal", ui_stats_annual_outside_normal),
-      tabItem("stats_comp_annual", ui_stats_comp_annual),
-      tabItem("stats_comp_flow", ui_stats_comp_flow)
+      tabItem("summary", ui_summary),
+      tabItem("sum_flow", ui_sum_flow),
+      tabItem("sum_single", ui_sum_single),
+      ##tabItem("sum_annual", ui_sum_annual),
+      #tabItem("sum_monthly", ui_sum_monthly),
+      #tabItem("sum_daily", ui_sum_daily),
+      tabItem("cum_lt", ui_cum_lt),
+      tabItem("cum_monthly", ui_cum_monthly),
+      tabItem("cum_daily", ui_cum_daily),
+      tabItem("annual_flow_low", ui_annual_flow_low),
+      tabItem("annual_flow_timing", ui_annual_flow_timing),
+      tabItem("annual_flow_peak", ui_annual_flow_peak),
+      tabItem("annual_outside_normal", ui_annual_outside_normal),
+      tabItem("comp_annual", ui_comp_annual),
+      tabItem("comp_flow", ui_comp_flow)
     )
   )
 )
