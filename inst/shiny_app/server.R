@@ -219,14 +219,14 @@ server <- function(input, output, session) {
   })
 
 
-  ##### Data Screening #####
+  # Data - Screening ---------------
 
   ##### Summary plot
   summaryData <- reactive({
     screen_flow_data(data = data_raw(),
-                     start_year = input$years_range[1],
-                     end_year = input$years_range[2],
-                     water_year_start = as.numeric(input$year_start))
+                     start_year = input$data_years_range[1],
+                     end_year = input$data_years_range[2],
+                     water_year_start = as.numeric(input$data_water_year))
   })
 
   summaryPlot <- function(){
@@ -242,7 +242,7 @@ server <- function(input, output, session) {
       #facet_wrap(~Statistic, ncol=2, scales="free_y")+
       xlab("Year") +
       theme_bw() +
-      { if(as.numeric(input$year_start) != 1) xlab("Water Year")} +
+      { if(as.numeric(input$data_water_year) != 1) xlab("Water Year")} +
       ylab("Discharge (cms)") +
       theme(axis.title = element_text(size = 15),
             plot.title = element_text(size = 15, hjust = 0.5),
@@ -291,9 +291,9 @@ server <- function(input, output, session) {
   missing_plot <- function(){
 
     plot_missing_dates(data = data_raw(),
-                       start_year = input$years_range[1],
-                       end_year = input$years_range[2],
-                       water_year_start = as.numeric(input$year_start),
+                       start_year = input$data_years_range[1],
+                       end_year = input$data_years_range[2],
+                       water_year_start = as.numeric(input$data_water_year),
                        months = as.numeric(input$availability_months))[[1]]
     #
     #
@@ -303,40 +303,40 @@ server <- function(input, output, session) {
     #   gather(Month, Value, 2:13) %>%
     #   mutate(Month = substr(Month, 1, 3))
     #
-    # if (input$year_start == 1) {
+    # if (input$data_water_year == 1) {
     #   plotdata$Month <- factor(plotdata$Month, levels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
     #                                                       "Aug", "Sep", "Oct", "Nov", "Dec"))
-    # } else if (input$year_start == 2) {
+    # } else if (input$data_water_year == 2) {
     #   plotdata$Month <- factor(plotdata$Month, levels = c("Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
     #                                                       "Sep", "Oct", "Nov", "Dec", "Jan"))
-    # } else if (input$year_start == 3) {
+    # } else if (input$data_water_year == 3) {
     #   plotdata$Month <- factor(plotdata$Month, levels = c("Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
     #                                                       "Oct", "Nov", "Dec", "Jan", "Feb"))
-    # } else if (input$year_start == 4) {
+    # } else if (input$data_water_year == 4) {
     #   plotdata$Month <- factor(plotdata$Month, levels = c("Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
     #                                                       "Nov", "Dec", "Jan", "Feb", "Mar"))
-    # } else if (input$year_start == 5) {
+    # } else if (input$data_water_year == 5) {
     #   plotdata$Month <- factor(plotdata$Month, levels = c("May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov",
     #                                                       "Dec", "Jan", "Feb", "Mar", "Apr"))
-    # } else if (input$year_start == 6) {
+    # } else if (input$data_water_year == 6) {
     #   plotdata$Month <- factor(plotdata$Month, levels = c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     #                                                       "Jan", "Feb", "Mar", "Apr", "May"))
-    # } else if (input$year_start == 7) {
+    # } else if (input$data_water_year == 7) {
     #   plotdata$Month <- factor(plotdata$Month, levels = c("Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan",
     #                                                       "Feb", "Mar", "Apr", "May", "Jun"))
-    # } else if (input$year_start == 8) {
+    # } else if (input$data_water_year == 8) {
     #   plotdata$Month <- factor(plotdata$Month, levels = c("Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb",
     #                                                       "Mar", "Apr", "May","Jun", "Jul"))
-    # } else if (input$year_start == 9) {
+    # } else if (input$data_water_year == 9) {
     #   plotdata$Month <- factor(plotdata$Month, levels = c("Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar",
     #                                                       "Apr", "May", "Jun", "Jul", "Aug"))
-    # } else if (input$year_start == 10) {
+    # } else if (input$data_water_year == 10) {
     #   plotdata$Month <- factor(plotdata$Month, levels = c("Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr",
     #                                                       "May", "Jun", "Jul", "Aug", "Sep"))
-    # } else if (input$year_start == 11) {
+    # } else if (input$data_water_year == 11) {
     #   plotdata$Month <- factor(plotdata$Month, levels = c("Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May",
     #                                                       "Jun", "Jul", "Aug", "Sep", "Oct"))
-    # } else if (input$year_start == 12) {
+    # } else if (input$data_water_year == 12) {
     #   plotdata$Month <- factor(plotdata$Month, levels = c("Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     #                                                       "Jul", "Aug", "Sep", "Oct", "Nov"))
     # }
@@ -351,7 +351,7 @@ server <- function(input, output, session) {
     #   #facet_wrap(~Statistic, ncol=2, scales="free_y")+
     #   xlab("Year") +
     #   theme_bw() +
-    #   { if(as.numeric(input$year_start) != 1) xlab("Water Year")} +
+    #   { if(as.numeric(input$data_water_year) != 1) xlab("Water Year")} +
     #   ylab("Number of Days") +
     #   theme(axis.title = element_text(size = 15),
     #         plot.title = element_text(size = 15, hjust = 0.5),
@@ -389,10 +389,10 @@ server <- function(input, output, session) {
                               percentiles = as.numeric(input$lt_ptiles),
                               roll_days = input$lt_roll_days,
                               roll_align = input$lt_roll_align,
-                              water_year_start = as.numeric(input$year_start),
-                              start_year = input$years_range[1],
-                              end_year = input$years_range[2],
-                              exclude_years = as.numeric(input$years_exclude),
+                              water_year_start = as.numeric(input$data_water_year),
+                              start_year = input$data_years_range[1],
+                              end_year = input$data_years_range[2],
+                              exclude_years = as.numeric(input$data_years_exclude),
                               custom_months = as.numeric(input$lt_months),
                               custom_months_label = input$lt_months_label,
                               ignore_missing = input$lt_ign_missing_box)
@@ -496,10 +496,10 @@ server <- function(input, output, session) {
                               percentiles = seq(from = 1,  to = 99, by = 1),
                               roll_days = input$ptile_roll_days,
                               roll_align = input$ptile_roll_align,
-                              water_year_start = as.numeric(input$year_start),
-                              start_year = input$years_range[1],
-                              end_year = input$years_range[2],
-                              exclude_years = as.numeric(input$years_exclude),
+                              water_year_start = as.numeric(input$data_water_year),
+                              start_year = input$data_years_range[1],
+                              end_year = input$data_years_range[2],
+                              exclude_years = as.numeric(input$data_years_exclude),
                               custom_months = as.numeric(input$ptile_months_cust),
                               custom_months_label = input$ptile_months_cust_label,
                               ignore_missing = input$ptile_ign_missing_box) %>%
@@ -579,10 +579,10 @@ server <- function(input, output, session) {
                                  #percentiles = seq(from = 0.01,  to = 99.99, by = 0.01),
                                  roll_days = input$ptile_roll_days,
                                  roll_align = input$ptile_roll_align,
-                                 water_year_start = as.numeric(input$year_start),
-                                 start_year = input$years_range[1],
-                                 end_year = input$years_range[2],
-                                 exclude_years = as.numeric(input$years_exclude),
+                                 water_year_start = as.numeric(input$data_water_year),
+                                 start_year = input$data_years_range[1],
+                                 end_year = input$data_years_range[2],
+                                 exclude_years = as.numeric(input$data_years_exclude),
                                  months = as.numeric(input$ptile_params)[as.numeric(input$ptile_params) %in% 1:12],
                                  include_longterm = ifelse("13" %in% input$ptile_params, TRUE, FALSE),
                                  custom_months = as.numeric(input$ptile_months_cust),
@@ -593,10 +593,10 @@ server <- function(input, output, session) {
                                  #percentiles = seq(from = 0.01,  to = 99.99, by = 0.01),
                                  roll_days = input$ptile_roll_days,
                                  roll_align = input$ptile_roll_align,
-                                 water_year_start = as.numeric(input$year_start),
-                                 start_year = input$years_range[1],
-                                 end_year = input$years_range[2],
-                                 exclude_years = as.numeric(input$years_exclude),
+                                 water_year_start = as.numeric(input$data_water_year),
+                                 start_year = input$data_years_range[1],
+                                 end_year = input$data_years_range[2],
+                                 exclude_years = as.numeric(input$data_years_exclude),
                                  months = as.numeric(input$ptile_params)[as.numeric(input$ptile_params) %in% 1:12],
                                  include_longterm = ifelse("13" %in% input$ptile_params, TRUE, FALSE),
                                  ignore_missing = input$ptile_ign_missing_box)[[1]]
@@ -638,10 +638,10 @@ server <- function(input, output, session) {
                       percentiles = as.numeric(input$ann_ptiles),
                       roll_days = input$ann_roll_days,
                       roll_align = input$ann_roll_align,
-                      water_year_start = as.numeric(input$year_start),
-                      start_year = input$years_range[1],
-                      end_year = input$years_range[2],
-                      exclude_years = as.numeric(input$years_exclude),
+                      water_year_start = as.numeric(input$data_water_year),
+                      start_year = input$data_years_range[1],
+                      end_year = input$data_years_range[2],
+                      exclude_years = as.numeric(input$data_years_exclude),
                       months = as.numeric(input$annual_months),
                       ignore_missing = input$ign_missing_box)
   })
@@ -744,10 +744,10 @@ server <- function(input, output, session) {
                                   zyp_method = input$trends_zyp_method,
                                   zyp_alpha = as.numeric(input$trends_alpha),
                                   basin_area = input$basinarea,
-                                  water_year_start = as.numeric(input$year_start),
-                                  start_year = input$years_range[1],
-                                  end_year = input$years_range[2],
-                                  exclude_years = as.numeric(input$years_exclude),
+                                  water_year_start = as.numeric(input$data_water_year),
+                                  start_year = input$data_years_range[1],
+                                  end_year = input$data_years_range[2],
+                                  exclude_years = as.numeric(input$data_years_exclude),
                                   annual_percentiles = as.numeric(input$trends_ann_ptiles),
                                   monthly_percentiles = as.numeric(input$trends_mon_ptiles),
                                   stats_days = as.numeric(input$trends_roll_days),
@@ -840,11 +840,11 @@ server <- function(input, output, session) {
       HTML(paste(paste0("compute_annual_trends(station_number = '", input$station_num, "'"),
                  paste0("zyp_method = '", input$trends_zyp_method, "'"),
                  paste0("zyp_alpha = ", as.numeric(input$trends_alpha)),
-                 paste0("water_year = ", ifelse(input$year_start != "1", "TRUE", "FALSE")),
-                 paste0("water_year_start = ", as.numeric(input$year_start)),
-                 paste0("start_year = ", input$years_range[1]),
-                 paste0("end_year = ", input$years_range[2]),
-                 paste0("exclude_years = ", ifelse(length(input$years_exclude) == 0, "NULL", list(as.numeric(input$years_exclude)))),
+                 paste0("water_year = ", ifelse(input$data_water_year != "1", "TRUE", "FALSE")),
+                 paste0("water_year_start = ", as.numeric(input$data_water_year)),
+                 paste0("start_year = ", input$data_years_range[1]),
+                 paste0("end_year = ", input$data_years_range[2]),
+                 paste0("exclude_years = ", ifelse(length(input$data_years_exclude) == 0, "NULL", list(as.numeric(input$data_years_exclude)))),
                  paste0("annual_percentiles = ", list(as.numeric(input$trends_ann_ptiles))),
                  paste0("monthly_percentiles = ", list(as.numeric(input$trends_mon_ptiles))),
                  paste0("stats_days = ", as.numeric(input$trends_roll_days)),
@@ -893,10 +893,10 @@ server <- function(input, output, session) {
     #        "fit_distr_method = '", input$freq_fit_distr_method, "', ",
     #        "fit_quantiles = ", "c(.975, .99, .98, .95, .90, .80, .50, .20, .10, .05, .01)", ", ",
     #        "water_year = ", "TRUE", ", ",
-    #        "water_year_start = ", as.numeric(input$year_start), ", ",
-    #        "start_year = ", input$years_range[1], ", ",
-    #        "end_year = ", input$years_range[2], ", ",
-    #        "exclude_years = ", as.numeric(input$years_exclude), ", ",
+    #        "water_year_start = ", as.numeric(input$data_water_year), ", ",
+    #        "start_year = ", input$data_years_range[1], ", ",
+    #        "end_year = ", input$data_years_range[2], ", ",
+    #        "exclude_years = ", as.numeric(input$data_years_exclude), ", ",
     #        "months = ", list(as.numeric(input$freq_months)), ", ",
     #        "ignore_missing = ", input$freq_ign_missing_box, ")")
 
@@ -911,11 +911,11 @@ server <- function(input, output, session) {
                  paste0("fit_distr = '", input$freq_fit_distr, "'"),
                  paste0("fit_distr_method = '", input$freq_fit_distr_method, "'"),
                  paste0("fit_quantiles = ", "c(.975, .99, .98, .95, .90, .80, .50, .20, .10, .05, .01)"),
-                 paste0("water_year = ", ifelse(input$year_start != "1", "TRUE", "FALSE")),
-                 paste0("water_year_start = ", as.numeric(input$year_start)),
-                 paste0("start_year = ", input$years_range[1]),
-                 paste0("end_year = ", input$years_range[2]),
-                 paste0("exclude_years = ", ifelse(length(input$years_exclude) == 0, "NULL", list(as.numeric(input$years_exclude)))),
+                 paste0("water_year = ", ifelse(input$data_water_year != "1", "TRUE", "FALSE")),
+                 paste0("water_year_start = ", as.numeric(input$data_water_year)),
+                 paste0("start_year = ", input$data_years_range[1]),
+                 paste0("end_year = ", input$data_years_range[2]),
+                 paste0("exclude_years = ", ifelse(length(input$data_years_exclude) == 0, "NULL", list(as.numeric(input$data_years_exclude)))),
                  paste0("months = ", list(as.numeric(input$freq_months))),
                  paste0("ignore_missing = ", input$freq_ign_missing_box, ")"),
                  sep = ',<br>'))
@@ -937,10 +937,10 @@ server <- function(input, output, session) {
                                        fit_distr = input$freq_fit_distr,
                                        fit_distr_method = input$freq_fit_distr_method,
                                        fit_quantiles = c(.975, .99, .98, .95, .90, .80, .50, .20, .10, .05, .01),
-                                       water_year_start = as.numeric(input$year_start),
-                                       start_year = input$years_range[1],
-                                       end_year = input$years_range[2],
-                                       exclude_years = as.numeric(input$years_exclude),
+                                       water_year_start = as.numeric(input$data_water_year),
+                                       start_year = input$data_years_range[1],
+                                       end_year = input$data_years_range[2],
+                                       exclude_years = as.numeric(input$data_years_exclude),
                                        months = as.numeric(input$freq_months),
                                        ignore_missing = input$freq_ign_missing_box))
   })
