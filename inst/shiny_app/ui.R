@@ -32,69 +32,69 @@ ui_data_load <- fluidRow(
     width = 12, h2("Loading Data"),
     box(
       width = 4,
-      radioGroupButtons(inputId = "data_source",
-                        label = "Source", choices = c("HYDAT", "CSV File"),
-                        selected = "HYDAT"),
-      conditionalPanel("input.data_source == 'HYDAT'",
-                       uiOutput("ui_data_station_num")),
-      conditionalPanel("input.data_source != 'HYDAT'",
-                       fileInput('file1', label = NULL,
-                                 accept=c('text/csv',
-                                          'text/comma-separated-values,text/plain',
-                                          '.csv'))),
-      bsButton("data_select", "Select", style = "primary"),
+      fluidRow(
+        column(
+          width = 5,
+          radioGroupButtons(inputId = "data_source",
+                            label = "Source", choices = c("HYDAT", "CSV File"),
+                            selected = "HYDAT"),
+          bsButton("data_select", "Load Data", style = "primary")),
+        column(
+          width = 7,
+          conditionalPanel("input.data_source == 'HYDAT'",
+                           uiOutput("ui_data_station_num")),
+          conditionalPanel(
+            "input.data_source != 'HYDAT'",
+            fileInput("data_file", label = "Select File",
+                      accept=c("text/csv",
+                               "text/comma-separated-values,text/plain",
+                               ".csv"))))),
       hr(),
-      h4("Station Information"),
-      fluidRow(column(width = 6, uiOutput("station_name")),
-               column(width = 6, uiOutput("basinarea"))),
-      h4("Filter Dates"),
-      selectInput("year_start",
-                  label = "Select a year period:",
-                  choices = list("Jan-Dec" = 1, "Feb-Jan" = 2,
-                                 "Mar-Feb" = 3, "Apr-Mar" = 4,
-                                 "May-Apr" = 5, "Jun-May" = 6,
-                                 "Jul-Jun" = 7, "Aug-Jul" = 8,
-                                 "Sep-Aug" = 9, "Oct-Sep" = 10,
-                                 "Nov-Oct" = 11, "Dec-Nov" = 12),
-                  selected = 1),
-      #h4("Analysis Options"),
-      #  selectInput("yearType",label = "Select a year type:", c("Calendar Year (Jan-Dec)"=1,"Water Year (Oct-Sep)"=2)),
-      # conditionalPanel("input.data_select%2>0",
-      uiOutput("years_range"),
-      uiOutput("years_exclude"),
+
+      conditionalPanel("input.data_source != 'HYDAT'",
+                       h4("Station Information"),
+                       fluidRow(column(width = 6, uiOutput("ui_data_station_name")),
+                                column(width = 6, uiOutput("ui_data_basin_area")))),
+
+      uiOutput("ui_data_water_year"),
+      uiOutput("ui_data_years_range"),
+      uiOutput("ui_data_years_exclude")
     ),
 
     tabBox(
       width = 8, id = "data_tabs",
 
-      ### Map --------
+      ### HYDAT Map --------
       tabPanel(
-        width = 12,
-        "HYDAT Map",
-        leafletOutput("data_map", width = "100%", height = "500px"),
-        bsButton("data_map_station", "Use selected station", style = "primary"),
+        title = "HYDAT Map", width = 12,
+        bsButton("data_hydat_map_select", "Use selected station", style = "primary"),
+        leafletOutput("data_hydat_map", width = "100%", height = "500px")
+      ),
+
+      ### HYDAT Table --------
+      tabPanel(
+        title = "HYDAT Table", width = 12,
+        bsButton("data_hydat_table_select", "Use selected station", style = "primary"),
+        DTOutput("data_hydat_table")
       ),
 
       ### Plot --------
       tabPanel(
         title = "Plot", value = "data_plot",
-        plotlyOutput('data_timeseries'),
-        fluidRow(column(4, br(),uiOutput("dateRange")),
-                 column(5, br(),checkboxInput("logTimeSeries", label = "Plot Discharge axis on log scale", value= FALSE)),
-                 column(2, br(),downloadButton('downloadtimeseries_plot', 'Download Plot'))),
-        selectInput("data_datatype", label = "Discharge type:",
-                    choices = list("Discharge (cms)" = 1,
-                                   "Volumetric Discharge (m3)" = 2,
-                                   "Runoff Yield (mm)" = 3))
+        uiOutput("ui_data_plot_options"),
+        plotlyOutput('data_plot')
       ),
 
+      ### Table --------
       tabPanel(
         title = "Table", br(),
-        DT::dataTableOutput("timeseries_data")
+        DTOutput("data_table")
       ),
 
       tabPanel(
-        title = "R Code")#data
+        title = "R Code",
+        verbatimTextOutput("data_code")
+      )
     )
   )
 )

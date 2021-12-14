@@ -14,96 +14,76 @@
 
 server <- function(input, output, session) {
 
+  # Global reactives ----------------------------------
+  data_load <- reactiveVal(value = FALSE)
+  code <- reactiveValues(data = "")
+
   # UI elements ---------------------------------------
+
+  ## Settings ------------------
   output$ui_opts <- build_ui(id = "opts", input, define_options = TRUE,
                              include = c("discharge", "rolling", "months",
                                          "percentiles", "missing"))
 
+  ## Data ----------------------
   output$ui_data_station_num <- renderUI({
     textInput("data_station_num", label = "Station Number",
               value = "08HB048",
               placeholder = "type station number or select from map")
   })
 
-  observeEvent(input$data_map_station, {
-    req(input$data_map_marker_click)
-
+  # Update station from Map button
+  observeEvent(input$data_hydat_map_select, {
+    req(input$data_hydat_map_marker_click)
     updateTextInput(session, "data_station_num",
-                    value = input$data_map_marker_click$id)
+                    value = input$data_hydat_map_marker_click$id)
+    data_load(TRUE)
 
   })
 
-  output$ui_sum <- build_ui(id = "sum", input,
-                             include = c("discharge", "rolling", "months",
-                                         "percentiles", "missing"))
-
-  output$ui_sum_flow <- build_ui(id = "sum_flow", input,
-                                 include = c("discharge", "rolling", "months",
-                                             "missing"))
-
-
-  # Data - Loading ---------------
-
-
-  ## Map -------------------------
-  output$data_map <- renderLeaflet({
-    leaflet() %>%
-      addProviderTiles(providers$Stamen.TonerLite,
-                       options = providerTileOptions(noWrap = TRUE)
-      ) %>%
-      addCircleMarkers(data = stations, lng = ~LONGITUDE, lat = ~LATITUDE,
-                       layerId = ~ STATION_NUMBER,
-                       radius = 4, fillOpacity = 1, stroke = FALSE,
-                       label = ~ STATION_NUMBER,
-                       popup = ~glue("Station Name: {STATION_NAME}<br>",
-                                     "Station Number: {STATION_NUMBER}"))
+  # Update station from Table button
+  observeEvent(input$data_hydat_table_select, {
+    req(input$data_hydat_table_rows_selected)
+    updateTextInput(
+      session, "data_station_num",
+      value = stations$station_number[input$data_hydat_table_rows_selected])
+    data_load(TRUE)
   })
 
-
-  # Raw daily discharge data
-  data_raw <- eventReactive(input$data_select, {
-    req(input$year_start)
-
-    if (input$data_source == "HYDAT") {
-      d <- fill_missing_dates(station_number = input$data_station_num) %>%
-        add_date_variables(water_year_start = as.numeric(input$year_start))
-    } else {
-      inFile <- input$file1
-      if (is.null(inFile))
-        return(NULL)
-
-      csv_file <- as.data.frame(read.csv(inFile$datapath, header = T, sep = ","))
-
-      d <- fill_missing_dates(data = csv_file) %>%
-        add_date_variables(water_year_start = as.numeric(input$year_start))
-    }
-
-    updateTabsetPanel(session, inputId = "data_tabs", selected = "data_plot")
-    d
+  # Custom data - Station name UI
+  output$ui_data_station_name <- renderUI({
+    textInput('data_station_name',
+              label = "Station/stream name:",
+              placeholder = "ex. Mission Creek")
   })
 
-# Station name UI
-output$station_name <- renderUI({
-  textInput('station_name', label = "Station/stream name:", placeholder = "ex. Mission Creek",
-            value = ifelse(input$data_source == "HYDAT",
-                           paste0(suppressMessages(tidyhydat::hy_stations(station_number = input$station_num)) %>% pull(STATION_NAME),
-                                  " (",input$station_num,")"),
-                           ""))
-})
-
-  # Basin area UI
-  output$basinarea <- renderUI({
-    numericInput("basinarea",
-                 label = "Basin area (sq. km):",
-                 value = ifelse(input$data_source == "HYDAT",
-                                round(suppressMessages(tidyhydat::hy_stations(station_number = input$station_num)) %>% pull(DRAINAGE_AREA_GROSS),3),
-                                NA),
+  # Custom data - Basin area UI
+  output$ui_data_basin_area <- renderUI({
+    numericInput("data_basin_area",
+                 label = "Basin area (sq. km):", value = 0,
                  min = 0, step = 0.1)
   })
 
   # Year selection/slider UI
-  output$years_range <- renderUI({
-    sliderInput("years_range", label = "Select start and end years to summarize:",
+  output$ui_data_water_year <- renderUI({
+    req(data_raw())
+    tagList(
+      h4("Filter Dates"),
+      selectInput("data_water_year",
+                  label = "Water year",
+                  choices = list("Jan-Dec" = 1, "Feb-Jan" = 2,
+                                 "Mar-Feb" = 3, "Apr-Mar" = 4,
+                                 "May-Apr" = 5, "Jun-May" = 6,
+                                 "Jul-Jun" = 7, "Aug-Jul" = 8,
+                                 "Sep-Aug" = 9, "Oct-Sep" = 10,
+                                 "Nov-Oct" = 11, "Dec-Nov" = 12),
+                  selected = 1))
+  })
+
+  output$ui_data_years_range <- renderUI({
+    req(data_raw())
+    sliderInput("data_years_range",
+                label = "Start and end years",
                 min = min(data_raw()$WaterYear),
                 max = max(data_raw()$WaterYear),
                 value = c(min(data_raw()$WaterYear), max(data_raw()$WaterYear)),
@@ -111,44 +91,119 @@ output$station_name <- renderUI({
   })
 
   # Exclude years selection
-  output$years_exclude <- renderUI({
-    selectizeInput("years_exclude",
-                   label = "Years to exclude:",
-                   choices = seq(from = input$years_range[1], to = input$years_range[2], by = 1),
+  output$ui_data_years_exclude <- renderUI({
+    req(data_raw(), input$data_years_range)
+    selectizeInput("data_years_exclude",
+                   label = "Years to exclude",
+                   choices = seq(from = input$data_years_range[1],
+                                 to = input$data_years_range[2], by = 1),
                    selected = NULL,
                    multiple = TRUE)
   })
 
-  # Daily timeseries outputs
-  output$dateRange <- renderUI({
-    dateRangeInput("dateRange", "Select start and end date of plot:", format = "yyyy-mm-dd", startview = "month",
-                   start = min(data_raw()$Date), end = max(data_raw()$Date))#"1950-01-01",end = "2000-12-31")
-  })
-
-  output$data_timeseries <- renderPlotly({
+  output$ui_data_plot_options <- renderUI({
     req(data_raw())
-    ggplotly(plot_timeseries(data = data_raw(), input))
+    select_plot_options(data = data_raw(), id = "data_plot", input)
   })
 
-  output$downloadtimeseries_plot <- downloadHandler(
-    filename = function() {paste0(input$station_name," - Full Time Series.png")},
+  ## Summary -------------------
+  output$ui_sum <- build_ui(id = "sum", input,
+                            include = c("discharge", "rolling", "months",
+                                        "percentiles", "missing"))
+
+  ## Summary - Flow ------------
+  output$ui_sum_flow <- build_ui(id = "sum_flow", input,
+                                 include = c("discharge", "rolling", "months",
+                                             "missing"))
+
+
+  # Data - Loading ---------------
+
+  ## HYDAT Map -------------------------
+  output$data_hydat_map <- renderLeaflet({
+    leaflet() %>%
+      addProviderTiles(providers$Stamen.TonerLite,
+                       options = providerTileOptions(noWrap = TRUE)
+      ) %>%
+      addPolygons(
+        data = bc_hydrozones,
+        stroke = 0.5, opacity = 1, weight = 1,
+        fillOpacity = 0.15, fillColor = "black", color = "black",
+        label = ~str_to_title(HYDROLOGICZONE_NAME)) %>%
+      addCircleMarkers(
+        data = stations, lng = ~longitude, lat = ~latitude,
+        layerId = ~ station_number,
+        radius = 3, fillOpacity = 1, stroke = FALSE, color = "#31688E",
+        label = ~ station_number,
+        popup = ~glue("<strong>Station Name:</strong> ",
+                      "{stringr::str_to_title(station_name)}<br>",
+                      "<strong>Station Number:</strong> {station_number}"))
+  })
+
+  ## HYDAT Table ------------------------
+  output$data_hydat_table <- renderDT({
+    stations %>%
+      select("station_number", "station_name", "province",
+             "hyd_status", "real_time", "regulated", "parameters") %>%
+      datatable(selection = "single", rownames = FALSE, filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE,
+                               scrollY = 450, deferRender = TRUE,
+                               scroller = TRUE,
+                               dom = 'Bfrtip'))
+  })
+
+  ## Load data ------------------
+  data_raw <- eventReactive(list(input$data_select, data_load()), {
+
+    req(input$data_station_num)
+    wy <- 1
+    if(!is.null(input$data_water_year)) wy <- as.numeric(input$data_water_year)
+
+
+    if (input$data_source == "HYDAT") {
+      d <- rlang::expr({
+        fill_missing_dates(station_number = !!input$data_station_num) %>%
+          add_date_variables(water_year_start = !!wy)
+      })
+    } else {
+      inFile <- input$data_file
+      if (is.null(inFile)) return(NULL)
+
+      d <- rlang::expr({
+        read.csv(!!inFile$datapath) %>%
+          fill_missing_dates(data = .) %>%
+          add_date_variables(water_year_start = !!wy)
+      })
+    }
+
+    updateTabsetPanel(session, inputId = "data_tabs", selected = "data_plot")
+    isolate(data_load(FALSE))
+
+    code$data <- rlang::expr_text(d) # Save for code tab
+
+    eval(d) # Evaluate now
+  })
+
+  output$data_plot <- renderPlotly({
+    req(data_raw())
+    ggplotly(plot_timeseries(data = data_raw(), id = "data_plot", input))
+  })
+
+  output$data_plot_download <- downloadHandler(
+    filename = function() {paste0(input$data_station_name," - Full Time Series.png")},
     content = function(file) {
       png(file, width = 900, height=500)
-      print(timeseries_plot())
+      print(timeseries_plot()) # Use same object as above
       dev.off()
     })
 
-  output$timeseries_data <- DT::renderDataTable({
-    # data_raw() %>%
-    #   select(-dplyr::contains("STATION_NUMBER"), -dplyr::contains("Parameter"), -Month, Month = MonthName) %>%
-    #   rename("Day of Year" = DayofYear, "Water Year" = WaterYear, "Day of Water Year" = WaterDayofYear) %>%
-    #   mutate(Value = round(Value, 4))
-    data <- data_raw()
-    data <- select(data,-dplyr::contains("STATION_NUMBER"), -dplyr::contains("Parameter"), -Month, Month = MonthName)
-    data <- rename(data,"Day of Year" = DayofYear, "Water Year" = WaterYear, "Day of Water Year" = WaterDayofYear)
-    data <- mutate(data,Value = round(Value, 4))
-    data}
-    ,
+  output$data_table <- renderDT({
+    data_raw() %>%
+      rename("StationNumber" = "STATION_NUMBER") %>%
+      select(-"Month") %>%
+      mutate(Value = round(Value, 4))
+    },
     rownames = FALSE,
     filter = 'top',
     extensions = c("Scroller"),
@@ -156,6 +211,12 @@ output$station_name <- renderUI({
                    scrollY = 450, deferRender = TRUE, scroller = TRUE,
                    dom = 'Bfrtip')
   )
+
+  output$data_code <- renderText({
+    req(code$data != "")
+    browser()
+    code_format(code$data)
+  })
 
 
   ##### Data Screening #####
@@ -933,20 +994,6 @@ output$station_name <- renderUI({
   output$freq_fit <- renderPrint({
     freq_data()$Freq_Fitting
   })
-
-
-  output$hydat_stations_table <- renderDataTable(
-    stations,
-    rownames = FALSE,
-    selection = list(mode = "single"),
-    filter = 'top',
-    extensions = c("Scroller","ColReorder","Buttons"),
-    options = list(scrollX = TRUE,
-                   scrollY = 450, deferRender = TRUE, scroller = TRUE,
-                   dom = 'Bfrtip',
-                   colReorder = TRUE,
-                   buttons= list(list(extend = 'colvis', columns = c(1:10))))
-  )
 
 
   ##### OLDER CODE #####

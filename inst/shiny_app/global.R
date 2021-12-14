@@ -15,20 +15,23 @@
 library(shiny)
 library(shinydashboard)
 library(shinyBS)
+library(shinyWidgets)
 
-library(ggplot2)
+library(glue)
 library(dplyr)
 library(tidyr)
-library(shinythemes)
-library(shinyWidgets)
-library(fasstr)
-library(tidyhydat)
+library(stringr)
+
+library(leaflet)
 library(DT)
 library(plotly)
 
-library(glue)
+library(fasstr)
+library(tidyhydat)
+library(bcmaps)
 
 
+# tidyhydat Stations data -----------------------
 stations_list <- tidyhydat::hy_stn_data_range(prov_terr_state_loc = "BC") %>%
   filter(DATA_TYPE == "Q") %>%
   pull(STATION_NUMBER)
@@ -64,10 +67,21 @@ station_parameters <- hy_stn_data_range() %>%
 
 stations <- left_join(stations,
                       select(station_parameters, STATION_NUMBER, PARAMETERS),
-                      by = "STATION_NUMBER")
+                      by = "STATION_NUMBER") %>%
+  rename_all(str_to_lower) %>%
+  rename("province" = "prov_terr_state_loc") %>%
+  mutate(across(c(-"station_number", -"province", -"latitude", -"longitude",
+                  "drainage_area_gross"), str_to_sentence))
+
+# bcmaps data -------------------
+bc_hydrozones <- hydrozones(ask = FALSE) %>%
+  sf::st_transform(crs = 4326)
 
 
-# Functions for inputs
+
+# Functions ---------------------
+
+## Functions for inputs ------------
 select_months <- function(id, input, set = TRUE) {
   renderUI({
     if(set) {
@@ -100,24 +114,35 @@ select_months <- function(id, input, set = TRUE) {
 
 select_discharge <- function(id, input, set = TRUE) {
   renderUI({
+    if(set) selected <- input$opts_discharge else selected <- NULL
     radioButtons(paste0(id, "_discharge"),
                  label = "Discharge type",
                  choices = list("Discharge (cms)" = 1,
                                 "Volumetric Discharge (m3)" = 2,
-                                "Runoff Yield (mm)" = 3))
+                                "Runoff Yield (mm)" = 3),
+                 selected = selected)
   })
 }
 
 select_rolling <- function(id, input, set = TRUE) {
   renderUI({
+    if(set) {
+      value <- input$opts_roll_days
+      selected <- input$opts_roll_align
+    } else {
+      value <- 1
+      selected <- NULL
+    }
+
     fluidRow(
       column(6,
              numericInput(paste0(id, "_roll_days"),
                           label = "Rolling avg. days",
-                          value = 1, min = 1, max = 180, step = 1)),
+                          value = value, min = 1, max = 180, step = 1)),
       column(6,
              selectInput(paste0(id, "_roll_align"),
                          label = "Rolling align",
+                         selected = selected,
                          choices = list("Right" = "right",
                                         "Left" = "left",
                                         "Center" = "center")))
@@ -127,19 +152,21 @@ select_rolling <- function(id, input, set = TRUE) {
 
 select_percentiles <- function(id, input, set = TRUE) {
   renderUI({
+    if(set) selected <- input$opts_percentiles else selected <- c(10,90)
     selectInput(paste0(id, "_percentiles"),
                 label = "Percentiles to calculate",
                 choices = c(1:99),
-                selected = c(10,90),
+                selected = selected,
                 multiple = TRUE)
   })
 }
 
 select_missing <- function(id, input, set = TRUE) {
   renderUI({
+    if(set) value <- input$opts_missing else value <- FALSE
     checkboxInput(paste0(id, "_missing"),
                   label = "Ignore missing values",
-                  value = FALSE)
+                  value = value)
   })
 }
 
@@ -153,6 +180,24 @@ select_extra <- function(id) {
     )
   })
 }
+
+select_plot_options <- function(data, id, input) {
+  div(align = "right",
+      dropdownButton(
+        tags$h3("Plot options"),
+        materialSwitch(glue("{id}_log"), label = "Use log scale", value = FALSE,
+                       status = "success"),
+        dateRangeInput(glue("{id}_date_range"), "Start/End dates",
+                       format = "yyyy-mm-dd", startview = "month",
+                       start = min(data$Date), end = max(data$Date)),
+        select_discharge(id, input),
+        status = "primary", icon = icon("gear", verify_fa = FALSE),
+        size = "sm", width = "300px", right = TRUE,
+        tooltip = tooltipOptions(title = "Plot options", placement = "left")
+      )
+  )
+}
+
 
 ui_hidden <- c("rolling", "months", "percentiles", "missing")
 
@@ -188,19 +233,41 @@ build_ui <- function(id, input, define_options = FALSE, include) {
 }
 
 
-# Functions for plots
+## Functions for plots ------
 
-plot_timeseries <- function(data, input){
-  plot_flow_data(data = data,
-                 log_discharge = input$logTimeSeries,
-                 start_date = input$dateRange[1],
-                 end_date = input$dateRange[2],
-                 start_year = as.numeric(input$years_range[1]),
-                 end_year = as.numeric(input$years_range[2]),
-                 exclude_years = as.numeric(input$years_exclude),
-                 water_year_start = as.numeric(input$year_start))[[1]] +
-    scale_color_manual(values = "dodgerblue4")
+plot_timeseries <- function(data, id, input){
+  req(!is.null(input[[glue("{id}_log")]]),
+      input[[glue("{id}_date_range")]],
+      input$data_years_range,
+      input$data_water_year)
+
+  suppressWarnings({
+    plot_flow_data(data = data,
+                   # Global data options
+                   water_year_start = as.numeric(input$data_water_year),
+                   start_year = input$data_years_range[1],
+                   end_year = input$data_years_range[2],
+                   exclude_years = as.numeric(input$data_years_exclude),
+                   # Plot specific options
+                   log_discharge = input[[glue("{id}_log")]],
+                   start_date = input[[glue("{id}_date_range")]][1],
+                   end_date = input[[glue("{id}_date_range")]][2])[[1]] +
+      scale_color_manual(values = "dodgerblue4")
+  })
 }
 
 
+## Functions for inputs ---------
+input_defaults <- function(id, default) {
+  reactive({
+    if(is.null(input[[id]])) default else input[[id]]
+  })
+}
 
+code_format <- function(expr) {
+  expr %>%
+    format() %>%
+    str_remove_all("^\\{|\\}$") %>%
+    str_squish() %>%
+    str_replace_all("%>%", "%>%\n ")
+}
