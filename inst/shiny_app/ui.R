@@ -19,10 +19,17 @@ ui_home <- fluidRow(
 
 # Settings ---------------------
 ui_settings <- fluidRow(
-  column(width = 12,
-         build_ui(id = "opts", define_options = TRUE,
-                  include = c("discharge", "missing", "rolling", "months",
-                              "percentiles"))
+  column(
+    width = 12, h2("Settings"),
+    box(title = "Global Settings", width = 6,
+        p("Set once here, apply to whole app"),
+        build_ui(id = "opts", define_options = TRUE,
+                 include = c("rolling", "months"))),
+    box(title = "Default Settings", width = 6,
+        p("Set defaults here, but can change throughout the app as needed"),
+        build_ui(id = "opts", define_options = TRUE,
+                 include = c("discharge", "missing", "percentiles"))
+    )
   )
 )
 
@@ -469,6 +476,26 @@ ui_cum_lt <- fluidRow(
   )
 )
 
+## Annual -------------------------
+ui_cum_annual <-  fluidRow(
+  column(
+    width = 12, h2("Annual Cumulative Statistics"),
+    box(width = 3),
+    tabBox(
+      width = 9, height = min_height,
+      tabPanel(
+        title = "Plot"
+      ),
+      tabPanel(
+        title = "Table"
+      ),
+      tabPanel(
+        title = "Info"
+      )
+    )
+  )
+)
+
 ## Monthly -------------------------
 ui_cum_monthly <-  fluidRow(
   column(
@@ -707,10 +734,8 @@ dashboardPage(skin = "green",
       tabItem("summary", ui_summary),
       tabItem("sum_flow", ui_sum_flow),
       tabItem("sum_single", ui_sum_single),
-      ##tabItem("sum_annual", ui_sum_annual),
-      #tabItem("sum_monthly", ui_sum_monthly),
-      #tabItem("sum_daily", ui_sum_daily),
       tabItem("cum_lt", ui_cum_lt),
+      tabItem("cum_annual", ui_cum_annual),
       tabItem("cum_monthly", ui_cum_monthly),
       tabItem("cum_daily", ui_cum_daily),
       tabItem("annual_flow_low", ui_annual_flow_low),
