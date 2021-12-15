@@ -77,6 +77,8 @@ stations <- left_join(stations,
 bc_hydrozones <- hydrozones(ask = FALSE) %>%
   sf::st_transform(crs = 4326)
 
+# Settings --------------------------
+min_height <- "250px" # Minimum placeholder height for boxes (will expand to content)
 
 
 # Functions ---------------------

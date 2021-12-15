@@ -38,7 +38,7 @@ ui_data_load <- fluidRow(
           radioGroupButtons(inputId = "data_source",
                             label = "Source", choices = c("HYDAT", "CSV File"),
                             selected = "HYDAT"),
-          bsButton("data_select", "Load Data", style = "primary")),
+          bsButton("data_load", "Load Data", style = "primary")),
         column(
           width = 7,
           conditionalPanel("input.data_source == 'HYDAT'",
@@ -62,7 +62,7 @@ ui_data_load <- fluidRow(
     ),
 
     tabBox(
-      width = 8, id = "data_tabs",
+      id = "data_tabs", width = 8, height = min_height,
 
       ### HYDAT Map --------
       tabPanel(
@@ -87,10 +87,11 @@ ui_data_load <- fluidRow(
 
       ### Table --------
       tabPanel(
-        title = "Table", br(),
+        title = "Table",
         DTOutput("data_table")
       ),
 
+      ### R Code -----------------
       tabPanel(
         title = "R Code",
         verbatimTextOutput("data_code")
@@ -150,7 +151,7 @@ ui_summary <- fluidRow(
       uiOutput("ui_sum"),
     ),
     tabBox(
-      width = 9,
+      width = 9, height = min_height,
       tabPanel(
         title = "Plot",
         plotOutput('lt_plot'),
@@ -252,7 +253,7 @@ ui_sum_single <- fluidRow(
       h4("long-term percentile rank")
     ),
     tabBox(
-      width = 9,
+      width = 9, height = min_height,
       tabPanel("Plot"
       ),
       tabPanel("Table"
@@ -273,7 +274,7 @@ ui_annual_flow_low <- fluidRow(
     width = 12, h2("Low flows"),
     box(width = 3),
     tabBox(
-      width = 9,
+      width = 9, height = min_height,
       tabPanel(
         title = "Plot"
       ),
@@ -293,7 +294,7 @@ ui_annual_flow_timing <- fluidRow(
     width = 12, h2("Flow timing"),
     box(width = 3),
     tabBox(
-      width = 9,
+      width = 9, height = min_height,
       tabPanel(
         title = "Plot"
       ),
@@ -313,7 +314,7 @@ ui_annual_flow_peak <- fluidRow(
     width = 12, h2("Flow peak"),
     box(width = 3),
     tabBox(
-      width = 9,
+      width = 9, height = min_height,
       tabPanel(
         title = "Plot"
       ),
@@ -333,7 +334,7 @@ ui_annual_outside_normal <- fluidRow(
     width = 12, h2("Days outside normal"),
     box(width = 3),
     tabBox(
-      width = 9,
+      width = 9, height = min_height,
       tabPanel(
         title = "Plot"
       ),
@@ -354,6 +355,7 @@ ui_sum_daily <- fluidRow(
     width = 12,
     h2("Daily"),
     tabBox(
+      width = 12, height = min_height,
 
       ### Summary Stats -------------------------
       tabPanel(
@@ -389,7 +391,7 @@ ui_sum_daily <- fluidRow(
                uiOutput("yearSelectDaily")
         ),
         column(width = 9,
-               tabBox(
+               tabBox(height = min_height,
                  tabPanel(
                    title = "Plot",br(),
                    plotOutput('dailyPlot'),br(),
@@ -420,7 +422,7 @@ ui_cum_lt <- fluidRow(
     box(width = 3,
         h4("group by day or group by month; or have in other tabs")
     ),
-    tabBox(width = 9,
+    tabBox(width = 9, height = min_height,
       tabPanel(
         title = "Plot"
       ),
@@ -440,7 +442,7 @@ ui_cum_monthly <-  fluidRow(
     width = 12, h2("Monthly Cumulative Statistics"),
     box(width = 3),
     tabBox(
-      width = 9,
+      width = 9, height = min_height,
       tabPanel(
         title = "Plot"
       ),
@@ -460,7 +462,7 @@ ui_cum_daily <- fluidRow(
     width = 12, h2("Daily Cumulative Statistics"),
     box(width = 3),
     tabBox(
-      width = 9,
+      width = 9, height = min_height,
       tabPanel(
         title = "Plot"
       ),
@@ -528,7 +530,7 @@ ui_comp_annual <- fluidRow(
 
     ),
     tabBox(
-      width = 9,
+      width = 9, height = min_height,
       tabPanel(
         title = "Analysis",
 
@@ -584,7 +586,7 @@ ui_comp_flow <- fluidRow(
         checkboxInput("freq_ign_missing_box", "Calculate statistics despite missing values", value = FALSE)
     ),
     tabBox(
-      width = 9,
+      width = 9, height = min_height,
       tabPanel(
         title = "Plot",
         # selectInput("freq_usemax", label = "Peak flow data:", choices = list("Minimum" = FALSE,"Maximum" = TRUE), selected = "Minimum"),

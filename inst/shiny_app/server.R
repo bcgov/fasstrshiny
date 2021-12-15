@@ -154,9 +154,9 @@ server <- function(input, output, session) {
   })
 
   ## Load data ------------------
-  data_raw <- eventReactive(list(input$data_select, data_load()), {
-
+  data_raw <- eventReactive(list(input$data_load, data_load()), {
     req(input$data_station_num)
+
     wy <- 1
     if(!is.null(input$data_water_year)) wy <- as.numeric(input$data_water_year)
 
