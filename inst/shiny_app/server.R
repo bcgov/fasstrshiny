@@ -15,8 +15,13 @@
 server <- function(input, output, session) {
 
   # Global reactives ----------------------------------
-  data_load <- reactiveVal(value = FALSE)
-  code <- reactiveValues(data = "")
+  data_load <- reactiveVal(value = FALSE) # Load selected data?
+  code <- reactiveValues(data = "",       # Holds code for sharing
+                         screen = "")
+
+  meta <- reactiveValues(station_name = "",
+                         basin_area = "")
+
 
   # UI elements ---------------------------------------
 
@@ -163,214 +168,149 @@ server <- function(input, output, session) {
 
     if (input$data_source == "HYDAT") {
       d <- rlang::expr({
-        fill_missing_dates(station_number = !!input$data_station_num) %>%
+        flow_data <- fill_missing_dates(station_number = !!input$data_station_num) %>%
           add_date_variables(water_year_start = !!wy)
       })
+      m <- filter(stations, .data$station_number == input$data_station_num)
+      meta$station_name <- m$station_name
+      meta$basin_area <- m$drainage_area_gross
     } else {
       inFile <- input$data_file
       if (is.null(inFile)) return(NULL)
 
       d <- rlang::expr({
-        read.csv(!!inFile$datapath) %>%
+        flow_data <- read.csv(!!inFile$datapath) %>%
           fill_missing_dates(data = .) %>%
           add_date_variables(water_year_start = !!wy)
       })
+      meta$station_name <- input$data_station_name
+      meta$basin_area <- input$data_basin_area
     }
 
     updateTabsetPanel(session, inputId = "data_tabs", selected = "data_plot")
     isolate(data_load(FALSE))
 
-    code$data <- rlang::expr_text(d) # Save for code tab
-
-    eval(d) # Evaluate now
+    code$data <- rlang::expr_text(d) # Save unevaluated code for code tab
+    eval(d) # Evaluate and pass on data now
   })
 
+  ## Plot ----------------
   output$data_plot <- renderPlotly({
-    req(data_raw())
+    validate_data(code)
     ggplotly(plot_timeseries(data = data_raw(), id = "data_plot", input))
   })
 
-  output$data_plot_download <- downloadHandler(
-    filename = function() {paste0(input$data_station_name," - Full Time Series.png")},
-    content = function(file) {
-      png(file, width = 900, height=500)
-      print(timeseries_plot()) # Use same object as above
-      dev.off()
-    })
-
+  ## Table ----------------
   output$data_table <- renderDT({
+    validate_data(code)
+
     data_raw() %>%
       rename("StationNumber" = "STATION_NUMBER") %>%
       select(-"Month") %>%
-      mutate(Value = round(Value, 4))
-    },
-    rownames = FALSE,
-    filter = 'top',
-    extensions = c("Scroller"),
-    options = list(scrollX = TRUE,
-                   scrollY = 450, deferRender = TRUE, scroller = TRUE,
-                   dom = 'Bfrtip')
-  )
+      mutate(Value = round(Value, 4)) %>%
+      datatable(rownames = FALSE,
+                filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                               deferRender = TRUE, dom = 'Bfrtip'))
+  })
 
+  ## R Code ----------------
   output$data_code <- renderText({
-    req(code$data != "")
-    browser()
-    code_format(code$data)
+    validate_data(code)
+    code_format(code, type = "data")
   })
 
 
   # Data - Screening ---------------
+  ## Data --------------
+  screen_raw <- reactive({
+    validate_data(code)
 
-  ##### Summary plot
-  summaryData <- reactive({
-    screen_flow_data(data = data_raw(),
-                     start_year = input$data_years_range[1],
-                     end_year = input$data_years_range[2],
-                     water_year_start = as.numeric(input$data_water_year))
-  })
-
-  summaryPlot <- function(){
-
-    plotdata <- summaryData() %>%
-      select(Year, Minimum, Maximum, Mean, StandardDeviation) #%>%  gather(Statistic,Value,2:5)
-
-    ggplot(data = plotdata, aes_string(x = "Year", y = input$summaryY)) +
-      ggtitle(paste0("Annual Daily ", input$summaryY, " - ", input$station_name)) +
-      theme(plot.title = element_text(hjust = 0.5)) +
-      geom_line(colour = "dodgerblue4") +
-      geom_point(colour = "firebrick3", size = 2) +
-      #facet_wrap(~Statistic, ncol=2, scales="free_y")+
-      xlab("Year") +
-      theme_bw() +
-      { if(as.numeric(input$data_water_year) != 1) xlab("Water Year")} +
-      ylab("Discharge (cms)") +
-      theme(axis.title = element_text(size = 15),
-            plot.title = element_text(size = 15, hjust = 0.5),
-            axis.text = element_text(size = 13))
-  }
-  output$summaryPlot <- renderPlotly({
-    ggplotly(summaryPlot())
-  })
-  output$downloadSummaryPlot <- downloadHandler(
-    filename = function() {paste0(input$station_name," - Full Time Series Annual",input$summaryY,".png")},
-    content = function(file) {
-      png(file, width = 900, height=500)
-      print(summaryPlot())
-      dev.off()
+    flow_data <- data_raw()
+    d <- rlang::expr({
+      screen_data <- screen_flow_data(
+        data = flow_data,
+        start_year = !!input$data_years_range[1],
+        end_year = !!input$data_years_range[2],
+        water_year_start = !!as.numeric(input$data_water_year))
     })
 
-  output$summary_table <- DT::renderDataTable(
-    summaryData() %>%
+    code$screen1 <- d
+    eval(d)
+  })
+
+  ## Summary plot ------------------
+  output$screen_plot1 <- renderPlotly({
+    validate_data(code)
+
+    xlab <- if_else(input$data_water_year != 1, "Water Year", "Year")
+    title <- paste0("Annual Daily ", input$screen_summary, " - ", meta$station_name)
+    screen_data <- screen_raw()
+
+    plot <- rlang::expr({
+      ggplot(data = screen_data, aes_string(x = "Year", y = !!input$screen_summary)) +
+        theme_bw() +
+        theme(axis.title = element_text(size = 15),
+              plot.title = element_text(size = 15, hjust = 0.5),
+              axis.text = element_text(size = 13)) +
+        geom_line(colour = "dodgerblue4") +
+        geom_point(colour = "firebrick3", size = 2) +
+        labs(x = !!xlab, y = "Discharge (cms)", title = !!title)
+    })
+
+    code$screen2 <- plot
+
+    ggplotly(eval(plot))
+  })
+
+
+  ## Missing Data Table ---------------------------
+  output$screen_plot2 <- renderPlotly({
+    validate_data(code)
+
+    flow_data <- data_raw()
+    plot <- rlang::expr({
+      plot_missing_dates(data = flow_data,
+                         start_year = !!input$data_years_range[1],
+                         end_year = !!input$data_years_range[2],
+                         water_year_start = !!as.numeric(input$data_water_year),
+                         months = !!as.numeric(input$screen_months))
+    })
+
+    code$screen3 <- plot
+    ggplotly(eval(plot)[[1]])
+  })
+
+  ## Summary table ------------------
+  output$screen_table <- DT::renderDT({
+    validate_data(code)
+    screen_raw() %>%
       select(-dplyr::contains("STATION_NUMBER")) %>%
-      rename("Total Days" = n_days, "Total Flow Days" = n_Q, "Total Missing Days" = n_missing_Q,
-             "Jan Missing Days" = Jan_missing_Q, "Feb Missing Days" = Feb_missing_Q,
-             "Mar Missing Days" = Mar_missing_Q, "Apr Missing Days" = Apr_missing_Q,
-             "May Missing Days" = May_missing_Q, "Jun Missing Days" = Jun_missing_Q,
-             "Jul Missing Days" = Jul_missing_Q, "Aug Missing Days" = Aug_missing_Q,
-             "Sep Missing Days" = Sep_missing_Q, "Oct Missing Days" = Oct_missing_Q,
-             "Nov Missing Days" = Nov_missing_Q, "Dec Missing Days" = Dec_missing_Q,
-             "Standard Deviation" = StandardDeviation)  %>%
-      mutate_if(is.numeric, funs(round(., 4))),
-    rownames = FALSE,
-    filter = 'top',
-    extensions = c("Scroller"),
-    options = list(scrollX = TRUE,
-                   scrollY = 450, deferRender = TRUE, scroller = TRUE,
-                   dom = 'Bfrtip')
-  )
-
-  output$download_summary_table <- downloadHandler(
-    filename = function() {paste0(input$station_name," - data screening.csv")},
-    content = function(file) {
-      write.csv(summaryData(), file, row.names = FALSE)
-    })
-
-
-  ##### Missing Data Table
-
-  missing_plot <- function(){
-
-    plot_missing_dates(data = data_raw(),
-                       start_year = input$data_years_range[1],
-                       end_year = input$data_years_range[2],
-                       water_year_start = as.numeric(input$data_water_year),
-                       months = as.numeric(input$availability_months))[[1]]
-    #
-    #
-    # plotdata <- summaryData() %>%
-    #   select(-dplyr::contains("STATION_NUMBER"), -Minimum, - Mean, -Median, -Maximum, -StandardDeviation,
-    #          -n_days, -n_Q, -n_missing_Q) %>%
-    #   gather(Month, Value, 2:13) %>%
-    #   mutate(Month = substr(Month, 1, 3))
-    #
-    # if (input$data_water_year == 1) {
-    #   plotdata$Month <- factor(plotdata$Month, levels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
-    #                                                       "Aug", "Sep", "Oct", "Nov", "Dec"))
-    # } else if (input$data_water_year == 2) {
-    #   plotdata$Month <- factor(plotdata$Month, levels = c("Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
-    #                                                       "Sep", "Oct", "Nov", "Dec", "Jan"))
-    # } else if (input$data_water_year == 3) {
-    #   plotdata$Month <- factor(plotdata$Month, levels = c("Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
-    #                                                       "Oct", "Nov", "Dec", "Jan", "Feb"))
-    # } else if (input$data_water_year == 4) {
-    #   plotdata$Month <- factor(plotdata$Month, levels = c("Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
-    #                                                       "Nov", "Dec", "Jan", "Feb", "Mar"))
-    # } else if (input$data_water_year == 5) {
-    #   plotdata$Month <- factor(plotdata$Month, levels = c("May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov",
-    #                                                       "Dec", "Jan", "Feb", "Mar", "Apr"))
-    # } else if (input$data_water_year == 6) {
-    #   plotdata$Month <- factor(plotdata$Month, levels = c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    #                                                       "Jan", "Feb", "Mar", "Apr", "May"))
-    # } else if (input$data_water_year == 7) {
-    #   plotdata$Month <- factor(plotdata$Month, levels = c("Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan",
-    #                                                       "Feb", "Mar", "Apr", "May", "Jun"))
-    # } else if (input$data_water_year == 8) {
-    #   plotdata$Month <- factor(plotdata$Month, levels = c("Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb",
-    #                                                       "Mar", "Apr", "May","Jun", "Jul"))
-    # } else if (input$data_water_year == 9) {
-    #   plotdata$Month <- factor(plotdata$Month, levels = c("Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar",
-    #                                                       "Apr", "May", "Jun", "Jul", "Aug"))
-    # } else if (input$data_water_year == 10) {
-    #   plotdata$Month <- factor(plotdata$Month, levels = c("Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr",
-    #                                                       "May", "Jun", "Jul", "Aug", "Sep"))
-    # } else if (input$data_water_year == 11) {
-    #   plotdata$Month <- factor(plotdata$Month, levels = c("Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May",
-    #                                                       "Jun", "Jul", "Aug", "Sep", "Oct"))
-    # } else if (input$data_water_year == 12) {
-    #   plotdata$Month <- factor(plotdata$Month, levels = c("Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    #                                                       "Jul", "Aug", "Sep", "Oct", "Nov"))
-    # }
-    #
-    #
-    # ggplot(data = plotdata, aes_string(x = "Year", y = "Value")) +
-    #   # ggtitle(paste0("Annual Daily ", input$summaryY, " - ", input$station_name)) +
-    #   theme(plot.title = element_text(hjust = 0.5)) +
-    #   geom_line(colour = "dodgerblue4") +
-    #   geom_point(colour = "firebrick3", size = 2) +
-    #   facet_wrap(~Month, ncol = 3, scales = "fixed") +
-    #   #facet_wrap(~Statistic, ncol=2, scales="free_y")+
-    #   xlab("Year") +
-    #   theme_bw() +
-    #   { if(as.numeric(input$data_water_year) != 1) xlab("Water Year")} +
-    #   ylab("Number of Days") +
-    #   theme(axis.title = element_text(size = 15),
-    #         plot.title = element_text(size = 15, hjust = 0.5),
-    #         axis.text = element_text(size = 13))
-  }
-  output$missing_plot <- renderPlotly({
-    ggplotly(missing_plot())
+      rename("Total days" = "n_days",
+             "Total flow days" = "n_Q",
+             "Total missing days" = "n_missing_Q",
+             "Standard deviation" = "StandardDeviation") %>%
+      rename_with(.cols = ends_with("_missing_Q"),
+                  ~ str_replace(., "_missing_Q", " missing days")) %>%
+      mutate_if(is.numeric, ~round(., 4)) %>%
+      datatable(rownames = FALSE,
+                filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE,
+                               scrollY = 450, deferRender = TRUE, scroller = TRUE,
+                               dom = 'Bfrtip'))
   })
 
-  output$download_missing_plot <- downloadHandler(
-    filename = function() {paste0(input$station_name," - missing data plot.png")},
-    content = function(file) {
-      png(file, width = 900, height=500)
-      print(missing_plot())
-      dev.off()
-    })
+  ## R Code -----------------
+  output$screen_code <- renderText({
+    validate_data(code)
+    code_format(code, type = "screen")
+  })
 
 
-  ##### Long-term Flows #####
+
+  # Long-term Flows #####
 
   # Summary Statistics
   lt_data <- reactive({
@@ -381,7 +321,7 @@ server <- function(input, output, session) {
       lt_data <- add_daily_volume(lt_data) %>%
         mutate(Value = Volume_m3)
     } else if (input$lt_datatype == 3) {
-      lt_data <- add_daily_yield(lt_data, basin_area = input$basinarea) %>%
+      lt_data <- add_daily_yield(lt_data, basin_area = meta$basin_area) %>%
         mutate(Value = Yield_mm)
     }
 
@@ -409,7 +349,7 @@ server <- function(input, output, session) {
                    dom = 'Bfrtip')
   )
   output$download_lt_table <- downloadHandler(
-    filename = function() {paste0(input$station_name," - Long-term Statistics.csv")},
+    filename = function() {paste0(meta$station_name," - Long-term Statistics.csv")},
     content = function(file) {
       write.csv(lt_data(), file, row.names = FALSE)
     })
@@ -469,7 +409,7 @@ server <- function(input, output, session) {
   })
 
   output$download_lt_plot <- downloadHandler(
-    filename = function() {paste0(input$station_name," - Long-term Statistics.png")},
+    filename = function() {paste0(meta$station_name," - Long-term Statistics.png")},
     content = function(file) {
       png(file, width = 900, height=500)
       print(lt_plot())
@@ -488,7 +428,7 @@ server <- function(input, output, session) {
       ptile_data <- add_daily_volume(ptile_data) %>%
         mutate(Value = Volume_m3)
     } else if (input$ptile_datatype == 3) {
-      ptile_data <- add_daily_yield(ptile_data, basin_area = input$basinarea) %>%
+      ptile_data <- add_daily_yield(ptile_data, basin_area = meta$basin_area) %>%
         mutate(Value = Yield_mm)
     }
 
@@ -517,7 +457,7 @@ server <- function(input, output, session) {
                    dom = 'Bfrtip')
   )
   output$download_ptile_table <- downloadHandler(
-    filename = function() {paste0(input$station_name," - Long-term Percentiles.csv")},
+    filename = function() {paste0(meta$station_name," - Long-term Percentiles.csv")},
     content = function(file) {
       write.csv(ptile_data(), file, row.names = FALSE)
     })
@@ -570,7 +510,7 @@ server <- function(input, output, session) {
       ptile_data <- add_daily_volume(ptile_data) %>%
         mutate(Value = Volume_m3)
     } else if (input$ptile_datatype == 3) {
-      ptile_data <- add_daily_yield(ptile_data, basin_area = input$basinarea) %>%
+      ptile_data <- add_daily_yield(ptile_data, basin_area = meta$basin_area) %>%
         mutate(Value = Yield_mm)
     }
 
@@ -614,7 +554,7 @@ server <- function(input, output, session) {
     ptile_plot()
   })
   output$download_ptile_plot <- downloadHandler(
-    filename = function() {paste0(input$station_name," - Flow Duration Curves.png")},
+    filename = function() {paste0(meta$station_name," - Flow Duration Curves.png")},
     content = function(file) {
       png(file, width = 900, height=500)
       print(ptile_plot())
@@ -630,7 +570,7 @@ server <- function(input, output, session) {
       ann_data <- add_daily_volume(ann_data) %>%
         mutate(Value = Volume_m3)
     } else if (input$ann_datatype == 3) {
-      ann_data <- add_daily_yield(ann_data, basin_area = input$basinarea) %>%
+      ann_data <- add_daily_yield(ann_data, basin_area = meta$basin_area) %>%
         mutate(Value = Yield_mm)
     }
 
@@ -743,7 +683,7 @@ server <- function(input, output, session) {
     isolate(compute_annual_trends(data = data,
                                   zyp_method = input$trends_zyp_method,
                                   zyp_alpha = as.numeric(input$trends_alpha),
-                                  basin_area = input$basinarea,
+                                  basin_area = meta$basin_area,
                                   water_year_start = as.numeric(input$data_water_year),
                                   start_year = input$data_years_range[1],
                                   end_year = input$data_years_range[2],
@@ -1061,7 +1001,7 @@ server <- function(input, output, session) {
       guides(colour = guide_legend(order = 1), fill = guide_legend(order = 2))+
       xlab(NULL)+
       ylab("Discharge (cms)")+
-      ggtitle(paste0("Daily Stream Discharge - ",input$station_name," (",input$yearRange[1],"-",input$yearRange[2],")"))
+      ggtitle(paste0("Daily Stream Discharge - ",meta$station_name," (",input$yearRange[1],"-",input$yearRange[2],")"))
     print(daily.plot)
   }
 
@@ -1071,7 +1011,7 @@ server <- function(input, output, session) {
   })
 
   output$downloadDailyPlot <- downloadHandler(
-    filename = function() {paste0(input$station_name," - Daily Discharge Summary"," (",input$yearRange[1],"-",input$yearRange[2],").png")},
+    filename = function() {paste0(meta$station_name," - Daily Discharge Summary"," (",input$yearRange[1],"-",input$yearRange[2],").png")},
     content = function(file) {
       png(file, width = 900, height=500)
       print(dailyPlot())
@@ -1094,7 +1034,7 @@ server <- function(input, output, session) {
   })
 
   output$downloadDailyTable <- downloadHandler(
-    filename = function() {paste0(input$station_name," - Daily Discharge Summary"," (",input$yearRange[1],"-",input$yearRange[2],").csv")},
+    filename = function() {paste0(meta$station_name," - Daily Discharge Summary"," (",input$yearRange[1],"-",input$yearRange[2],").csv")},
     content = function(file) {
       write.csv(dailyTable(),file, row.names = FALSE)
     })

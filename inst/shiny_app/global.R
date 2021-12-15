@@ -20,7 +20,9 @@ library(shinyWidgets)
 library(glue)
 library(dplyr)
 library(tidyr)
+library(purrr)
 library(stringr)
+library(styler)
 
 library(leaflet)
 library(DT)
@@ -258,18 +260,41 @@ plot_timeseries <- function(data, id, input){
   })
 }
 
+## Check Functions ---------
 
-## Functions for inputs ---------
-input_defaults <- function(id, default) {
-  reactive({
-    if(is.null(input[[id]])) default else input[[id]]
-  })
+validate_data <- function(code, type = "data") {
+  validate(need(code[[type]] != "", "You'll first need to 'Load Data'"))
 }
 
-code_format <- function(expr) {
-  expr %>%
-    format() %>%
+
+## Other Functions ---------
+code_format <- function(code, type) {
+  str_subset(names(code), type) %>%
+    sort() %>%
+    map(~code[[.]]) %>%
+    as.character() %>%
     str_remove_all("^\\{|\\}$") %>%
     str_squish() %>%
-    str_replace_all("%>%", "%>%\n ")
+    glue_collapse("\n\n") %>%
+    str_replace_all("%>%", "%>%\n ") %>%
+    str_replace_all("\\+", "\\+\n ") %>%
+    str_replace_all("&&", "\n\n") %>%
+    code_break_lines()
 }
+
+code_break_lines <- function(code) {
+  s <- str_split(code, "\n") %>% unlist()
+  l <- map_lgl(s, ~nchar(.) > 80)
+  # only set new line if list items are longer than 4 and not near the end of a line
+  s[l] <- str_replace_all(s[l], ",(?! [:print:]{1,4}(,|[:punct:]{1,4}$))", ",\n")
+
+  glue_collapse(s, "\n") %>%
+    style_text() %>%
+    as.character() %>%
+    glue_collapse("\n") %>%
+    str_remove_all("^\n*")
+}
+
+
+
+

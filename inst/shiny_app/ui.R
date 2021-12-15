@@ -103,39 +103,52 @@ ui_data_load <- fluidRow(
 
 ## Data Screening ---------------------
 ui_data_screen <- fluidRow(
-  column(width = 12, h2("Data Screening"),
-         tabBox(
-           tabPanel(
-             title = "Data Summary Plot",
-             fluidRow(column(9,br(),selectInput("summaryY", "Select annual daily metric to review:",
-                                                c("Mean","Maximum","Minimum","StandardDeviation"))),
-                      column(2,br(),downloadButton('downloadSummaryPlot','Download Plot'))),
-             plotlyOutput('summaryPlot')
-           ),
-           tabPanel(
-             title = "Data Availability Plot", br(),
-             selectizeInput("availability_months",
-                            label = "Months:",
-                            choices = list("Jan" = 1, "Feb" = 2,
-                                           "Mar" = 3, "Apr" = 4,
-                                           "May" = 5, "Jun" = 6,
-                                           "Jul" = 7, "Aug" = 8,
-                                           "Sep" = 9, "Oct" = 10,
-                                           "Nov" = 11, "Dec" = 12),
-                            selected = c(1:12),
-                            multiple = TRUE),
-             downloadButton('download_missing_plot', 'Download Plot'),br(),
-             plotlyOutput("missing_plot")
-           ),
-           tabPanel(
-             title = "Table", br(),
-             downloadButton('download_summary_table', 'Download Table'), br(),
-             DT::dataTableOutput("summary_table")
-           ),
-           tabPanel(
-             title = "R Code"
-           )
-         )
+  column(
+    width = 12, h2("Data Screening"),
+    tabBox(
+      width = 12, height = min_height,
+
+      ### Summary Plot -----------------
+      tabPanel(
+        title = "Data Summary Plot",
+        selectInput("screen_summary", "Review annual daily metric",
+                    c("Mean","Maximum","Minimum","StandardDeviation")),
+        plotlyOutput("screen_plot1")
+      ),
+
+      ### Availability Plot -----------------
+      tabPanel(
+        title = "Data Availability Plot",
+        fluidRow(
+          column(width = 1,
+                 checkboxGroupButtons(
+                   "screen_months",
+                   label = "Months",
+                   choices = list("Jan" = 1, "Feb" = 2,
+                                  "Mar" = 3, "Apr" = 4,
+                                  "May" = 5, "Jun" = 6,
+                                  "Jul" = 7, "Aug" = 8,
+                                  "Sep" = 9, "Oct" = 10,
+                                  "Nov" = 11, "Dec" = 12),
+                   selected = c(1:12),
+                   direction = "vertical")
+          ),
+          column(width = 11, plotlyOutput("screen_plot2"))
+        )
+      ),
+
+      ### Table -----------------
+      tabPanel(
+        title = "Table",
+        DT::dataTableOutput("screen_table")
+      ),
+
+      ### R Code -----------------
+      tabPanel(
+        title = "R Code",
+        verbatimTextOutput("screen_code")
+      )
+    )
   )
 )
 
