@@ -20,22 +20,12 @@ server <- function(input, output, session) {
                          screen = "")
 
   meta <- reactiveValues(station_name = "",
-                         basin_area = "")
+                         basin_area = NA_real_)
 
 
   # UI elements ---------------------------------------
 
-  ## Settings ------------------
-  output$ui_opts <- build_ui(id = "opts", input, define_options = TRUE,
-                             include = c("discharge", "rolling", "months",
-                                         "percentiles", "missing"))
-
   ## Data ----------------------
-  output$ui_data_station_num <- renderUI({
-    textInput("data_station_num", label = "Station Number",
-              value = "08HB048",
-              placeholder = "type station number or select from map")
-  })
 
   # Update station from Map button
   observeEvent(input$data_hydat_map_select, {
@@ -55,19 +45,6 @@ server <- function(input, output, session) {
     data_load(TRUE)
   })
 
-  # Custom data - Station name UI
-  output$ui_data_station_name <- renderUI({
-    textInput('data_station_name',
-              label = "Station/stream name:",
-              placeholder = "ex. Mission Creek")
-  })
-
-  # Custom data - Basin area UI
-  output$ui_data_basin_area <- renderUI({
-    numericInput("data_basin_area",
-                 label = "Basin area (sq. km):", value = 0,
-                 min = 0, step = 0.1)
-  })
 
   # Year selection/slider UI
   output$ui_data_water_year <- renderUI({
@@ -85,6 +62,7 @@ server <- function(input, output, session) {
                   selected = 1))
   })
 
+  # Years range
   output$ui_data_years_range <- renderUI({
     req(data_raw())
     sliderInput("data_years_range",
@@ -106,20 +84,35 @@ server <- function(input, output, session) {
                    multiple = TRUE)
   })
 
+  # Add plot options as Gear in corner
   output$ui_data_plot_options <- renderUI({
     req(data_raw())
     select_plot_options(data = data_raw(), id = "data_plot", input)
   })
 
   ## Summary -------------------
-  output$ui_sum <- build_ui(id = "sum", input,
-                            include = c("discharge", "rolling", "months",
-                                        "percentiles", "missing"))
+  output$ui_sum <- renderUI({
+    build_ui(id = "sum", input,
+             include = c("discharge", "missing", "rolling",
+                         "months", "percentiles"))
+  })
+
+  # Add plot options as Gear in corner
+  output$ui_sum_plot_options <- renderUI({
+    req(sum_raw())
+    p <- select(sum_raw(), -any_of(c("STATION_NUMBER", "Month", "Year"))) %>%
+      names()
+
+    select_plot_options(data = sum_raw(), id = "sum_plot", input,
+                        include = c("log", "parameters"),
+                        params = p)
+  })
 
   ## Summary - Flow ------------
-  output$ui_sum_flow <- build_ui(id = "sum_flow", input,
-                                 include = c("discharge", "rolling", "months",
-                                             "missing"))
+  output$ui_sum_flow <- renderUI({
+    build_ui(id = "sum_flow", input,
+             include = c("discharge", "missing", "months"))
+  })
 
 
   # Data - Loading ---------------

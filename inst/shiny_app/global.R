@@ -86,56 +86,51 @@ min_height <- "250px" # Minimum placeholder height for boxes (will expand to con
 # Functions ---------------------
 
 ## Functions for inputs ------------
-select_months <- function(id, input, set = TRUE) {
-  renderUI({
-    if(set) {
-      selected <- input$opts_months
-      value <- input$opts_months_label
-    } else {
-      selected <- NULL
-      value <- NULL
-    }
+select_months <- function(id, input = NULL, set = TRUE) {
+  if(set & !is.null(input)) {
+    selected <- input$opts_months
+    value <- input$opts_months_label
+  } else {
+    selected <- 1:12
+    value <- ""
+  }
 
-    tagList(
-      selectInput(paste0(id, "_months"),
-                  label = "Custom Months",
-                  choices = list("Jan" = 1,  "Feb" = 2,
-                                 "Mar" = 3,  "Apr" = 4,
-                                 "May" = 5,  "Jun" = 6,
-                                 "Jul" = 7,  "Aug" = 8,
-                                 "Sep" = 9,  "Oct" = 10,
-                                 "Nov" = 11, "Dec" = 12),
-                  selected = selected,
-                  multiple = TRUE),
+  tagList(
+    selectInput(paste0(id, "_months"),
+                label = "Custom Months",
+                choices = list("Jan" = 1,  "Feb" = 2,
+                               "Mar" = 3,  "Apr" = 4,
+                               "May" = 5,  "Jun" = 6,
+                               "Jul" = 7,  "Aug" = 8,
+                               "Sep" = 9,  "Oct" = 10,
+                               "Nov" = 11, "Dec" = 12),
+                selected = selected,
+                multiple = TRUE),
 
-      textInput(paste0(id, "_months_label"),
-                label = "Custom Months Label",
-                placeholder = "ex. Jun-Aug",
-                value = value)
-    )
-  })
+    textInput(paste0(id, "_months_label"),
+              label = "Custom Months Label",
+              placeholder = "ex. Jun-Aug",
+              value = value)
+  )
 }
 
-select_discharge <- function(id, input, set = TRUE) {
-  renderUI({
-    if(set) selected <- input$opts_discharge else selected <- NULL
-    radioButtons(paste0(id, "_discharge"),
-                 label = "Discharge type",
-                 choices = list("Discharge (cms)" = 1,
-                                "Volumetric Discharge (m3)" = 2,
-                                "Runoff Yield (mm)" = 3),
-                 selected = selected)
-  })
+select_discharge <- function(id, input = NULL, set = TRUE) {
+  if(set & !is.null(input)) selected <- input$opts_discharge else selected <- NULL
+  radioButtons(paste0(id, "_discharge"),
+               label = "Discharge type",
+               choices = list("Discharge (cms)" = 1,
+                              "Volumetric Discharge (m3)" = 2,
+                              "Runoff Yield (mm)" = 3),
+               selected = selected)
 }
 
-select_rolling <- function(id, input, set = TRUE) {
-  renderUI({
-    if(set) {
+select_rolling <- function(id, input = NULL, set = TRUE) {
+    if(set & !is.null(input)) {
       value <- input$opts_roll_days
       selected <- input$opts_roll_align
     } else {
       value <- 1
-      selected <- NULL
+      selected <- "right"
     }
 
     fluidRow(
@@ -151,62 +146,79 @@ select_rolling <- function(id, input, set = TRUE) {
                                         "Left" = "left",
                                         "Center" = "center")))
       )
-  })
 }
 
-select_percentiles <- function(id, input, set = TRUE) {
-  renderUI({
-    if(set) selected <- input$opts_percentiles else selected <- c(10,90)
-    selectInput(paste0(id, "_percentiles"),
-                label = "Percentiles to calculate",
-                choices = c(1:99),
-                selected = selected,
-                multiple = TRUE)
-  })
+select_percentiles <- function(id, input = NULL, set = TRUE) {
+  if(set & !is.null(input)) selected <- input$opts_percentiles else selected <- c(10,90)
+  selectInput(paste0(id, "_percentiles"),
+              label = "Percentiles to calculate",
+              choices = c(1:99),
+              selected = selected,
+              multiple = TRUE)
 }
 
-select_missing <- function(id, input, set = TRUE) {
-  renderUI({
-    if(set) value <- input$opts_missing else value <- FALSE
-    checkboxInput(paste0(id, "_missing"),
-                  label = "Ignore missing values",
-                  value = value)
-  })
+select_missing <- function(id, input = NULL, set = TRUE) {
+  if(set & !is.null(input)) value <- input$opts_missing else value <- FALSE
+  checkboxInput(paste0(id, "_missing"),
+                label = "Ignore missing values",
+                value = value)
 }
 
 select_extra <- function(id) {
-  renderUI({
-    materialSwitch(
-      inputId = glue("{id}_show_extra"),
-      label = "Show/hide extra options",
-      value = FALSE,
-      status = "success"
-    )
-  })
+  materialSwitch(
+    inputId = glue("{id}_show_extra"),
+    label = "Show/hide extra options",
+    value = FALSE,
+    status = "success"
+  )
 }
 
-select_plot_options <- function(data, id, input) {
-  div(align = "right",
-      dropdownButton(
-        tags$h3("Plot options"),
-        materialSwitch(glue("{id}_log"), label = "Use log scale", value = FALSE,
-                       status = "success"),
-        dateRangeInput(glue("{id}_date_range"), "Start/End dates",
-                       format = "yyyy-mm-dd", startview = "month",
-                       start = min(data$Date), end = max(data$Date)),
-        select_discharge(id, input),
-        status = "primary", icon = icon("gear", verify_fa = FALSE),
-        size = "sm", width = "300px", right = TRUE,
-        tooltip = tooltipOptions(title = "Plot options", placement = "left")
-      )
+select_parameters <- function(id, params) {
+  checkboxGroupButtons(glue("{id}_params"),
+                       label = "Statistics",
+                       choices = params,
+                       selected = params)
+}
+
+select_plot_options <- function(data, id, input,
+                                include = c("log", "date_range", "discharge"),
+                                params = NULL) {
+
+  i <- tagList()
+  if("log" %in% include) {
+    i <- tagList(i, materialSwitch(glue("{id}_log"),
+                                   label = "Use log scale", value = FALSE,
+                                   status = "success"))
+  }
+  if("date_range" %in% include) {
+    i <- tagList(i, dateRangeInput(glue("{id}_date_range"), "Start/End dates",
+                                   format = "yyyy-mm-dd", startview = "month",
+                                   start = min(data$Date), end = max(data$Date)))
+  }
+  if("discharge" %in% include) {
+    i <- tagList(i, select_discharge(id, input))
+  }
+  if("parameters" %in% include) {
+    i <- tagList(i, select_parameters(id, params))
+  }
+
+  t <- tagList(
+    div(align = "right",
+        dropdownButton(
+          tags$h3("Plot options"),
+          i,
+          status = "primary", icon = icon("gear", verify_fa = FALSE),
+          size = "sm", width = "300px", right = TRUE,
+          tooltip = tooltipOptions(title = "Plot options", placement = "left")
+        )
+    )
   )
 }
 
 
-ui_hidden <- c("rolling", "months", "percentiles", "missing")
+ui_hidden <- c("rolling", "months", "percentiles")
 
-build_ui <- function(id, input, define_options = FALSE, include) {
-
+build_ui <- function(id, input = NULL, define_options = FALSE, include) {
   # Set up all options in the settings
   # - Don't hide and don't set defaults
   if(define_options == TRUE) {
@@ -232,8 +244,7 @@ build_ui <- function(id, input, define_options = FALSE, include) {
                   conditionalPanel(glue("input.{id}_show_extra == true"),
                                    ui_hide))
   }
-
-  renderUI(ui)
+  ui
 }
 
 

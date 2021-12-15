@@ -20,8 +20,10 @@ ui_home <- fluidRow(
 # Settings ---------------------
 ui_settings <- fluidRow(
   column(width = 12,
-         uiOutput("ui_opts")
-         )
+         build_ui(id = "opts", define_options = TRUE,
+                  include = c("discharge", "missing", "rolling", "months",
+                              "percentiles"))
+  )
 )
 
 # Data -------------------------
@@ -41,8 +43,11 @@ ui_data_load <- fluidRow(
           bsButton("data_load", "Load Data", style = "primary")),
         column(
           width = 7,
-          conditionalPanel("input.data_source == 'HYDAT'",
-                           uiOutput("ui_data_station_num")),
+          conditionalPanel(
+            "input.data_source == 'HYDAT'",
+            textInput("data_station_num", label = "Station Number",
+                      value = "08HB048",
+                      placeholder = "type station number or select from map")),
           conditionalPanel(
             "input.data_source != 'HYDAT'",
             fileInput("data_file", label = "Select File",
@@ -51,10 +56,17 @@ ui_data_load <- fluidRow(
                                ".csv"))))),
       hr(),
 
-      conditionalPanel("input.data_source != 'HYDAT'",
-                       h4("Station Information"),
-                       fluidRow(column(width = 6, uiOutput("ui_data_station_name")),
-                                column(width = 6, uiOutput("ui_data_basin_area")))),
+      conditionalPanel(
+        "input.data_source != 'HYDAT'",
+        h4("Station Information"),
+        fluidRow(column(width = 6,
+                        textInput('data_station_name',
+                                  label = "Station/stream name:",
+                                  placeholder = "ex. Mission Creek")),
+                 column(width = 6,
+                        numericInput("data_basin_area",
+                                     label = "Basin area (sq. km):", value = 0,
+                                     min = 0, step = 0.1)))),
 
       uiOutput("ui_data_water_year"),
       uiOutput("ui_data_years_range"),
