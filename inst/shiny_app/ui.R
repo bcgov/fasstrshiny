@@ -170,29 +170,37 @@ ui_summary <- fluidRow(
   column(
     width = 12, h2("Summary Statistics"),
     box(
-      width = 3,
-      radioButtons("summary_type", label = "Summary type",
-                   choices = list("Long-term", "Annual", "Monthly", "Daily")),
+      width = 4,
+      radioGroupButtons("sum_type",
+                        label = "Summary type",
+                        choices = list("Long-term", "Annual",
+                                       "Monthly", "Daily"),
+                        justified = TRUE),
       uiOutput("ui_sum"),
     ),
     tabBox(
-      width = 9, height = min_height,
+      width = 8, height = min_height,
+
+      ## Plot ---------------------
       tabPanel(
         title = "Plot",
-        plotOutput('lt_plot'),
-        h4("Plotting Options"),
-        uiOutput("lt_params"),
-        checkboxInput("lt_logQ", "Plot discharge on log scale", value = FALSE),
-        textInput("lt_plot_title", label = "Plot title:", value = NULL), br(),
-        downloadButton('download_lt_plot', 'Download Plot')
+        uiOutput("ui_sum_plot_options"),
+        plotOutput("sum_plot")
+        #h4("Plotting Options"),
+        #uiOutput("lt_params"),
+        #textInput("lt_plot_title", label = "Plot title:", value = NULL), br(),
+        #downloadButton('download_lt_plot', 'Download Plot')
       ),
+
+      ## Table ---------------------
       tabPanel(
-        title = "Table", br(),
-        downloadButton('download_lt_table', 'Download Table'),
-        dataTableOutput("lt_table")
+        title = "Table",
+        DTOutput("sum_table")
       ),
+
+      ## R Code ---------------------
       tabPanel(
-        title = "Info"
+        title = "R Code"
       )
     )
   )

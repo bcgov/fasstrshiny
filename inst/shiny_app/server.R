@@ -166,7 +166,7 @@ server <- function(input, output, session) {
       })
       m <- filter(stations, .data$station_number == input$data_station_num)
       meta$station_name <- m$station_name
-      meta$basin_area <- m$drainage_area_gross
+      meta$basin_area <- as.numeric(m$drainage_area_gross)
     } else {
       inFile <- input$data_file
       if (is.null(inFile)) return(NULL)
@@ -177,7 +177,7 @@ server <- function(input, output, session) {
           add_date_variables(water_year_start = !!wy)
       })
       meta$station_name <- input$data_station_name
-      meta$basin_area <- input$data_basin_area
+      meta$basin_area <- as.numeric(input$data_basin_area)
     }
 
     updateTabsetPanel(session, inputId = "data_tabs", selected = "data_plot")
@@ -303,102 +303,111 @@ server <- function(input, output, session) {
 
 
 
-  # Long-term Flows #####
+  # Summary Statistics ---------------------------------------
 
-  # Summary Statistics
-  lt_data <- reactive({
+  ## Data --------------------
+  sum_raw <- reactive({
+    validate_data(code)
+    req(input$sum_type, input$sum_discharge)
 
-    lt_data <- data_raw()
+    sum_data <- data_raw()
 
-    if (input$lt_datatype == 2) {
-      lt_data <- add_daily_volume(lt_data) %>%
+    if (input$sum_discharge == 2) {
+      sum_data <- add_daily_volume(sum_data) %>%
         mutate(Value = Volume_m3)
-    } else if (input$lt_datatype == 3) {
-      lt_data <- add_daily_yield(lt_data, basin_area = meta$basin_area) %>%
+    } else if (input$sum_discharge == 3) {
+      sum_data <- add_daily_yield(sum_data,
+                                  basin_area = meta$basin_area) %>%
         mutate(Value = Yield_mm)
     }
 
-    calc_longterm_daily_stats(data = lt_data,
-                              percentiles = as.numeric(input$lt_ptiles),
-                              roll_days = input$lt_roll_days,
-                              roll_align = input$lt_roll_align,
-                              water_year_start = as.numeric(input$data_water_year),
-                              start_year = input$data_years_range[1],
-                              end_year = input$data_years_range[2],
-                              exclude_years = as.numeric(input$data_years_exclude),
-                              custom_months = as.numeric(input$lt_months),
-                              custom_months_label = input$lt_months_label,
-                              ignore_missing = input$lt_ign_missing_box)
+    calc <- switch(input$sum_type,
+                   "Long-term" = calc_longterm_daily_stats,
+                   "Annual" = calc_annual_stats,
+                   "Monthly" = calc_monthly_stats,
+                   "Daily" = calc_daily_stats)
+
+    calc(data = sum_data,
+         percentiles = as.numeric(input$sum_percentiles),
+         roll_days = input$sum_roll_days,
+         roll_align = input$sum_roll_align,
+         water_year_start = as.numeric(input$data_water_year),
+         start_year = input$data_years_range[1],
+         end_year = input$data_years_range[2],
+         exclude_years = as.numeric(input$data_years_exclude),
+         #custom_months = as.numeric(input$lt_months), # Long-term
+         #custom_months_label = input$lt_months_label, # Long-term
+         #months = as.numeric(input$annual_months),    # Annual
+         ignore_missing = input$sum_missing)
   })
 
-  output$lt_table <- DT::renderDataTable(
-    lt_data() %>% select(-dplyr::contains("STATION_NUMBER")) %>%
-      mutate_if(is.numeric, funs(round(., 4))),
-    rownames = FALSE,
-    filter = 'top',
-    extensions = c("Scroller"),
-    options = list(scrollX = TRUE,
-                   scrollY = 450, deferRender = TRUE, scroller = TRUE,
-                   dom = 'Bfrtip')
-  )
-  output$download_lt_table <- downloadHandler(
-    filename = function() {paste0(meta$station_name," - Long-term Statistics.csv")},
-    content = function(file) {
-      write.csv(lt_data(), file, row.names = FALSE)
-    })
+  ## Table -----------------------
 
-
-  lt_plot_data <- reactive({
-    lt_data() %>% gather(Parameter, Value, 3:ncol(lt_data()))
+  output$sum_table <- DT::renderDT({
+    sum_raw() %>%
+      select(-dplyr::contains("STATION_NUMBER")) %>%
+      mutate(across(where(is.numeric), ~round(., 4))) %>%
+      datatable(rownames = FALSE,
+                filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                               deferRender = TRUE, dom = 'Bfrtip'))
   })
 
-  output$lt_params <- renderUI({
-    selectizeInput("lt_params",
-                   label = "Statistics to plot:",
-                   choices = unique(lt_plot_data()$Parameter),
-                   selected = unique(lt_plot_data()$Parameter),
-                   multiple = TRUE)
-  })
+  ## Plot --------------------
+  output$sum_plot <- renderPlot({
+    req(sum_raw(), input$sum_plot_params)
+    validate(need(input$sum_type %in% c("Long-term", "Annual"),
+                  "Summary plots only available for Long-term and Annual right now"))
 
+    plot_data <- sum_raw() %>%
+      pivot_longer(cols = -any_of(c("STATION_NUMBER", "Month", "Year")),
+                   names_to = "Parameter", values_to = "Value") %>%
+      filter(Parameter %in% input$sum_plot_params) %>%
+      rename_with(.cols = matches("Month|Year"), ~ "x") %>%
+      filter(x != "Long-term")
 
-  lt_plot_lt_data <- reactive({
-    lt_data() %>% filter(Month == "Long-term")
-  })
+    xlab <- case_when(input$sum_type == "Long-term" ~ "Month",
+                      input$sum_type == "Annual" ~ "Year",
+                      TRUE ~ "Time")
 
-  lt_plot <- function(){
+    ylab <- case_when(input$sum_discharge == 1 ~ "Discharge (cms)",
+                      input$sum_discharge == 2 ~ "Volumetric Discharge (m3)",
+                      input$sum_discharge == 3 ~ "Runoff Yield (mm)")
 
-    plot_data <- lt_plot_data() %>%
-      filter(Parameter %in% input$lt_params) %>%
-      filter(Month != "Long-term") %>%
-      mutate(Month = match(Month, month.abb))
+    col_lab <- glue("{input$sum_type} Statistics")
 
-    ggplot(data = plot_data, aes_string(x = "Month", y = "Value", colour = "Parameter")) +
-      geom_line() +
-      geom_point() +
-      geom_hline(aes(yintercept=lt_plot_lt_data()$Mean, colour = "LTMean"), linetype = 2)+
-      geom_hline(aes(yintercept=lt_plot_lt_data()$Median, colour = "LTMedian"))+
-      expand_limits(y = 0) +
-      ylab("Discharge (cms)") +
-      { if(input$lt_datatype == 2) ylab("Volumetric Discharge (m3)") } +
-      { if(input$lt_datatype == 3) ylab("Runoff Yield (mm)") } +
-      xlab("Month") +
+    trans <- if_else(input$sum_plot_log, "log10", "identity")
+
+    g <- ggplot(data = plot_data, aes(x = x, y = Value, colour = Parameter)) +
+      theme_bw() +
+      theme(legend.position = "right",
+            legend.spacing = unit(0, "cm"),
+            legend.justification = "top",
+            legend.text = element_text(size = 9),
+            panel.border = element_rect(colour = "black", fill = NA, size = 1),
+            panel.grid = element_line(size = .2),
+            axis.title = element_text(size = 12),
+            axis.text = element_text(size = 10)) +
+      geom_line(na.rm = TRUE) +
+      geom_point(na.rm = TRUE) +
       scale_color_brewer(palette = "Set1") +
-      ggplot2::theme_bw() +
-      ggplot2::labs(color = 'Long-term Statistics') +
-      {if(input$lt_logQ) scale_y_log10(expand = c(0, 0)) } +
-      {if(input$lt_logQ) annotation_logticks(base= 10,"left",size=0.6,short = unit(.14, "cm"), mid = unit(.3, "cm"), long = unit(.5, "cm"))}+
-      {if(!is.null(input$lt_plot_title)) ggtitle(paste(input$lt_plot_title))} +
-      ggplot2::theme(legend.position = "right",
-                     legend.spacing = ggplot2::unit(0, "cm"),
-                     legend.justification = "top",
-                     legend.text = ggplot2::element_text(size = 9),
-                     panel.border = ggplot2::element_rect(colour = "black", fill = NA, size = 1),
-                     panel.grid = ggplot2::element_line(size = .2),
-                     axis.title = ggplot2::element_text(size = 12),
-                     axis.text = ggplot2::element_text(size = 10))
-  }
-  output$lt_plot <- renderPlot({
-    lt_plot()
+      scale_y_continuous(expand = c(0, 0), trans = trans) +
+      labs(x = xlab, y = ylab, colour = col_lab)
+
+    if(input$sum_type == "Long-term") {
+      stats <- filter(sum_raw(), Month == "Long-term")
+      g <- g +
+        geom_hline(aes(yintercept = stats$Mean, colour = "LTMean"),
+                   linetype = 2, na.rm = TRUE) +
+        geom_hline(aes(yintercept = stats$Median, colour = "LTMedian"),
+                   na.rm = TRUE)
+    }
+
+    #{if(input$lt_logQ) annotation_logticks(base= 10,"left",size=0.6,short = unit(.14, "cm"), mid = unit(.3, "cm"), long = unit(.5, "cm"))}+
+
+      #{if(!is.null(input$lt_plot_title)) ggtitle(paste(input$lt_plot_title))} +
+      g
   })
 
   output$download_lt_plot <- downloadHandler(
@@ -557,26 +566,6 @@ server <- function(input, output, session) {
 
   annual_data <- reactive({
 
-    ann_data <- data_raw()
-
-    if (input$ann_datatype == 2) {
-      ann_data <- add_daily_volume(ann_data) %>%
-        mutate(Value = Volume_m3)
-    } else if (input$ann_datatype == 3) {
-      ann_data <- add_daily_yield(ann_data, basin_area = meta$basin_area) %>%
-        mutate(Value = Yield_mm)
-    }
-
-    calc_annual_stats(data = ann_data,
-                      percentiles = as.numeric(input$ann_ptiles),
-                      roll_days = input$ann_roll_days,
-                      roll_align = input$ann_roll_align,
-                      water_year_start = as.numeric(input$data_water_year),
-                      start_year = input$data_years_range[1],
-                      end_year = input$data_years_range[2],
-                      exclude_years = as.numeric(input$data_years_exclude),
-                      months = as.numeric(input$annual_months),
-                      ignore_missing = input$ign_missing_box)
   })
 
   annual_plot_data <- reactive({
@@ -600,23 +589,8 @@ server <- function(input, output, session) {
       geom_point() +
       expand_limits(y = 0) +
       ylab("Discharge (cms)") +
-      { if(input$ann_datatype == 2) ylab("Volumetric Discharge (m3)") } +
-      { if(input$ann_datatype == 3) ylab("Runoff Yield (mm)") } +
       xlab("Year") +
-      scale_color_brewer(palette = "Set1") +
-      ggplot2::theme_bw() +
-      ggplot2::labs(color = 'Annual Statistics') +
-      {if(input$ann_logQ)scale_y_log10(expand = c(0, 0))}+
-      {if(input$ann_logQ)annotation_logticks(base= 10,"left", size=0.6,short = unit(.14, "cm"), mid = unit(.3, "cm"), long = unit(.5, "cm"))}+
-      {if(!is.null(input$ann_plot_title)) ggtitle(paste(input$ann_plot_title))} +
-      ggplot2::theme(legend.position = "right",
-                     legend.spacing = ggplot2::unit(0, "cm"),
-                     legend.justification = "top",
-                     legend.text = ggplot2::element_text(size = 12),
-                     panel.border = ggplot2::element_rect(colour = "black", fill = NA, size = 1),
-                     panel.grid = ggplot2::element_line(size = .2),
-                     axis.title = ggplot2::element_text(size = 13),
-                     axis.text = ggplot2::element_text(size = 12))
+      ggplot2::labs(color = 'Annual Statistics')
   }
 
   output$annual_plot <- renderPlotly({
