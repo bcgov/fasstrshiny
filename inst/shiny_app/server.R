@@ -25,6 +25,14 @@ server <- function(input, output, session) {
 
   # UI elements ---------------------------------------
 
+  # Disable allowed missing dependon on type and whether ignoring missing
+  observe({
+    req(!is.null(input$sum_missing), input$sum_type)
+    if(input$sum_missing || input$sum_type %in% c("Long-term", "Daily")) {
+      disable("sum_allowed")
+    } else enable("sum_allowed")
+  })
+
   ## Data ----------------------
 
   # Update station from Map button
@@ -93,7 +101,7 @@ server <- function(input, output, session) {
   ## Summary -------------------
   output$ui_sum <- renderUI({
     build_ui(id = "sum", input,
-             include = c("discharge", "missing", "rolling",
+             include = c("discharge", "missing", "allowed", "rolling",
                          "months", "percentiles"))
   })
 
@@ -111,7 +119,7 @@ server <- function(input, output, session) {
   ## Summary - Flow ------------
   output$ui_sum_flow <- renderUI({
     build_ui(id = "sum_flow", input,
-             include = c("discharge", "missing", "months"))
+             include = c("discharge", "missing", "allowed", "months"))
   })
 
 
@@ -213,7 +221,6 @@ server <- function(input, output, session) {
     validate_data(code)
     code_format(code, type = "data")
   })
-
 
   # Data - Screening ---------------
   ## Data --------------

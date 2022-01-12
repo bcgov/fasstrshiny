@@ -28,7 +28,7 @@ ui_settings <- fluidRow(
     box(title = "Default Settings", width = 6,
         p("Set defaults here, but can change throughout the app as needed"),
         build_ui(id = "opts", define_options = TRUE,
-                 include = c("discharge", "missing", "percentiles"))
+                 include = c("discharge", "missing", "allowed", "percentiles"))
     )
   )
 )
