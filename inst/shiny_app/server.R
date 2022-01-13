@@ -102,18 +102,18 @@ server <- function(input, output, session) {
 
   # Add plot options as Gear in corner
   output$ui_sum_plot_options <- renderUI({
-    req(sum_raw())
-    p <- select(sum_raw(), -any_of(c("STATION_NUMBER", "Month", "Year"))) %>%
+    validate_data(code)
+    p <- select(data_raw(), -any_of(c("STATION_NUMBER", "Month", "Year"))) %>%
       names()
 
-    select_plot_options(data = sum_raw(), id = "sum_plot", input,
+    select_plot_options(data = data_raw(), id = "sum_plot", input,
                         include = c("log", "parameters"),
                         params = p)
   })
 
   ## Summary - Flow ------------
-  output$ui_sum_flow <- renderUI({
-    build_ui(id = "sum_flow", input,
+  output$ui_sumfl <- renderUI({
+    build_ui(id = "sumfl", input,
              include = c("discharge", "missing", "allowed", "months"))
   })
 
@@ -154,7 +154,7 @@ server <- function(input, output, session) {
                                dom = 'Bfrtip'))
   })
 
-  ## Load data ------------------
+  ## Raw data ------------------
   data_raw <- eventReactive(list(input$data_load, data_load()), {
     req(input$data_station_num)
 
@@ -165,7 +165,9 @@ server <- function(input, output, session) {
     if (input$data_source == "HYDAT") {
       d <- rlang::expr({
         flow_data <- fill_missing_dates(station_number = !!input$data_station_num) %>%
-          add_date_variables(water_year_start = !!wy)
+          add_date_variables(water_year_start = !!wy) %>%
+          add_daily_volume() %>%
+          add_daily_yield(basin_area = meta$basin_area)
       })
       m <- filter(stations, .data$station_number == input$data_station_num)
       meta$station_name <- m$station_name
