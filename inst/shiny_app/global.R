@@ -268,6 +268,80 @@ build_ui <- function(id, input = NULL, define_options = FALSE, include) {
 }
 
 
+#' Combine elements for functions
+#'
+#' @param fun Character. Name of the fasstr function to use
+#' @param data Character. Name of the data to use
+#' @param id Character. Input/output id (e.g., "sum")
+#' @param input Shiny input object
+#' @param params Character vector of inputs to become arguments. Unnamed inputs
+#'   are assumed to be "id_input". Any input not part of id can be named (e.g.,
+#'   "data" = "water_year").
+#' @param extra Character. String with extra arguments not related to shiny
+#'   inputs
+#' @param end Character. String to put after the function (e.g., "[[1]]" for
+#'   plots)
+#'
+#' @return
+#' @noRd
+#'
+#' @examples
+#'
+#' \dontrun{
+#' t <- create_fun(fun = "calc_longterm_daily_stats",
+#'                 data = "flow_data", id = "sumfl", input,
+#'                 params = c("discharge", "roll_days", "roll_align",
+#'                            "data" = "water_year",
+#'                            "data" = "years_range",
+#'                            "data" = "years_exclude",
+#'                            "months", "missing"))
+#' }
+
+create_fun <- function(fun, data, id, input, params, extra = NULL, end = "") {
+  names(params)[names(params) == ""] <- id
+  names(params) <- glue("{names(params)}_{params}")
+
+  id <- map(names(params), ~input[[.]])
+  nulls <- map_lgl(id, ~is.null(.) || . == "") # Remove NULLs and emptys
+  id <- id[!nulls]
+  params <- params[!nulls]
+
+  p <- vector()
+  for(i in seq_along(params)) {
+    p[i] <- case_when(
+      params[i] == "discharge" ~ glue("values = '{id[i]}'"),
+      params[i] == "percentiles" ~
+        glue("percentiles = c({glue_collapse(id[[i]], sep = ', ')})"),
+      params[i] == "roll_days" ~ glue("roll_days = {id[i]}"),
+      params[i] == "roll_align" ~ glue("roll_align = '{id[i]}'"),
+      params[i] == "water_year" ~
+        glue("water_year_start = {id[i]}"),
+      params[i] == "years_range" ~
+        glue("start_year = {id[[i]][1]}, ",
+             "end_year = {id[[i]][2]}"),
+      params[i] == "years_exclude" ~
+        glue("exclude_years = {id[i]}"),
+      params[i] == "months" ~
+        glue("months = c({glue_collapse(id[[i]], sep = ', ')})"),
+      params[i] == "custom_months" ~
+        glue("custom_months = c({glue_collapse(id[i], sep = ', ')})"),
+      params[i] == "custom_months_label" ~ glue("custom_months_label = {id[i]}"),
+      params[i] == "missing" ~ glue("ignore_missing = {id[i]}"),
+      params[i] == "allowed" ~ glue("allowed_missing = {id[i]}"),
+      params[i] == "plot_log" ~ glue("log_discharge = {id[i]}"),
+      params[i] == "mad" ~
+        glue("percent_MAD = c({id[i]})"))
+  }
+
+  args <- glue_collapse(c(data, p, extra), sep = ', ')
+
+  glue("{fun}({args}){end}")
+}
+
+
+
+
+
 ## Functions for plots ------
 
 plot_timeseries <- function(data, id, input){

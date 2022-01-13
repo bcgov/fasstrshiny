@@ -117,6 +117,19 @@ server <- function(input, output, session) {
              include = c("discharge", "missing", "allowed", "months"))
   })
 
+  # Plot options
+  output$ui_sumfl_plot_options <- renderUI({
+    validate_data(code)
+    select_plot_options(data = data_raw(), id = "sumfl_plot", input,
+                        include = c("log"))
+  })
+
+  ## Summary - single ------------
+  output$ui_sumsi <- renderUI({
+    build_ui(id = "sumsi", input,
+             include = c("discharge", "months"))
+  })
+
 
   # Data - Loading ---------------
 
@@ -307,49 +320,59 @@ server <- function(input, output, session) {
 
 
 
-  # Summary Statistics ---------------------------------------
+  # Summary Statistics - General ---------------------------------------
 
-  ## Data --------------------
-  sum_raw <- reactive({
-    validate_data(code)
-    req(input$sum_type, input$sum_discharge)
+  ## Plot --------------------
+  output$sum_plot <- renderPlot({
+    req(data_raw(), input$sum_plot_params)
 
-    sum_data <- data_raw()
+    flow_data <- data_raw()
 
-    if (input$sum_discharge == 2) {
-      sum_data <- add_daily_volume(sum_data) %>%
-        mutate(Value = Volume_m3)
-    } else if (input$sum_discharge == 3) {
-      sum_data <- add_daily_yield(sum_data,
-                                  basin_area = meta$basin_area) %>%
-        mutate(Value = Yield_mm)
-    }
+    g <- switch(input$sum_type,
+                "Long-term" = "plot_longterm_daily_stats",
+                "Annual" = "plot_annual_stats",
+                "Monthly" = "plot_monthly_stats",
+                "Daily" = "plot_daily_stats") %>%
+      create_fun("flow_data", id = "sum", input,
+                 params = c("discharge", "roll_days", "roll_align", "months",
+                            "data" = "water_year",
+                            "data" = "years_range",
+                            "data" = "years_exclude",
+                            if_else(input$sum_type %in% c("Long-term", "Daily"),
+                                    "missing", "allowed"),
+                            "plot_log"),
+                 end = "[[1]]")
 
-    calc <- switch(input$sum_type,
-                   "Long-term" = calc_longterm_daily_stats,
-                   "Annual" = calc_annual_stats,
-                   "Monthly" = calc_monthly_stats,
-                   "Daily" = calc_daily_stats)
+    code$sum2 <- g
 
-    calc(data = sum_data,
-         percentiles = as.numeric(input$sum_percentiles),
-         roll_days = input$sum_roll_days,
-         roll_align = input$sum_roll_align,
-         water_year_start = as.numeric(input$data_water_year),
-         start_year = input$data_years_range[1],
-         end_year = input$data_years_range[2],
-         exclude_years = as.numeric(input$data_years_exclude),
-         #custom_months = as.numeric(input$lt_months), # Long-term
-         #custom_months_label = input$lt_months_label, # Long-term
-         #months = as.numeric(input$annual_months),    # Annual
-         ignore_missing = input$sum_missing)
+    eval(parse(text = g))
   })
 
   ## Table -----------------------
-
   output$sum_table <- DT::renderDT({
-    sum_raw() %>%
-      select(-dplyr::contains("STATION_NUMBER")) %>%
+    validate_data(code)
+    req(input$sum_type, input$sum_discharge)
+
+    flow_data <- data_raw()
+
+    t <- switch(input$sum_type,
+                "Long-term" = "calc_longterm_daily_stats",
+                "Annual" = "calc_annual_stats",
+                "Monthly" = "calc_monthly_stats",
+                "Daily" = "calc_daily_stats") %>%
+      create_fun("flow_data", id = "sum", input,
+                 params = c("discharge", "percentiles",
+                            "roll_days", "roll_align",
+                            "data" = "water_year",
+                            "data" = "years_range",
+                            "data" = "years_exclude",
+                            "months",
+                            if_else(input$sum_type %in% c("Long-term", "Daily"),
+                                    "missing", "allowed")))
+
+    code$sum1 <- t
+
+    eval(parse(text = t)) %>%
       mutate(across(where(is.numeric), ~round(., 4))) %>%
       datatable(rownames = FALSE,
                 filter = 'top',
@@ -358,70 +381,122 @@ server <- function(input, output, session) {
                                deferRender = TRUE, dom = 'Bfrtip'))
   })
 
-  ## Plot --------------------
-  output$sum_plot <- renderPlot({
-    req(sum_raw(), input$sum_plot_params)
-    validate(need(input$sum_type %in% c("Long-term", "Annual"),
-                  "Summary plots only available for Long-term and Annual right now"))
 
-    plot_data <- sum_raw() %>%
-      pivot_longer(cols = -any_of(c("STATION_NUMBER", "Month", "Year")),
-                   names_to = "Parameter", values_to = "Value") %>%
-      filter(Parameter %in% input$sum_plot_params) %>%
-      rename_with(.cols = matches("Month|Year"), ~ "x") %>%
-      filter(x != "Long-term")
-
-    xlab <- case_when(input$sum_type == "Long-term" ~ "Month",
-                      input$sum_type == "Annual" ~ "Year",
-                      TRUE ~ "Time")
-
-    ylab <- case_when(input$sum_discharge == 1 ~ "Discharge (cms)",
-                      input$sum_discharge == 2 ~ "Volumetric Discharge (m3)",
-                      input$sum_discharge == 3 ~ "Runoff Yield (mm)")
-
-    col_lab <- glue("{input$sum_type} Statistics")
-
-    trans <- if_else(input$sum_plot_log, "log10", "identity")
-
-    g <- ggplot(data = plot_data, aes(x = x, y = Value, colour = Parameter)) +
-      theme_bw() +
-      theme(legend.position = "right",
-            legend.spacing = unit(0, "cm"),
-            legend.justification = "top",
-            legend.text = element_text(size = 9),
-            panel.border = element_rect(colour = "black", fill = NA, size = 1),
-            panel.grid = element_line(size = .2),
-            axis.title = element_text(size = 12),
-            axis.text = element_text(size = 10)) +
-      geom_line(na.rm = TRUE) +
-      geom_point(na.rm = TRUE) +
-      scale_color_brewer(palette = "Set1") +
-      scale_y_continuous(expand = c(0, 0), trans = trans) +
-      labs(x = xlab, y = ylab, colour = col_lab)
-
-    if(input$sum_type == "Long-term") {
-      stats <- filter(sum_raw(), Month == "Long-term")
-      g <- g +
-        geom_hline(aes(yintercept = stats$Mean, colour = "LTMean"),
-                   linetype = 2, na.rm = TRUE) +
-        geom_hline(aes(yintercept = stats$Median, colour = "LTMedian"),
-                   na.rm = TRUE)
-    }
-
-    #{if(input$lt_logQ) annotation_logticks(base= 10,"left",size=0.6,short = unit(.14, "cm"), mid = unit(.3, "cm"), long = unit(.5, "cm"))}+
-
-      #{if(!is.null(input$lt_plot_title)) ggtitle(paste(input$lt_plot_title))} +
-      g
+  ## R Code -----------------
+  output$sum_code <- renderText({
+    validate_data(code)
+    code_format(code, type = "sum")
   })
 
-  output$download_lt_plot <- downloadHandler(
-    filename = function() {paste0(meta$station_name," - Long-term Statistics.png")},
-    content = function(file) {
-      png(file, width = 900, height=500)
-      print(lt_plot())
-      dev.off()
-    })
 
+  # Summary Statistics - Flow ---------------------------------------
+  ## Plot --------------------
+  output$sumfl_plot <- renderPlot({
+    req(data_raw())
+
+    flow_data <- data_raw()
+
+    # missing arguments
+    # - include_longterm
+    # - custom months
+
+    g <- create_fun(
+      fun = "plot_flow_duration", data = "flow_data", id = "sumfl", input,
+      params = c("discharge",
+                 "roll_days", "roll_align",
+                 "data" = "water_year",
+                 "data" = "years_range",
+                 "data" = "years_exclude",
+                 "months", "missing", "plot_log"),
+      end = "[[1]]")
+
+    code$sumfl1 <- g
+
+    eval(parse(text = g))
+  })
+
+
+  ## Table -----------------------
+  output$sumfl_table <- DT::renderDT({
+    validate_data(code)
+    req(input$sumfl_discharge)
+
+    flow_data <- data_raw()
+
+    t <- create_fun(fun = "calc_longterm_daily_stats",
+                    data = "flow_data", id = "sumfl", input,
+                    params = c("discharge", "roll_days", "roll_align",
+                               "data" = "water_year",
+                               "data" = "years_range",
+                               "data" = "years_exclude",
+                               "months", "missing"),
+                    extra = "percentiles = 1:99",
+                    end = "%>% select(-Mean, -Median, -Minimum, -Maximum)")
+
+    code$sumfl2 <- t
+
+    eval(parse(text = t)) %>%
+      mutate(across(where(is.numeric), ~round(., 4))) %>%
+      datatable(rownames = FALSE,
+                filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                               deferRender = TRUE, dom = 'Bfrtip'))
+  })
+
+
+  ## R Code -----------------
+  output$sumfl_code <- renderText({
+    validate_data(code)
+    code_format(code, type = "sumfl")
+  })
+
+  # Summary Statistics - Single ---------------------------------------
+
+  ## Table -----------------------
+  output$sumsi_stats <- DT::renderDT({
+    validate_data(code)
+    req(input$sumsi_discharge)
+    validate(need(
+      is.null(input$sumsi_mad) ||
+        input$sumsi_mad == "" ||
+        !any(is.na(as.numeric(str_split(input$sumsi_mad,
+                             pattern = ",", simplify = TRUE)))),
+      "MAD percentiles must be comma-separated numbers (e.g., 5, 10, 50)"))
+
+    flow_data <- data_raw()
+
+    # Args missing: complete_years
+    t <- create_fun(fun = "calc_longterm_mean",
+                    data = "flow_data", id = "sumsi", input,
+                    params = c("discharge", "roll_days", "roll_align",
+                               "data" = "water_year",
+                               "data" = "years_range",
+                               "data" = "years_exclude",
+                               "months", "mad"))
+
+    code$sumsi <- t
+
+    eval(parse(text = t)) %>%
+      mutate(across(where(is.numeric), ~round(., 4))) %>%
+      datatable(rownames = FALSE,
+                filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                               deferRender = TRUE, dom = 'Bfrtip'))
+  })
+
+
+  ## R Code -----------------
+  output$sumfl_code <- renderText({
+    validate_data(code)
+    code_format(code, type = "sumfl")
+  })
+
+
+
+
+# Older code -------------------------------
 
 
   # Flow Duration and Percentiles
@@ -429,14 +504,6 @@ server <- function(input, output, session) {
   ptile_data <- reactive({
 
     ptile_data <- data_raw()
-
-    if (input$ptile_datatype == 2) {
-      ptile_data <- add_daily_volume(ptile_data) %>%
-        mutate(Value = Volume_m3)
-    } else if (input$ptile_datatype == 3) {
-      ptile_data <- add_daily_yield(ptile_data, basin_area = meta$basin_area) %>%
-        mutate(Value = Yield_mm)
-    }
 
     calc_longterm_daily_stats(data = ptile_data,
                               percentiles = seq(from = 1,  to = 99, by = 1),
@@ -566,6 +633,11 @@ server <- function(input, output, session) {
       print(ptile_plot())
       dev.off()
     })
+
+
+
+
+
   ##### Annual Flows #####
 
   annual_data <- reactive({
@@ -1005,11 +1077,14 @@ server <- function(input, output, session) {
   })
 
   output$downloadDailyTable <- downloadHandler(
-    filename = function() {paste0(meta$station_name," - Daily Discharge Summary"," (",input$yearRange[1],"-",input$yearRange[2],").csv")},
+    filename = function() {paste0(meta$station_name,
+                                  " - Daily Discharge Summary"," (",
+                                  input$yearRange[1],"-",input$yearRange[2],
+                                  ").csv")},
     content = function(file) {
       write.csv(dailyTable(),file, row.names = FALSE)
     })
-
+}
 
 
 
@@ -1058,7 +1133,4 @@ server <- function(input, output, session) {
   #   filename = function() {paste0("Annual Discharge Summary.", input$ann_filetype)},
   #   content = function(file) {
   #     write_results(data = annual_data(), file)
-  #   }
-  # )
-
-}
+  #

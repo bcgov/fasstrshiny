@@ -172,10 +172,10 @@ ui_data_screen <- fluidRow(
 )
 
 
-# Stats Summary ----------------
-ui_summary <- fluidRow(
+# Stats Summary - General ----------------
+ui_sum_general <- fluidRow(
   column(
-    width = 12, h2("Summary Statistics"),
+    width = 12, h2("General Summary Statistics"),
     box(
       width = 4,
       radioGroupButtons("sum_type",
@@ -193,10 +193,6 @@ ui_summary <- fluidRow(
         title = "Plot",
         uiOutput("ui_sum_plot_options"),
         plotOutput("sum_plot")
-        #h4("Plotting Options"),
-        #uiOutput("lt_params"),
-        #textInput("lt_plot_title", label = "Plot title:", value = NULL), br(),
-        #downloadButton('download_lt_plot', 'Download Plot')
       ),
 
       ## Table ---------------------
@@ -207,11 +203,77 @@ ui_summary <- fluidRow(
 
       ## R Code ---------------------
       tabPanel(
-        title = "R Code"
+        title = "R Code",
+        verbatimTextOutput("sum_code")
       )
     )
   )
 )
+
+
+# Stats Summary - Flow ----------------
+ui_sum_flow <- fluidRow(
+  column(
+    width = 12, h2("Flow duration and percentiles"),
+    box(
+      width = 4,
+      uiOutput("ui_sumfl"),
+    ),
+    tabBox(
+      width = 8, height = min_height,
+
+      ## Plot ---------------------
+      tabPanel(
+        title = "Plot - Flow duration",
+        uiOutput("ui_sumfl_plot_options"),
+        plotOutput("sumfl_plot")
+      ),
+
+      ## Table ---------------------
+      tabPanel(
+        title = "Table - Percentiles",
+        DTOutput("sumfl_table")
+      ),
+
+      ## R Code ---------------------
+      tabPanel(
+        title = "R Code",
+        verbatimTextOutput("sumfl_code")
+      )
+    )
+  )
+)
+
+# Stats Summary - single ----------------
+ui_sum_single <- fluidRow(
+  column(
+    width = 12, h2("Single stats"),
+    box(
+      width = 4,
+      textInput("sumsi_mad", label = "MAD percentiles to add",
+                placehold = "e.g., 5, 10, 50"),
+      uiOutput("ui_sumsi"),
+    ),
+    tabBox(
+      width = 8, height = min_height,
+
+      ## Table ---------------------
+      tabPanel(
+        title = "Stats",
+        DTOutput("sumsi_stats")
+      ),
+
+      ## R Code ---------------------
+      tabPanel(
+        title = "R Code",
+        verbatimTextOutput("sumsi_code")
+      )
+    )
+  )
+)
+
+
+
 
 
 ### Annual Summary Stats --------------------------
@@ -221,7 +283,7 @@ ui_summary <- fluidRow(
 #   tabBox(
 #     width = 9,
 #     tabPanel(
-#       title = "Plot", #br(),
+#       title = "Plot", #
 #       plotlyOutput('annual_plot'),
 #       fluidRow(
 #         column(width = 6,
@@ -247,62 +309,7 @@ ui_summary <- fluidRow(
 # )
 
 
-## Flow duration and Percentiles --------------
-ui_sum_flow <- fluidRow(
-  column(
-    width = 12, h2("Flow duration and Percentiles"),
-    box(
-      width = 3,
-      uiOutput("ui_sum_flow")
-    ),
-    column(width = 9,
-           tabsetPanel(
-             tabPanel(
-               title = "Plot",
-               plotOutput('ptile_plot'),
-               h4("Plotting Options"),
-               uiOutput("ptile_params"),
-               checkboxInput("ptile_logQ", "Plot discharge on log scale", value = FALSE),
-               textInput("ptile_plot_title", label = "Plot title:", value = NULL), br(),
-               downloadButton('download_ptile_plot', 'Download Plot')
-             ),
-             tabPanel(
-               title = "Table", br(),
-               downloadButton('download_ptile_table', 'Download Table'),
-               dataTableOutput("ptile_table")
-             ),
-             tabPanel(
-               title = "Info"
-             )
-           )
-    )
-  )
-)
 
-
-
-## Single stats --------------
-ui_sum_single <- fluidRow(
-  column(
-    width = 12, h2("Single Statistics"),
-    box(
-      width = 3,
-
-      h4("long-term Mean Annual Discharge"),
-      h4("long-term percentile"),
-      h4("long-term percentile rank")
-    ),
-    tabBox(
-      width = 9, height = min_height,
-      tabPanel("Plot"
-      ),
-      tabPanel("Table"
-      ),
-      tabPanel("Info"
-      )
-    )
-  )
-)
 
 
 
@@ -433,15 +440,15 @@ ui_sum_daily <- fluidRow(
         column(width = 9,
                tabBox(height = min_height,
                  tabPanel(
-                   title = "Plot",br(),
-                   plotOutput('dailyPlot'),br(),
+                   title = "Plot",
+                   plotOutput('dailyPlot'),
                    downloadButton('downloadDailyPlot', 'Download Plot')
                  ),
                  tabPanel(
                    title = "Data",
-                   br(),
+
                    downloadButton('downloadDailyTable', 'Download Table'),
-                   br(),br(),
+
                    dataTableOutput("dailyTable")),
                  tabPanel(
                    title = "Info")
@@ -596,14 +603,14 @@ ui_comp_annual <- fluidRow(
 
         DT::dataTableOutput("trends_results"),
         textOutput("testing_rows"),
-        br(),
+
         fluidRow(column(3, DT::dataTableOutput("trends_results_data")),
                  column(9, plotlyOutput("trends_plot")))
       ),
       tabPanel(
         title = "R Code",
         h4("Copy and paste the following into an R console or script to reproduce the results."),
-        br(),
+
         htmlOutput("trends_code")
       )
     )
@@ -669,7 +676,7 @@ ui_comp_flow <- fluidRow(
       tabPanel(
         title = "R Code",
         h4("Copy and paste the following into an R console or script to reproduce the results."),
-        br(),
+
         htmlOutput("freq_code")
       ) # end of tabPanel
     ) # end of tabsetPanel
@@ -693,6 +700,7 @@ dashboardPage(skin = "green",
   dashboardHeader(title = "fasstr Shiny"),
   dashboardSidebar(
     tags$script(src = "tips.js"),
+    useShinyjs(),
     sidebarMenu(
       id = "menu",
       menuItem("Home", tabName = "home", icon = icon("home")),
@@ -702,7 +710,7 @@ dashboardPage(skin = "green",
                menuSubItem("Screening", tabName = "data_screen")),
       menuItem("Summary statistics", tabName = "summary",
                icon=icon("chart-bar"),
-               menuSubItem("General", tabName = "summary"),
+               menuSubItem("General", tabName = "sum_general"),
                menuSubItem("Flow duration and percentiles",
                            tabName = "sum_flow"),
                menuSubItem("Single stats", tabName = "sum_single")),
@@ -731,7 +739,7 @@ dashboardPage(skin = "green",
       tabItem("settings", ui_settings),
       tabItem("data_load", ui_data_load),
       tabItem("data_screen", ui_data_screen),
-      tabItem("summary", ui_summary),
+      tabItem("sum_general", ui_sum_general),
       tabItem("sum_flow", ui_sum_flow),
       tabItem("sum_single", ui_sum_single),
       tabItem("cum_lt", ui_cum_lt),
