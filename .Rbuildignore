@@ -1,3 +1,5 @@
 ^fasstrshiny\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
+^DEVTESTS.R$
+^CODE_DESIGN.md$
