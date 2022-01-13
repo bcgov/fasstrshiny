@@ -25,13 +25,8 @@ server <- function(input, output, session) {
 
   # UI elements ---------------------------------------
 
-  # Disable allowed missing dependon on type and whether ignoring missing
-  observe({
-    req(!is.null(input$sum_missing), input$sum_type)
-    if(input$sum_missing || input$sum_type %in% c("Long-term", "Daily")) {
-      disable("sum_allowed")
-    } else enable("sum_allowed")
-  })
+  # Disable allowed missing depend on on type and whether ignoring missing
+  toggle_allowed(id = "sum", input)
 
   ## Data ----------------------
 
