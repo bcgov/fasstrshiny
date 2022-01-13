@@ -258,7 +258,7 @@ ui_sum_single <- fluidRow(
       ## Table ---------------------
       tabPanel(
         title = "Stats",
-        DTOutput("sumsi_stats")
+        gt_output("sumsi_mad")
       ),
 
       ## R Code ---------------------

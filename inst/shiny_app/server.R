@@ -457,15 +457,13 @@ server <- function(input, output, session) {
 
   ## R Code -----------------
   output$sumfl_code <- renderText({
-    validate_data(code)
-    code_format(code, type = "sumfl")
+    code_format(code, id = "sumfl")
   })
 
   # Summary Statistics - Single ---------------------------------------
 
-  ## Table -----------------------
-  output$sumsi_stats <- DT::renderDT({
-    validate_data(code)
+  ## MAD -----------------------
+  output$sumsi_mad <- render_gt({
     req(input$sumsi_discharge)
     validate(need(
       is.null(input$sumsi_mad) ||
@@ -485,22 +483,41 @@ server <- function(input, output, session) {
                                "data" = "years_exclude",
                                "months", "mad"))
 
-    code$sumsi <- t
+    code$sumsi_mad <- t
 
-    eval(parse(text = t)) %>%
-      mutate(across(where(is.numeric), ~round(., 4))) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Bfrtip'))
+    parse(text = t) %>%
+      eval() %>%
+      gt() %>%
+      fmt_number(columns = where(is.numeric), decimals = 4)
   })
 
+  ## Perc -----------------------
+  output$sumsi_perc <- render_gt({
+    req(input$sumsi_discharge)
+
+  # Percentiles
+  t <- create_fun(fun = "calc_longterm_percentile",
+                  data = "flow_data", id = "sumsi", input,
+                  params = c("discharge", "roll_days", "roll_align",
+                             "data" = "water_year",
+                             "data" = "years_range",
+                             "data" = "years_exclude",
+                             "months", "percentiles"))
+
+  code$sumsi_perc <- t
+
+  parse(text = t) %>%
+    eval() %>%
+    gt() %>%
+    fmt_number(decimals = 4)
+  })
+
+  # ADD:
+  # calc_flow_percentile()
 
   ## R Code -----------------
   output$sumfl_code <- renderText({
-    validate_data(code)
-    code_format(code, type = "sumfl")
+    code_format(code, id = "sumfl")
   })
 
 
