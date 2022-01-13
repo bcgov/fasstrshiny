@@ -119,9 +119,9 @@ select_discharge <- function(id, input = NULL, set = TRUE) {
   if(set & !is.null(input)) selected <- input$opts_discharge else selected <- NULL
   radioButtons(paste0(id, "_discharge"),
                label = "Discharge type",
-               choices = list("Discharge (cms)" = 1,
-                              "Volumetric Discharge (m3)" = 2,
-                              "Runoff Yield (mm)" = 3),
+               choices = list("Discharge (cms)" = "Value",
+                              "Volumetric Discharge (m3)" = "Volume_m3",
+                              "Runoff Yield (mm)" = "Yield_mm"),
                selected = selected)
 }
 
