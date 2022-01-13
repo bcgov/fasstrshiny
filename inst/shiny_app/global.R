@@ -27,6 +27,7 @@ library(styler)
 
 library(leaflet)
 library(DT)
+library(gt)
 library(plotly)
 
 library(fasstr)
@@ -188,7 +189,7 @@ select_parameters <- function(id, params) {
 }
 
 select_plot_options <- function(data, id, input,
-                                include = c("log", "date_range", "discharge"),
+                                include = c("log", "daterange", "discharge"),
                                 params = NULL) {
 
   i <- tagList()
@@ -197,8 +198,8 @@ select_plot_options <- function(data, id, input,
                                    label = "Use log scale", value = FALSE,
                                    status = "success"))
   }
-  if("date_range" %in% include) {
-    i <- tagList(i, dateRangeInput(glue("{id}_date_range"), "Start/End dates",
+  if("daterange" %in% include) {
+    i <- tagList(i, dateRangeInput(glue("{id}_daterange"), "Start/End dates",
                                    format = "yyyy-mm-dd", startview = "month",
                                    start = min(data$Date), end = max(data$Date)))
   }
@@ -298,11 +299,14 @@ build_ui <- function(id, input = NULL, define_options = FALSE, include) {
 #' }
 
 create_fun <- function(fun, data, id, input, params, extra = NULL, end = "") {
+
+  if(is.null(names(params))) names(params) <- rep(id, length(params))
   names(params)[names(params) == ""] <- id
   names(params) <- glue("{names(params)}_{params}")
 
   id <- map(names(params), ~input[[.]])
-  nulls <- map_lgl(id, ~is.null(.) || . == "") # Remove NULLs and emptys
+  # Remove NULL/empty
+  nulls <- map_lgl(id, ~is.null(.) || (is.character(.) && . == ""))
   id <- id[!nulls]
   params <- params[!nulls]
 
@@ -316,11 +320,12 @@ create_fun <- function(fun, data, id, input, params, extra = NULL, end = "") {
       params[i] == "roll_align" ~ glue("roll_align = '{id[i]}'"),
       params[i] == "water_year" ~
         glue("water_year_start = {id[i]}"),
-      params[i] == "years_range" ~
-        glue("start_year = {id[[i]][1]}, ",
-             "end_year = {id[[i]][2]}"),
+      params[i] == "years_range" ~ glue("start_year = {id[[i]][1]}, ",
+                                        "end_year = {id[[i]][2]}"),
       params[i] == "years_exclude" ~
         glue("exclude_years = {id[i]}"),
+      params[i] == "plot_daterange" ~ glue("start_date = '{id[[i]][1]}', ",
+                                           "end_date = '{id[[i]][2]}'"),
       params[i] == "months" ~
         glue("months = c({glue_collapse(id[[i]], sep = ', ')})"),
       params[i] == "custom_months" ~
@@ -340,41 +345,12 @@ create_fun <- function(fun, data, id, input, params, extra = NULL, end = "") {
 
 
 
-
-
-## Functions for plots ------
-
-plot_timeseries <- function(data, id, input){
-  req(!is.null(input[[glue("{id}_log")]]),
-      input[[glue("{id}_date_range")]],
-      input$data_years_range,
-      input$data_water_year)
-
-  suppressWarnings({
-    plot_flow_data(data = data,
-                   # Global data options
-                   water_year_start = as.numeric(input$data_water_year),
-                   start_year = input$data_years_range[1],
-                   end_year = input$data_years_range[2],
-                   exclude_years = as.numeric(input$data_years_exclude),
-                   # Plot specific options
-                   log_discharge = input[[glue("{id}_log")]],
-                   start_date = input[[glue("{id}_date_range")]][1],
-                   end_date = input[[glue("{id}_date_range")]][2])[[1]] +
-      scale_color_manual(values = "dodgerblue4")
-  })
-}
-
 ## Check Functions ---------
 
-validate_data <- function(code, type = "data") {
-  validate(need(code[[type]] != "", "You'll first need to 'Load Data'"))
-}
-
-
 ## Other Functions ---------
-code_format <- function(code, type) {
-  str_subset(names(code), type) %>%
+
+code_format <- function(code, id) {
+  str_subset(names(code), id) %>%
     sort() %>%
     map(~code[[.]]) %>%
     as.character() %>%

@@ -15,9 +15,7 @@
 server <- function(input, output, session) {
 
   # Global reactives ----------------------------------
-  data_load <- reactiveVal(value = FALSE) # Load selected data?
-  code <- reactiveValues(data = "",       # Holds code for sharing
-                         screen = "")
+  code <- reactiveValues()                # Holds code
 
   meta <- reactiveValues(station_name = "",
                          basin_area = NA_real_)
@@ -31,23 +29,19 @@ server <- function(input, output, session) {
   ## Data ----------------------
 
   # Update station from Map button
-  observeEvent(input$data_hydat_map_select, {
-    req(input$data_hydat_map_marker_click)
+  observe({
     updateTextInput(session, "data_station_num",
                     value = input$data_hydat_map_marker_click$id)
-    data_load(TRUE)
-
-  })
+  }) %>%
+    bindEvent(input$data_hydat_map_marker_click)
 
   # Update station from Table button
-  observeEvent(input$data_hydat_table_select, {
-    req(input$data_hydat_table_rows_selected)
+  observe({
     updateTextInput(
       session, "data_station_num",
       value = stations$station_number[input$data_hydat_table_rows_selected])
-    data_load(TRUE)
-  })
-
+  }) %>%
+    bindEvent(input$data_hydat_table_rows_selected)
 
   # Year selection/slider UI
   output$ui_data_water_year <- renderUI({
@@ -67,7 +61,7 @@ server <- function(input, output, session) {
 
   # Years range
   output$ui_data_years_range <- renderUI({
-    req(data_raw())
+    req(data_raw(), input$data_water_year)
     sliderInput("data_years_range",
                 label = "Start and end years",
                 min = min(data_raw()$WaterYear),
@@ -102,7 +96,6 @@ server <- function(input, output, session) {
 
   # Add plot options as Gear in corner
   output$ui_sum_plot_options <- renderUI({
-    validate_data(code)
     p <- select(data_raw(), -any_of(c("STATION_NUMBER", "Month", "Year"))) %>%
       names()
 
@@ -119,15 +112,14 @@ server <- function(input, output, session) {
 
   # Plot options
   output$ui_sumfl_plot_options <- renderUI({
-    validate_data(code)
     select_plot_options(data = data_raw(), id = "sumfl_plot", input,
                         include = c("log"))
   })
 
-  ## Summary - single ------------
+  ## Summary - Single ------------
   output$ui_sumsi <- renderUI({
     build_ui(id = "sumsi", input,
-             include = c("discharge", "months"))
+             include = c("discharge", "months", "percentiles"))
   })
 
 
@@ -137,8 +129,7 @@ server <- function(input, output, session) {
   output$data_hydat_map <- renderLeaflet({
     leaflet() %>%
       addProviderTiles(providers$Stamen.TonerLite,
-                       options = providerTileOptions(noWrap = TRUE)
-      ) %>%
+                       options = providerTileOptions(noWrap = TRUE)) %>%
       addPolygons(
         data = bc_hydrozones,
         stroke = 0.5, opacity = 1, weight = 1,
@@ -168,7 +159,7 @@ server <- function(input, output, session) {
   })
 
   ## Raw data ------------------
-  data_raw <- eventReactive(list(input$data_load, data_load()), {
+  data_raw <- reactive({
     req(input$data_station_num)
 
     wy <- 1
@@ -176,45 +167,64 @@ server <- function(input, output, session) {
 
 
     if (input$data_source == "HYDAT") {
-      d <- rlang::expr({
-        flow_data <- fill_missing_dates(station_number = !!input$data_station_num) %>%
-          add_date_variables(water_year_start = !!wy) %>%
-          add_daily_volume() %>%
-          add_daily_yield(basin_area = meta$basin_area)
-      })
       m <- filter(stations, .data$station_number == input$data_station_num)
       meta$station_name <- m$station_name
       meta$basin_area <- as.numeric(m$drainage_area_gross)
+
+      d <- glue(
+        "flow_data <- fill_missing_dates(",
+        "        station_number = '{input$data_station_num}') %>%",
+        "  add_date_variables(water_year_start = {wy}) %>%",
+        "  add_daily_volume() %>%",
+        "  add_daily_yield()")
+
     } else {
       inFile <- input$data_file
       if (is.null(inFile)) return(NULL)
 
-      d <- rlang::expr({
-        flow_data <- read.csv(!!inFile$datapath) %>%
-          fill_missing_dates(data = .) %>%
-          add_date_variables(water_year_start = !!wy)
-      })
       meta$station_name <- input$data_station_name
       meta$basin_area <- as.numeric(input$data_basin_area)
+
+      d <- glue("flow_data <- read.csv({inFile$datapath}) %>%",
+                "  fill_missing_dates() %>%",
+                "  add_date_variables(water_year_start = {wy})")
+
     }
 
     updateTabsetPanel(session, inputId = "data_tabs", selected = "data_plot")
-    isolate(data_load(FALSE))
 
-    code$data <- rlang::expr_text(d) # Save unevaluated code for code tab
-    eval(d) # Evaluate and pass on data now
-  })
+    # Save unevaluated code for code tab
+    code$data_raw <- d
+
+    eval(parse(text = d)) # Evaluate and create flow_data
+  }) %>%
+    bindEvent(input$data_load)
 
   ## Plot ----------------
   output$data_plot <- renderPlotly({
-    validate_data(code)
-    ggplotly(plot_timeseries(data = data_raw(), id = "data_plot", input))
+    req(data_raw(),
+        !is.null(input$data_plot_log),
+        input$data_plot_daterange,
+        input$data_years_range,
+        input$data_water_year)
+
+    flow_data <- data_raw()
+
+    g <- create_fun(
+      "plot_flow_data", "flow_data", id = "data", input,
+      params = c("water_year", "years_range", "exclude_years",
+                 "plot_log", "plot_daterange"),
+      end = "[[1]] + scale_color_manual(values = 'dodgerblue4')")
+
+    code$data_plot <- g
+
+    parse(text = g) %>%
+      eval() %>%
+      ggplotly()
   })
 
   ## Table ----------------
   output$data_table <- renderDT({
-    validate_data(code)
-
     data_raw() %>%
       rename("StationNumber" = "STATION_NUMBER") %>%
       select(-"Month") %>%
@@ -228,73 +238,74 @@ server <- function(input, output, session) {
 
   ## R Code ----------------
   output$data_code <- renderText({
-    validate_data(code)
-    code_format(code, type = "data")
+    code_format(code, id = "data")
   })
 
   # Data - Screening ---------------
   ## Data --------------
   screen_raw <- reactive({
-    validate_data(code)
+    req(data_raw())
 
     flow_data <- data_raw()
-    d <- rlang::expr({
+    d <- glue("
       screen_data <- screen_flow_data(
         data = flow_data,
-        start_year = !!input$data_years_range[1],
-        end_year = !!input$data_years_range[2],
-        water_year_start = !!as.numeric(input$data_water_year))
-    })
+        start_year = {input$data_years_range[1]},
+        end_year = {input$data_years_range[2]},
+        water_year_start = {as.numeric(input$data_water_year)})
+        ")
 
-    code$screen1 <- d
-    eval(d)
+    code$screen_data <- d
+    eval(parse(text = d))
   })
 
   ## Summary plot ------------------
   output$screen_plot1 <- renderPlotly({
-    validate_data(code)
+    req(screen_raw())
 
     xlab <- if_else(input$data_water_year != 1, "Water Year", "Year")
     title <- paste0("Annual Daily ", input$screen_summary, " - ", meta$station_name)
     screen_data <- screen_raw()
 
-    plot <- rlang::expr({
-      ggplot(data = screen_data, aes_string(x = "Year", y = !!input$screen_summary)) +
+    g <- glue(
+      "ggplot(data = screen_data,
+              aes(x = Year, y = {input$screen_summary})) +
         theme_bw() +
         theme(axis.title = element_text(size = 15),
               plot.title = element_text(size = 15, hjust = 0.5),
               axis.text = element_text(size = 13)) +
-        geom_line(colour = "dodgerblue4") +
-        geom_point(colour = "firebrick3", size = 2) +
-        labs(x = !!xlab, y = "Discharge (cms)", title = !!title)
-    })
+        geom_line(colour = 'dodgerblue4') +
+        geom_point(colour = 'firebrick3', size = 2) +
+        labs(x = '{xlab}', y = 'Discharge (cms)', title = '{title}')")
 
-    code$screen2 <- plot
+    code$screen_plot <- g
 
-    ggplotly(eval(plot))
+    parse(text = g) %>%
+      eval() %>%
+      ggplotly()
   })
 
 
-  ## Missing Data Table ---------------------------
+  ## Missing Data Plot ---------------------------
   output$screen_plot2 <- renderPlotly({
-    validate_data(code)
+    req(data_raw())
 
     flow_data <- data_raw()
-    plot <- rlang::expr({
-      plot_missing_dates(data = flow_data,
-                         start_year = !!input$data_years_range[1],
-                         end_year = !!input$data_years_range[2],
-                         water_year_start = !!as.numeric(input$data_water_year),
-                         months = !!as.numeric(input$screen_months))
-    })
+    g <- create_fun("plot_missing_dates", "flow_data",
+                    id = "screen", input,
+                    params = c("data" = "data_years_range",
+                               "data" = "water_year",
+                               "months"), end = "[[1]]")
 
-    code$screen3 <- plot
-    ggplotly(eval(plot)[[1]])
+    code$screen_miss <- g
+
+    parse(text = g) %>%
+      eval() %>%
+      ggplotly()
   })
 
   ## Summary table ------------------
   output$screen_table <- DT::renderDT({
-    validate_data(code)
     screen_raw() %>%
       select(-dplyr::contains("STATION_NUMBER")) %>%
       rename("Total days" = "n_days",
@@ -308,14 +319,14 @@ server <- function(input, output, session) {
                 filter = 'top',
                 extensions = c("Scroller"),
                 options = list(scrollX = TRUE,
-                               scrollY = 450, deferRender = TRUE, scroller = TRUE,
+                               scrollY = 450, deferRender = TRUE,
+                               scroller = TRUE,
                                dom = 'Bfrtip'))
   })
 
   ## R Code -----------------
   output$screen_code <- renderText({
-    validate_data(code)
-    code_format(code, type = "screen")
+    code_format(code, id = "screen")
   })
 
 
@@ -343,14 +354,13 @@ server <- function(input, output, session) {
                             "plot_log"),
                  end = "[[1]]")
 
-    code$sum2 <- g
+    code$sum_plot <- g
 
     eval(parse(text = g))
   })
 
   ## Table -----------------------
   output$sum_table <- DT::renderDT({
-    validate_data(code)
     req(input$sum_type, input$sum_discharge)
 
     flow_data <- data_raw()
@@ -370,9 +380,10 @@ server <- function(input, output, session) {
                             if_else(input$sum_type %in% c("Long-term", "Daily"),
                                     "missing", "allowed")))
 
-    code$sum1 <- t
+    code$sum_table <- t
 
-    eval(parse(text = t)) %>%
+    parse(text = t) %>%
+      eval() %>%
       mutate(across(where(is.numeric), ~round(., 4))) %>%
       datatable(rownames = FALSE,
                 filter = 'top',
@@ -384,15 +395,14 @@ server <- function(input, output, session) {
 
   ## R Code -----------------
   output$sum_code <- renderText({
-    validate_data(code)
-    code_format(code, type = "sum")
+    code_format(code, id = "sum")
   })
 
 
   # Summary Statistics - Flow ---------------------------------------
   ## Plot --------------------
   output$sumfl_plot <- renderPlot({
-    req(data_raw())
+    req(data_raw(), !is.null(input$sumfl_plot_log))
 
     flow_data <- data_raw()
 
@@ -410,7 +420,7 @@ server <- function(input, output, session) {
                  "months", "missing", "plot_log"),
       end = "[[1]]")
 
-    code$sumfl1 <- g
+    code$sumfl_plot <- g
 
     eval(parse(text = g))
   })
@@ -418,8 +428,7 @@ server <- function(input, output, session) {
 
   ## Table -----------------------
   output$sumfl_table <- DT::renderDT({
-    validate_data(code)
-    req(input$sumfl_discharge)
+    req(data_raw(), input$sumfl_discharge)
 
     flow_data <- data_raw()
 
@@ -433,9 +442,10 @@ server <- function(input, output, session) {
                     extra = "percentiles = 1:99",
                     end = "%>% select(-Mean, -Median, -Minimum, -Maximum)")
 
-    code$sumfl2 <- t
+    code$sumfl_table <- t
 
-    eval(parse(text = t)) %>%
+    parse(text = t) %>%
+      eval() %>%
       mutate(across(where(is.numeric), ~round(., 4))) %>%
       datatable(rownames = FALSE,
                 filter = 'top',

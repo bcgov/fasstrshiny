@@ -86,14 +86,12 @@ ui_data_load <- fluidRow(
       ### HYDAT Map --------
       tabPanel(
         title = "HYDAT Map", width = 12,
-        bsButton("data_hydat_map_select", "Use selected station", style = "primary"),
         leafletOutput("data_hydat_map", width = "100%", height = "500px")
       ),
 
       ### HYDAT Table --------
       tabPanel(
         title = "HYDAT Table", width = 12,
-        bsButton("data_hydat_table_select", "Use selected station", style = "primary"),
         DTOutput("data_hydat_table")
       ),
 
