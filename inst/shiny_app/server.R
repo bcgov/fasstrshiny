@@ -148,6 +148,28 @@ server <- function(input, output, session) {
   })
 
 
+  ## AH - Flow timing --------------------------------------------------------
+  # None
+
+  ## AH - Low flows --------------------------------------------------------
+  output$ui_ahlf <- renderUI({
+    build_ui(id = "ahlf", input,
+             include = c("discharge", "missing", "allowed"))
+  })
+
+  ## AH - Peak flows --------------------------------------------------------
+  output$ui_ahp <- renderUI({
+    build_ui(id = "ahp", input,
+             include = c("discharge", "missing", "allowed"))
+  })
+
+  ## AH - Outside Noraml --------------------------------------------------------
+  output$ui_ahon <- renderUI({
+    build_ui(id = "ahon", input, include = "discharge")
+  })
+
+
+
   # Data - Loading ---------------
 
   ## HYDAT Map -------------------------
@@ -316,8 +338,7 @@ server <- function(input, output, session) {
 
     flow_data <- data_raw()
     g <- create_fun("plot_missing_dates", data = "flow_data",
-                    id = "screen", input,
-                    params = NULL, end = "[[1]]")
+                    id = "screen", input, end = "[[1]]")
 
     code$screen_miss <- g
 
@@ -613,11 +634,206 @@ server <- function(input, output, session) {
   })
 
 
+  # AH - Flow timing ---------------------------------------
+  ## Plot --------------------
+  output$ahft_plot <- renderPlot({
+    req(data_raw(), input$ahft_percent)
+
+    flow_data <- data_raw()
+
+    g <- create_fun(
+      "plot_annual_flow_timing", data = "flow_data",
+      id = "ahft", input,
+      params_ignore = c("roll_days", "roll_align"),
+      extra = glue("percent_total = ",
+                   "c({glue_collapse(input$ahft_percent, sep = ',')})"),
+      end = "[[1]]")
+
+    code$ahft_plot <- g
+
+    eval(parse(text = g))
+  })
 
 
+  ## Table -----------------------
+  output$ahft_table <- DT::renderDT({
+    req(data_raw(), input$ahft_percent)
+
+    flow_data <- data_raw()
+
+    t <- create_fun(
+      "calc_annual_flow_timing", data = "flow_data",
+      id = "ahft", input,
+      params_ignore = c("roll_days", "roll_align"),
+      extra = glue("percent_total = ",
+                   "c({glue_collapse(input$ahft_percent, sep = ',')})"))
+
+    code$ahft_table <- t
+
+    parse(text = t) %>%
+      eval() %>%
+      mutate(across(where(is.numeric), ~round(., 4))) %>%
+      datatable(rownames = FALSE,
+                filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                               deferRender = TRUE, dom = 'Brtip'))
+  })
 
 
+  ## R Code -----------------
+  output$ahft_code <- renderText({
+    code_format(code, id = "ahft")
+  })
 
+
+  # AH - Low Flows ---------------------------------------
+  ## Plot --------------------
+  output$ahlf_plot <- renderPlot({
+    req(data_raw(), input$ahlf_discharge)
+
+    flow_data <- data_raw()
+
+    g <- create_fun(
+      "plot_annual_lowflows", data = "flow_data",
+      id = "ahlf", input,
+      params = c("discharge", "missing", "allowed"),
+      params_ignore = "roll_days",
+      extra = glue("roll_days = ",
+                   "c({glue_collapse(input$ahlf_roll, sep = ',')})"),
+      end = " %>% wrap_plots()")
+
+    code$ahlf_plot <- g
+
+    eval(parse(text = g))
+  })
+
+
+  ## Table -----------------------
+  output$ahlf_table <- DT::renderDT({
+    req(data_raw(), input$ahlf_discharge)
+
+    flow_data <- data_raw()
+
+    t <- create_fun(
+      "calc_annual_lowflows", data = "flow_data",
+      id = "ahlf", input,
+      params = c("discharge", "missing", "allowed"),
+      params_ignore = "roll_days",
+      extra = glue("roll_days = ",
+                   "c({glue_collapse(input$ahlf_roll, sep = ',')})"))
+
+    code$ahlf_table <- t
+
+    parse(text = t) %>%
+      eval() %>%
+      mutate(across(where(is.numeric), ~round(., 4))) %>%
+      datatable(rownames = FALSE,
+                filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                               deferRender = TRUE, dom = 'Brtip'))
+  })
+
+
+  ## R Code -----------------
+  output$ahlf_code <- renderText({
+    code_format(code, id = "ahlf")
+  })
+
+  # AH - Peaks ---------------------------------------
+
+  ## Table -----------------------
+  output$ahp_table <- DT::renderDT({
+    req(data_raw(), input$ahp_discharge)
+
+    flow_data <- data_raw()
+
+    t <- create_fun(
+      "calc_annual_peaks", data = "flow_data",
+      id = "ahp", input,
+      params = c("discharge", "missing", "allowed"),
+      params_ignore = "roll_days",
+      extra = glue("roll_days = ",
+                   "c({glue_collapse(input$ahp_roll, sep = ',')})"))
+
+    code$ahp_table <- t
+
+    parse(text = t) %>%
+      eval() %>%
+      mutate(across(where(is.numeric), ~round(., 4))) %>%
+      datatable(rownames = FALSE,
+                filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                               deferRender = TRUE, dom = 'Brtip'))
+  })
+
+
+  ## R Code -----------------
+  output$ahp_code <- renderText({
+    code_format(code, id = "ahp")
+  })
+
+  # AH - Days outside normal ---------------------------------------
+  ## Plot --------------------
+  output$ahon_plot <- renderPlot({
+    req(data_raw(), input$ahon_discharge)
+    validate(
+      need(length(input$ahon_percentiles) == 2,
+           paste0("Can only have 2 percentiles defining lower and upper ",
+                  "bounds of the normal range")))
+
+    flow_data <- data_raw()
+
+    g <- create_fun(
+      "plot_annual_outside_normal", data = "flow_data",
+      id = "ahon", input,
+      params = "discharge",
+      extra = glue("normal_percentiles = ",
+                   "c({glue_collapse(input$ahon_percentiles, sep = ',')})"),
+      end = "[[1]]")
+
+    code$ahon_plot <- g
+
+    eval(parse(text = g))
+  })
+
+
+  ## Table -----------------------
+  output$ahon_table <- DT::renderDT({
+    req(data_raw(), input$ahon_discharge)
+    validate(
+      need(length(input$ahon_percentiles) == 2,
+           paste0("Can only have 2 percentiles defining lower and upper ",
+                  "bounds of the normal range")))
+
+    flow_data <- data_raw()
+
+    t <- create_fun(
+      "calc_annual_outside_normal", data = "flow_data",
+      id = "ahon", input,
+      params = "discharge",
+      extra = glue("normal_percentiles = ",
+                   "c({glue_collapse(input$ahon_percentiles, sep = ',')})"))
+
+    code$ahon_table <- t
+
+    parse(text = t) %>%
+      eval() %>%
+      mutate(across(where(is.numeric), ~round(., 4))) %>%
+      datatable(rownames = FALSE,
+                filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                               deferRender = TRUE, dom = 'Brtip'))
+  })
+
+
+  ## R Code -----------------
+  output$ahon_code <- renderText({
+    code_format(code, id = "ahon")
+  })
 
 
 

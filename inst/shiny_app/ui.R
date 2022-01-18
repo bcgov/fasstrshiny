@@ -290,7 +290,7 @@ ui_sum_single <- fluidRow(
 
 # Cumulative -------------
 
-ui_cumulative <-  fluidRow(
+ui_cumulative <- fluidRow(
   column(
     width = 12, h2("Cumulative Statistics"),
     box(
@@ -334,149 +334,145 @@ ui_cumulative <-  fluidRow(
 )
 
 
-# Annual Hydrograph ------------------------------
-
-## Flows low ------------------------
-ui_annual_flow_low <- fluidRow(
+# AH - Flow timing ------------------------------
+ui_ah_flow_timing <- fluidRow(
   column(
-    width = 12, h2("Low flows"),
-    box(width = 3),
+    width = 12, h2("Flow Timing"),
+    box(
+      width = 4,
+      selectInput("ahft_percent",
+                  label = "Percents of total annual flows",
+                  choices = c(1:99),
+                  selected = c(25, 33, 50, 75),
+                  multiple = TRUE)
+    ),
     tabBox(
-      width = 9, height = min_height,
+      width = 8, height = min_height,
+
+      ## Plot ---------------------
       tabPanel(
-        title = "Plot"
+        title = "Plot",
+        plotOutput("ahft_plot")
       ),
+
+      ## Table ---------------------
       tabPanel(
-        title = "Table"
+        title = "Table",
+        DTOutput("ahft_table")
       ),
+
+      ## R Code ---------------------
       tabPanel(
-        title = "Info"
+        title = "R Code",
+        verbatimTextOutput("ahft_code")
       )
     )
   )
 )
 
-## Flow timing ------------------------
-ui_annual_flow_timing <- fluidRow(
+# AH - Low flows ------------------------
+ui_ah_low_flows <- fluidRow(
   column(
-    width = 12, h2("Flow timing"),
-    box(width = 3),
+    width = 12, h2("Low Flows"),
+    box(
+      width = 4,
+      selectInput("ahlf_roll",
+                  label = "Days to calculate rolling averages over",
+                  choices = c(1:31),
+                  selected = c(1, 3, 7, 30),
+                  multiple = TRUE),
+      uiOutput("ui_ahlf")
+    ),
     tabBox(
-      width = 9, height = min_height,
+      width = 8, height = min_height,
+
+      ## Plot ---------------------
       tabPanel(
-        title = "Plot"
+        title = "Plot",
+        plotOutput("ahlf_plot")
       ),
+
+      ## Table ---------------------
       tabPanel(
-        title = "Table"
+        title = "Table",
+        DTOutput("ahlf_table")
       ),
+
+      ## R Code ---------------------
       tabPanel(
-        title = "Info"
+        title = "R Code",
+        verbatimTextOutput("ahlf_code")
       )
     )
   )
 )
 
-## Flow peak ------------------------
-ui_annual_flow_peak <- fluidRow(
+# AH - Flow peak ------------------------
+ui_ah_peak <- fluidRow(
   column(
-    width = 12, h2("Flow peak"),
-    box(width = 3),
+    width = 12, h2("Peak Flows"),
+    box(
+      width = 4,
+      "SHOULD THIS BE HERE? OR LEAVE AS DEFAULT GLOBAL?",
+      selectInput("ahp_roll",
+                  label = "Days to calculate rolling averages over",
+                  choices = c(1:31),
+                  selected = 1),
+      uiOutput("ui_ahp")
+    ),
     tabBox(
-      width = 9, height = min_height,
+      width = 8, height = min_height,
+
+      ## Table ---------------------
       tabPanel(
-        title = "Plot"
+        title = "Table",
+        DTOutput("ahp_table")
       ),
+
+      ## R Code ---------------------
       tabPanel(
-        title = "Table"
-      ),
-      tabPanel(
-        title = "Info"
+        title = "R Code",
+        verbatimTextOutput("ahp_code")
       )
     )
   )
 )
 
-## Days outside normal ------------------------
-ui_annual_outside_normal <- fluidRow(
+# AH - Days outside normal ------------------------
+ui_ah_outside_normal <- fluidRow(
   column(
-    width = 12, h2("Days outside normal"),
-    box(width = 3),
+    width = 12, h2("Days Outside Normal"),
+    box(
+      width = 4,
+      selectInput("ahon_percentiles",
+                  label = "Normal range (percentiles)",
+                  choices = c(1:99),
+                  selected = c(25, 75),
+                  multiple = TRUE),
+      uiOutput("ui_ahon")
+    ),
     tabBox(
-      width = 9, height = min_height,
+      width = 8, height = min_height,
+
+      ## Plot ---------------------
       tabPanel(
-        title = "Plot"
+        title = "Plot",
+        plotOutput("ahon_plot")
       ),
+
+      ## Table ---------------------
       tabPanel(
-        title = "Table"
+        title = "Table",
+        DTOutput("ahon_table")
       ),
+
+      ## R Code ---------------------
       tabPanel(
-        title = "Info"
+        title = "R Code",
+        verbatimTextOutput("ahon_code")
       )
     )
   )
-)
-
-
-## Daily ------------------------
-ui_sum_daily <- fluidRow(
-  column(
-    width = 12,
-    h2("Daily"),
-    tabBox(
-      width = 12, height = min_height,
-
-      ### Summary Stats -------------------------
-      tabPanel(
-        title = "Summary Statistics",
-        column(width = 3,
-               h4("Daily Flows"),
-               selectInput("dly_datatype", label = "Discharge type:", choices = list("Discharge (cms)" = 1,
-                                                                                     "Volumetric Discharge (m3)" = 2,
-                                                                                     "Runoff Yield (mm)" = 3),
-                           selected = 1),
-               fluidRow(column(6,numericInput("dly_roll_days", label = "Rolling average days:", value = 1, min = 1, max = 180, step = 1)),
-                        column(6,selectInput("dly_roll_align", label = "Rolling alignment:",
-                                             choices = list("Right" = "right", "Left" = "left", "Center" = "center"), selected = "Right"))),
-               selectizeInput("dly_months",
-                              label = "Months:",
-                              choices = list("Jan" = 1, "Feb" = 2,
-                                             "Mar" = 3, "Apr" = 4,
-                                             "May" = 5, "Jun" = 6,
-                                             "Jul" = 7, "Aug" = 8,
-                                             "Sep" = 9, "Oct" = 10,
-                                             "Nov" = 11, "Dec" = 12),
-                              selected = c(1:12),
-                              multiple = TRUE),
-               selectizeInput("dly_ptiles",
-                              label = "Percentiles to calculate:",
-                              choices = c(1:99),
-                              selected = c(10,90),
-                              multiple = TRUE),
-               checkboxInput("dly_ign_missing_box", "Calculate statistics despite missing values", value = FALSE),
-               h5("Display Settings"),
-               checkboxInput("logDaily", label = "Plot Discharge axis on log scale", value= TRUE),
-               checkboxInput("yearCheckDaily", label = "Plot daily discharge from a selected year (below)", value= FALSE),
-               uiOutput("yearSelectDaily")
-        ),
-        column(width = 9,
-               tabBox(height = min_height,
-                 tabPanel(
-                   title = "Plot",
-                   plotOutput('dailyPlot'),
-                   downloadButton('downloadDailyPlot', 'Download Plot')
-                 ),
-                 tabPanel(
-                   title = "Data",
-
-                   downloadButton('downloadDailyTable', 'Download Table'),
-
-                   dataTableOutput("dailyTable")),
-                 tabPanel(
-                   title = "Info")
-               )
-        )),
-
-    ))
 )
 
 
@@ -654,11 +650,10 @@ dashboardPage(skin = "green",
                icon = icon("chart-area")),
       menuItem("Annual Hydrograph Stats", tabName = "annual",
                icon = icon("calendar"),
-               menuSubItem("Low Flows", tabName = "annual_flow_low"),
-               menuSubItem("Flow timing", tabName = "annual_flow_timing"),
-               menuSubItem("Peak Flows", tabName = "annual_flow_peak"),
-               menuSubItem("Days outside normal",
-                           tabName = "annual_outside_normal")),
+               menuSubItem("Flow timing", tabName = "ah_flow_timing"),
+               menuSubItem("Low Flows", tabName = "ah_low_flows"),
+               menuSubItem("Peak Flows", tabName = "ah_peak"),
+               menuSubItem("Days outside normal", tabName = "ah_outside_normal")),
       menuItem("Computations", tabName = "computed",
                icon = icon("chart-line"),
                menuSubItem("Annual Trends", tabName = "comp_annual"),
@@ -675,10 +670,10 @@ dashboardPage(skin = "green",
       tabItem("sum_flow", ui_sum_flow),
       tabItem("sum_single", ui_sum_single),
       tabItem("cumulative", ui_cumulative),
-      tabItem("annual_flow_low", ui_annual_flow_low),
-      tabItem("annual_flow_timing", ui_annual_flow_timing),
-      tabItem("annual_flow_peak", ui_annual_flow_peak),
-      tabItem("annual_outside_normal", ui_annual_outside_normal),
+      tabItem("ah_flow_timing", ui_ah_flow_timing),
+      tabItem("ah_low_flows", ui_ah_low_flows),
+      tabItem("ah_peak", ui_ah_peak),
+      tabItem("ah_outside_normal", ui_ah_outside_normal),
       tabItem("comp_annual", ui_comp_annual),
       tabItem("comp_flow", ui_comp_flow)
     )

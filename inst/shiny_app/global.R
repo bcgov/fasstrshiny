@@ -385,8 +385,8 @@ build_ui <- function(id, input = NULL, define_options = FALSE,
 #'                params_extra = c("mad" = "percent_MAD = c(input$sumsi_mad)"))
 #' }
 
-create_fun <- function(fun, data, id, input, params, params_ignore = NULL,
-                       extra = NULL, end = "") {
+create_fun <- function(fun, data, id, input, params = NULL,
+                       params_ignore = NULL, extra = NULL, end = "") {
 
   params_default <- c("discharge", "roll_days", "roll_align", "water_year",
                       "years_range", "years_exclude", "months")
