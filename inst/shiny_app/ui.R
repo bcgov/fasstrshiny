@@ -235,6 +235,7 @@ ui_sum_flow <- fluidRow(
       ## Table ---------------------
       tabPanel(
         title = "Table - Percentiles",
+        uiOutput("ui_sumfl_table_options"),
         DTOutput("sumfl_table")
       ),
 
@@ -247,14 +248,21 @@ ui_sum_flow <- fluidRow(
   )
 )
 
-# Stats Summary - single ----------------
+# Stats Summary - Single ----------------
 ui_sum_single <- fluidRow(
   column(
-    width = 12, h2("Single stats"),
+    width = 12, h2("Long-term Single stats"),
     box(
       width = 4,
-      textInput("sumsi_mad", label = "MAD percentiles to add",
-                placehold = "e.g., 5, 10, 50"),
+      selectInput("sumsi_mad",
+                  label = "Mean Annual Discharge percentiles (MAD)",
+                  choices = c(1:99),
+                  selected = c(1, 5, 50, 95, 99),
+                  multiple = TRUE),
+      select_percentiles(id = "sumsi", set = FALSE),
+      numericInput("sumsi_flow",
+                   label = "Flow value for calculating percentile rank",
+                   value = 10, min = 0),
       uiOutput("ui_sumsi"),
     ),
     tabBox(
@@ -263,7 +271,12 @@ ui_sum_single <- fluidRow(
       ## Table ---------------------
       tabPanel(
         title = "Stats",
-        gt_output("sumsi_mad")
+        h4("Mean Annual Discharge (MAD)"),
+        gt_output("sumsi_mad"),
+        h4("Long-term Percentiles"),
+        gt_output("sumsi_perc"),
+        h4("Percentile Rank of Flow"),
+        gt_output("sumsi_flow")
       ),
 
       ## R Code ---------------------

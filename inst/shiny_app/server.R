@@ -449,24 +449,16 @@ server <- function(input, output, session) {
 
   ## MAD -----------------------
   output$sumsi_mad <- render_gt({
-    req(input$sumsi_discharge)
-    validate(need(
-      is.null(input$sumsi_mad) ||
-        input$sumsi_mad == "" ||
-        !any(is.na(as.numeric(str_split(input$sumsi_mad,
-                             pattern = ",", simplify = TRUE)))),
-      "MAD percentiles must be comma-separated numbers (e.g., 5, 10, 50)"))
+    req(input$sumsi_discharge, input$sumsi_mad)
 
     flow_data <- data_raw()
 
-    # Args missing: complete_years
-    t <- create_fun(fun = "calc_longterm_mean",
-                    data = "flow_data", id = "sumsi", input,
-                    params = c("discharge", "roll_days", "roll_align",
-                               "data" = "water_year",
-                               "data" = "years_range",
-                               "data" = "years_exclude",
-                               "months", "mad"))
+
+    t <- create_fun(
+      fun = "calc_longterm_mean",
+      data = "flow_data", id = "sumsi", input,
+      params = "complete",
+      extra = glue("percent_MAD = c({glue_collapse(input$sumsi_mad, sep = ',')})"))
 
     code$sumsi_mad <- t
 
@@ -476,42 +468,48 @@ server <- function(input, output, session) {
       fmt_number(columns = where(is.numeric), decimals = 4)
   })
 
-  ## Perc -----------------------
+  ## Longterm percentiles -----------------------
   output$sumsi_perc <- render_gt({
-    req(input$sumsi_discharge)
+    req(input$sumsi_discharge, input$sumsi_percentiles)
 
-  # Percentiles
-  t <- create_fun(fun = "calc_longterm_percentile",
-                  data = "flow_data", id = "sumsi", input,
-                  params = c("discharge", "roll_days", "roll_align",
-                             "data" = "water_year",
-                             "data" = "years_range",
-                             "data" = "years_exclude",
-                             "months", "percentiles"))
+    flow_data <- data_raw()
+    # Percentiles
+    t <- create_fun(fun = "calc_longterm_percentile",
+                    data = "flow_data", id = "sumsi", input,
+                    params = c("percentiles", "complete"))
 
-  code$sumsi_perc <- t
+    code$sumsi_perc <- t
 
-  parse(text = t) %>%
-    eval() %>%
-    gt() %>%
-    fmt_number(decimals = 4)
+    parse(text = t) %>%
+      eval() %>%
+      gt() %>%
+      fmt_number(columns = where(is.numeric), decimals = 4)
   })
 
-  # ADD:
-  # calc_flow_percentile()
+  ## Flow Percentile -----------------------
+  output$sumsi_flow <- render_gt({
+    req(input$sumsi_discharge, input$sumsi_flow)
+
+    flow_data <- data_raw()
+
+    # Flow
+    t <- create_fun(fun = "calc_flow_percentile",
+                    data = "flow_data", id = "sumsi", input,
+                    params = "complete",
+                    extra = glue("flow_value = {input$sumsi_flow}"))
+
+    code$sumsi_flow <- t
+
+    parse(text = t) %>%
+      eval() %>%
+      gt() %>%
+      fmt_number(columns = where(is.numeric), decimals = 4)
+  })
 
   ## R Code -----------------
-  output$sumfl_code <- renderText({
-    code_format(code, id = "sumfl")
+  output$sumsi_code <- renderText({
+    code_format(code, id = "sumsi")
   })
-
-
-
-
-# Older code -------------------------------
-
-
-  # Flow Duration and Percentiles
 
   ptile_data <- reactive({
 
