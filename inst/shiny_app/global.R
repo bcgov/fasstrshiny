@@ -83,7 +83,8 @@ bc_hydrozones <- hydrozones(ask = FALSE) %>%
 
 # Settings --------------------------
 min_height <- "250px" # Minimum placeholder height for boxes (will expand to content)
-
+global_settings <- c("rolling", "months",                          # Settings tab
+                     "years_range", "years_exclude", "water_year") # Data tab
 
 # Functions ---------------------
 
@@ -99,7 +100,30 @@ select_months <- function(id, input = NULL, set = TRUE) {
 
   tagList(
     selectInput(paste0(id, "_months"),
-                label = "Custom Months",
+                label = "Months to Include",
+                choices = list("Jan" = 1,  "Feb" = 2,
+                               "Mar" = 3,  "Apr" = 4,
+                               "May" = 5,  "Jun" = 6,
+                               "Jul" = 7,  "Aug" = 8,
+                               "Sep" = 9,  "Oct" = 10,
+                               "Nov" = 11, "Dec" = 12),
+                selected = selected,
+                multiple = TRUE)
+  )
+}
+
+select_custom_months <- function(id, input = NULL, set = TRUE) {
+  if(set & !is.null(input)) {
+    selected <- input$opts_custom_months
+    value <- input$opts_custom_months_label
+  } else {
+    selected <- NULL
+    value <- ""
+  }
+
+  tagList(
+    selectInput(paste0(id, "_custom_months"),
+                label = "Months to combine and summarize",
                 choices = list("Jan" = 1,  "Feb" = 2,
                                "Mar" = 3,  "Apr" = 4,
                                "May" = 5,  "Jun" = 6,
@@ -109,8 +133,8 @@ select_months <- function(id, input = NULL, set = TRUE) {
                 selected = selected,
                 multiple = TRUE),
 
-    textInput(paste0(id, "_months_label"),
-              label = "Custom Months Label",
+    textInput(paste0(id, "_custom_months_label"),
+              label = "Summary months label",
               placeholder = "ex. Jun-Aug",
               value = value)
   )
@@ -150,13 +174,23 @@ select_rolling <- function(id, input = NULL, set = TRUE) {
       )
 }
 
+
 select_percentiles <- function(id, input = NULL, set = TRUE) {
-  if(set & !is.null(input)) selected <- input$opts_percentiles else selected <- c(10,90)
+  if(set & !is.null(input)) {
+    selected <- input$opts_percentiles
+  } else selected <- c(10,90)
+
   selectInput(paste0(id, "_percentiles"),
               label = "Percentiles to calculate",
               choices = c(1:99),
               selected = selected,
               multiple = TRUE)
+}
+
+select_complete <- function(id, input = NULL, set = TRUE) {
+  if(set & !is.null(input)) value <- input$opts_complete else value <- FALSE
+  checkboxInput(paste0(id, "_complete"),
+                label = "Complete years only")
 }
 
 select_missing <- function(id, input = NULL, set = TRUE) {
@@ -188,9 +222,9 @@ select_parameters <- function(id, params) {
                        selected = params)
 }
 
-select_plot_options <- function(data, id, input,
-                                include = c("log", "daterange", "discharge"),
-                                params = NULL) {
+select_plot_options <- function(id, input,
+                                include = "log",
+                                params = NULL, data = NULL) {
 
   i <- tagList()
   if("log" %in% include) {
@@ -199,6 +233,9 @@ select_plot_options <- function(data, id, input,
                                    status = "success"))
   }
   if("daterange" %in% include) {
+    if(is.null(data)) stop("Require 'data' to create daterange UI",
+                           call. = FALSE)
+
     i <- tagList(i, dateRangeInput(glue("{id}_daterange"), "Start/End dates",
                                    format = "yyyy-mm-dd", startview = "month",
                                    start = min(data$Date), end = max(data$Date)))
@@ -207,6 +244,9 @@ select_plot_options <- function(data, id, input,
     i <- tagList(i, select_discharge(id, input))
   }
   if("parameters" %in% include) {
+    if(is.null(params)) stop("Require 'params' to create parameters UI",
+                           call. = FALSE)
+
     i <- tagList(i, select_parameters(id, params))
   }
 
@@ -223,6 +263,33 @@ select_plot_options <- function(data, id, input,
   )
 }
 
+select_table_options <- function(id, input,
+                                 include = c("percentiles", "custom_months"),
+                                 params = NULL, data = NULL) {
+
+  i <- tagList()
+  if("percentiles" %in% include) {
+   i <- tagList(i, select_percentiles(id, input, set = TRUE))
+  }
+  if("custom_months" %in% include) {
+    i <- tagList(i, select_custom_months(id, input, set = TRUE))
+  }
+
+  t <- tagList(
+    div(align = "right",
+        dropdownButton(
+          tags$h3("Table options"),
+          i,
+          status = "primary", icon = icon("gear", verify_fa = FALSE),
+          size = "sm", width = "300px", right = TRUE,
+          tooltip = tooltipOptions(title = "Table options", placement = "left")
+        )
+    )
+  )
+}
+
+
+
 # Disable/Enable 'allowed'
 toggle_allowed <- function(id, input) {
   observe({
@@ -236,10 +303,19 @@ toggle_allowed <- function(id, input) {
 }
 
 
-# Define hidden UI elements ----------------------
-ui_hidden <- c("allowed", "rolling", "months", "percentiles")
+build_ui <- function(id, input = NULL, define_options = FALSE,
+                     include, hide = c("allowed", "custom_months", "percentiles"),
+                     global = global_settings) {
 
-build_ui <- function(id, input = NULL, define_options = FALSE, include) {
+  if(any(global %in% include) & !define_options){
+    stop("Some ui elements included here (",
+         paste0(include[include %in% c("rolling", "months")],
+                collapse = ", "),
+         ") should only be set once on the 'Settings' tab.\n",
+         "They should not be set on individual tabs.",
+         call. = FALSE)
+  }
+
   # Set up all options in the settings
   # - Don't hide and don't set defaults
   if(define_options == TRUE) {
@@ -252,18 +328,20 @@ build_ui <- function(id, input = NULL, define_options = FALSE, include) {
   # - Hide extra options
   # - Set defaults from the Settings tab
     set <- TRUE
-    ui_show <- include[!include %in% ui_hidden] %>%
+    ui <- include[!include %in% hide] %>%
       purrr::map(~get(paste0("select_", .))(id, input, set)) %>%
       purrr::map(tagList) %>%
       append(tagList(select_extra(id)))
 
-    ui_hide <- include[include %in% ui_hidden] %>%
+    ui_hide <- include[include %in% hide] %>%
       purrr::map(~get(paste0("select_", .))(id, input, set)) %>%
       purrr::map(tagList)
 
-    ui <- tagList(ui_show,
-                  conditionalPanel(glue("input.{id}_show_extra == true"),
-                                   ui_hide))
+    if(length(include[include %in% hide]) > 0) {
+      ui <- tagList(ui,
+                    conditionalPanel(glue("input.{id}_show_extra == true"),
+                                     ui_hide))
+    }
   }
   ui
 }
@@ -296,47 +374,84 @@ build_ui <- function(id, input = NULL, define_options = FALSE, include) {
 #'                            "data" = "years_range",
 #'                            "data" = "years_exclude",
 #'                            "months", "missing"))
+#'
+#'
+#' t <- create_fun(fun = "calc_longterm_mean",
+#'                 data = "flow_data", id = "sumsi", input,
+#'                 params = c("discharge", "roll_days", "roll_align",
+#'                            "water_year", "years_range", "years_exclude",
+#'                            "months", "mad"),
+#'                params_extra = c("mad" = "percent_MAD = c(input$sumsi_mad)"))
 #' }
 
-create_fun <- function(fun, data, id, input, params, extra = NULL, end = "") {
+create_fun <- function(fun, data, id, input, params, params_ignore = NULL,
+                       extra = NULL, end = "") {
 
-  if(is.null(names(params))) names(params) <- rep(id, length(params))
-  names(params)[names(params) == ""] <- id
-  names(params) <- glue("{names(params)}_{params}")
+  params_default <- c("discharge", "roll_days", "roll_align", "water_year",
+                      "years_range", "years_exclude", "months")
 
+  if(!is.null(params_ignore)) {
+    params_default <- params_default[!params_default %in% params_ignore]
+  }
+
+  params <- unique(c(params, params_default))
+
+  # Figure out where parameters come from
+  if(is.null(names(params))) {
+    n <- rep(NA_character_, length(params))
+  } else n <- names(params)
+  n[params %in% c("roll_days", "roll_align", "months")] <- "opts"
+  n[params %in% c("water_year", "years_range", "years_exclude")] <- "data"
+  n[is.na(n)] <- id
+  names(params) <- glue("{n}_{params}")
+
+  # Retrieve inputs for these parameters
   id <- map(names(params), ~input[[.]])
+
   # Remove NULL/empty
   nulls <- map_lgl(id, ~is.null(.) || (is.character(.) && . == ""))
   id <- id[!nulls]
   params <- params[!nulls]
 
+  # Create standard parameters
+  #
+  # - REMEMBER! When collapsing multiple elements with glue_collapse, use [[i]]
   p <- vector()
   for(i in seq_along(params)) {
     p[i] <- case_when(
+
+      # Specific
       params[i] == "discharge" ~ glue("values = '{id[i]}'"),
       params[i] == "percentiles" ~
         glue("percentiles = c({glue_collapse(id[[i]], sep = ', ')})"),
-      params[i] == "roll_days" ~ glue("roll_days = {id[i]}"),
-      params[i] == "roll_align" ~ glue("roll_align = '{id[i]}'"),
-      params[i] == "water_year" ~
-        glue("water_year_start = {id[i]}"),
-      params[i] == "years_range" ~ glue("start_year = {id[[i]][1]}, ",
-                                        "end_year = {id[[i]][2]}"),
-      params[i] == "years_exclude" ~
-        glue("exclude_years = {id[i]}"),
-      params[i] == "plot_daterange" ~ glue("start_date = '{id[[i]][1]}', ",
-                                           "end_date = '{id[[i]][2]}'"),
-      params[i] == "months" ~
-        glue("months = c({glue_collapse(id[[i]], sep = ', ')})"),
       params[i] == "custom_months" ~
-        glue("custom_months = c({glue_collapse(id[i], sep = ', ')})"),
-      params[i] == "custom_months_label" ~ glue("custom_months_label = {id[i]}"),
+        glue("custom_months = c({glue_collapse(id[[i]], sep = ', ')})"),
+      params[i] == "custom_months_label" ~ glue("custom_months_label = '{id[i]}'"),
       params[i] == "missing" ~ glue("ignore_missing = {id[i]}"),
       params[i] == "allowed" ~ glue("allowed_missing = {id[i]}"),
-      params[i] == "plot_log" ~ glue("log_discharge = {id[i]}"),
-      params[i] == "mad" ~
-        glue("percent_MAD = c({id[i]})"))
+      params[i] == "complete" ~ glue("complete_years = {id[i]}"),
+
+      # Opts
+      params[i] == "roll_days" ~ glue("roll_days = {id[i]}"),
+      params[i] == "roll_align" ~ glue("roll_align = '{id[i]}'"),
+      params[i] == "months" ~
+        glue("months = c({glue_collapse(id[[i]], sep = ', ')})"),
+
+      # Data
+      params[i] == "water_year" ~
+        glue("water_year_start = {id[i]}"),
+      params[i] == "years_range" ~
+        glue("start_year = {id[[i]][1]}, end_year = {id[[i]][2]}"),
+      params[i] == "years_exclude" ~
+        glue("exclude_years = {id[i]}"),
+
+      # Plot
+      params[i] == "daterange" ~
+        glue("start_date = '{id[[i]][1]}', end_date = '{id[[i]][2]}'"),
+      params[i] == "log" ~ glue("log_discharge = {id[i]}")
+      )
   }
+
 
   args <- glue_collapse(c(data, p, extra), sep = ', ')
 
@@ -350,7 +465,7 @@ create_fun <- function(fun, data, id, input, params, extra = NULL, end = "") {
 ## Other Functions ---------
 
 code_format <- function(code, id) {
-  str_subset(names(code), id) %>%
+  str_subset(names(code), glue("{id}_")) %>%
     sort() %>%
     map(~code[[.]]) %>%
     as.character() %>%

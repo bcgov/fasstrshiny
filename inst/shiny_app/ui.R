@@ -23,12 +23,16 @@ ui_settings <- fluidRow(
     width = 12, h2("Settings"),
     box(title = "Global Settings", width = 6,
         p("Set once here, apply to whole app"),
+
         build_ui(id = "opts", define_options = TRUE,
                  include = c("rolling", "months"))),
+
     box(title = "Default Settings", width = 6,
         p("Set defaults here, but can change throughout the app as needed"),
+
         build_ui(id = "opts", define_options = TRUE,
-                 include = c("discharge", "missing", "allowed", "percentiles"))
+                 include = c("discharge", "missing", "allowed", "percentiles",
+                             "custom_months"))
     )
   )
 )
@@ -196,6 +200,7 @@ ui_sum_general <- fluidRow(
       ## Table ---------------------
       tabPanel(
         title = "Table",
+        uiOutput("ui_sum_table_options"),
         DTOutput("sum_table")
       ),
 

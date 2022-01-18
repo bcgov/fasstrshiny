@@ -84,39 +84,40 @@ server <- function(input, output, session) {
   # Add plot options as Gear in corner
   output$ui_data_plot_options <- renderUI({
     req(data_raw())
-    select_plot_options(data = data_raw(), id = "data_plot", input)
+    select_plot_options(data = data_raw(), id = "data", input,
+                        include = c("log", "daterange"))
   })
 
-  ## Summary -------------------
+  ## Summary ------------------------------------------------------------------
   output$ui_sum <- renderUI({
     build_ui(id = "sum", input,
-             include = c("discharge", "missing", "allowed", "rolling",
-                         "months", "percentiles"))
+             include = c("discharge", "missing", "allowed"))
   })
 
-  # Add plot options as Gear in corner
+  # Plot options
   output$ui_sum_plot_options <- renderUI({
-    p <- select(data_raw(), -any_of(c("STATION_NUMBER", "Month", "Year"))) %>%
-      names()
-
-    select_plot_options(data = data_raw(), id = "sum_plot", input,
-                        include = c("log", "parameters"),
-                        params = p)
+    select_plot_options(id = "sum", input, include = "log")
+    # Add inner/outer percentiles?
   })
 
-  ## Summary - Flow ------------
+  # Table options
+  output$ui_sum_table_options <- renderUI({
+    select_table_options(id = "sum", input)
+  })
+
+  ## Summary - Flow ----------------------------------------------------------
   output$ui_sumfl <- renderUI({
     build_ui(id = "sumfl", input,
-             include = c("discharge", "missing", "allowed", "months"))
+             include = c("discharge", "missing", "allowed", "custom_months"))
   })
 
   # Plot options
   output$ui_sumfl_plot_options <- renderUI({
-    select_plot_options(data = data_raw(), id = "sumfl_plot", input,
-                        include = c("log"))
+    select_plot_options(data = data_raw(), id = "sumfl", input,
+                        include = "log")
   })
 
-  ## Summary - Single ------------
+  ## Summary - Single --------------------------------------------------------
   output$ui_sumsi <- renderUI({
     build_ui(id = "sumsi", input,
              include = c("discharge", "months", "percentiles"))
@@ -155,7 +156,7 @@ server <- function(input, output, session) {
                 options = list(scrollX = TRUE,
                                scrollY = 450, deferRender = TRUE,
                                scroller = TRUE,
-                               dom = 'Bfrtip'))
+                               dom = 'Brtip'))
   })
 
   ## Raw data ------------------
@@ -203,8 +204,8 @@ server <- function(input, output, session) {
   ## Plot ----------------
   output$data_plot <- renderPlotly({
     req(data_raw(),
-        !is.null(input$data_plot_log),
-        input$data_plot_daterange,
+        !is.null(input$data_log),
+        input$data_daterange,
         input$data_years_range,
         input$data_water_year)
 
@@ -212,8 +213,7 @@ server <- function(input, output, session) {
 
     g <- create_fun(
       "plot_flow_data", "flow_data", id = "data", input,
-      params = c("water_year", "years_range", "exclude_years",
-                 "plot_log", "plot_daterange"),
+      params = c("log", "daterange"),
       end = "[[1]] + scale_color_manual(values = 'dodgerblue4')")
 
     code$data_plot <- g
@@ -291,11 +291,9 @@ server <- function(input, output, session) {
     req(data_raw())
 
     flow_data <- data_raw()
-    g <- create_fun("plot_missing_dates", "flow_data",
+    g <- create_fun("plot_missing_dates", data = "flow_data",
                     id = "screen", input,
-                    params = c("data" = "data_years_range",
-                               "data" = "water_year",
-                               "months"), end = "[[1]]")
+                    params = NULL, end = "[[1]]")
 
     code$screen_miss <- g
 
@@ -321,7 +319,7 @@ server <- function(input, output, session) {
                 options = list(scrollX = TRUE,
                                scrollY = 450, deferRender = TRUE,
                                scroller = TRUE,
-                               dom = 'Bfrtip'))
+                               dom = 'Brtip'))
   })
 
   ## R Code -----------------
@@ -335,7 +333,7 @@ server <- function(input, output, session) {
 
   ## Plot --------------------
   output$sum_plot <- renderPlot({
-    req(data_raw(), input$sum_plot_params)
+    req(data_raw())
 
     flow_data <- data_raw()
 
@@ -345,13 +343,9 @@ server <- function(input, output, session) {
                 "Monthly" = "plot_monthly_stats",
                 "Daily" = "plot_daily_stats") %>%
       create_fun("flow_data", id = "sum", input,
-                 params = c("discharge", "roll_days", "roll_align", "months",
-                            "data" = "water_year",
-                            "data" = "years_range",
-                            "data" = "years_exclude",
-                            if_else(input$sum_type %in% c("Long-term", "Daily"),
+                 params = c(if_else(input$sum_type %in% c("Long-term", "Daily"),
                                     "missing", "allowed"),
-                            "plot_log"),
+                            "log"),
                  end = "[[1]]")
 
     code$sum_plot <- g
@@ -371,14 +365,13 @@ server <- function(input, output, session) {
                 "Monthly" = "calc_monthly_stats",
                 "Daily" = "calc_daily_stats") %>%
       create_fun("flow_data", id = "sum", input,
-                 params = c("discharge", "percentiles",
-                            "roll_days", "roll_align",
-                            "data" = "water_year",
-                            "data" = "years_range",
-                            "data" = "years_exclude",
-                            "months",
-                            if_else(input$sum_type %in% c("Long-term", "Daily"),
-                                    "missing", "allowed")))
+                 params = c("percentiles",
+                            case_when(
+                              input$sum_type == "Daily" ~ "missing",
+                              input$sum_type == "Long-term" ~
+                                c("missing", "custom_months", "custom_months_label"),
+                              TRUE ~ "allowed")))
+
 
     code$sum_table <- t
 
@@ -389,7 +382,7 @@ server <- function(input, output, session) {
                 filter = 'top',
                 extensions = c("Scroller"),
                 options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Bfrtip'))
+                               deferRender = TRUE, dom = 'Brtip'))
   })
 
 
@@ -402,22 +395,17 @@ server <- function(input, output, session) {
   # Summary Statistics - Flow ---------------------------------------
   ## Plot --------------------
   output$sumfl_plot <- renderPlot({
-    req(data_raw(), !is.null(input$sumfl_plot_log))
+    req(data_raw(), !is.null(input$sumfl_log))
 
     flow_data <- data_raw()
 
     # missing arguments
     # - include_longterm
-    # - custom months
 
     g <- create_fun(
       fun = "plot_flow_duration", data = "flow_data", id = "sumfl", input,
-      params = c("discharge",
-                 "roll_days", "roll_align",
-                 "data" = "water_year",
-                 "data" = "years_range",
-                 "data" = "years_exclude",
-                 "months", "missing", "plot_log"),
+      params = c("custom_months", "custom_months_label",
+                 "missing", "log"),
       end = "[[1]]")
 
     code$sumfl_plot <- g
@@ -434,11 +422,8 @@ server <- function(input, output, session) {
 
     t <- create_fun(fun = "calc_longterm_daily_stats",
                     data = "flow_data", id = "sumfl", input,
-                    params = c("discharge", "roll_days", "roll_align",
-                               "data" = "water_year",
-                               "data" = "years_range",
-                               "data" = "years_exclude",
-                               "months", "missing"),
+                    params = c("custom_months", "custom_months_label",
+                               "missing"),
                     extra = "percentiles = 1:99",
                     end = "%>% select(-Mean, -Median, -Minimum, -Maximum)")
 
@@ -451,7 +436,7 @@ server <- function(input, output, session) {
                 filter = 'top',
                 extensions = c("Scroller"),
                 options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Bfrtip'))
+                               deferRender = TRUE, dom = 'Brtip'))
   })
 
 
