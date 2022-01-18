@@ -23,8 +23,18 @@ server <- function(input, output, session) {
 
   # UI elements ---------------------------------------
 
-  # Disable allowed missing depend on on type and whether ignoring missing
+  ## Disable/enable -----------------
+
+  # `allowed`/`missing` depend on type and whether ignoring missing
   toggle_allowed(id = "sum", input)
+
+  # Cumulative stats season
+  observe({
+    req(!is.null(input$cum_seasons), !is.null(input$cum_type))
+    if(input$cum_type != "Annual") {
+      disable("cum_seasons")
+    } else enable("cum_seasons")
+  })
 
   ## Data ----------------------
 
@@ -120,7 +130,21 @@ server <- function(input, output, session) {
   ## Summary - Single --------------------------------------------------------
   output$ui_sumsi <- renderUI({
     build_ui(id = "sumsi", input,
-             include = c("discharge", "months", "percentiles"))
+             include = c("discharge", "complete"), # Percentiles by hand to group
+             hide = "")
+  })
+
+  ## Cumulative ----------------------------------------------------------
+
+  # Plot options
+  output$ui_cum_plot_options <- renderUI({
+    select_plot_options(data = data_raw(), id = "cum", input, include = "log")
+  })
+
+  # Table options
+  output$ui_cum_table_options <- renderUI({
+    select_table_options(data = data_raw(), id = "cum", input,
+                         include = "percentiles")
   })
 
 
@@ -511,148 +535,103 @@ server <- function(input, output, session) {
     code_format(code, id = "sumsi")
   })
 
-  ptile_data <- reactive({
+  # Cumulative ---------------------------------------
+  ## Plot --------------------
+  output$cum_plot <- renderPlot({
+    req(data_raw(), input$cum_type)
 
-    ptile_data <- data_raw()
+    flow_data <- data_raw()
 
-    calc_longterm_daily_stats(data = ptile_data,
-                              percentiles = seq(from = 1,  to = 99, by = 1),
-                              roll_days = input$ptile_roll_days,
-                              roll_align = input$ptile_roll_align,
-                              water_year_start = as.numeric(input$data_water_year),
-                              start_year = input$data_years_range[1],
-                              end_year = input$data_years_range[2],
-                              exclude_years = as.numeric(input$data_years_exclude),
-                              custom_months = as.numeric(input$ptile_months_cust),
-                              custom_months_label = input$ptile_months_cust_label,
-                              ignore_missing = input$ptile_ign_missing_box) %>%
-      select(-Mean, -Median, -Minimum, -Maximum)
-  })
+    # Patchwork plot design
+    d <- "AC\\nBC"
 
-  output$ptile_table <- DT::renderDataTable(
-    ptile_data() %>% select(-dplyr::contains("STATION_NUMBER")) %>%
-      mutate_if(is.numeric, funs(round(., 4))),
-    rownames = FALSE,
-    filter = 'top',
-    extensions = c("Scroller"),
-    options = list(scrollX = TRUE,
-                   scrollY = 450, deferRender = TRUE, scroller = TRUE,
-                   dom = 'Bfrtip')
-  )
-  output$download_ptile_table <- downloadHandler(
-    filename = function() {paste0(meta$station_name," - Long-term Percentiles.csv")},
-    content = function(file) {
-      write.csv(ptile_data(), file, row.names = FALSE)
-    })
-
-  ptile_plot_data <- reactive({
-    ptile_data() %>% gather(Parameter, Value, 3:ncol(ptile_data()))
-  })
-
-
-  ptile_months_plotting <- reactive({
-
-    if (!is.null(input$ptile_months_cust) & !is.null(input$ptile_months_cust_label)) {
-      list("Jan" = 1, "Feb" = 2,
-           "Mar" = 3, "Apr" = 4,
-           "May" = 5, "Jun" = 6,
-           "Jul" = 7, "Aug" = 8,
-           "Sep" = 9, "Oct" = 10,
-           "Nov" = 11, "Dec" = 12,
-           "Long-term" = 13,
-           "Custom Months" = 14)
+    e <- glue("use_yield = {input$cum_discharge}")
+    if(input$cum_type == "Annual") {
+      p <- NULL
+      e <- glue("{e}, include_seasons = {input$cum_seasons}")
+      end <- glue("%>% wrap_plots(nrow = 2, byrow = FALSE, design = '{d}')")
     } else {
-      list("Jan" = 1, "Feb" = 2,
-           "Mar" = 3, "Apr" = 4,
-           "May" = 5, "Jun" = 6,
-           "Jul" = 7, "Aug" = 8,
-           "Sep" = 9, "Oct" = 10,
-           "Nov" = 11, "Dec" = 12,
-           "Long-term" = 13)
+      p <- "log"
+      end <- "[[1]]"
     }
 
+    g <- switch(input$cum_type,
+                "Annual"  = "plot_annual_cumulative_stats",
+                "Monthly" = "plot_monthly_cumulative_stats",
+                "Daily"   = "plot_daily_cumulative_stats") %>%
+      create_fun("flow_data",
+                 id = "cum", input, params = p,
+                 params_ignore = c("discharge", "roll_days", "roll_align"),
+                 extra = e,
+                 end = end)
+
+    code$cum_plot <- g
+
+    eval(parse(text = g))
   })
-  output$ptile_params <- renderUI({
-    selectizeInput("ptile_params",
-                   label = "Months to plot:",
-                   choices = ptile_months_plotting(),
-                   selected = 1:length(ptile_months_plotting()),
-                   multiple = TRUE)
-  })
 
 
-  ptile_plot_ptile_data <- reactive({
-    ptile_data() %>% filter(Month == "Long-term")
-  })
+  ## Table -----------------------
+  output$cum_table <- DT::renderDT({
+    req(data_raw(), input$cum_discharge)
 
-  ptile_plot <- function(){
+    flow_data <- data_raw()
 
-    ptile_data <- data_raw()
-
-    if (input$ptile_datatype == 2) {
-      ptile_data <- add_daily_volume(ptile_data) %>%
-        mutate(Value = Volume_m3)
-    } else if (input$ptile_datatype == 3) {
-      ptile_data <- add_daily_yield(ptile_data, basin_area = meta$basin_area) %>%
-        mutate(Value = Yield_mm)
-    }
-
-    if ("14" %in% input$ptile_params) {
-      plot <- plot_flow_duration(data = ptile_data,
-                                 #percentiles = seq(from = 0.01,  to = 99.99, by = 0.01),
-                                 roll_days = input$ptile_roll_days,
-                                 roll_align = input$ptile_roll_align,
-                                 water_year_start = as.numeric(input$data_water_year),
-                                 start_year = input$data_years_range[1],
-                                 end_year = input$data_years_range[2],
-                                 exclude_years = as.numeric(input$data_years_exclude),
-                                 months = as.numeric(input$ptile_params)[as.numeric(input$ptile_params) %in% 1:12],
-                                 include_longterm = ifelse("13" %in% input$ptile_params, TRUE, FALSE),
-                                 custom_months = as.numeric(input$ptile_months_cust),
-                                 custom_months_label = input$ptile_months_cust_label,
-                                 ignore_missing = input$ptile_ign_missing_box)[[1]]
+    e <- glue("use_yield = {input$cum_discharge}")
+    if(input$cum_type == "Annual") {
+      e <- glue("{e}, include_seasons = {input$cum_seasons}")
+      p <- NULL
     } else {
-      plot <- plot_flow_duration(data = ptile_data,
-                                 #percentiles = seq(from = 0.01,  to = 99.99, by = 0.01),
-                                 roll_days = input$ptile_roll_days,
-                                 roll_align = input$ptile_roll_align,
-                                 water_year_start = as.numeric(input$data_water_year),
-                                 start_year = input$data_years_range[1],
-                                 end_year = input$data_years_range[2],
-                                 exclude_years = as.numeric(input$data_years_exclude),
-                                 months = as.numeric(input$ptile_params)[as.numeric(input$ptile_params) %in% 1:12],
-                                 include_longterm = ifelse("13" %in% input$ptile_params, TRUE, FALSE),
-                                 ignore_missing = input$ptile_ign_missing_box)[[1]]
+      p <- "percentiles"
     }
 
-    plot  +
-      { if(input$ptile_datatype == 2) ylab("Daily Volumetric Discharge (m3)") } +
-      { if(input$ptile_datatype == 3) ylab("Daily Runoff Yield (mm)") } +
-      ggplot2::theme(legend.text = ggplot2::element_text(size = 12),
-                     axis.title = ggplot2::element_text(size = 15),
-                     axis.text = ggplot2::element_text(size = 13))
+    t <- switch(input$cum_type,
+                "Annual"  = "calc_annual_cumulative_stats",
+                "Monthly" = "calc_monthly_cumulative_stats",
+                "Daily"   = "calc_daily_cumulative_stats") %>%
+      create_fun("flow_data",
+                 id = "cum", input, params = p,
+                 params_ignore = c("discharge", "roll_days", "roll_align"),
+                 extra = e)
 
-  }
-  output$ptile_plot <- renderPlot({
-    ptile_plot()
+    code$cum_table <- t
+
+    parse(text = t) %>%
+      eval() %>%
+      mutate(across(where(is.numeric), ~round(., 4))) %>%
+      datatable(rownames = FALSE,
+                filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                               deferRender = TRUE, dom = 'Brtip'))
   })
-  output$download_ptile_plot <- downloadHandler(
-    filename = function() {paste0(meta$station_name," - Flow Duration Curves.png")},
-    content = function(file) {
-      png(file, width = 900, height=500)
-      print(ptile_plot())
-      dev.off()
-    })
 
 
-
-
-
-  ##### Annual Flows #####
-
-  annual_data <- reactive({
-
+  ## R Code -----------------
+  output$cum_code <- renderText({
+    code_format(code, id = "cum")
   })
+
+
+
+
+
+
+
+
+
+
+
+# TO ADD ----- Functions to add from fasstr: ------------------
+# - calc_longterm_monthly_stats
+# - plot_longterm_monthly_stats
+# - plot_annual_means
+
+
+
+
+# Older code -------------------------------
+
 
   annual_plot_data <- reactive({
     annual_data() %>% gather(Parameter, Value, 3:ncol(annual_data()))

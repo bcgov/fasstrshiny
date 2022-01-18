@@ -288,45 +288,50 @@ ui_sum_single <- fluidRow(
   )
 )
 
+# Cumulative -------------
 
+ui_cumulative <-  fluidRow(
+  column(
+    width = 12, h2("Cumulative Statistics"),
+    box(
+      width = 4,
+      radioGroupButtons("cum_type",
+                        label = "Cumulative type",
+                        choices = list("Annual", "Monthly", "Daily"),
+                        justified = TRUE),
+      radioButtons("cum_discharge",
+                   label = "Discharge type",
+                   choices = list("Volumetric Discharge (m3)" = FALSE,
+                                  "Runoff Yield (mm)" = TRUE)),
+      checkboxInput("cum_seasons",
+                    label = "Include seasons",
+                    value = TRUE)
+      ),
+    tabBox(
+      width = 8, height = min_height,
 
+      ## Plot ---------------------
+      tabPanel(
+        title = "Plot",
+        uiOutput("ui_cum_plot_options"),
+        plotOutput("cum_plot", height = "500px")
+        ),
 
+      ## Table ---------------------
+      tabPanel(
+        title = "Table",
+        uiOutput("ui_cum_table_options"),
+        DTOutput("cum_table")
+      ),
 
-### Annual Summary Stats --------------------------
-# tabPanel(
-#   title = "Summary Statistics",
-#
-#   tabBox(
-#     width = 9,
-#     tabPanel(
-#       title = "Plot", #
-#       plotlyOutput('annual_plot'),
-#       fluidRow(
-#         column(width = 6,
-#                h4("Plotting Options"),
-#                uiOutput("annual_params"),
-#                checkboxInput("ann_logQ", "Plot discharge on log scale", value = FALSE),
-#                textInput("ann_plot_title", label = "Plot title:", value = NULL)),
-#         column(width = 6,
-#                h4("Downloading"),
-#                selectInput("ann_plottype", "File type:", choices = c("png", "jpeg", "pdf", "bmp"), selected = "png"),
-#                downloadButton('download_annual_plot', 'Download Plot')))
-#     ),
-#     tabPanel(
-#       title = "Table",
-#       selectInput("ann_filetype", "File type:", choices = c("csv", "xls", "xlsx"), selected = "csv"),
-#       downloadButton('download_annual_table', 'Download Table'),
-#       DT::dataTableOutput("annual_table")
-#     ),
-#     tabPanel(
-#       title = "R-Code"
-#     )
-#   )
-# )
-
-
-
-
+      ## R Code ---------------------
+      tabPanel(
+        title = "R Code",
+        verbatimTextOutput("cum_code")
+      )
+    )
+  )
+)
 
 
 # Annual Hydrograph ------------------------------
@@ -472,91 +477,6 @@ ui_sum_daily <- fluidRow(
         )),
 
     ))
-)
-
-# Stats Cumulative -------------
-
-## Long Term ---------------------------------
-
-ui_cum_lt <- fluidRow(
-
-  column(
-    width = 12, h2("Long Term Cumulative Statistics"),
-    box(width = 3,
-        h4("group by day or group by month; or have in other tabs")
-    ),
-    tabBox(width = 9, height = min_height,
-      tabPanel(
-        title = "Plot"
-      ),
-      tabPanel(
-        title = "Table"
-      ),
-      tabPanel(
-        title = "Info"
-      )
-    )
-  )
-)
-
-## Annual -------------------------
-ui_cum_annual <-  fluidRow(
-  column(
-    width = 12, h2("Annual Cumulative Statistics"),
-    box(width = 3),
-    tabBox(
-      width = 9, height = min_height,
-      tabPanel(
-        title = "Plot"
-      ),
-      tabPanel(
-        title = "Table"
-      ),
-      tabPanel(
-        title = "Info"
-      )
-    )
-  )
-)
-
-## Monthly -------------------------
-ui_cum_monthly <-  fluidRow(
-  column(
-    width = 12, h2("Monthly Cumulative Statistics"),
-    box(width = 3),
-    tabBox(
-      width = 9, height = min_height,
-      tabPanel(
-        title = "Plot"
-      ),
-      tabPanel(
-        title = "Table"
-      ),
-      tabPanel(
-        title = "Info"
-      )
-    )
-  )
-)
-
-## Daily -------------------
-ui_cum_daily <- fluidRow(
-  column(
-    width = 12, h2("Daily Cumulative Statistics"),
-    box(width = 3),
-    tabBox(
-      width = 9, height = min_height,
-      tabPanel(
-        title = "Plot"
-      ),
-      tabPanel(
-        title = "Table"
-      ),
-      tabPanel(
-        title = "Info"
-      )
-    )
-  )
 )
 
 
@@ -731,11 +651,7 @@ dashboardPage(skin = "green",
                            tabName = "sum_flow"),
                menuSubItem("Single stats", tabName = "sum_single")),
       menuItem("Cumulative Stats", tabName = "cumulative",
-               icon = icon("chart-area"),
-               menuSubItem("Long-term", tabName = "cum_lt"),
-               menuSubItem("Annual", tabName = "cum_annual"),
-               menuSubItem("Monthly", tabName = "cum_monthly"),
-               menuSubItem("Daily", tabName = "cum_daily")),
+               icon = icon("chart-area")),
       menuItem("Annual Hydrograph Stats", tabName = "annual",
                icon = icon("calendar"),
                menuSubItem("Low Flows", tabName = "annual_flow_low"),
@@ -758,10 +674,7 @@ dashboardPage(skin = "green",
       tabItem("sum_general", ui_sum_general),
       tabItem("sum_flow", ui_sum_flow),
       tabItem("sum_single", ui_sum_single),
-      tabItem("cum_lt", ui_cum_lt),
-      tabItem("cum_annual", ui_cum_annual),
-      tabItem("cum_monthly", ui_cum_monthly),
-      tabItem("cum_daily", ui_cum_daily),
+      tabItem("cumulative", ui_cumulative),
       tabItem("annual_flow_low", ui_annual_flow_low),
       tabItem("annual_flow_timing", ui_annual_flow_timing),
       tabItem("annual_flow_peak", ui_annual_flow_peak),

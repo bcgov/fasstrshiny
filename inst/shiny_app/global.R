@@ -29,6 +29,7 @@ library(leaflet)
 library(DT)
 library(gt)
 library(plotly)
+library(patchwork)
 
 library(fasstr)
 library(tidyhydat)
