@@ -27,3 +27,27 @@ calc_annual_peaks(d)
 
 calc_annual_outside_normal(d)
 plot_annual_outside_normal(d)
+
+
+ft <- calc_annual_flow_timing(d)
+at <- compute_annual_trends(d, zyp_method = "zhang")
+
+ft
+at$Annual_Trends_Data %>% filter(Statistic == "DoY_25pct_TotalQ")
+at$Annual_Trends_Data
+
+v <- compute_annual_frequencies(d, roll_days = c(1, 3))  # uses compute_frequency_analysis
+names(v)
+
+v$Freq_Analysis_Data
+v$Freq_Plot_Data
+v$Freq_Plot
+v$Freq_Fitting
+
+# Single value
+compute_frequency_quantile(d, roll_days = 7, return_period = 10)
+
+tidyhydat::download_hydat()
+v2 <- compute_hydat_peak_frequencies("08HB048")
+
+compute_hydat_peak_frequencies("08HB048", fit_distr = "PIII")
