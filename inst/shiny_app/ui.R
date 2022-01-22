@@ -44,27 +44,24 @@ ui_data_load <- fluidRow(
   column(
     width = 12, h2("Loading Data"),
     box(
-      width = 4,
-      fluidRow(
-        column(
-          width = 5,
-          radioGroupButtons(inputId = "data_source",
-                            label = "Source", choices = c("HYDAT", "CSV File"),
-                            selected = "HYDAT"),
-          bsButton("data_load", "Load Data", style = "primary")),
-        column(
-          width = 7,
-          conditionalPanel(
-            "input.data_source == 'HYDAT'",
-            textInput("data_station_num", label = "Station Number",
-                      value = "08HB048",
-                      placeholder = "type station number or select from map")),
-          conditionalPanel(
-            "input.data_source != 'HYDAT'",
-            fileInput("data_file", label = "Select File",
-                      accept=c("text/csv",
-                               "text/comma-separated-values,text/plain",
-                               ".csv"))))),
+      width = 3,
+      radioGroupButtons(inputId = "data_source",
+                        label = "Source", choices = c("HYDAT", "CSV"),
+                        justified = TRUE,
+                        selected = "HYDAT"),
+
+      conditionalPanel(
+        "input.data_source == 'HYDAT'",
+        textInput("data_station_num", label = "Station Number",
+                  value = "08HB048",
+                  placeholder = "type station number or select from map")),
+      conditionalPanel(
+        "input.data_source != 'HYDAT'",
+        fileInput("data_file", label = "Select File",
+                  accept=c("text/csv",
+                           "text/comma-separated-values,text/plain",
+                           ".csv"))),
+      bsButton("data_load", "Load Data", style = "primary"),
       hr(),
 
       conditionalPanel(
@@ -85,7 +82,7 @@ ui_data_load <- fluidRow(
     ),
 
     tabBox(
-      id = "data_tabs", width = 8, height = min_height,
+      id = "data_tabs", width = 9, height = min_height,
 
       ### HYDAT Map --------
       tabPanel(
@@ -174,37 +171,39 @@ ui_data_screen <- fluidRow(
 )
 
 
-# Stats Summary - General ----------------
+# Stats Summary ---------------------------------------------------------------
+
+## General ----------------
 ui_sum_general <- fluidRow(
   column(
     width = 12, h2("General Summary Statistics"),
     box(
-      width = 4,
+      width = 3,
       radioGroupButtons("sum_type",
                         label = "Summary type",
                         choices = list("Long-term", "Annual",
                                        "Monthly", "Daily"),
-                        justified = TRUE),
+                        justified = TRUE, direction = "vertical"),
       uiOutput("ui_sum"),
     ),
     tabBox(
-      width = 8, height = min_height,
+      width = 9, height = min_height,
 
-      ## Plot ---------------------
+      ### Plot ---------------------
       tabPanel(
         title = "Plot",
         uiOutput("ui_sum_plot_options"),
         plotOutput("sum_plot")
       ),
 
-      ## Table ---------------------
+      ### Table ---------------------
       tabPanel(
         title = "Table",
         uiOutput("ui_sum_table_options"),
         DTOutput("sum_table")
       ),
 
-      ## R Code ---------------------
+      ### R Code ---------------------
       tabPanel(
         title = "R Code",
         verbatimTextOutput("sum_code")
@@ -214,32 +213,32 @@ ui_sum_general <- fluidRow(
 )
 
 
-# Stats Summary - Flow ----------------
+## Flow ----------------
 ui_sum_flow <- fluidRow(
   column(
     width = 12, h2("Flow duration and percentiles"),
     box(
-      width = 4,
+      width = 3,
       uiOutput("ui_sumfl"),
     ),
     tabBox(
-      width = 8, height = min_height,
+      width = 9, height = min_height,
 
-      ## Plot ---------------------
+      ### Plot ---------------------
       tabPanel(
         title = "Plot - Flow duration",
         uiOutput("ui_sumfl_plot_options"),
         plotOutput("sumfl_plot")
       ),
 
-      ## Table ---------------------
+      ### Table ---------------------
       tabPanel(
         title = "Table - Percentiles",
         uiOutput("ui_sumfl_table_options"),
         DTOutput("sumfl_table")
       ),
 
-      ## R Code ---------------------
+      ### R Code ---------------------
       tabPanel(
         title = "R Code",
         verbatimTextOutput("sumfl_code")
@@ -248,27 +247,27 @@ ui_sum_flow <- fluidRow(
   )
 )
 
-# Stats Summary - Single ----------------
+## Single ----------------
 ui_sum_single <- fluidRow(
   column(
     width = 12, h2("Long-term Single stats"),
     box(
-      width = 4,
+      width = 3,
       selectInput("sumsi_mad",
-                  label = "Mean Annual Discharge percentiles (MAD)",
+                  label = "Mean Annual Discharge percentiles",
                   choices = c(1:99),
                   selected = c(1, 5, 50, 95, 99),
                   multiple = TRUE),
       select_percentiles(id = "sumsi", set = FALSE),
       numericInput("sumsi_flow",
-                   label = "Flow value for calculating percentile rank",
+                   label = "Flow value for percentile",
                    value = 10, min = 0),
       uiOutput("ui_sumsi"),
     ),
     tabBox(
-      width = 8, height = min_height,
+      width = 9, height = min_height,
 
-      ## Table ---------------------
+      ### Table ---------------------
       tabPanel(
         title = "Stats",
         h4("Mean Annual Discharge (MAD)"),
@@ -279,7 +278,7 @@ ui_sum_single <- fluidRow(
         gt_output("sumsi_flow")
       ),
 
-      ## R Code ---------------------
+      ### R Code ---------------------
       tabPanel(
         title = "R Code",
         verbatimTextOutput("sumsi_code")
@@ -294,7 +293,7 @@ ui_cumulative <- fluidRow(
   column(
     width = 12, h2("Cumulative Statistics"),
     box(
-      width = 4,
+      width = 3,
       radioGroupButtons("cum_type",
                         label = "Cumulative type",
                         choices = list("Annual", "Monthly", "Daily"),
@@ -308,7 +307,7 @@ ui_cumulative <- fluidRow(
                     value = TRUE)
       ),
     tabBox(
-      width = 8, height = min_height,
+      width = 9, height = min_height,
 
       ## Plot ---------------------
       tabPanel(
@@ -334,48 +333,52 @@ ui_cumulative <- fluidRow(
 )
 
 
-# AH - Flow timing ------------------------------
+# Annual Hydrograph Stats -----------------------------------------------------
+
+## Flow timing ------------------------------
 ui_ah_flow_timing <- fluidRow(
   column(
     width = 12, h2("Flow Timing"),
     box(
-      width = 4,
-      selectInput("ahft_percent",
-                  label = "Percents of total annual flows",
-                  choices = c(1:99),
-                  selected = c(25, 33, 50, 75),
-                  multiple = TRUE)
-    ),
-    tabBox(
-      width = 8, height = min_height,
+      width = 12,
+      div(style = "max-width: 300px;",
+          selectInput("ahft_percent",
+                      label = "Percents of total annual flows",
+                      choices = c(1:99),
+                      selected = c(25, 33, 50, 75),
+                      multiple = TRUE)),
 
-      ## Plot ---------------------
-      tabPanel(
-        title = "Plot",
-        plotOutput("ahft_plot")
-      ),
+      tabBox(
+        width = 12, height = min_height,
 
-      ## Table ---------------------
-      tabPanel(
-        title = "Table",
-        DTOutput("ahft_table")
-      ),
+        ### Plot ---------------------
+        tabPanel(
+          title = "Plot",
+          plotOutput("ahft_plot")
+        ),
 
-      ## R Code ---------------------
-      tabPanel(
-        title = "R Code",
-        verbatimTextOutput("ahft_code")
+        ### Table ---------------------
+        tabPanel(
+          title = "Table",
+          DTOutput("ahft_table")
+        ),
+
+        ### R Code ---------------------
+        tabPanel(
+          title = "R Code",
+          verbatimTextOutput("ahft_code")
+        )
       )
     )
   )
 )
 
-# AH - Low flows ------------------------
+## Low flows ------------------------
 ui_ah_low_flows <- fluidRow(
   column(
     width = 12, h2("Low Flows"),
     box(
-      width = 4,
+      width = 3,
       selectInput("ahlf_roll",
                   label = "Days to calculate rolling averages over",
                   choices = c(1:31),
@@ -384,21 +387,21 @@ ui_ah_low_flows <- fluidRow(
       uiOutput("ui_ahlf")
     ),
     tabBox(
-      width = 8, height = min_height,
+      width = 9, height = min_height,
 
-      ## Plot ---------------------
+      ### Plot ---------------------
       tabPanel(
         title = "Plot",
         plotOutput("ahlf_plot")
       ),
 
-      ## Table ---------------------
+      ### Table ---------------------
       tabPanel(
         title = "Table",
         DTOutput("ahlf_table")
       ),
 
-      ## R Code ---------------------
+      ### R Code ---------------------
       tabPanel(
         title = "R Code",
         verbatimTextOutput("ahlf_code")
@@ -407,12 +410,12 @@ ui_ah_low_flows <- fluidRow(
   )
 )
 
-# AH - Flow peak ------------------------
+## Flow peak ------------------------
 ui_ah_peak <- fluidRow(
   column(
     width = 12, h2("Peak Flows"),
     box(
-      width = 4,
+      width = 3,
       "SHOULD THIS BE HERE? OR LEAVE AS DEFAULT GLOBAL?",
       selectInput("ahp_roll",
                   label = "Days to calculate rolling averages over",
@@ -421,15 +424,15 @@ ui_ah_peak <- fluidRow(
       uiOutput("ui_ahp")
     ),
     tabBox(
-      width = 8, height = min_height,
+      width = 9, height = min_height,
 
-      ## Table ---------------------
+      ### Table ---------------------
       tabPanel(
         title = "Table",
         DTOutput("ahp_table")
       ),
 
-      ## R Code ---------------------
+      ### R Code ---------------------
       tabPanel(
         title = "R Code",
         verbatimTextOutput("ahp_code")
@@ -438,12 +441,12 @@ ui_ah_peak <- fluidRow(
   )
 )
 
-# AH - Days outside normal ------------------------
+## Days outside normal ------------------------
 ui_ah_outside_normal <- fluidRow(
   column(
     width = 12, h2("Days Outside Normal"),
     box(
-      width = 4,
+      width = 3,
       selectInput("ahon_percentiles",
                   label = "Normal range (percentiles)",
                   choices = c(1:99),
@@ -452,21 +455,21 @@ ui_ah_outside_normal <- fluidRow(
       uiOutput("ui_ahon")
     ),
     tabBox(
-      width = 8, height = min_height,
+      width = 9, height = min_height,
 
-      ## Plot ---------------------
+      ### Plot ---------------------
       tabPanel(
         title = "Plot",
-        plotOutput("ahon_plot")
+        plotOutput("ahon_plot", height = "550px")
       ),
 
-      ## Table ---------------------
+      ### Table ---------------------
       tabPanel(
         title = "Table",
         DTOutput("ahon_table")
       ),
 
-      ## R Code ---------------------
+      ### R Code ---------------------
       tabPanel(
         title = "R Code",
         verbatimTextOutput("ahon_code")
