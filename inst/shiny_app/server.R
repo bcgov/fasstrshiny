@@ -163,11 +163,27 @@ server <- function(input, output, session) {
              include = c("discharge", "missing", "allowed"))
   })
 
-  ## AH - Outside Noraml --------------------------------------------------------
+  ## AH - Outside Normal -----------------------------------------------------
   output$ui_ahon <- renderUI({
     build_ui(id = "ahon", input, include = "discharge")
   })
 
+  ## Annual Trends ----------------------------------------
+  output$ui_at <- renderUI({
+    build_ui(id = "at", input, include = c("discharge", "missing", "allowed"))
+  })
+
+  ## Volume Frequency ----------------------------------------
+  output$ui_vf <- renderUI({
+    build_ui(id = "vf", input, include = c("discharge", "missing", "allowed"))
+  })
+
+  output$ui_vf_day <- renderUI({
+    req(vf_freqs())
+    radioGroupButtons("vf_day",
+                      choices = names(vf_freqs()$Freq_Fitting),
+                      selected = names(vf_freqs()$Freq_Fitting)[1])
+  })
 
 
   # Data - Loading ---------------
@@ -837,505 +853,253 @@ server <- function(input, output, session) {
 
 
 
+# Annual Trends -----------------------------------------------
+  # Includes low flows, flow timing, and outside normal
+  # (also monthly stats/annual stats)
+
+
+  ## Trends -----------------------
+  at_trends <- reactive({
+    req(data_raw(), input$at_zyp)
+
+    flow_data <- data_raw()
+
+    # ingore_missing / allowed missing
+    #basin area?
+
+    # Define parameters
+    p <- c(
+      glue("zyp_method = '{input$at_zyp}'"),
+      glue("annual_percentiles = c({glue_collapse(input$at_annual_percentiles, sep = ', ')})"),
+      glue("monthly_percentiles = c({glue_collapse(input$at_monthly_percentiles, sep = ', ')})"),
+      glue("stats_days = {input$opts_roll_days}"),
+      glue("stats_align = '{input$opts_roll_align}'"),
+      glue("lowflow_days = c({glue_collapse(input$at_low_roll_days, sep = ', ')})"),
+      glue("lowflow_align = '{input$at_low_roll_align}'"),
+      glue("timing_percent = c({glue_collapse(input$at_percent, sep = ', ')})"),
+      glue("normal_percentiles = c({glue_collapse(input$at_normal, sep = ', ')})"),
+      glue("zyp_alpha = {input$at_alpha}")) %>%
+      glue_collapse(sep = ", ")
+
+    r <- create_fun(
+      "compute_annual_trends",
+      data = "flow_data", id = "at", input,
+      params = c("discharge"), params_ignore = c("roll_days", "roll_align"),
+      extra = p)
+
+    code$at_data <- r
+
+    eval(parse(text = r))
+  }) %>%
+    bindEvent(input$at_compute)
+
+  ## Plot --------------------
+  output$at_plot <- renderPlot({
+    req(at_trends())
+
+    at_trends()[[5]]
+  })
+
+
+  ## Table -----------------------
+  output$at_table <- DT::renderDT({
+    req(at_trends())
+
+    at_trends()[[1]] %>%
+      mutate(across(where(is.numeric), ~round(., 4))) %>%
+      datatable(rownames = FALSE,
+                filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                               deferRender = TRUE, dom = 'Brtip'))
+  })
+
+
+  ## R Code -----------------
+  output$at_code <- renderText({
+    code_format(code, id = "at")
+  })
+
+
+
+  # Volume Frequency - High/Low --------------------------------------------
+
+  ## Frequencies -----------------------
+  vf_freqs <- reactive({
+    req(data_raw(), input$vf_use_max)
+
+    validate(need(all(!is.na(text_to_num(input$vf_prob_scale))),
+                  "Probabilies to plot must be a comma separated list of numbers"))
+
+    flow_data <- data_raw()
+
+    #
+    # roll_align
+
+
+    # Define parameters
+    p <- c(
+      glue("use_max = {input$vf_use_max}"),
+      glue("use_log = {input$vf_log}"),
+      glue("roll_days = c({glue_collapse(input$vf_roll_extra, sep = ', ')})"),
+      glue("prob_plot_position = '{input$vf_prob_plot}'"),
+      glue("prob_scale_points = c({input$vf_prob_scale})"),
+      glue("fit_distr = '{input$vf_fit_distr}'"),
+      glue("fit_quantiles = c({glue_collapse(input$vf_quantiles, sep = ', ')})"),
+      glue("plot_curve = {input$vf_plot_curve}")) %>%
+      glue_collapse(sep = ", ")
+
+    r <- create_fun(
+      "compute_annual_frequencies",
+      data = "flow_data", id = "vf", input,
+      params = c("discharge", "missing", "allowed"),
+      params_ignore = "roll_days",
+      extra = p)
+
+    code$vf_data <- r
+
+    eval(parse(text = r))
+  }) %>%
+    bindEvent(input$vf_compute)
+
+  ## Plot --------------------
+  output$vf_plot <- renderPlot({
+    validate(need(input$vf_compute,
+                  "Choose your settings and click 'Compute Analysis'"))
+
+    vf_freqs()[["Freq_Plot"]]
+  })
+
+
+  ## Table -----------------------
+  output$vf_table <- DT::renderDT({
+    validate(need(input$vf_compute,
+                  "Choose your settings and click 'Compute Analysis'"))
+
+    vf_freqs()[["Freq_Fitted_Quantiles"]] %>%
+      mutate(across(where(is.numeric), ~round(., 4))) %>%
+      datatable(rownames = FALSE,
+                filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                               deferRender = TRUE, dom = 'Brtip'))
+  })
+
+  ## Fit checks --------------------
+  output$vf_fit_stats <- renderPrint({
+    req(vf_freqs(), input$vf_day)
+    vf_freqs()[["Freq_Fitting"]][[input$vf_day]]
+  })
+
+  output$vf_fit_plot <- renderPlot({
+    validate(need(vf_freqs(),
+                  "Choose your settings and click 'Compute Analysis'"))
+    req(input$vf_day)
+    vf_freqs()[["Freq_Fitting"]][[input$vf_day]] %>%
+      gg_fitdistr(title = input$vf_day)
+  })
+
+
+
+  ## R Code -----------------
+  output$vf_code <- renderText({
+    code_format(code, id = "vf")
+  })
+
+
+
+  # Volume Frequency - HYDAT Peak -------------------------------------------
+
+  ## Frequencies -----------------------
+  hp_freqs <- reactive({
+    req(data_raw(), input$hp_use_max)
+
+    validate(need(
+      isTruthy(data_raw()$STATION_NUMBER) &
+        length(unique(data_raw()$STATION_NUMBER)) == 1,
+      paste0("This analysis is only available for HYDAT data with a ",
+             "valid STATION_NUMBER")))
+
+    validate(need(all(!is.na(text_to_num(input$hp_prob_scale))),
+                  "Probabilies to plot must be a comma separated list of numbers"))
+
+    flow_data <- data_raw()
+
+    # Define parameters
+    p <- c(
+      glue("station_number = '{unique(flow_data$STATION_NUMBER)}'"),
+      glue("use_max = {input$hp_use_max}"),
+      glue("use_log = {input$hp_log}"),
+      glue("prob_plot_position = '{input$hp_prob_plot}'"),
+      glue("prob_scale_points = c({input$hp_prob_scale})"),
+      glue("fit_distr = '{input$hp_fit_distr}'"),
+      glue("fit_quantiles = c({glue_collapse(input$hp_quantiles, sep = ', ')})"),
+      glue("plot_curve = {input$vf_plot_curve}")) %>%
+      glue_collapse(sep = ", ")
+
+    r <- create_fun(
+      "compute_hydat_peak_frequencies", id = "hp", input = input,
+      params_ignore = c("roll_days", "roll_align", "water_year", "months"),
+      extra = p)
+
+    code$hp_data <- r
+
+    eval(parse(text = r))
+  }) %>%
+    bindEvent(input$hp_compute)
+
+  ## Plot --------------------
+  output$hp_plot <- renderPlot({
+    validate(need(input$hp_compute,
+                  "Choose your settings and click 'Compute Analysis'"))
+    req(hp_freqs())
+
+    hp_freqs()[["Freq_Plot"]]
+  })
+
+
+  ## Table -----------------------
+  output$hp_table <- DT::renderDT({
+    validate(need(input$hp_compute,
+                  "Choose your settings and click 'Compute Analysis'"))
+
+    hp_freqs()[["Freq_Fitted_Quantiles"]] %>%
+      mutate(across(where(is.numeric), ~round(., 4))) %>%
+      datatable(rownames = FALSE,
+                filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                               deferRender = TRUE, dom = 'Brtip'))
+  })
+
+  ## Fit checks --------------------
+  output$hp_fit_stats <- renderPrint({
+    req(hp_freqs())
+    hp_freqs()[["Freq_Fitting"]][[1]]
+  })
+
+  output$hp_fit_plot <- renderPlot({
+    validate(need(hp_freqs(),
+                  "Choose your settings and click 'Compute Analysis'"))
+    hp_freqs()[["Freq_Fitting"]][[11]] %>%
+      gg_fitdistr(title = "")
+  })
+
+
+
+  ## R Code -----------------
+  output$hp_code <- renderText({
+    code_format(code, id = "hp")
+  })
+
+
+
+
 
 # TO ADD ----- Functions to add from fasstr: ------------------
 # - calc_longterm_monthly_stats
 # - plot_longterm_monthly_stats
 # - plot_annual_means
+# - compute_frequency_quantile ??? only gives single value
 
 
-
-
-# Older code -------------------------------
-
-
-  annual_plot_data <- reactive({
-    annual_data() %>% gather(Parameter, Value, 3:ncol(annual_data()))
-  })
-
-  output$annual_params <- renderUI({
-    selectizeInput("annual_params",
-                   label = "Statistics to plot:",
-                   choices = unique(annual_plot_data()$Parameter),
-                   selected = unique(annual_plot_data()$Parameter),
-                   multiple = TRUE)
-  })
-
-  annual_plot <- function(){
-
-    plot_data <- annual_plot_data() %>% filter(Parameter %in% input$annual_params)
-
-    ggplot(data = plot_data, aes_string(x = "Year", y = "Value", colour = "Parameter")) +
-      geom_line(alpha = 0.5) +
-      geom_point() +
-      expand_limits(y = 0) +
-      ylab("Discharge (cms)") +
-      xlab("Year") +
-      ggplot2::labs(color = 'Annual Statistics')
-  }
-
-  output$annual_plot <- renderPlotly({
-    ggplotly(annual_plot())
-  })
-  output$download_annual_plot <- downloadHandler(
-    filename = function() {paste0("Annual Discharge Summary.", input$ann_plottype)},
-    content = function(file) {
-      ggplot2::ggsave(file, plot = annual_plot(),  width = 11, height = 4, device = input$ann_plottype)
-    }
-  )
-
-  output$annual_table <- DT::renderDataTable(
-    annual_data() %>%
-      select(-contains("STATION_NUMBER")) %>%
-      mutate_if(is.numeric, funs(round(., 4))),
-    rownames = FALSE,
-    filter = 'top',
-    extensions = c("Scroller"),
-    options = list(scrollX = TRUE,
-                   scrollY = 450, deferRender = TRUE, scroller = TRUE,
-                   dom = 'Bfrtip')
-  )
-
-  output$download_annual_table <- downloadHandler(
-    filename = function() {paste0("Annual Discharge Summary.", input$ann_filetype)},
-    content = function(file) {
-      write_results(data = annual_data(), file)
-    }
-  )
-
-
-
-
-  ##### Monthly Flows #####
-
-
-
-
-
-  ##### Daily Flows #####
-
-
-
-
-
-
-
-
-  ##### Trending #####
-
-  trends_data <- reactive({
-
-    input$trends_compute
-
-    data <- data_raw()
-    isolate(compute_annual_trends(data = data,
-                                  zyp_method = input$trends_zyp_method,
-                                  zyp_alpha = as.numeric(input$trends_alpha),
-                                  basin_area = meta$basin_area,
-                                  water_year_start = as.numeric(input$data_water_year),
-                                  start_year = input$data_years_range[1],
-                                  end_year = input$data_years_range[2],
-                                  exclude_years = as.numeric(input$data_years_exclude),
-                                  annual_percentiles = as.numeric(input$trends_ann_ptiles),
-                                  monthly_percentiles = as.numeric(input$trends_mon_ptiles),
-                                  stats_days = as.numeric(input$trends_roll_days),
-                                  stats_align = input$trends_roll_align,
-                                  lowflow_days = as.numeric(input$trends_low_roll_days),
-                                  lowflow_align = input$trends_low_roll_align,
-                                  timing_percent = as.numeric(input$trends_timing),
-                                  normal_percentiles = c(as.numeric(input$trends_normal_lower),as.numeric(input$trends_normal_upper)),
-                                  ignore_missing = input$trends_ign_missing_box))
-  })
-
-
-  trends_results_dataframe <- reactive({
-    trends_data()[[1]] %>%
-      filter(Statistic == trend_to_plot()) %>%
-      select(-contains("STATION_NUMBER"), -Statistic) %>%
-      gather(Year, Value) %>%
-      mutate(Value = round(Value, 3),
-             Include = "Yes")
-  })
-
-  output$trends_results_data <- DT::renderDataTable(
-    trends_results_dataframe(),
-    rownames = FALSE,
-    selection = list(mode = 'single', selected = 1),
-    filter = 'top',
-    extensions = c("Scroller"),
-    options = list(scrollY = 350, deferRender = TRUE, scroller = TRUE,
-                   dom = 'Bfrtip',
-                   sDom  = '<"top">lrt<"bottom">ip')
-  )
-
-  output$trends_results <- DT::renderDataTable(
-    trends_data()[[2]]   %>%
-      select(-contains("STATION_NUMBER")) %>%
-      mutate_if(is.numeric, funs(round(., 6))),
-    rownames = FALSE,
-    selection = list(mode = 'single', selected = 1),
-    filter = 'top',
-    extensions = c("Scroller"),
-    options = list(scrollX = TRUE,
-                   scrollY = 350, deferRender = TRUE, scroller = TRUE,
-                   dom = 'Bfrtip')
-  )
-
-  # output$test <- renderPrint({
-  #   as.character(trends_data()$Statistic)[input$trends_results_rows_selected]
-  #
-  # })
-  trend_to_plot <- reactive({
-
-    as.character(trends_data()[[1]]$Statistic)[input$trends_results_rows_selected]
-
-  })
-
-
-  output$trends_plot <- renderPlotly({
-
-    #data <- trends_data() %>% select(-STATION_NUMBER)
-
-    # plots <- trends_data()[[-1:2]]
-
-    # ggplotly(trends_data()[[paste(trend_to_plot())]])
-
-    ggplotly(trends_data()[[paste(trend_to_plot())]] +
-               {if (!is.null(input$trends_results_data_rows_selected))
-                 geom_point(aes_string(y=as.numeric(trends_results_dataframe()[input$trends_results_data_rows_selected,2]),
-                                       x=as.numeric(trends_results_dataframe()[input$trends_results_data_rows_selected,1])),
-                            shape=21,size=2,fill=NA, stroke=2,colour="red")}
-    )
-
-  })
-
-
-  output$testing_rows <- renderPrint({
-    as.numeric(c(trends_results_dataframe()[input$trends_results_data_rows_selected,1],
-                 trends_results_dataframe()[input$trends_results_data_rows_selected,2]))
-
-  })
-
-
-
-
-
-  output$trends_code <- renderUI({
-
-    input$trends_compute
-
-    isolate(
-      HTML(paste(paste0("compute_annual_trends(station_number = '", input$station_num, "'"),
-                 paste0("zyp_method = '", input$trends_zyp_method, "'"),
-                 paste0("zyp_alpha = ", as.numeric(input$trends_alpha)),
-                 paste0("water_year = ", ifelse(input$data_water_year != "1", "TRUE", "FALSE")),
-                 paste0("water_year_start = ", as.numeric(input$data_water_year)),
-                 paste0("start_year = ", input$data_years_range[1]),
-                 paste0("end_year = ", input$data_years_range[2]),
-                 paste0("exclude_years = ", ifelse(length(input$data_years_exclude) == 0, "NULL", list(as.numeric(input$data_years_exclude)))),
-                 paste0("annual_percentiles = ", list(as.numeric(input$trends_ann_ptiles))),
-                 paste0("monthly_percentiles = ", list(as.numeric(input$trends_mon_ptiles))),
-                 paste0("stats_days = ", as.numeric(input$trends_roll_days)),
-                 paste0("stats_align = '", input$trends_roll_align, "'"),
-                 paste0("lowflow_days = ", list(as.numeric(input$trends_low_roll_days))),
-                 paste0("lowflow_align = '", input$trends_low_roll_align, "'"),
-                 paste0("timing_percent = ", list(as.numeric(input$trends_timing))),
-                 paste0("normal_percentiles = c(", as.numeric(input$trends_normal_lower), ", ", as.numeric(input$trends_normal_upper), ")"),
-                 paste0("ignore_missing = ", input$trends_ign_missing_box, ")"),
-                 sep = ',<br>'))
-    )
-  })
-
-
-  ##### Flow Frequency #####
-
-  # output$freq_station_num <- renderUI({
-  #   selectizeInput("freq_station_num", label = "Station Number:",
-  #                  choices = stations_list, ### see top of script
-  #                  selected = "08HB048",
-  #                  options = list(placeholder ="type or select station number", maxOptions = 2420 ))
-  # })
-  #
-  #
-  #
-  # freq_data_raw <- reactive({
-  #   fill_missing_dates(station_number = input$freq_station_num) %>%
-  #     add_date_variables(water_year = TRUE,
-  #                                water_year_start = as.numeric(input$freq_year_start))
-  # })
-
-
-  output$freq_code <- renderUI({
-
-    input$freq_compute
-
-    #unlist(as.integer(input$freq_months))
-    # paste0("compute_annual_frequencies(station_number = '", input$station_num, "', ",
-    #        "roll_days = ", input$freq_roll_days, ", ",
-    #        "roll_align = '", input$freq_roll_align, "', ",
-    #        "use_max = ", input$freq_usemax, ", ",
-    #        "use_log = ", input$freq_uselog, ", ",
-    #        "prob_plot_position = '", input$freq_prob_plot_position, "', ",
-    #        "prob_scale_points = ", "c(.9999, .999, .99, .9, .5, .2, .1, .02, .01, .001, .0001)", ", ",
-    #        "fit_distr = '", input$freq_fit_distr, "', ",
-    #        "fit_distr_method = '", input$freq_fit_distr_method, "', ",
-    #        "fit_quantiles = ", "c(.975, .99, .98, .95, .90, .80, .50, .20, .10, .05, .01)", ", ",
-    #        "water_year = ", "TRUE", ", ",
-    #        "water_year_start = ", as.numeric(input$data_water_year), ", ",
-    #        "start_year = ", input$data_years_range[1], ", ",
-    #        "end_year = ", input$data_years_range[2], ", ",
-    #        "exclude_years = ", as.numeric(input$data_years_exclude), ", ",
-    #        "months = ", list(as.numeric(input$freq_months)), ", ",
-    #        "ignore_missing = ", input$freq_ign_missing_box, ")")
-
-    isolate(
-      HTML(paste(paste0("compute_annual_frequencies(station_number = '", input$station_num, "'"),
-                 paste0("roll_days = ", input$freq_roll_days),
-                 paste0("roll_align = '", input$freq_roll_align, "'"),
-                 paste0("use_max = ", input$freq_usemax),
-                 paste0("use_log = ", input$freq_uselog),
-                 paste0("prob_plot_position = '", input$freq_prob_plot_position, "'"),
-                 paste0("prob_scale_points = ", "c(.9999, .999, .99, .9, .5, .2, .1, .02, .01, .001, .0001)"),
-                 paste0("fit_distr = '", input$freq_fit_distr, "'"),
-                 paste0("fit_distr_method = '", input$freq_fit_distr_method, "'"),
-                 paste0("fit_quantiles = ", "c(.975, .99, .98, .95, .90, .80, .50, .20, .10, .05, .01)"),
-                 paste0("water_year = ", ifelse(input$data_water_year != "1", "TRUE", "FALSE")),
-                 paste0("water_year_start = ", as.numeric(input$data_water_year)),
-                 paste0("start_year = ", input$data_years_range[1]),
-                 paste0("end_year = ", input$data_years_range[2]),
-                 paste0("exclude_years = ", ifelse(length(input$data_years_exclude) == 0, "NULL", list(as.numeric(input$data_years_exclude)))),
-                 paste0("months = ", list(as.numeric(input$freq_months))),
-                 paste0("ignore_missing = ", input$freq_ign_missing_box, ")"),
-                 sep = ',<br>'))
-    )
-  })
-
-
-  freq_data <- reactive({
-
-    input$freq_compute
-
-    isolate(compute_annual_frequencies(data = data_raw(),
-                                       roll_days = input$freq_roll_days,
-                                       roll_align = input$freq_roll_align,
-                                       use_max = input$freq_usemax,
-                                       use_log = input$freq_uselog,
-                                       prob_plot_position = input$freq_prob_plot_position,
-                                       prob_scale_points = c(.9999, .999, .99, .9, .5, .2, .1, .02, .01, .001, .0001),
-                                       fit_distr = input$freq_fit_distr,
-                                       fit_distr_method = input$freq_fit_distr_method,
-                                       fit_quantiles = c(.975, .99, .98, .95, .90, .80, .50, .20, .10, .05, .01),
-                                       water_year_start = as.numeric(input$data_water_year),
-                                       start_year = input$data_years_range[1],
-                                       end_year = input$data_years_range[2],
-                                       exclude_years = as.numeric(input$data_years_exclude),
-                                       months = as.numeric(input$freq_months),
-                                       ignore_missing = input$freq_ign_missing_box))
-  })
-
-  output$freq_slider <- renderUI({
-    sliderInput("freq_slider",
-                label = "Start and end years:",
-                min = ifelse(as.numeric(input$freq_year_start) == 1, min(freq_data_raw()$Year), min(freq_data_raw()$WaterYear)),
-                max = ifelse(as.numeric(input$freq_year_start) == 1, max(freq_data_raw()$Year), max(freq_data_raw()$WaterYear)),
-                value = c(ifelse(as.numeric(input$freq_year_start) == 1, min(freq_data_raw()$Year), min(freq_data_raw()$WaterYear)),
-                          ifelse(as.numeric(input$freq_year_start) == 1, max(freq_data_raw()$Year), max(freq_data_raw()$WaterYear))),
-                dragRange = TRUE,
-                sep = "")
-  })
-
-  freq_plot_data <- reactive({
-    freq_data() %>% gather(Parameter, Value, 3:ncol(freq_data()))
-  })
-
-  output$freq_exclude <- renderUI({
-    selectizeInput("freq_exclude",
-                   label = "Years to exclude:",
-                   choices = seq(from = input$freq_slider[1], to = input$freq_slider[2], by = 1),
-                   selected = NULL,
-                   multiple = TRUE)
-  })
-
-  # freq_plot <- function(){
-  #   # plot <- plot_annual_stats(station_number = "08HB048")
-  #
-  #
-  #   print(plot)
-  # }
-  #
-  # output$freq_plot <- renderPlot({
-  #   freq_plot()
-  # })
-  #
-  output$freq_Q_stat <- renderDataTable({
-    freq_data()$Freq_Analysis_Data
-  })
-  output$freq_plotdata <- renderDataTable({
-    freq_data()$Freq_Plot_Data
-  })
-  output$freq_fitted_quantiles <- renderDataTable({
-    freq_data()$Freq_Fitted_Quantiles
-  })
-  output$freq_freqplot <- plotly::renderPlotly({
-    ggplotly(freq_data()$Freq_Plot)
-  })
-  output$freq_fit <- renderPrint({
-    freq_data()$Freq_Fitting
-  })
-
-
-  ##### OLDER CODE #####
-
-
-  dailyData <- reactive({
-
-    #timeseries <- timeseriesData()
-    daily.data <- data_raw() %>%
-      group_by(DayofYear)%>%
-      filter(DayofYear < 366) %>% # removes any day 366 during leap years; i.e. only the first 365 days of each year are summarized
-      summarize(Mean=mean(Value, na.rm=TRUE),
-                Minimum=min(Value, na.rm=TRUE),
-                FifthPercentile=quantile(Value,.05, na.rm=TRUE),
-                TwentyFifthPercentile=quantile(Value,.25, na.rm=TRUE),
-                Median=median(Value, na.rm=TRUE),
-                SeventyFifthPercentile=quantile(Value,.75, na.rm=TRUE),
-                NinetyFifthPercentile=quantile(Value,.95, na.rm=TRUE),
-                Maximum=max(Value, na.rm=TRUE))
-
-    if (input$yearCheckDaily) {
-      flow.Year <- data_raw() %>% filter(analysisYear==input$yearDaily & analysisDOY <366) %>% select(analysisDOY,Value) %>% rename("yearValue"=Value)
-      daily.data <- merge(daily.data,flow.Year, by = "analysisDOY", all.x = TRUE)
-    }
-    daily.data <- as.data.frame(daily.data)
-  })
-
-  output$yearSelectDaily <- renderUI({
-    sliderInput("yearDaily", label = "Select year of daily discharge to plot:",value=yearData()$minYear,
-                min=min(data_raw()$analysisYear), max=max(data_raw()$analysisYear),sep = "")#yearData()$minYear
-  })
-
-  dailyPlot <- function(){
-
-    daily.plot <- ggplot(dailyData(),aes_string(x="DayofYear")) +
-      geom_ribbon(aes(ymin=Minimum,ymax=Maximum,fill = "Max-Min Range of Flow"))+
-      geom_ribbon(aes(ymin=FifthPercentile,ymax=NinetyFifthPercentile,fill = "Range of 90% of Flow"))+
-      geom_ribbon(aes(ymin=TwentyFifthPercentile,ymax=SeventyFifthPercentile,fill = "Range of 50% of Flow"))+
-      geom_line(aes(y=Median, colour="Median Flow"), size=.5)+
-      geom_line(aes(y=Mean, colour="Mean Flow"), size=.5) +
-      {if(input$yearCheckDaily)geom_line(aes(y=yearValue,colour="YEAR"))}+
-      scale_fill_manual(values = c("Max-Min Range of Flow" = "lightblue2" ,"Range of 90% of Flow" = "lightblue3","Range of 50% of Flow" = "lightblue4")) +
-      scale_color_manual(values = c("Mean Flow" = "paleturquoise", "Median Flow" = "dodgerblue4"),
-                         labels = c("Mean Flow", "Median Flow")) +
-      {if(input$yearCheckDaily)  scale_color_manual(values = c("Mean Flow" = "paleturquoise", "Median Flow" = "dodgerblue4","YEAR" = "red"),
-                                                    labels = c("Mean Flow", "Median Flow","YEAR"=input$yearDaily))}+
-      #scale_x_date(date_labels = "%b", date_breaks = "1 month",expand=c(0,0))+
-      scale_y_continuous(expand = c(0, 0)) +
-      {if(input$logDaily)scale_y_log10(expand = c(0, 0))}+
-      {if(input$logDaily)annotation_logticks(base= 10,"left",size=0.6,short = unit(.14, "cm"), mid = unit(.3, "cm"), long = unit(.5, "cm"))}+
-      theme(axis.text=element_text(size=15),
-            axis.title=element_text(size=15),
-            axis.ticks = element_line(size=.1),
-            axis.ticks.length=unit(0.1,"cm"),
-            axis.title.y=element_text(margin=margin(0,0,0,0)),
-            plot.title = element_text(size=15,hjust = 0.5),
-            #panel.grid.minor = element_blank(),
-            panel.grid.major = element_line(size=.1),
-            panel.background = element_rect(fill = "grey94"),
-            legend.position = "top", legend.title = element_blank(),
-            legend.text = element_text(size=13),
-            legend.box = "vertical",
-            legend.key.size = unit(0.4,"cm"),
-            legend.margin=unit(.2, "cm")) +
-      guides(colour = guide_legend(order = 1), fill = guide_legend(order = 2))+
-      xlab(NULL)+
-      ylab("Discharge (cms)")+
-      ggtitle(paste0("Daily Stream Discharge - ",meta$station_name," (",input$yearRange[1],"-",input$yearRange[2],")"))
-    print(daily.plot)
-  }
-
-  #structure to show the plot interactively
-  output$dailyPlot <- renderPlot({
-    dailyPlot()
-  })
-
-  output$downloadDailyPlot <- downloadHandler(
-    filename = function() {paste0(meta$station_name," - Daily Discharge Summary"," (",input$yearRange[1],"-",input$yearRange[2],").png")},
-    content = function(file) {
-      png(file, width = 900, height=500)
-      print(dailyPlot())
-      dev.off()
-    })
-
-  dailyTable <- reactive({
-    dailyTable <- dailyData()# %>%
-    #   rename("Date"=analysisDate,"Day of Year"=analysisDOY,"5th Percentile"=FifthPercentile,"25th Percentile"=TwentyFifthPercentile,"75th Percentile"=SeventyFifthPercentile,"95th Percentile"=NinetyFifthPercentile)
-    # if (input$yearCheckDaily) {
-    #   names(dailyTable)[names(dailyTable) == 'yearValue'] <- paste(input$yearDaily)
-    # }
-    # dailyTable$"Date" <- format(as.Date(dailyTable$"Date"),format="%b-%d")
-    # dailyTable[,c(3:10)] <- round(dailyTable[,c(3:10)],3)
-    # dailyTable <- as.data.frame(dailyTable)
-  })
-
-  output$dailyTable <- renderDataTable({
-    dailyTable()
-  })
-
-  output$downloadDailyTable <- downloadHandler(
-    filename = function() {paste0(meta$station_name,
-                                  " - Daily Discharge Summary"," (",
-                                  input$yearRange[1],"-",input$yearRange[2],
-                                  ").csv")},
-    content = function(file) {
-      write.csv(dailyTable(),file, row.names = FALSE)
-    })
-}
-
-
-
-
-
-
-
-  # output$station_num <- renderUI({
-  #   selectizeInput("station_num", label = "Station Number:",
-  #                  choices = stations_list, ### see top of script
-  #                  selected = "08HB048",
-  #                  options = list(placeholder ="type or select station number", maxOptions = 2420 ))
-  # })
-  #
-
-
-  # data_raw <- reactive({
-  #   fill_missing_dates(station_number = input$station_num) %>%
-  #     add_date_variables(water_year = TRUE,
-  #                                water_year_start = as.numeric(input$ann_year_start))
-  # })
-
-
-  # output$ann_basinarea <- renderUI({
-  #   numericInput("ann_basinarea",
-  #                label = "Basin area (sq. km):",
-  #                value =  round(suppressMessages(tidyhydat::hy_stations(station_number = input$station_num)) %>% pull(DRAINAGE_AREA_GROSS),3),
-  #                min = 0, step = 0.1)
-  # })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  # output$download_annual_table <- downloadHandler(
-  #   filename = function() {paste0("Annual Discharge Summary.", input$ann_filetype)},
-  #   content = function(file) {
-  #     write_results(data = annual_data(), file)
-  #

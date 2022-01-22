@@ -476,155 +476,271 @@ ui_ah_outside_normal <- fluidRow(
 )
 
 
-# Stats Computed ---------------
+# Computations ---------------
 
 ## Annual Trends -----------------------
 ui_comp_annual <- fluidRow(
   column(
     width = 12, h2("Annual Trends"),
     box(width = 3,
-        actionButton("trends_compute", "Compute Trends"),
-        helpText("Trending Methods"),
-        selectInput("trends_zyp_method", label = "Pre-whitened trend method:",
-                    choices = list("Zhang" = "zhang", "Yue-Pilon" = "yuepilon"),
-                    selected = "zhang"),
-        numericInput("trends_alpha", label = "Alpha for plotting:", value = 0.05, min = 0, max = 1, step = 0.01),
-        helpText("Summary Statistics"),
-        fluidRow(column(6,numericInput("trends_roll_days",
-                                       label = "Rolling average days:", value = 1, min = 1, max = 180, step = 1)),
-                 column(6,selectInput("trends_roll_align", label = "Rolling alignment:",
-                                      choices = list("Right" = "right", "Left" = "left", "Center" = "center"),
-                                      selected = "Right"))),
-        fluidRow(column(6, selectizeInput("trends_ann_ptiles",
-                                          label = "Annual percentiles:",
-                                          choices = c(1:99),
-                                          selected = c(10,90),
-                                          multiple = TRUE)),
-                 column(6, selectizeInput("trends_mon_ptiles",
-                                          label = "Monthly percentiles:",
-                                          choices = c(1:99),
-                                          selected = c(10,20),
-                                          multiple = TRUE))),
-        helpText("Low Flows"),
-        fluidRow(column(6, selectizeInput("trends_low_roll_days",
-                                          label = "Rolling days:",
-                                          choices = c(1:180),
-                                          selected = c(1,3,7,30),
-                                          multiple = TRUE)),
-                 column(6,selectInput("trends_low_roll_align", label = "Rolling alignment:",
-                                      choices = list("Right" = "right", "Left" = "left", "Center" = "center"),
-                                      selected = "Right"))),
-        helpText("Flow Timing"),
-        selectizeInput("trends_timing",
-                       label = "Percent of annual flow:",
-                       choices = seq(0.1, 99.9, by = 0.1),
-                       selected = c(25,33.3,50,75),
-                       multiple = TRUE),
-        helpText("Normal Days"),
-        fluidRow(column(6,numericInput("trends_normal_lower",
-                                       label = "Lower Limit:", value = 25, min = 1, max = 99, step = 1)),
-                 column(6,numericInput("trends_normal_upper",
-                                       label = "Upper Limit:", value = 75, min = 1, max = 99, step = 1))),
-        checkboxInput("trends_ign_missing_box", "Calculate statistics despite missing values", value = FALSE)
 
+        bsButton("at_compute", "Compute Trends", style = "primary"),
+
+        uiOutput("ui_at"),
+
+        h4("Trending Methods"),
+        fluidRow(
+          column(
+            width = 6,
+            radioGroupButtons("at_zyp",
+                              label = "Trend method",
+                              choices = list("Zhang" = "zhang",
+                                             "Yue-Pilon" = "yuepilon"),
+                              justified = TRUE, selected = "zhang",
+                              direction = "vertical")),
+          column(
+            width = 6,
+            numericInput("at_alpha", label = "Alpha",
+                         value = 0.05, min = 0, max = 0.3, step = 0.05))
+        ),
+
+
+        h4("Summary Statistics"),
+        fluidRow(
+          column(6, selectizeInput("at_annual_percentiles",
+                                   label = "Annual percentiles",
+                                   choices = c(1:99),
+                                   selected = c(10,90),
+                                   multiple = TRUE)),
+          column(6, selectizeInput("at_monthly_percentiles",
+                                   label = "Monthly percentiles",
+                                   choices = c(1:99),
+                                   selected = c(10,20),
+                                   multiple = TRUE))),
+
+        h4("Low Flows"),
+        fluidRow(
+          column(6, selectizeInput("at_low_roll_days",
+                                   label = "Rolling days",
+                                   choices = c(1:180),
+                                   selected = c(1,3,7,30),
+                                   multiple = TRUE)),
+          column(6,selectInput("at_low_roll_align", label = "Rolling alignment",
+                               choices = list("Right" = "right",
+                                              "Left" = "left",
+                                              "Center" = "center"),
+                               selected = "right"))),
+
+        h4("Flow Timing"),
+        selectInput("at_percent",
+                    label = "Days to calculate rolling averages over",
+                    choices = c(1:31),
+                    selected = c(1, 3, 7, 30),
+                    multiple = TRUE),
+
+        h4("Normal Days"),
+        sliderInput("at_normal", label = "Percentiles for normal range",
+                    value = c(25, 75), min = 1, max = 99, step = 1)
     ),
+
     tabBox(
       width = 9, height = min_height,
+
+      ### Plot ---------------------
       tabPanel(
-        title = "Analysis",
-
-        DT::dataTableOutput("trends_results"),
-        textOutput("testing_rows"),
-
-        fluidRow(column(3, DT::dataTableOutput("trends_results_data")),
-                 column(9, plotlyOutput("trends_plot")))
+        title = "Plot",
+        plotOutput("at_plot")
       ),
+
+      ### Table ---------------------
+      tabPanel(
+        title = "Table",
+        DTOutput("at_table")
+      ),
+
+      ### R Code ---------------------
       tabPanel(
         title = "R Code",
-        h4("Copy and paste the following into an R console or script to reproduce the results."),
-
-        htmlOutput("trends_code")
+        verbatimTextOutput("at_code")
       )
     )
   )
 )
 
-## Flow Frequency ------------------
-
-ui_comp_flow <- fluidRow(
+## Volume Frequency - High/Low ------------------
+ui_comp_volume_freq <- fluidRow(
   column(
-    width = 12, h2("Flow Frequency"),
+    width = 12, h2("High/Low Volume Frequency Analysis"),
     box(width = 3,
-        actionButton("freq_compute", "Compute Analysis"),
-        h4("Data Selection"),
-        # uiOutput("freq_station_num"),
-        # selectInput("freq_year_start", label = "Calendar:", choices = list("Jan-Dec" = 1, "Feb-Jan" = 2,
-        #                                                                    "Mar-Feb" = 3, "Apr-Mar" = 4,
-        #                                                                    "May-Apr" = 5, "Jun-May" = 6,
-        #                                                                    "Jul-Jun" = 7, "Aug-Jul" = 8,
-        #                                                                    "Sep-Aug" = 9, "Oct-Sep" = 10,
-        #                                                                    "Nov-Oct" = 11, "Dec-Nov" = 12),
-        #             selected = 1),
-        # uiOutput("freq_slider"),
-        # uiOutput("freq_exclude"),
-        selectizeInput("freq_months",
-                       label = "Months:",
-                       choices = list("Jan" = 1, "Feb" = 2,
-                                      "Mar" = 3, "Apr" = 4,
-                                      "May" = 5, "Jun" = 6,
-                                      "Jul" = 7, "Aug" = 8,
-                                      "Sep" = 9, "Oct" = 10,
-                                      "Nov" = 11, "Dec" = 12),
-                       selected = c(1:12),
-                       multiple = TRUE),
-        h4("Data Statistics"),
-        selectInput("freq_use_max", label = "Annual Extreme:", choices = c("Minimum", "Maximum"), selected = "Minimum"),
-        fluidRow(column(6,numericInput("freq_roll_days", label = "Rolling average days:", value = 1, min = 1, max = 180, step = 1)),
-                 column(6,selectInput("freq_roll_align", label = "Alignment:",
-                                      choices = list("Right" = "right", "Left" = "left", "Center" = "center"), selected = "Right"))),
-        checkboxInput("freq_ign_missing_box", "Calculate statistics despite missing values", value = FALSE)
+
+        bsButton("vf_compute", "Compute Analysis", style = "primary"),
+
+        selectInput("vf_roll_extra",
+                    label = "Days to calculate rolling averages over",
+                    choices = c(1:31),
+                    selected = c(1, 3, 7, 30),
+                    multiple = TRUE),
+        uiOutput("ui_vf"),
+
+        fluidRow(
+          column(
+            width = 6,
+            radioGroupButtons("vf_use_max",
+                              label = "Low or High Flow",
+                              choices = list("Low" = FALSE,
+                                             "High" = TRUE),
+                              selected = FALSE,
+                              justified = TRUE)),
+          column(
+            width = 6,
+            checkboxInput("vf_log",
+                              label = "Log transform data",
+                              value = FALSE))
+        ),
+
+        fluidRow(
+          column(6, radioGroupButtons("vf_fit_distr",
+                                      label = "Distribution used to fit data",
+                                      choices = list("PIII" = "PIII",
+                                                     "Weibull" = "weibull"))),
+          column(6, selectizeInput(
+            "vf_quantiles",
+            label = "Quantiles to estimate",
+            choices = seq(0.01, 0.999, 0.0025),
+            selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
+                         0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
+            multiple = TRUE))),
+
+        checkboxInput("vf_plot_curve", label = "Plot curve", value = TRUE),
+
+        fluidRow(
+          column(6, radioGroupButtons("vf_prob_plot",
+                                      label = "Plotting positions",
+                                      choices = list("Weibull" = "weibull",
+                                                     "Median" = "median",
+                                                     "Hazen" = "hazen"))),
+          column(6, textInput("vf_prob_scale",
+                              label = "Probabilies to plot",
+                              value = "0.9999, 0.999, 0.99, 0.9, .5, .2, .1, .02, .01, .001, .0001")))
     ),
+
     tabBox(
       width = 9, height = min_height,
+
+      ### Plot ---------------------
       tabPanel(
         title = "Plot",
-        # selectInput("freq_usemax", label = "Peak flow data:", choices = list("Minimum" = FALSE,"Maximum" = TRUE), selected = "Minimum"),
-        checkboxInput("freq_usemax", label = "Use maximum data data", value = FALSE),
-        checkboxInput("freq_uselog", label = "Use log-transformed data", value = FALSE),
-        selectInput("freq_prob_plot_position", label = "Probability plot position", choices = c("weibull", "median","hazen"), selected = "weibull"),
-        selectInput("freq_fit_distr", label = "fit_distr", choices = c("PIII", "weibull"), selected = "PIII"),
-        selectInput("freq_fit_distr_method", label = "fit_distr_method (add ifelse)", choices = list("method of moments" = "MOM",
-                                                                                                     "maximum likelihood estimate" = "MLE"), selected = "MOM"),
-        plotlyOutput("freq_freqplot"),
-        textOutput("freq_fit"),
-        dataTableOutput("freq_Q_stat"),
-        dataTableOutput("freq_plotdata"),
-        dataTableOutput("freq_fitted_quantiles")
+        plotOutput("vf_plot")
+      ),
 
-      ),
+      ### Table ---------------------
       tabPanel(
-        title = "Table"
+        title = "Table",
+        DTOutput("vf_table")
       ),
+
+      ### Plot ---------------------
+      tabPanel(
+        title = "Fit Checks",
+        uiOutput("ui_vf_day"),
+        verbatimTextOutput("vf_fit_stats"),
+        plotOutput("vf_fit_plot", height = "550px")
+      ),
+
+      ### R Code ---------------------
       tabPanel(
         title = "R Code",
-        h4("Copy and paste the following into an R console or script to reproduce the results."),
+        verbatimTextOutput("vf_code")
+      )
+    )
+  )
+)
 
-        htmlOutput("freq_code")
-      ) # end of tabPanel
-    ) # end of tabsetPanel
-  ) # end of mainPanel
+## Volume Frequency - HYDAT Peaks ------------------
+ui_comp_hydat_peak <- fluidRow(
+  column(
+    width = 12, h2("HYDATE Peak Volume Frequency Analysis"),
+    box(width = 3,
+
+        bsButton("hp_compute", "Compute Analysis", style = "primary"),
+
+        fluidRow(
+          column(
+            width = 6,
+            radioGroupButtons("hp_use_max",
+                              label = "Low or High Flow",
+                              choices = list("Low" = FALSE,
+                                             "High" = TRUE),
+                              selected = FALSE,
+                              justified = TRUE)),
+          column(
+            width = 6,
+            checkboxInput("hp_log",
+                          label = "Log transform data",
+                          value = FALSE))
+        ),
+
+        fluidRow(
+          column(6, radioGroupButtons("hp_fit_distr",
+                                      label = "Distribution used to fit data",
+                                      choices = list("PIII" = "PIII",
+                                                     "Weibull" = "weibull"))),
+          column(6, selectizeInput(
+            "hp_quantiles",
+            label = "Quantiles to estimate",
+            choices = seq(0.01, 0.999, 0.0025),
+            selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
+                         0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
+            multiple = TRUE))),
+
+        checkboxInput("hp_plot_curve", label = "Plot curve", value = TRUE),
+
+        fluidRow(
+          column(6, radioGroupButtons("hp_prob_plot",
+                                      label = "Plotting positions",
+                                      choices = list("Weibull" = "weibull",
+                                                     "Median" = "median",
+                                                     "Hazen" = "hazen"))),
+          column(6, textInput("hp_prob_scale",
+                              label = "Probabilies to plot",
+                              value = "0.9999, 0.999, 0.99, 0.9, .5, .2, .1, .02, .01, .001, .0001")))
+    ),
+
+    tabBox(
+      width = 9, height = min_height,
+
+      ### Plot ---------------------
+      tabPanel(
+        title = "Plot",
+        plotOutput("hp_plot")
+      ),
+
+      ### Table ---------------------
+      tabPanel(
+        title = "Table",
+        DTOutput("hp_table")
+      ),
+
+      ### Plot ---------------------
+      tabPanel(
+        title = "Fit Checks",
+        verbatimTextOutput("hp_fit_stats"),
+        plotOutput("hp_fit_plot", height = "550px")
+      ),
+
+      ### R Code ---------------------
+      tabPanel(
+        title = "R Code",
+        verbatimTextOutput("hp_code")
+      )
+    )
+  )
 )
 
 
 
-# #### Map ####
-#
 
-# tabPanel(
-#   title = "HYDAT Stations",
-#   h5("Put nice map here (that can be filtered by the table below?) :)"),
-#   DT::dataTableOutput("hydat_stations_table")
-# )# end of tapPanel
+
 
 
 # Combine -------------------------------------------------------------------
@@ -657,7 +773,8 @@ dashboardPage(skin = "green",
       menuItem("Computations", tabName = "computed",
                icon = icon("chart-line"),
                menuSubItem("Annual Trends", tabName = "comp_annual"),
-               menuSubItem("Flow Frequency", tabName = "comp_flow"))
+               menuSubItem("Volume Frequency", tabName = "comp_volume_freq"),
+               menuSubItem("HYDAT Peak", tabName = "comp_hydat_peak"))
     )
   ),
   dashboardBody(
@@ -675,7 +792,8 @@ dashboardPage(skin = "green",
       tabItem("ah_peak", ui_ah_peak),
       tabItem("ah_outside_normal", ui_ah_outside_normal),
       tabItem("comp_annual", ui_comp_annual),
-      tabItem("comp_flow", ui_comp_flow)
+      tabItem("comp_volume_freq", ui_comp_volume_freq),
+      tabItem("comp_hydat_peak", ui_comp_hydat_peak)
     )
   )
 )
