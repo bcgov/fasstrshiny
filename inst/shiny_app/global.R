@@ -385,7 +385,7 @@ build_ui <- function(id, input = NULL, define_options = FALSE,
 #'                params_extra = c("mad" = "percent_MAD = c(input$sumsi_mad)"))
 #' }
 
-create_fun <- function(fun, data, id, input, params = NULL,
+create_fun <- function(fun, data = NULL, id, input, params = NULL,
                        params_ignore = NULL, extra = NULL, end = "") {
 
   params_default <- c("discharge", "roll_days", "roll_align", "water_year",
@@ -494,4 +494,21 @@ code_break_lines <- function(code) {
 
 
 
+gg_fitdistr <- function(fit, title) {
+
+  g <- patchwork::wrap_plots(
+    fitdistrplus::denscomp(v$Freq_Fitting[[1]], addlegend = FALSE, plotstyle = "ggplot"),
+    fitdistrplus::qqcomp(v$Freq_Fitting[[1]], addlegend = FALSE, plotstyle = "ggplot"),
+    fitdistrplus::cdfcomp(v$Freq_Fitting[[1]], addlegend = FALSE, plotstyle = "ggplot"),
+    fitdistrplus::ppcomp(v$Freq_Fitting[[1]], addlegend = FALSE, plotstyle = "ggplot")) +
+    patchwork::plot_annotation(title = title)
+
+  g &
+    ggplot2::theme_bw() +
+    ggplot2::theme(legend.position = "none")
+}
+
+text_to_num <- function(x) {
+ suppressWarnings(as.numeric(stringr::str_split(x, ",", simplify = TRUE)))
+}
 
