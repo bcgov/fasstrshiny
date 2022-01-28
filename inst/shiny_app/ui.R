@@ -551,14 +551,18 @@ ui_comp_annual <- fluidRow(
 
       ### Plot ---------------------
       tabPanel(
-        title = "Plot",
-        plotOutput("at_plot")
+        title = "Explore statistics",
+        DTOutput("at_table_fit"),
+        p(style = "margin-bottom:30px"), # A bit of space
+        fluidRow(
+          column(4, gt_output("at_table_years_sub")),
+          column(8, plotOutput("at_plot")))
       ),
 
       ### Table ---------------------
       tabPanel(
-        title = "Table",
-        DTOutput("at_table")
+        title = "Table - Yearly stats",
+        DTOutput("at_table_years")
       ),
 
       ### R Code ---------------------

@@ -884,7 +884,7 @@ server <- function(input, output, session) {
     r <- create_fun(
       "compute_annual_trends",
       data = "flow_data", id = "at", input,
-      params = c("discharge"), params_ignore = c("roll_days", "roll_align"),
+      params_ignore = c("roll_days", "roll_align"),
       extra = p)
 
     code$at_data <- r
@@ -893,16 +893,49 @@ server <- function(input, output, session) {
   }) %>%
     bindEvent(input$at_compute)
 
-  ## Plot --------------------
-  output$at_plot <- renderPlot({
+  ## Table - Fit -----------------------
+  output$at_table_fit <- DT::renderDT({
     req(at_trends())
 
-    at_trends()[[5]]
+    at_trends()[["Annual_Trends_Results"]] %>%
+      mutate(across(where(is.numeric), ~round(., 4))) %>%
+      datatable(
+        rownames = FALSE,
+        extensions = c("Scroller"),
+        options = list(scrollX = TRUE, scrollY = 250, scroller = TRUE,
+                       deferRender = TRUE, dom = 'Brtip', pageLength = 10),
+        selection = list(target = "row", mode = "single", selected = 1))
   })
 
+  ## Stat - to plot ---------------------
+  at_stat <- reactive({
+    req(input$at_table_fit_rows_selected)
+    at_trends()[["Annual_Trends_Results"]] %>%
+      slice(input$at_table_fit_rows_selected) %>%
+      pull(Statistic) %>%
+      as.character()
+  })
 
-  ## Table -----------------------
-  output$at_table <- DT::renderDT({
+  ## Plot --------------------
+  output$at_plot <- renderPlot({
+    at_trends()[[at_stat()]]
+  })
+
+  ## Table - years sub -----------------------
+  output$at_table_years_sub <- render_gt({
+    req(at_trends(), at_stat())
+
+    at_trends()[[1]] %>%
+      filter(Statistic == at_stat()) %>%
+      select(-any_of(c("STATION_NUMBER", "Statistic"))) %>%
+      pivot_longer(cols = everything(),
+                   names_to = "Year",
+                   values_to = at_stat()) %>%
+      gt()
+  }, height = px(400))
+
+  ## Table - years -----------------------
+  output$at_table_years <- renderDT({
     req(at_trends())
 
     at_trends()[[1]] %>%
