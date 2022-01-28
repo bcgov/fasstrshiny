@@ -497,10 +497,10 @@ code_break_lines <- function(code) {
 gg_fitdistr <- function(fit, title) {
 
   g <- patchwork::wrap_plots(
-    fitdistrplus::denscomp(v$Freq_Fitting[[1]], addlegend = FALSE, plotstyle = "ggplot"),
-    fitdistrplus::qqcomp(v$Freq_Fitting[[1]], addlegend = FALSE, plotstyle = "ggplot"),
-    fitdistrplus::cdfcomp(v$Freq_Fitting[[1]], addlegend = FALSE, plotstyle = "ggplot"),
-    fitdistrplus::ppcomp(v$Freq_Fitting[[1]], addlegend = FALSE, plotstyle = "ggplot")) +
+    fitdistrplus::denscomp(fit, addlegend = FALSE, plotstyle = "ggplot"),
+    fitdistrplus::qqcomp(fit, addlegend = FALSE, plotstyle = "ggplot"),
+    fitdistrplus::cdfcomp(fit, addlegend = FALSE, plotstyle = "ggplot"),
+    fitdistrplus::ppcomp(fit, addlegend = FALSE, plotstyle = "ggplot")) +
     patchwork::plot_annotation(title = title)
 
   g &
