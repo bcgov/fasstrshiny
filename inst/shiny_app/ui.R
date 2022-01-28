@@ -184,6 +184,11 @@ ui_sum_general <- fluidRow(
                         choices = list("Long-term", "Annual",
                                        "Monthly", "Daily"),
                         justified = TRUE, direction = "vertical"),
+      selectInput("sum_mad",
+                  label = "Mean Annual Discharge percentiles",
+                  choices = c(1:99),
+                  selected = c(1, 5, 50, 95, 99),
+                  multiple = TRUE),
       uiOutput("ui_sum"),
     ),
     tabBox(
@@ -203,6 +208,13 @@ ui_sum_general <- fluidRow(
         DTOutput("sum_table")
       ),
 
+      ### MAD --------------------
+      tabPanel(
+        title = "MAD",
+        h4("Mean Annual Discharge (MAD)"),
+        gt_output("sum_mad")
+      ),
+
       ### R Code ---------------------
       tabPanel(
         title = "R Code",
@@ -219,6 +231,9 @@ ui_sum_flow <- fluidRow(
     width = 12, h2("Flow duration and percentiles"),
     box(
       width = 3,
+      numericInput("sumfl_flow",
+                   label = "Flow value for percentile",
+                   value = 10, min = 0),
       uiOutput("ui_sumfl"),
     ),
     tabBox(
@@ -228,7 +243,10 @@ ui_sum_flow <- fluidRow(
       tabPanel(
         title = "Plot - Flow duration",
         uiOutput("ui_sumfl_plot_options"),
-        plotOutput("sumfl_plot")
+        plotOutput("sumfl_plot"),
+        p(style = "margin-bottom: 20px"),
+        h4("Percentile Rank of Flow"),
+        textOutput("sumfl_perc")
       ),
 
       ### Table ---------------------
@@ -242,46 +260,6 @@ ui_sum_flow <- fluidRow(
       tabPanel(
         title = "R Code",
         verbatimTextOutput("sumfl_code")
-      )
-    )
-  )
-)
-
-## Single ----------------
-ui_sum_single <- fluidRow(
-  column(
-    width = 12, h2("Long-term Single stats"),
-    box(
-      width = 3,
-      selectInput("sumsi_mad",
-                  label = "Mean Annual Discharge percentiles",
-                  choices = c(1:99),
-                  selected = c(1, 5, 50, 95, 99),
-                  multiple = TRUE),
-      select_percentiles(id = "sumsi", set = FALSE),
-      numericInput("sumsi_flow",
-                   label = "Flow value for percentile",
-                   value = 10, min = 0),
-      uiOutput("ui_sumsi"),
-    ),
-    tabBox(
-      width = 9, height = min_height,
-
-      ### Table ---------------------
-      tabPanel(
-        title = "Stats",
-        h4("Mean Annual Discharge (MAD)"),
-        gt_output("sumsi_mad"),
-        h4("Long-term Percentiles"),
-        gt_output("sumsi_perc"),
-        h4("Percentile Rank of Flow"),
-        gt_output("sumsi_flow")
-      ),
-
-      ### R Code ---------------------
-      tabPanel(
-        title = "R Code",
-        verbatimTextOutput("sumsi_code")
       )
     )
   )
@@ -773,8 +751,7 @@ dashboardPage(skin = "green",
                icon=icon("chart-bar"),
                menuSubItem("General", tabName = "sum_general"),
                menuSubItem("Flow duration and percentiles",
-                           tabName = "sum_flow"),
-               menuSubItem("Single stats", tabName = "sum_single")),
+                           tabName = "sum_flow")),
       menuItem("Cumulative Stats", tabName = "cumulative",
                icon = icon("chart-area")),
       menuItem("Annual Hydrograph Stats", tabName = "annual",
@@ -798,7 +775,6 @@ dashboardPage(skin = "green",
       tabItem("data_screen", ui_data_screen),
       tabItem("sum_general", ui_sum_general),
       tabItem("sum_flow", ui_sum_flow),
-      tabItem("sum_single", ui_sum_single),
       tabItem("cumulative", ui_cumulative),
       tabItem("ah_flow_timing", ui_ah_flow_timing),
       tabItem("ah_low_flows", ui_ah_low_flows),

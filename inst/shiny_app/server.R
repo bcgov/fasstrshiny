@@ -127,13 +127,6 @@ server <- function(input, output, session) {
                         include = "log")
   })
 
-  ## Summary - Single --------------------------------------------------------
-  output$ui_sumsi <- renderUI({
-    build_ui(id = "sumsi", input,
-             include = c("discharge", "complete"), # Percentiles by hand to group
-             hide = "")
-  })
-
   ## Cumulative ----------------------------------------------------------
 
   # Plot options
@@ -170,7 +163,7 @@ server <- function(input, output, session) {
 
   ## Annual Trends ----------------------------------------
   output$ui_at <- renderUI({
-    build_ui(id = "at", input, include = c("discharge", "missing", "allowed"))
+    build_ui(id = "at", input, include = c("missing", "allowed"))
   })
 
   ## Volume Frequency ----------------------------------------
@@ -414,6 +407,26 @@ server <- function(input, output, session) {
     eval(parse(text = g))
   })
 
+  ## MAD -----------------------
+  output$sum_mad <- render_gt({
+    req(input$sum_discharge, input$sum_mad)
+
+    flow_data <- data_raw()
+
+    t <- create_fun(
+      fun = "calc_longterm_mean",
+      data = "flow_data", id = "sum", input,
+      params = "complete",
+      extra = glue("percent_MAD = c({glue_collapse(input$sum_mad, sep = ',')})"))
+
+    code$sum_mad <- t
+
+    parse(text = t) %>%
+      eval() %>%
+      gt() %>%
+      fmt_number(columns = where(is.numeric), decimals = 4)
+  })
+
   ## Table -----------------------
   output$sum_table <- DT::renderDT({
     req(input$sum_type, input$sum_discharge)
@@ -454,6 +467,27 @@ server <- function(input, output, session) {
 
 
   # Summary Statistics - Flow ---------------------------------------
+
+  ## Flow Percentile -----------------------
+  output$sumfl_perc <- renderText({
+    req(input$sumfl_discharge, input$sumfl_flow)
+
+    flow_data <- data_raw()
+
+    # Flow
+    t <- create_fun(fun = "calc_flow_percentile",
+                    data = "flow_data", id = "sumfl", input,
+                    params = "complete",
+                    extra = glue("flow_value = {input$sumfl_flow}"))
+
+    code$sumfl_flow <- t
+
+    parse(text = t) %>%
+      eval() %>%
+      pull(Percentile) %>%
+      round(4)
+  })
+
   ## Plot --------------------
   output$sumfl_plot <- renderPlot({
     req(data_raw(), !is.null(input$sumfl_log))
@@ -501,75 +535,12 @@ server <- function(input, output, session) {
   })
 
 
+
+
+
   ## R Code -----------------
   output$sumfl_code <- renderText({
     code_format(code, id = "sumfl")
-  })
-
-  # Summary Statistics - Single ---------------------------------------
-
-  ## MAD -----------------------
-  output$sumsi_mad <- render_gt({
-    req(input$sumsi_discharge, input$sumsi_mad)
-
-    flow_data <- data_raw()
-
-
-    t <- create_fun(
-      fun = "calc_longterm_mean",
-      data = "flow_data", id = "sumsi", input,
-      params = "complete",
-      extra = glue("percent_MAD = c({glue_collapse(input$sumsi_mad, sep = ',')})"))
-
-    code$sumsi_mad <- t
-
-    parse(text = t) %>%
-      eval() %>%
-      gt() %>%
-      fmt_number(columns = where(is.numeric), decimals = 4)
-  })
-
-  ## Longterm percentiles -----------------------
-  output$sumsi_perc <- render_gt({
-    req(input$sumsi_discharge, input$sumsi_percentiles)
-
-    flow_data <- data_raw()
-    # Percentiles
-    t <- create_fun(fun = "calc_longterm_percentile",
-                    data = "flow_data", id = "sumsi", input,
-                    params = c("percentiles", "complete"))
-
-    code$sumsi_perc <- t
-
-    parse(text = t) %>%
-      eval() %>%
-      gt() %>%
-      fmt_number(columns = where(is.numeric), decimals = 4)
-  })
-
-  ## Flow Percentile -----------------------
-  output$sumsi_flow <- render_gt({
-    req(input$sumsi_discharge, input$sumsi_flow)
-
-    flow_data <- data_raw()
-
-    # Flow
-    t <- create_fun(fun = "calc_flow_percentile",
-                    data = "flow_data", id = "sumsi", input,
-                    params = "complete",
-                    extra = glue("flow_value = {input$sumsi_flow}"))
-
-    code$sumsi_flow <- t
-
-    parse(text = t) %>%
-      eval() %>%
-      gt() %>%
-      fmt_number(columns = where(is.numeric), decimals = 4)
-  })
-
-  ## R Code -----------------
-  output$sumsi_code <- renderText({
-    code_format(code, id = "sumsi")
   })
 
   # Cumulative ---------------------------------------
