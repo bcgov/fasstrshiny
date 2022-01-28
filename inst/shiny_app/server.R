@@ -455,7 +455,7 @@ server <- function(input, output, session) {
       datatable(rownames = FALSE,
                 filter = 'top',
                 extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                options = list(scrollX = TRUE, scrollY = 500, scroller = TRUE,
                                deferRender = TRUE, dom = 'Brtip'))
   })
 
@@ -530,7 +530,7 @@ server <- function(input, output, session) {
       datatable(rownames = FALSE,
                 filter = 'top',
                 extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                options = list(scrollX = TRUE, scrollY = 500, scroller = TRUE,
                                deferRender = TRUE, dom = 'Brtip'))
   })
 

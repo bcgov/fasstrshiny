@@ -84,6 +84,11 @@ This can be saved for sharing with the user through the R Code panel, and can
 then be parsed and evaluated with `eval(parse(text = t))`.
 
 
+## Datatables
+
+- With the scroller extension, must use the scrollY attribute to set table height
+  (can't use pageLength)
+
 ## IDs
 
 - `discharge`
