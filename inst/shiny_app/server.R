@@ -1003,9 +1003,22 @@ server <- function(input, output, session) {
     vf_freqs()[["Freq_Plot"]]
   })
 
+  ## Table - Plot data -----------------------
+  output$vf_table_plot <- DT::renderDT({
+    validate(need(input$vf_compute,
+                  "Choose your settings and click 'Compute Analysis'"))
 
-  ## Table -----------------------
-  output$vf_table <- DT::renderDT({
+    vf_freqs()[["Freq_Plot_Data"]] %>%
+      mutate(across(where(is.numeric), ~round(., 4))) %>%
+      datatable(rownames = FALSE,
+                filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                               deferRender = TRUE, dom = 'Brtip'))
+  })
+
+  ## Table - Fitted Quantiles -----------------------
+  output$vf_table_fit <- DT::renderDT({
     validate(need(input$vf_compute,
                   "Choose your settings and click 'Compute Analysis'"))
 
@@ -1126,7 +1139,7 @@ server <- function(input, output, session) {
   })
 
 
-
+}
 
 
 # TO ADD ----- Functions to add from fasstr: ------------------

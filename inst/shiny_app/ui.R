@@ -640,10 +640,16 @@ ui_comp_volume_freq <- fluidRow(
         plotOutput("vf_plot")
       ),
 
-      ### Table ---------------------
+      ### Table - Plot Data ---------------------
       tabPanel(
-        title = "Table",
-        DTOutput("vf_table")
+        title = "Table - Plot Data",
+        DTOutput("vf_table_plot")
+      ),
+
+      ### Table - Plot Data ---------------------
+      tabPanel(
+        title = "Table - Fitted Quantiles",
+        DTOutput("vf_table_fit")
       ),
 
       ### Plot ---------------------
