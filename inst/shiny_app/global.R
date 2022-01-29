@@ -295,8 +295,7 @@ select_table_options <- function(id, input,
 
 
 build_ui <- function(id, input = NULL, define_options = FALSE,
-                     include, hide = c("custom_months"),
-                     global = global_settings) {
+                     include, global = global_settings) {
 
   if(any(global %in% include) & !define_options){
     stop("Some ui elements included here (",
@@ -308,7 +307,7 @@ build_ui <- function(id, input = NULL, define_options = FALSE,
   }
 
   # Set up all options in the settings
-  # - Don't hide and don't set defaults
+  # - Don't set defaults
   if(define_options == TRUE) {
     set <- FALSE
     ui <- include %>%
@@ -316,23 +315,12 @@ build_ui <- function(id, input = NULL, define_options = FALSE,
       purrr::map(tagList)
   } else {
   # Set up options for a specific tab
-  # - Hide extra options
   # - Set defaults from the Settings tab
     set <- TRUE
-    ui <- include[!include %in% hide] %>%
+    ui <- include %>%
       purrr::map(~get(paste0("select_", .))(id, input, set)) %>%
       purrr::map(tagList) %>%
       append(tagList(select_extra(id)))
-
-    ui_hide <- include[include %in% hide] %>%
-      purrr::map(~get(paste0("select_", .))(id, input, set)) %>%
-      purrr::map(tagList)
-
-    if(length(include[include %in% hide]) > 0) {
-      ui <- tagList(ui,
-                    conditionalPanel(glue("input.{id}_show_extra == true"),
-                                     ui_hide))
-    }
   }
   ui
 }

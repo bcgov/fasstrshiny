@@ -394,7 +394,6 @@ ui_ah_peak <- fluidRow(
     width = 12, h2("Peak Flows"),
     box(
       width = 3,
-      "SHOULD THIS BE HERE? OR LEAVE AS DEFAULT GLOBAL?",
       selectInput("ahp_roll",
                   label = "Days to calculate rolling averages over",
                   choices = c(1:31),

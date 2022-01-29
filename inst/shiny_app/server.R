@@ -392,7 +392,7 @@ server <- function(input, output, session) {
 
   ## Plot --------------------
   output$sum_plot <- renderPlot({
-    req(data_raw())
+    req(data_raw(), !is.null(input$sum_log))
 
     flow_data <- data_raw()
 
@@ -909,7 +909,8 @@ server <- function(input, output, session) {
       pivot_longer(cols = everything(),
                    names_to = "Year",
                    values_to = at_stat()) %>%
-      gt()
+      gt() %>%
+      fmt_number(-Year, decimals = 4)
   }, height = px(400))
 
   ## Table - years -----------------------
