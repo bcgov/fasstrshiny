@@ -25,9 +25,6 @@ server <- function(input, output, session) {
 
   ## Disable/enable -----------------
 
-  # `allowed`/`missing` depend on type and whether ignoring missing
-  toggle_allowed(id = "sum", input)
-
   # Cumulative stats season
   observe({
     req(!is.null(input$cum_seasons), !is.null(input$cum_type))
@@ -101,7 +98,7 @@ server <- function(input, output, session) {
   ## Summary ------------------------------------------------------------------
   output$ui_sum <- renderUI({
     build_ui(id = "sum", input,
-             include = c("discharge", "missing", "allowed"))
+             include = c("discharge", "miss_allowed"))
   })
 
   # Plot options
@@ -118,7 +115,7 @@ server <- function(input, output, session) {
   ## Summary - Flow ----------------------------------------------------------
   output$ui_sumfl <- renderUI({
     build_ui(id = "sumfl", input,
-             include = c("discharge", "missing", "allowed", "custom_months"))
+             include = c("discharge", "missing", "custom_months"))
   })
 
   # Plot options
@@ -147,13 +144,13 @@ server <- function(input, output, session) {
   ## AH - Low flows --------------------------------------------------------
   output$ui_ahlf <- renderUI({
     build_ui(id = "ahlf", input,
-             include = c("discharge", "missing", "allowed"))
+             include = c("discharge", "allowed"))
   })
 
   ## AH - Peak flows --------------------------------------------------------
   output$ui_ahp <- renderUI({
     build_ui(id = "ahp", input,
-             include = c("discharge", "missing", "allowed"))
+             include = c("discharge", "allowed"))
   })
 
   ## AH - Outside Normal -----------------------------------------------------
@@ -161,14 +158,22 @@ server <- function(input, output, session) {
     build_ui(id = "ahon", input, include = "discharge")
   })
 
-  ## Annual Trends ----------------------------------------
-  output$ui_at <- renderUI({
-    build_ui(id = "at", input, include = c("missing", "allowed"))
+
+  ## Annual Trends ------------------------------------------------
+
+  output$ui_at_allowed <- renderUI({
+    tagList(
+      sliderInput("at_allowed_annual",
+                  label = "Annual - Allowed missing (%)",
+                  value = input$opts_allowed, step = 5, min = 0, max = 100),
+      sliderInput("at_allowed_monthly",
+                  label = "Monthly - Allowed missing (%)",
+                  value = input$opts_allowed, step = 5, min = 0, max = 100))
   })
 
   ## Volume Frequency ----------------------------------------
   output$ui_vf <- renderUI({
-    build_ui(id = "vf", input, include = c("discharge", "missing", "allowed"))
+    build_ui(id = "vf", input, include = c("discharge", "allowed"))
   })
 
   output$ui_vf_day <- renderUI({
@@ -684,7 +689,7 @@ server <- function(input, output, session) {
     g <- create_fun(
       "plot_annual_lowflows", data = "flow_data",
       id = "ahlf", input,
-      params = c("discharge", "missing", "allowed"),
+      params = c("discharge", "allowed"),
       params_ignore = "roll_days",
       extra = glue("roll_days = ",
                    "c({glue_collapse(input$ahlf_roll, sep = ',')})"),
@@ -705,7 +710,7 @@ server <- function(input, output, session) {
     t <- create_fun(
       "calc_annual_lowflows", data = "flow_data",
       id = "ahlf", input,
-      params = c("discharge", "missing", "allowed"),
+      params = c("discharge", "allowed"),
       params_ignore = "roll_days",
       extra = glue("roll_days = ",
                    "c({glue_collapse(input$ahlf_roll, sep = ',')})"))
@@ -849,6 +854,8 @@ server <- function(input, output, session) {
       glue("lowflow_align = '{input$at_low_roll_align}'"),
       glue("timing_percent = c({glue_collapse(input$at_percent, sep = ', ')})"),
       glue("normal_percentiles = c({glue_collapse(input$at_normal, sep = ', ')})"),
+      glue("allowed_missing_annual = {input$at_allowed_annual}"),
+      glue("allowed_missing_monthly = {input$at_allowed_monthly}"),
       glue("zyp_alpha = {input$at_alpha}")) %>%
       glue_collapse(sep = ", ")
 
@@ -956,7 +963,7 @@ server <- function(input, output, session) {
     r <- create_fun(
       "compute_annual_frequencies",
       data = "flow_data", id = "vf", input,
-      params = c("discharge", "missing", "allowed"),
+      params = c("discharge", "allowed"),
       params_ignore = "roll_days",
       extra = p)
 

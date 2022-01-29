@@ -204,7 +204,15 @@ select_allowed <- function(id, input = NULL, set = TRUE) {
   if(set & !is.null(input)) value <- input$opts_allowed else value <- FALSE
   sliderInput(paste0(id, "_allowed"),
               label = "Allowed missing (%)",
-              value = value, step = 5, min = 0, max =100)
+              value = value, step = 5, min = 0, max = 100)
+}
+
+select_miss_allowed <- function(id, input = NULL, set = TRUE) {
+  if(input[[glue("{id}_type")]] %in% c("Long-term", "Daily")) {
+    select_missing(id, input, set)
+  } else {
+    select_allowed(id, input, set)
+  }
 }
 
 select_extra <- function(id) {
@@ -286,22 +294,8 @@ select_table_options <- function(id, input,
 }
 
 
-
-# Disable/Enable 'allowed'
-toggle_allowed <- function(id, input) {
-  observe({
-    req(!is.null(input[[glue("{id}_missing")]]),
-        input[[glue("{id}_type")]])
-    if(input[[glue("{id}_missing")]] ||
-       input[[glue("{id}_type")]] %in% c("Long-term", "Daily")) {
-      disable(glue("{id}_allowed"))
-    } else enable(glue("{id}_allowed"))
-  })
-}
-
-
 build_ui <- function(id, input = NULL, define_options = FALSE,
-                     include, hide = c("allowed", "custom_months", "percentiles"),
+                     include, hide = c("custom_months"),
                      global = global_settings) {
 
   if(any(global %in% include) & !define_options){

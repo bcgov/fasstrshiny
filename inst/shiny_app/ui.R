@@ -467,8 +467,6 @@ ui_comp_annual <- fluidRow(
 
         bsButton("at_compute", "Compute Trends", style = "primary"),
 
-        uiOutput("ui_at"),
-
         h4("Trending Methods"),
         fluidRow(
           column(
@@ -521,7 +519,10 @@ ui_comp_annual <- fluidRow(
 
         h4("Normal Days"),
         sliderInput("at_normal", label = "Percentiles for normal range",
-                    value = c(25, 75), min = 1, max = 99, step = 1)
+                    value = c(25, 75), min = 1, max = 99, step = 1),
+
+        h4("Missing"),
+        uiOutput("ui_at_allowed")
     ),
 
     tabBox(

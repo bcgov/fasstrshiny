@@ -88,6 +88,10 @@ then be parsed and evaluated with `eval(parse(text = t))`.
 
 - With the scroller extension, must use the scrollY attribute to set table height
   (can't use pageLength)
+  
+## Missing vs. Allowed missing
+- If `allowed_missing` exists, use only that (it overrides `ignore_missing` anyway)
+- If a tab had options for either (i.e. when there is `type`) then use the `miss_allowed` ui to switch between the two.
 
 ## IDs
 
