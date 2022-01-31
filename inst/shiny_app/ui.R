@@ -464,39 +464,34 @@ ui_comp_annual <- fluidRow(
     width = 12, h2("Annual Trends"),
     box(width = 3,
 
-        bsButton("at_compute", "Compute Trends", style = "primary"),
+        bsButton("at_compute", "Compute Trends", style = "primary",
+                 class = "centreButton"),
+        hr(class = "narrowHr"),
 
-        h4("Trending Methods"),
         fluidRow(
-          column(
-            width = 6,
-            radioGroupButtons("at_zyp",
+          column(width = 6,
+                 awesomeRadio("at_zyp",
                               label = "Trend method",
                               choices = list("Zhang" = "zhang",
                                              "Yue-Pilon" = "yuepilon"),
-                              justified = TRUE, selected = "zhang",
-                              direction = "vertical")),
-          column(
-            width = 6,
-            numericInput("at_alpha", label = "Alpha",
-                         value = 0.05, min = 0, max = 0.3, step = 0.05))
-        ),
-
-
-        h4("Summary Statistics"),
+                              selected = "zhang")),
+          column(width = 6,
+                 numericInput("at_alpha", label = "Trend Alpha",
+                              value = 0.05, min = 0, max = 0.3, step = 0.05))),
+        strong("Percentiles"),
         fluidRow(
           column(6, selectizeInput("at_annual_percentiles",
-                                   label = "Annual percentiles",
+                                   label = "Annual",
                                    choices = c(1:99),
                                    selected = c(10,90),
                                    multiple = TRUE)),
           column(6, selectizeInput("at_monthly_percentiles",
-                                   label = "Monthly percentiles",
+                                   label = "Monthly",
                                    choices = c(1:99),
                                    selected = c(10,20),
                                    multiple = TRUE))),
 
-        h4("Low Flows"),
+        strong("Low Flows"),
         fluidRow(
           column(6, selectizeInput("at_low_roll_days",
                                    label = "Rolling days",
@@ -509,18 +504,15 @@ ui_comp_annual <- fluidRow(
                                               "Center" = "center"),
                                selected = "right"))),
 
-        h4("Flow Timing"),
         selectInput("at_percent",
-                    label = "Days to calculate rolling averages over",
+                    label = "Flow Timing: No. days for rolling",
                     choices = c(1:31),
                     selected = c(1, 3, 7, 30),
                     multiple = TRUE),
 
-        h4("Normal Days"),
-        sliderInput("at_normal", label = "Percentiles for normal range",
+        sliderInput("at_normal", label = "Normal Days: Percentile range",
                     value = c(25, 75), min = 1, max = 99, step = 1),
 
-        h4("Missing"),
         uiOutput("ui_at_allowed")
     ),
 
@@ -558,7 +550,9 @@ ui_comp_volume_freq <- fluidRow(
     width = 12, h2("High/Low Volume Frequency Analysis"),
     box(width = 3,
 
-        bsButton("vf_compute", "Compute Analysis", style = "primary"),
+        bsButton("vf_compute", "Compute Analysis", style = "primary",
+                 class = "centreButton"),
+        hr(class = "narrowHr"),
 
         selectInput("vf_roll_extra",
                     label = "Days to calculate rolling averages over",
@@ -653,7 +647,9 @@ ui_comp_hydat_peak <- fluidRow(
     width = 12, h2("HYDATE Peak Volume Frequency Analysis"),
     box(width = 3,
 
-        bsButton("hp_compute", "Compute Analysis", style = "primary"),
+        bsButton("hp_compute", "Compute Analysis", style = "primary",
+                 class = "centreButton"),
+        hr(class = "narrowHr"),
 
         fluidRow(
           column(
@@ -769,6 +765,16 @@ dashboardPage(skin = "green",
   ),
   dashboardBody(
     tags$head(tags$style(HTML('
+    .narrowHr {
+      margin-top: 10px;
+      margin-bottom:10px;
+    }
+    .centreButton {
+      position: relative;
+      left: 50%;
+      -ms-transform: translate(-50%, 0);
+      transform: translate(-50%, 0);
+    }
     .customButton {
       position: relative;
       top: -40px;
