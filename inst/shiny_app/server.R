@@ -873,6 +873,9 @@ server <- function(input, output, session) {
 
   ## Table - Fit -----------------------
   output$at_table_fit <- DT::renderDT({
+    validate(need(input$at_compute,
+                  "Choose your settings and click 'Compute Trends'"))
+
     req(at_trends())
 
     at_trends()[["Annual_Trends_Results"]] %>%
@@ -915,6 +918,8 @@ server <- function(input, output, session) {
 
   ## Table - years -----------------------
   output$at_table_years <- renderDT({
+    validate(need(input$at_compute,
+                  "Choose your settings and click 'Compute Trends'"))
     req(at_trends())
 
     at_trends()[[1]] %>%
