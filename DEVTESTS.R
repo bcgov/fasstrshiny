@@ -28,21 +28,27 @@ calc_annual_peaks(d)
 calc_annual_outside_normal(d)
 plot_annual_outside_normal(d)
 
-
-ft <- calc_annual_flow_timing(d)
+# Annual trends
 at <- compute_annual_trends(d, zyp_method = "zhang")
 
-ft
+to_ggiraph(at[[4]], type = "Annual Mean")
+
 at$Annual_Trends_Data %>% filter(Statistic == "DoY_25pct_TotalQ")
 at$Annual_Trends_Data
 
-v <- compute_annual_frequencies(d, roll_days = c(1, 3))  # uses compute_frequency_analysis
+
+# Vol freq
+v <- compute_annual_frequencies(d, roll_days = c(1, 3, 7, 9))  # uses compute_frequency_analysis
 names(v)
 
 v$Freq_Analysis_Data
 v$Freq_Plot_Data
 v$Freq_Plot
 v$Freq_Fitting
+v$Freq_Fitted_Quantiles
+
+to_ggiraph(v$Freq_Plot, type = "flow")
+
 
 # Single value
 compute_frequency_quantile(d, roll_days = 7, return_period = 10)
@@ -51,3 +57,14 @@ tidyhydat::download_hydat()
 v2 <- compute_hydat_peak_frequencies("08HB048")
 
 compute_hydat_peak_frequencies("08HB048", fit_distr = "PIII")
+
+
+
+# Just in case
+# ggplotly_cust <- function(x, digits = 4) {
+#   opts <- options(digits = digits)
+#   p <- plotly::ggplotly(x) %>%
+#     plotly::config(modeBarButtons = list(list("toImage")))
+#   options(opts)
+#   p
+# }

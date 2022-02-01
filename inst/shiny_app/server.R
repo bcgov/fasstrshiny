@@ -156,6 +156,26 @@ server <- function(input, output, session) {
 
   ## Annual Trends ------------------------------------------------
 
+  # Excluded years, takes defaults from input$data_years_exclude,
+  # but allowed to modify here
+  output$ui_at_exclude <- renderUI({
+    req(input$data_years_range)
+    selectizeInput("at_years_exclude",
+                   label = "Years to exclude",
+                   choices = seq(from = input$data_years_range[1],
+                                 to = input$data_years_range[2], by = 1),
+                   selected = input$data_years_exclude,
+                   multiple = TRUE)
+  })
+
+  # Update years_exclude as points selected/unselected
+  observe({
+    updateNumericInput(inputId = "at_years_exclude",
+                       value = c(at_excluded(),
+                                 input$at_plot_selected))
+  }) %>%
+    bindEvent(input$at_plot_selected)
+
   output$ui_at_allowed <- renderUI({
     tagList(
       sliderInput("at_allowed_annual",
@@ -166,7 +186,30 @@ server <- function(input, output, session) {
                   value = input$opts_allowed, step = 5, min = 0, max = 100))
   })
 
+
+
   ## Volume Frequency ----------------------------------------
+
+  # Excluded years, takes defaults from input$data_years_exclude,
+  # but allowed to modify here
+  output$ui_vf_exclude <- renderUI({
+    req(input$data_years_range)
+    selectizeInput("vf_years_exclude",
+                   label = "Years to exclude",
+                   choices = seq(from = input$data_years_range[1],
+                                 to = input$data_years_range[2], by = 1),
+                   selected = input$data_years_exclude,
+                   multiple = TRUE)
+  })
+
+  # Update years_exclude as points selected/unselected
+  observe({
+    updateNumericInput(inputId = "vf_years_exclude",
+                       value = c(vf_excluded(),
+                                 input$vf_plot_selected))
+  }) %>%
+    bindEvent(input$vf_plot_selected)
+
   output$ui_vf <- renderUI({
     build_ui(id = "vf", input, include = c("discharge", "allowed"))
   })
@@ -828,6 +871,13 @@ server <- function(input, output, session) {
   # (also monthly stats/annual stats)
 
 
+  ## Excluded ----------------------------
+  # What years were excluded when the trends were last calculated?
+  at_excluded <- reactive({
+    input$at_years_exclude
+  }) %>%
+    bindEvent(input$at_compute)
+
   ## Trends -----------------------
   at_trends <- reactive({
     req(data_raw(), input$at_zyp)
@@ -839,6 +889,7 @@ server <- function(input, output, session) {
 
     # Define parameters
     p <- c(
+      glue("exclude_years = c({glue_collapse(input$at_years_exclude, sep = ', ')})"),
       glue("zyp_method = '{input$at_zyp}'"),
       glue("annual_percentiles = c({glue_collapse(input$at_annual_percentiles, sep = ', ')})"),
       glue("monthly_percentiles = c({glue_collapse(input$at_monthly_percentiles, sep = ', ')})"),
@@ -856,7 +907,7 @@ server <- function(input, output, session) {
     r <- create_fun(
       "compute_annual_trends",
       data = "flow_data", id = "at", input,
-      params_ignore = c("roll_days", "roll_align"),
+      params_ignore = c("roll_days", "roll_align", "years_exclude"),
       extra = p)
 
     code$at_data <- r
@@ -872,14 +923,19 @@ server <- function(input, output, session) {
 
     req(at_trends())
 
+    isolate({
+      s <- input$at_table_fit_rows_selected
+      if(is.null(s)) s <- 1
+    })
+
     at_trends()[["Annual_Trends_Results"]] %>%
       mutate(across(where(is.numeric), ~round(., 4))) %>%
       datatable(
         rownames = FALSE,
         extensions = c("Scroller"),
         options = list(scrollX = TRUE, scrollY = 250, scroller = TRUE,
-                       deferRender = TRUE, dom = 'Brtip', pageLength = 10),
-        selection = list(target = "row", mode = "single", selected = 1))
+                       deferRender = TRUE, dom = 'Brtip'),
+        selection = list(target = "row", mode = "single", selected = s))
   })
 
   ## Stat - to plot ---------------------
@@ -892,9 +948,25 @@ server <- function(input, output, session) {
   })
 
   ## Plot --------------------
-  output$at_plot <- renderPlot({
-    at_trends()[[at_stat()]]
+  output$at_plot <- renderggiraph({
+    at_trends()[[at_stat()]] %>%
+      to_ggiraph(value = at_stat())
   })
+
+  # Add/Remove selected points if changing the numericInput
+  observe({
+    yrs <- input$at_years_exclude       # All excluded years
+    yrs <- yrs[!yrs %in% at_excluded()] # Not ones excluded in last run (point doesn't exist)
+    if(length(yrs) == 0) yrs <- NULL
+
+    if(!identical(yrs, input$at_plot_selected)) {
+      if(is.null(yrs)) yrs <- ""
+      session$sendCustomMessage(type = 'at_plot_set', message = yrs)
+    }
+  }) %>%
+    bindEvent(input$at_years_exclude, ignoreNULL = FALSE, ignoreInit = TRUE)
+
+
 
   ## Table - years sub -----------------------
   output$at_table_years_sub <- render_gt({
@@ -935,6 +1007,13 @@ server <- function(input, output, session) {
 
   # Volume Frequency - High/Low --------------------------------------------
 
+  ## Excluded ----------------------------
+  # What years were excluded when the trends were last calculated?
+  vf_excluded <- reactive({
+    input$vf_years_exclude
+  }) %>%
+    bindEvent(input$vf_compute)
+
   ## Frequencies -----------------------
   vf_freqs <- reactive({
     req(data_raw(), input$vf_use_max)
@@ -950,6 +1029,7 @@ server <- function(input, output, session) {
 
     # Define parameters
     p <- c(
+      glue("exclude_years = c({glue_collapse(input$vf_years_exclude, sep = ', ')})"),
       glue("use_max = {input$vf_use_max}"),
       glue("use_log = {input$vf_log}"),
       glue("roll_days = c({glue_collapse(input$vf_roll_extra, sep = ', ')})"),
@@ -964,7 +1044,7 @@ server <- function(input, output, session) {
       "compute_annual_frequencies",
       data = "flow_data", id = "vf", input,
       params = c("discharge", "allowed"),
-      params_ignore = "roll_days",
+      params_ignore = c("roll_days", "years_exclude"),
       extra = p)
 
     code$vf_data <- r
@@ -974,12 +1054,31 @@ server <- function(input, output, session) {
     bindEvent(input$vf_compute)
 
   ## Plot --------------------
-  output$vf_plot <- renderPlot({
+  output$vf_plot <- renderGirafe({
     validate(need(input$vf_compute,
                   "Choose your settings and click 'Compute Analysis'"))
 
-    vf_freqs()[["Freq_Plot"]]
+    vf_freqs()[["Freq_Plot"]] %>%
+      to_ggiraph(type = "flow")
   })
+
+  # Remove selected points if changing the numericInput
+  observe({
+      yrs <- input$vf_years_exclude       # All excluded years
+      yrs <- yrs[!yrs %in% vf_excluded()] # Not ones excluded in last run (point doesn't exist)
+
+      if(length(yrs) == 0) yrs <- NULL
+      if(!identical(yrs, input$vf_plot_selected)) { # Don't change if no change to make
+        if(is.null(yrs)) yrs <- ""
+        session$sendCustomMessage(type = 'vf_plot_set', message = yrs)
+      }
+  }) %>%
+    bindEvent(input$vf_years_exclude, ignoreNULL = FALSE, ignoreInit = TRUE)
+
+
+
+
+
 
   ## Table - Plot data -----------------------
   output$vf_table_plot <- DT::renderDT({

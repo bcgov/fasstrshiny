@@ -464,11 +464,14 @@ ui_comp_annual <- fluidRow(
     width = 12, h2("Annual Trends"),
     box(width = 3,
 
+        # Compute button
         bsButton("at_compute", "Compute Trends", style = "primary",
                  class = "centreButton"),
         hr(class = "narrowHr"),
 
+        # Other options
         fluidRow(
+          uiOutput("ui_at_exclude"),
           column(width = 6,
                  awesomeRadio("at_zyp",
                               label = "Trend method",
@@ -526,7 +529,13 @@ ui_comp_annual <- fluidRow(
         p(style = "margin-bottom:30px"), # A bit of space
         fluidRow(
           column(4, gt_output("at_table_years_sub")),
-          column(8, plotOutput("at_plot")))
+          column(8,
+                 conditionalPanel(
+                   "output.at_plot",
+                   helpText("Click on a point to add year to ",
+                            "'Years to exclude'. Remember to re-Compute ",
+                            "Trends.")),
+                 ggiraphOutput("at_plot", height = "450px")))
       ),
 
       ### Table ---------------------
@@ -550,10 +559,13 @@ ui_comp_volume_freq <- fluidRow(
     width = 12, h2("High/Low Volume Frequency Analysis"),
     box(width = 3,
 
+        # Buttons
         bsButton("vf_compute", "Compute Analysis", style = "primary",
                  class = "centreButton"),
         hr(class = "narrowHr"),
 
+        # Other
+        uiOutput("ui_vf_exclude"),
         selectInput("vf_roll_extra",
                     label = "Days to calculate rolling averages over",
                     choices = c(1:31),
@@ -609,7 +621,12 @@ ui_comp_volume_freq <- fluidRow(
       ### Plot ---------------------
       tabPanel(
         title = "Plot",
-        plotOutput("vf_plot")
+        conditionalPanel(
+          "output.vf_plot",
+          helpText("Click on a point to add that year to ",
+                   "'Years to exclude'. Remember to re-Compute ",
+                   "Analysis.")),
+        ggiraphOutput("vf_plot")
       ),
 
       ### Table - Plot Data ---------------------
@@ -618,7 +635,7 @@ ui_comp_volume_freq <- fluidRow(
         DTOutput("vf_table_plot")
       ),
 
-      ### Table - Plot Data ---------------------
+      ### Table - Fitted Quantiles ---------------------
       tabPanel(
         title = "Table - Fitted Quantiles",
         DTOutput("vf_table_fit")

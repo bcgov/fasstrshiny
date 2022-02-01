@@ -83,6 +83,12 @@ calc_longterm_daily_stats(flow_data,
 This can be saved for sharing with the user through the R Code panel, and can 
 then be parsed and evaluated with `eval(parse(text = t))`.
 
+## ggiraph
+- `to_ggiraph()` modifies the ggplot2 outputs by overwriting non-interactive
+  geoms with interactive ones, and creating tooltips from mapped variables.
+  - therefore, if the mapped variables change in the fasstr package, `to_ggiraph()`
+    will break!
+
 
 ## Datatables
 
