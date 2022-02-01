@@ -153,11 +153,6 @@ server <- function(input, output, session) {
              include = c("discharge", "allowed"))
   })
 
-  ## AH - Outside Normal -----------------------------------------------------
-  output$ui_ahon <- renderUI({
-    build_ui(id = "ahon", input, include = "discharge")
-  })
-
 
   ## Annual Trends ------------------------------------------------
 
@@ -781,7 +776,6 @@ server <- function(input, output, session) {
     g <- create_fun(
       "plot_annual_outside_normal", data = "flow_data",
       id = "ahon", input,
-      params = "discharge",
       extra = glue("normal_percentiles = ",
                    "c({glue_collapse(input$ahon_percentiles, sep = ',')})"),
       end = "[[1]]")
