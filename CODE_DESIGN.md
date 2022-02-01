@@ -9,6 +9,17 @@ arguments.
 
 Most sections of fasstrshiny related to families of functions within fasstr.
 
+## Organization
+Each panel of the app has a corresponding section in both the server.R and the ui.R scripts.
+Interactively built UI elements are at the *top* of the server.R script under "UI elements".
+Non-interactively built UI elements are in their corresponding section in the ui.R script.
+Functions for building commonly used inputs are in the global.R script. 
+Functions used for generic, non-shiny specific, tasks are in utils.R script in the fasstrshiny R folder.
+
+The ui.R script has each panel built as a separate `fluidRow()` which is then combined in the the UI at the bottom of the script under "Combine". 
+In this section, the menu is created and the panels and tabs are assembled. 
+Note that each section needs to be created in the menu, which then links to dashboard body, which includes the `fluidRow()` object. 
+
 ## Inputs
 
 Many inputs are the same among sections in fasstrshiny because they related to
@@ -82,6 +93,7 @@ calc_longterm_daily_stats(flow_data,
 
 This can be saved for sharing with the user through the R Code panel, and can 
 then be parsed and evaluated with `eval(parse(text = t))`.
+
 
 ## ggiraph
 - `to_ggiraph()` modifies the ggplot2 outputs by overwriting non-interactive
