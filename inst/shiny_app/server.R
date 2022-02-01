@@ -95,28 +95,22 @@ server <- function(input, output, session) {
   output$ui_sum_plot_options <- renderUI({
     req(input$data_years_range)
 
-    year_add <- selectizeInput(
-      "sum_year_add",
-      label = "Year to add",
-      choices = c("Choose a year" = "",
-                  seq(from = input$data_years_range[1],
-                      to = input$data_years_range[2], by = 1)),
-      selected = NULL,
-      multiple = FALSE)
-
-    select_plot_options(id = "sum", input, include = "log", extra = year_add)
+    select_plot_options(id = "sum", input,
+                        include = c("log", "year_add", "dates_add"))
     # Add inner/outer percentiles?
   })
 
-  # Enable/disable year_add
+  # Enable/disable year_add and dates_add
   observe({
-    req(input$sum_year_add)
     if(input$sum_type %in% c("Long-term", "Daily")) {
       enable("sum_year_add")
-    } else disable("sum_year_add")
+    } else {
+      disable("sum_year_add")
+    }
+
+    if(input$sum_type == "Daily") enable("sum_dates_add") else disable("sum_dates_add")
   }) %>%
     bindEvent(input$sum_type)
-
 
   # Table options
   output$ui_sum_table_options <- renderUI({
@@ -450,13 +444,25 @@ server <- function(input, output, session) {
 
   ## Plot --------------------
   output$sum_plot <- renderPlot({
-    req(data_raw(), !is.null(input$sum_log), !is.null(input$sum_year_add))
+    req(data_raw(), input$sum_type,
+        !is.null(input$sum_log), !is.null(input$sum_year_add))
 
     flow_data <- data_raw()
 
     e <- NULL
     if(input$sum_type %in% c("Long-term", "Daily") & input$sum_year_add != "") {
       e <- glue("add_year = {input$sum_year_add}")
+    }
+
+    end <- "[[1]]"
+    if(input$sum_type == "Daily" & !is.null(input$sum_dates_add)){
+      dts <- glue("as.Date(c(\"{glue_collapse(input$sum_dates_add, sep = '\", \"')}\"))")
+      labs <- glue("c(\"{glue_collapse(format(as.Date(input$sum_dates_add), '%b-%d'), ",
+                   "sep = '\", \"')}\")")
+      end <- glue("{end} + ",
+                  "  geom_vline(xintercept = {dts}, colour = 'grey20') +",
+                  "  annotate(geom = 'text', x = {dts}, y = Inf, vjust = 2, ",
+                  "           hjust = 1.05, label = {labs})")
     }
 
     g <- switch(input$sum_type,
@@ -469,7 +475,7 @@ server <- function(input, output, session) {
                                     "missing", "allowed"),
                             "log"),
                  extra = e,
-                 end = "[[1]]")
+                 end = end)
 
     code$sum_plot <- g
 

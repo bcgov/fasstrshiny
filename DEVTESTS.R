@@ -8,8 +8,17 @@ d <- fill_missing_dates(station_number = "08HB048") %>%
   add_daily_volume() %>%
   add_daily_yield()
 
-plot_daily_stats(d, values = Yield_mm)
+dts <- as.Date(c("1900-06-30", "1900-07-30", "1900-04-30"))
+plot_daily_stats(d, values = Yield_mm, ignore_missing = TRUE, add_year = 2000, log_discharge = TRUE)[[1]] +
+  geom_vline(xintercept = dts, colour = "grey20") +
+  annotate(geom = "text", x = dts, y = Inf, vjust = 2, hjust = 1.05, label = dts)
 
+
+plot_longterm_daily_stats(d, values = Yield_mm, ignore_missing = TRUE, add_year = 2000, log_discharge = TRUE)[[1]] +
+  geom_vline(xintercept = dts, colour = "grey20") +
+  annotate(geom = "text", x = dts, y = Inf, vjust = 2, hjust = 1.05, label = dts)
+
+plot_daily_stats(d, values = Yield_mm)[[1]]$mapping
 
 calc_longterm_mean(d, percent_MAD = c(5, 10 ,50), complete_years = TRUE)
 
