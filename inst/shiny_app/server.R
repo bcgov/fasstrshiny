@@ -23,16 +23,6 @@ server <- function(input, output, session) {
 
   # UI elements ---------------------------------------
 
-  ## Disable/enable -----------------
-
-  # Cumulative stats season
-  observe({
-    req(!is.null(input$cum_seasons), !is.null(input$cum_type))
-    if(input$cum_type != "Annual") {
-      disable("cum_seasons")
-    } else enable("cum_seasons")
-  })
-
   ## Data ----------------------
 
   # Update station from Map button
@@ -103,9 +93,30 @@ server <- function(input, output, session) {
 
   # Plot options
   output$ui_sum_plot_options <- renderUI({
-    select_plot_options(id = "sum", input, include = "log")
+    req(input$data_years_range)
+
+    year_add <- selectizeInput(
+      "sum_year_add",
+      label = "Year to add",
+      choices = c("Choose a year" = "",
+                  seq(from = input$data_years_range[1],
+                      to = input$data_years_range[2], by = 1)),
+      selected = NULL,
+      multiple = FALSE)
+
+    select_plot_options(id = "sum", input, include = "log", extra = year_add)
     # Add inner/outer percentiles?
   })
+
+  # Enable/disable year_add
+  observe({
+    req(input$sum_year_add)
+    if(input$sum_type %in% c("Long-term", "Daily")) {
+      enable("sum_year_add")
+    } else disable("sum_year_add")
+  }) %>%
+    bindEvent(input$sum_type)
+
 
   # Table options
   output$ui_sum_table_options <- renderUI({
@@ -136,6 +147,15 @@ server <- function(input, output, session) {
     select_table_options(data = data_raw(), id = "cum", input,
                          include = "percentiles")
   })
+
+  # Enable/disable seasons
+  observe({
+    req(input$cum_seasons)
+    if(input$cum_type != "Annual") {
+      disable("cum_seasons")
+    } else enable("cum_seasons")
+  }) %>%
+    bindEvent(input$cum_type)
 
 
   ## AH - Flow timing --------------------------------------------------------
@@ -430,9 +450,14 @@ server <- function(input, output, session) {
 
   ## Plot --------------------
   output$sum_plot <- renderPlot({
-    req(data_raw(), !is.null(input$sum_log))
+    req(data_raw(), !is.null(input$sum_log), !is.null(input$sum_year_add))
 
     flow_data <- data_raw()
+
+    e <- NULL
+    if(input$sum_type %in% c("Long-term", "Daily") & input$sum_year_add != "") {
+      e <- glue("add_year = {input$sum_year_add}")
+    }
 
     g <- switch(input$sum_type,
                 "Long-term" = "plot_longterm_daily_stats",
@@ -443,6 +468,7 @@ server <- function(input, output, session) {
                  params = c(if_else(input$sum_type %in% c("Long-term", "Daily"),
                                     "missing", "allowed"),
                             "log"),
+                 extra = e,
                  end = "[[1]]")
 
     code$sum_plot <- g

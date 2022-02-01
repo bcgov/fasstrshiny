@@ -231,9 +231,8 @@ select_parameters <- function(id, params) {
                        selected = params)
 }
 
-select_plot_options <- function(id, input,
-                                include = "log",
-                                params = NULL, data = NULL) {
+select_plot_options <- function(id, input, include = "log",
+                                params = NULL, extra = NULL, data = NULL) {
 
   i <- tagList()
   if("log" %in% include) {
@@ -258,6 +257,8 @@ select_plot_options <- function(id, input,
 
     i <- tagList(i, select_parameters(id, params))
   }
+
+  if(!is.null(extra)) i <- tagList(i, extra)
 
   t <- tagList(
     dropdownButton(
