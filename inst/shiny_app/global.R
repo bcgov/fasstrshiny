@@ -194,14 +194,23 @@ select_complete <- function(id, input = NULL, set = TRUE) {
                 label = "Complete years only")
 }
 
-select_missing <- function(id, input = NULL, set = TRUE) {
-  if(set & !is.null(input)) value <- input$opts_missing else value <- FALSE
-  checkboxInput(paste0(id, "_missing"),
+select_missing <- function(id, input = NULL, set = TRUE, value = NULL) {
+  if(set & !is.null(input) & is.null(value)) {
+    value <- input$opts_missing
+  } else if(is.null(value)) {
+    value <- FALSE
+  }
+  checkboxInput(paste0(id, "_missing"), value = value,
                 label = "Ignore missing values")
 }
 
-select_allowed <- function(id, input = NULL, set = TRUE) {
-  if(set & !is.null(input)) value <- input$opts_allowed else value <- FALSE
+select_allowed <- function(id, input = NULL, set = TRUE, value = NULL) {
+  if(set & !is.null(input) & is.null(value)) {
+    value <- input$opts_allowed
+  } else if(is.null(value)) {
+    value <- FALSE
+  }
+
   sliderInput(paste0(id, "_allowed"),
               label = "Allowed missing (%)",
               value = value, step = 5, min = 0, max = 100)
@@ -209,9 +218,9 @@ select_allowed <- function(id, input = NULL, set = TRUE) {
 
 select_miss_allowed <- function(id, input = NULL, set = TRUE) {
   if(input[[glue("{id}_type")]] %in% c("Long-term", "Daily")) {
-    select_missing(id, input, set)
+    select_missing(id, input, set, value = input[[glue("{id}_missing")]])
   } else {
-    select_allowed(id, input, set)
+    select_allowed(id, input, set, value = input[[glue("{id}_allowed")]])
   }
 }
 
@@ -232,12 +241,12 @@ select_parameters <- function(id, params) {
 }
 
 select_plot_options <- function(id, input, include = "log",
-                                params = NULL, extra = NULL, data = NULL) {
+                                params = NULL, data = NULL) {
 
   i <- tagList()
   if("log" %in% include) {
     i <- tagList(i, materialSwitch(glue("{id}_log"),
-                                   label = "Use log scale", value = FALSE,
+                                   label = "Use log scale", value = TRUE,
                                    status = "success"))
   }
   if("daterange" %in% include) {
@@ -258,7 +267,30 @@ select_plot_options <- function(id, input, include = "log",
     i <- tagList(i, select_parameters(id, params))
   }
 
-  if(!is.null(extra)) i <- tagList(i, extra)
+  if("year_add" %in% include) {
+    i <- tagList(i,
+                 selectizeInput(
+                   "sum_year_add",
+                   label = "Year to add",
+                   choices = c("Choose a year" = "",
+                               seq(from = input$data_years_range[1],
+                                   to = input$data_years_range[2], by = 1)),
+                   selected = NULL,
+                   multiple = FALSE))
+  }
+  if("dates_add" %in% include) {
+    # Start disabled, enable if correct type selected
+    d <- seq(as.Date("1900-01-01"), as.Date("1900-12-31"), by = 1)
+
+    i <- tagList(i,
+                 disabled(
+                   selectizeInput(
+                     "sum_dates_add",
+                     label = "Date to show",
+                     choices = c("Choose date(s)" = "",
+                                 setNames(as.character(d), format(d, "%b-%d"))),
+                     selected = NULL, multiple = TRUE)))
+  }
 
   t <- tagList(
     dropdownButton(
@@ -320,8 +352,7 @@ build_ui <- function(id, input = NULL, define_options = FALSE,
     set <- TRUE
     ui <- include %>%
       purrr::map(~get(paste0("select_", .))(id, input, set)) %>%
-      purrr::map(tagList) %>%
-      append(tagList(select_extra(id)))
+      purrr::map(tagList)
   }
   ui
 }
@@ -423,7 +454,7 @@ create_fun <- function(fun, data = NULL, id, input, params = NULL,
       params[i] == "years_range" ~
         glue("start_year = {id[[i]][1]}, end_year = {id[[i]][2]}"),
       params[i] == "years_exclude" ~
-        glue("exclude_years = {id[i]}"),
+        glue("exclude_years = c({glue_collapse(id[[i]], sep = ', ')})"),
 
       # Plot
       params[i] == "daterange" ~
