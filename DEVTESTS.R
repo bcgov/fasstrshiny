@@ -20,6 +20,16 @@ plot_longterm_daily_stats(d, values = Yield_mm, ignore_missing = TRUE, add_year 
 
 plot_daily_stats(d, values = Yield_mm)[[1]]$mapping
 
+
+mad <- calc_longterm_mean(d, percent_MAD = c(5, 10, 50, 99)) %>%
+  pivot_longer(-STATION_NUMBER, names_to = "type")
+
+plot_daily_stats(d, values = Yield_mm, ignore_missing = TRUE, add_year = 2000, log_discharge = TRUE)[[1]] +
+  geom_hline(yintercept = mad$value, size = c(1, rep(0.5, nrow(mad) - 1))) +
+  geom_text(data = mad, aes(y = value, label = type),
+            x = c(Inf, rep(-Inf, nrow(mad) - 1)),
+            hjust = c(1.1, rep(-0.1, nrow(mad) -1)), vjust = -0.5)
+
 calc_longterm_mean(d, percent_MAD = c(5, 10 ,50), complete_years = TRUE)
 
 plot_annual_cumulative_stats(d, include_seasons = TRUE) %>%
