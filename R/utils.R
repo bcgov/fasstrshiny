@@ -74,3 +74,12 @@ text_to_num <- function(x) {
   suppressWarnings(as.numeric(stringr::str_split(x, ",", simplify = TRUE)))
 }
 
+
+get_date <- function(n, water_year) {
+  d <- as.Date(as.numeric(n), origin = as.Date("1900-01-01") - 1)
+  if(water_year != 1) {
+    d[as.numeric(format(d, "%m")) >= water_year] <-
+      d[as.numeric(format(d, "%m")) >= water_year] - 365
+  }
+  d
+}

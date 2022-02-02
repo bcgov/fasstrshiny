@@ -280,16 +280,23 @@ select_plot_options <- function(id, input, include = "log",
   }
   if("dates_add" %in% include) {
     # Start disabled, enable if correct type selected
-    d <- seq(as.Date("1900-01-01"), as.Date("1900-12-31"), by = 1)
+    # Updated depending on water year in UI section of server.R
+    d <- setNames(1:365,
+                  format(as.Date(1:365, origin = "1899-12-31"),
+                         "%b-%d"))
+    dts <- selectizeInput(
+      "sum_dates_add",
+      label = "Date to show",
+      choices = c("Choose date(s)" = "", d),
+      selected = NULL, multiple = TRUE) %>%
+      disabled()
 
-    i <- tagList(i,
-                 disabled(
-                   selectizeInput(
-                     "sum_dates_add",
-                     label = "Date to show",
-                     choices = c("Choose date(s)" = "",
-                                 setNames(as.character(d), format(d, "%b-%d"))),
-                     selected = NULL, multiple = TRUE)))
+    i <- tagList(i, dts)
+  }
+  if("mad_add" %in% include) {
+    i <- tagList(i, materialSwitch(glue("{id}_mad_add"),
+                                   label = "Add MAD values", value = FALSE,
+                                   status = "success"))
   }
 
   t <- dropdownButton(

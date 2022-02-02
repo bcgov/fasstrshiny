@@ -96,9 +96,10 @@ server <- function(input, output, session) {
     req(input$data_years_range)
 
     select_plot_options(id = "sum", input,
-                        include = c("log", "year_add", "dates_add"))
+                        include = c("log", "year_add", "dates_add", "mad_add"))
     # Add inner/outer percentiles?
   })
+
 
   # Enable/disable year_add and dates_add
   observe({
@@ -454,17 +455,6 @@ server <- function(input, output, session) {
       e <- glue("add_year = {input$sum_year_add}")
     }
 
-    end <- "[[1]]"
-    if(input$sum_type == "Daily" & !is.null(input$sum_dates_add)){
-      dts <- glue("as.Date(c(\"{glue_collapse(input$sum_dates_add, sep = '\", \"')}\"))")
-      labs <- glue("c(\"{glue_collapse(format(as.Date(input$sum_dates_add), '%b-%d'), ",
-                   "sep = '\", \"')}\")")
-      end <- glue("{end} + ",
-                  "  geom_vline(xintercept = {dts}, colour = 'grey20') +",
-                  "  annotate(geom = 'text', x = {dts}, y = Inf, vjust = 2, ",
-                  "           hjust = 1.05, label = {labs})")
-    }
-
     g <- switch(input$sum_type,
                 "Long-term" = "plot_longterm_daily_stats",
                 "Annual" = "plot_annual_stats",
@@ -475,15 +465,47 @@ server <- function(input, output, session) {
                                     "missing", "allowed"),
                             "log"),
                  extra = e,
-                 end = end)
+                 end = "[[1]]")
 
     code$sum_plot <- g
 
-    eval(parse(text = g))
+    g <- eval(parse(text = g))
+
+    # Add dates
+    if(input$sum_type == "Daily" & !is.null(input$sum_dates_add)){
+      dts <- data.frame(
+        Date = get_date(input$sum_dates_add,
+                        water_year = as.numeric(input$data_water_year))) %>%
+        mutate(labs = format(Date, '%b-%d'),
+               hjust = if_else(as.numeric(input$data_water_year) ==
+                                 as.numeric(format(Date, "%m")),
+                               -0.05, 1.05))
+
+      g <- g +
+        geom_vline(xintercept = dts$Date, colour = 'grey20') +
+        geom_text(data = dts, aes(x = Date, label = labs, hjust = hjust),
+                  y = Inf, vjust = 2)
+    }
+
+    # Add mad
+    if(!is.null(input$sum_mad_add) && input$sum_mad_add &&
+       input$sum_type != "Monthly") {
+      mad <- sum_mad() %>%
+        pivot_longer(-STATION_NUMBER, names_to = "type")
+
+      g <- g +
+        geom_hline(yintercept = mad$value, size = c(1, rep(0.5, nrow(mad) - 1)),
+                   inherit.aes = FALSE) +
+        geom_text(data = mad, aes(y = value, label = type), inherit.aes = FALSE,
+                  x = c(Inf, rep(-Inf, nrow(mad) - 1)),
+                  hjust = c(1.1, rep(-0.1, nrow(mad) -1)), vjust = -0.5)
+    }
+
+    g
   })
 
   ## MAD -----------------------
-  output$sum_mad <- render_gt({
+  sum_mad <- reactive({
     req(input$sum_discharge, input$sum_mad)
 
     flow_data <- data_raw()
@@ -497,7 +519,11 @@ server <- function(input, output, session) {
     code$sum_mad <- t
 
     parse(text = t) %>%
-      eval() %>%
+      eval()
+  })
+
+  output$sum_mad <- render_gt({
+     sum_mad() %>%
       gt() %>%
       fmt_number(columns = where(is.numeric), decimals = 4)
   })
