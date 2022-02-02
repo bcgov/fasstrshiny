@@ -292,14 +292,12 @@ select_plot_options <- function(id, input, include = "log",
                      selected = NULL, multiple = TRUE)))
   }
 
-  t <- tagList(
-    dropdownButton(
-      tags$h3("Plot options"),
-      i,
-      status = "primary", icon = icon("gear", verify_fa = FALSE),
-      size = "sm", width = "300px", right = TRUE, inline = TRUE,
-      tooltip = tooltipOptions(title = "Plot options", placement = "left")
-    )
+  t <- dropdownButton(
+    tags$h3("Plot options"),
+    i,
+    status = "primary", icon = icon("gear", verify_fa = FALSE),
+    size = "sm", width = "300px", right = TRUE,
+    tooltip = tooltipOptions(title = "Plot options", placement = "left")
   )
 }
 
@@ -315,14 +313,12 @@ select_table_options <- function(id, input,
     i <- tagList(i, select_custom_months(id, input, set = TRUE))
   }
 
-  t <- tagList(
-    dropdownButton(
-      tags$h3("Table options"),
-      i,
-      status = "primary", icon = icon("gear", verify_fa = FALSE),
-      size = "sm", width = "300px", right = TRUE, inline = TRUE,
-      tooltip = tooltipOptions(title = "Table options", placement = "left")
-    )
+  t <- dropdownButton(
+    tags$h3("Table options"),
+    i,
+    status = "primary", icon = icon("gear", verify_fa = FALSE),
+    size = "sm", width = "300px", right = TRUE,
+    tooltip = tooltipOptions(title = "Table options", placement = "left")
   )
 }
 

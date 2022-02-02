@@ -99,7 +99,7 @@ ui_data_load <- fluidRow(
       ### Plot --------
       tabPanel(
         title = "Plot", value = "data_plot",
-        uiOutput("ui_data_plot_options", class = "customButton", align = "right"),
+        uiOutput("ui_data_plot_options", align = "right"),
         plotlyOutput('data_plot')
       ),
 
@@ -197,14 +197,14 @@ ui_sum_general <- fluidRow(
       ### Plot ---------------------
       tabPanel(
         title = "Plot",
-        uiOutput("ui_sum_plot_options", class = "customButton", align = "right"),
+        uiOutput("ui_sum_plot_options", align = "right"),
         plotOutput("sum_plot")
       ),
 
       ### Table ---------------------
       tabPanel(
         title = "Table",
-        uiOutput("ui_sum_table_options", class = "customButton", align = "right"),
+        uiOutput("ui_sum_table_options", align = "right"),
         DTOutput("sum_table")
       ),
 
@@ -242,7 +242,7 @@ ui_sum_flow <- fluidRow(
       ### Plot ---------------------
       tabPanel(
         title = "Plot - Flow duration",
-        uiOutput("ui_sumfl_plot_options", class = "customButton", align = "right"),
+        uiOutput("ui_sumfl_plot_options", align = "right"),
         plotOutput("sumfl_plot"),
         p(style = "margin-bottom: 20px"),
         h4("Percentile Rank of Flow"),
@@ -252,7 +252,7 @@ ui_sum_flow <- fluidRow(
       ### Table ---------------------
       tabPanel(
         title = "Table - Percentiles",
-        uiOutput("ui_sumfl_table_options", class = "customButton", align = "right"),
+        uiOutput("ui_sumfl_table_options", align = "right"),
         DTOutput("sumfl_table")
       ),
 
@@ -290,14 +290,14 @@ ui_cumulative <- fluidRow(
       ## Plot ---------------------
       tabPanel(
         title = "Plot",
-        uiOutput("ui_cum_plot_options", class = "customButton", align = "right"),
+        uiOutput("ui_cum_plot_options", align = "right"),
         plotOutput("cum_plot", height = "500px")
         ),
 
       ## Table ---------------------
       tabPanel(
         title = "Table",
-        uiOutput("ui_cum_table_options", class = "customButton", align = "right"),
+        uiOutput("ui_cum_table_options", align = "right"),
         DTOutput("cum_table")
       ),
 
@@ -791,11 +791,7 @@ dashboardPage(skin = "green",
       left: 50%;
       -ms-transform: translate(-50%, 0);
       transform: translate(-50%, 0);
-    }
-    .customButton {
-      position: relative;
-      top: -40px;
-      height: 0;'))),
+    }'))),
     tabItems(
       tabItem("home", ui_home),
       tabItem("settings", ui_settings),
