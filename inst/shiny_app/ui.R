@@ -280,9 +280,9 @@ ui_cumulative <- fluidRow(
                    label = "Discharge type",
                    choices = list("Volumetric Discharge (m3)" = FALSE,
                                   "Runoff Yield (mm)" = TRUE)),
-      checkboxInput("cum_seasons",
-                    label = "Include seasons",
-                    value = TRUE)
+      materialSwitch("cum_seasons",
+                     label = "Include seasons",
+                     value = TRUE)
       ),
     tabBox(
       width = 9, height = min_height,
@@ -584,9 +584,9 @@ ui_comp_volume_freq <- fluidRow(
                               justified = TRUE)),
           column(
             width = 6,
-            checkboxInput("vf_log",
-                              label = "Log transform data",
-                              value = FALSE))
+            materialSwitch("vf_log",
+                           label = "Log transform data",
+                           value = FALSE))
         ),
 
         fluidRow(
@@ -602,7 +602,7 @@ ui_comp_volume_freq <- fluidRow(
                          0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
             multiple = TRUE))),
 
-        checkboxInput("vf_plot_curve", label = "Plot curve", value = TRUE),
+        materialSwitch("vf_plot_curve", label = "Plot curve", value = TRUE),
 
         fluidRow(
           column(6, radioGroupButtons("vf_prob_plot",
@@ -679,9 +679,9 @@ ui_comp_hydat_peak <- fluidRow(
                               justified = TRUE)),
           column(
             width = 6,
-            checkboxInput("hp_log",
-                          label = "Log transform data",
-                          value = FALSE))
+            materialSwitch("hp_log",
+                           label = "Log transform data",
+                           value = FALSE))
         ),
 
         fluidRow(
@@ -697,7 +697,7 @@ ui_comp_hydat_peak <- fluidRow(
                          0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
             multiple = TRUE))),
 
-        checkboxInput("hp_plot_curve", label = "Plot curve", value = TRUE),
+        materialSwitch("hp_plot_curve", label = "Plot curve", value = TRUE),
 
         fluidRow(
           column(6, radioGroupButtons("hp_prob_plot",

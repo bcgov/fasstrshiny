@@ -190,25 +190,25 @@ select_percentiles <- function(id, input = NULL, set = TRUE) {
 
 select_complete <- function(id, input = NULL, set = TRUE) {
   if(set & !is.null(input)) value <- input$opts_complete else value <- FALSE
-  checkboxInput(paste0(id, "_complete"),
-                label = "Complete years only")
+  materialSwitch(paste0(id, "_complete"),
+                 label = "Complete years only")
 }
 
 select_missing <- function(id, input = NULL, set = TRUE, value = NULL) {
   if(set & !is.null(input) & is.null(value)) {
     value <- input$opts_missing
   } else if(is.null(value)) {
-    value <- FALSE
+    value <- TRUE
   }
-  checkboxInput(paste0(id, "_missing"), value = value,
-                label = "Ignore missing values")
+  materialSwitch(paste0(id, "_missing"), value = value, status = "danger",
+                 label = "Ignore missing values")
 }
 
 select_allowed <- function(id, input = NULL, set = TRUE, value = NULL) {
   if(set & !is.null(input) & is.null(value)) {
     value <- input$opts_allowed
   } else if(is.null(value)) {
-    value <- FALSE
+    value <- 100
   }
 
   sliderInput(paste0(id, "_allowed"),
