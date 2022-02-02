@@ -266,6 +266,30 @@ ui_sum_flow <- fluidRow(
   )
 )
 
+
+## Annual Means -----------------------
+ui_sum_annual <- fluidRow(
+  column(
+    width = 12, h2("Annual Means"),
+    tabBox(
+      width = 12, height = min_height,
+      ### Plot ---------------------
+      tabPanel(
+        title = "Plot",
+        uiOutput("ui_sumam"),
+        plotOutput("sumam_plot")
+      ),
+
+      ### R Code ---------------------
+      tabPanel(
+        title = "R Code",
+        verbatimTextOutput("sumam_code")
+      )
+    )
+  )
+)
+
+
 # Cumulative -------------
 
 ui_cumulative <- fluidRow(

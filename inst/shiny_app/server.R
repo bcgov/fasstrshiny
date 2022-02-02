@@ -130,6 +130,12 @@ server <- function(input, output, session) {
                         include = "log")
   })
 
+  ## SS - Annual Means ----------------------------------------------------------
+  output$ui_sumam <- renderUI({
+    build_ui(id = "sumam", input, include = "missing")
+  })
+
+
   ## Cumulative ----------------------------------------------------------
 
   # Plot options
@@ -756,6 +762,37 @@ server <- function(input, output, session) {
   output$sumfl_code <- renderText({
     code_format(code, id = "sumfl")
   })
+
+
+
+  # Summary Stats - Annual Means ---------------------------------------
+
+
+  ## Plot --------------------
+  output$sumam_plot <- renderPlot({
+    req(data_raw(), input$sumam_missing)
+
+    flow_data <- data_raw()
+
+    g <- create_fun(
+      fun = "plot_annual_means", data = "flow_data", id = "sumam", input,
+      params = c("missing"),
+      end = "[[1]]")
+
+    code$sumam_plot <- g
+
+    eval(parse(text = g))
+  })
+
+
+  ## R Code -----------------
+  output$sumam_code <- renderText({
+    code_format(code, id = "sumam")
+  })
+
+
+
+
 
   # Cumulative ---------------------------------------
   ## Plot --------------------
