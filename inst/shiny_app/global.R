@@ -32,6 +32,7 @@ library(patchwork)
 library(ggiraph)
 
 library(fasstrshiny)
+library(fasstr)
 library(tidyhydat)
 library(bcmaps)
 
@@ -472,6 +473,3 @@ create_fun <- function(fun, data = NULL, id, input, params = NULL,
   glue("{fun}({args}){end}")
 }
 
-
-
-## Check Functions ---------

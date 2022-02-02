@@ -2,11 +2,51 @@ library(fasstr)
 library(tidyverse)
 library(tidyhydat)
 library(patchwork)
+library(ggiraph)
 
 d <- fill_missing_dates(station_number = "08HB048") %>%
   add_date_variables(water_year_start = 1) %>%
   add_daily_volume() %>%
   add_daily_yield()
+
+screen_data <- screen_flow_data(d)
+
+g <- "ggplot(data = screen_data,
+              aes(x = Year, y = Mean)) +
+        theme_bw() +
+        theme(axis.title = element_text(size = 15),
+              plot.title = element_text(size = 15, hjust = 0.5),
+              axis.text = element_text(size = 13)) +
+        geom_line(colour = 'dodgerblue4') +
+        geom_point(colour = 'firebrick3', size = 2)"
+
+stat <- "Mean"
+g <- parse(text = g) %>%
+  eval()
+
+g2 <- g + geom_point_interactive(aes(tooltip = paste0("Year: ", Year, "\n",
+                                                      "Mean: ", .data[[stat]]),
+                                     data_id = Year),
+                                 colour = 'firebrick3', size = 2)
+girafe(ggobj = g2)
+
+
+g <- plot_missing_dates(d)[[1]]
+g$layers[[1]] <- geom_bar_interactive(
+  aes(tooltip = paste0("Year: ", Year, "\nMissing: ", Value),
+      data_id = paste0(Year, "-", Month)), colour = "cornflowerblue",
+  fill = "cornflowerblue", stat = "identity")
+
+girafe(ggobj = g)
+
+
+
+
+
+plot_flow_data(d)[[1]] %>%
+  to_ggiraph() %>%
+  ggiraph(ggobj = .)
+
 
 dts <- as.Date(c("1900-06-30", "1900-07-30", "1900-04-30"))
 plot_daily_stats(d, values = Yield_mm, ignore_missing = TRUE, add_year = 2000, log_discharge = TRUE)[[1]] +

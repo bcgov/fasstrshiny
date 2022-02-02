@@ -111,6 +111,10 @@ then be parsed and evaluated with `eval(parse(text = t))`.
 - If `allowed_missing` exists, use only that (it overrides `ignore_missing` anyway)
 - If a tab had options for either (i.e. when there is `type`) then use the `miss_allowed` ui to switch between the two.
 
+## `ggiraph`
+- Always use `girafe`, `girafeOutput` and `renderGirafe` (not any of the ggiraph variantes)
+- Always use `girafe(ggobj = PLOT)` (`ggobj` is the important argument here)
+
 ## IDs
 
 - `discharge`
