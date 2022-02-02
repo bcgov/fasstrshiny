@@ -85,7 +85,7 @@ server <- function(input, output, session) {
                         include = c("log", "daterange"))
   })
 
-  ## Summary ------------------------------------------------------------------
+  ## SS - General -------------------------------------------------------------
   output$ui_sum <- renderUI({
     build_ui(id = "sum", input,
              include = c("discharge", "miss_allowed"))
@@ -118,7 +118,7 @@ server <- function(input, output, session) {
     select_table_options(id = "sum", input)
   })
 
-  ## Summary - Flow ----------------------------------------------------------
+  ## SS - Flow ----------------------------------------------------------
   output$ui_sumfl <- renderUI({
     build_ui(id = "sumfl", input,
              include = c("discharge", "missing", "custom_months"))
@@ -373,7 +373,7 @@ server <- function(input, output, session) {
   })
 
   ## Summary plot ------------------
-  output$screen_plot1 <- renderPlotly({
+  output$screen_plot1 <- renderGirafe({
     req(screen_raw())
 
     xlab <- if_else(input$data_water_year != 1, "Water Year", "Year")
@@ -393,14 +393,19 @@ server <- function(input, output, session) {
 
     code$screen_plot <- g
 
-    parse(text = g) %>%
-      eval() %>%
-      ggplotly()
+    g <- parse(text = g) %>%
+      eval() +
+      geom_point_interactive(aes(tooltip = paste0(
+        "Year: ", Year, "\n",
+        input$screen_summary, ": ", round(.data[[input$screen_summary]], 4))),
+        colour = 'firebrick3', size = 3)
+
+    girafe(ggobj = g, width_svg = 13, height_svg = 5)
   })
 
 
   ## Missing Data Plot ---------------------------
-  output$screen_plot2 <- renderPlotly({
+  output$screen_plot2 <- renderGirafe({
     req(data_raw())
 
     flow_data <- data_raw()
@@ -409,9 +414,16 @@ server <- function(input, output, session) {
 
     code$screen_miss <- g
 
-    parse(text = g) %>%
-      eval() %>%
-      ggplotly()
+    g <- parse(text = g) %>%
+      eval()
+
+    g$layers[[1]] <- geom_bar_interactive(
+      aes(tooltip = paste0("Year: ", Year, "\nMissing: ", Value),
+          data_id = paste0(Year, "-", Month)), colour = "cornflowerblue",
+      fill = "cornflowerblue", stat = "identity")
+
+    girafe(ggobj = g, width_svg = 14, height_svg = 6,
+           options = list(opts_selection(type = "none")))
   })
 
   ## Summary table ------------------
@@ -441,10 +453,101 @@ server <- function(input, output, session) {
 
 
 
-  # Summary Statistics - General ---------------------------------------
+  # Summary Stats - General ---------------------------------------
 
   ## Plot --------------------
-  output$sum_plot <- renderPlot({
+  output$sum_plot <- renderGirafe({
+    req(data_raw(), input$sum_type,
+        !is.null(input$sum_log), !is.null(input$sum_year_add))
+
+    flow_data <- data_raw()
+
+    e <- NULL
+    if(input$sum_type %in% c("Long-term", "Daily") & input$sum_year_add != "") {
+      e <- glue("add_year = {input$sum_year_add}")
+    }
+
+    g <- switch(input$sum_type,
+                "Long-term" = "plot_longterm_daily_stats",
+                "Annual" = "plot_annual_stats",
+                "Monthly" = "plot_monthly_stats",
+                "Daily" = "plot_daily_stats") %>%
+      create_fun("flow_data", id = "sum", input,
+                 params = c(if_else(input$sum_type %in% c("Long-term", "Daily"),
+                                    "missing", "allowed"),
+                            "log"),
+                 extra = e,
+                 end = "[[1]]")
+
+    code$sum_plot <- g
+
+    g <- eval(parse(text = g))
+
+
+    # Add interactivity
+
+    if(input$sum_type == "Long-term") {
+      g <- g +
+        geom_point_interactive(
+          aes(y = Mean,
+              tooltip = paste0("Month: ", Month, "\nMean: ", round(Mean, 4)),
+              data_id = paste0(Month, "-mean")),
+          colour = "paleturquoise", size = 4) +
+        geom_point_interactive(
+          aes(y = Median,
+              tooltip = paste0("Month: ", Month, "\nMedian: ", round(Median, 4)),
+              data_id = paste0(Month, "-median")),
+          colour = "dodgerblue4", size = 4)
+    } else if(input$sum_type == "Annual") {
+
+    } else if(input$sum_type == "Monthly") {
+
+    } else if(input$sum_type == "Daily") {
+
+    }
+
+    # Add dates
+    if(input$sum_type == "Daily" & !is.null(input$sum_dates_add)){
+      dts <- data.frame(
+        Date = get_date(input$sum_dates_add,
+                        water_year = as.numeric(input$data_water_year))) %>%
+        mutate(labs = format(Date, '%b-%d'),
+               hjust = if_else(as.numeric(input$data_water_year) ==
+                                 as.numeric(format(Date, "%m")),
+                               -0.05, 1.05))
+
+      g <- g +
+        geom_vline_interactive(xintercept = dts$Date, colour = 'grey20',
+                               tooltip = dts$labs) +
+        geom_text(data = dts, aes(x = Date, label = labs, hjust = hjust),
+                  y = Inf, vjust = 2)
+    }
+
+    # Add mad
+    if(!is.null(input$sum_mad_add) && input$sum_mad_add &&
+       input$sum_type != "Monthly") {
+      mad <- sum_mad() %>%
+        pivot_longer(-STATION_NUMBER, names_to = "type")
+
+      g <- g +
+        geom_hline_interactive(tooltip = glue(mad$type, ": ", mad$value),
+                               yintercept = mad$value,
+                               size = c(1, rep(0.5, nrow(mad) - 1)),
+                               inherit.aes = FALSE) +
+        geom_text(data = mad, aes(y = value, label = type), inherit.aes = FALSE,
+                  x = c(Inf, rep(-Inf, nrow(mad) - 1)),
+                  hjust = c(1.1, rep(-0.1, nrow(mad) -1)), vjust = -0.5)
+    }
+
+    girafe(ggobj = g, width_svg = 12, height = 6,
+           options = list(opts_toolbar(position = "topleft"),
+                          opts_selection(type = "none")))
+  })
+
+
+
+  ## Plot Test--------------------
+  output$sum_plot_test <- renderPlotly({
     req(data_raw(), input$sum_type,
         !is.null(input$sum_log), !is.null(input$sum_year_add))
 
@@ -482,7 +585,8 @@ server <- function(input, output, session) {
                                -0.05, 1.05))
 
       g <- g +
-        geom_vline(xintercept = dts$Date, colour = 'grey20') +
+        geom_vline_interactive(xintercept = dts$Date, colour = 'grey20',
+                               tooltip = dts$labs) +
         geom_text(data = dts, aes(x = Date, label = labs, hjust = hjust),
                   y = Inf, vjust = 2)
     }
@@ -494,15 +598,24 @@ server <- function(input, output, session) {
         pivot_longer(-STATION_NUMBER, names_to = "type")
 
       g <- g +
-        geom_hline(yintercept = mad$value, size = c(1, rep(0.5, nrow(mad) - 1)),
-                   inherit.aes = FALSE) +
+        geom_hline_interactive(tooltip = glue(mad$type, ": ", mad$value),
+                               yintercept = mad$value,
+                               size = c(1, rep(0.5, nrow(mad) - 1)),
+                               inherit.aes = FALSE) +
         geom_text(data = mad, aes(y = value, label = type), inherit.aes = FALSE,
                   x = c(Inf, rep(-Inf, nrow(mad) - 1)),
                   hjust = c(1.1, rep(-0.1, nrow(mad) -1)), vjust = -0.5)
     }
 
-    g
+    ggplotly(g)
   })
+
+
+
+
+
+
+
 
   ## MAD -----------------------
   sum_mad <- reactive({
@@ -567,7 +680,7 @@ server <- function(input, output, session) {
   })
 
 
-  # Summary Statistics - Flow ---------------------------------------
+  # Summary Stats - Flow ---------------------------------------
 
   ## Flow Percentile -----------------------
   output$sumfl_perc <- renderText({
@@ -1006,9 +1119,9 @@ server <- function(input, output, session) {
   })
 
   ## Plot --------------------
-  output$at_plot <- renderggiraph({
+  output$at_plot <- renderGirafe({
     at_trends()[[at_stat()]] %>%
-      to_ggiraph(value = at_stat())
+      to_girafe(value = at_stat())
   })
 
   # Add/Remove selected points if changing the numericInput
@@ -1117,7 +1230,7 @@ server <- function(input, output, session) {
                   "Choose your settings and click 'Compute Analysis'"))
 
     vf_freqs()[["Freq_Plot"]] %>%
-      to_ggiraph(type = "flow")
+      to_girafe(type = "flow")
   })
 
   # Remove selected points if changing the numericInput

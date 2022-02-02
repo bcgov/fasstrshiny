@@ -45,7 +45,7 @@ gg_fitdistr <- function(fit, title) {
 }
 
 
-to_ggiraph <- function(g, value = NULL, type = "trends", digits = 4) {
+to_girafe <- function(g, value = NULL, type = "trends", digits = 4) {
 
   if(type == "trends") {
     g$layers[[1]] <- ggiraph::geom_point_interactive(
@@ -61,11 +61,17 @@ to_ggiraph <- function(g, value = NULL, type = "trends", digits = 4) {
         "Probability: ", round(prob, digits = digits)),
         data_id = Year), size = 2)
     g <- g + ggplot2::scale_color_viridis_d(end = 0.8)
+  } else if(type == "raw") {
+    g$layers[[1]] <- ggiraph::geom_line_interactive(
+      ggplot2::aes(tooltip = paste0(
+        "Date: ", Date, "\n",
+        value, ": ", round(Value, digits = digits)),
+        data_id = Date), colour = "dodgerblue4",
+      na.rm = TRUE)
   }
 
   ggiraph::girafe(ggobj = g, width_svg = 8, height_svg = 5,
-                  options = list(ggiraph::opts_selection(type = "multiple",
-                                                         only_shiny = FALSE)))
+                  options = list(ggiraph::opts_selection(type = "multiple")))
 }
 
 

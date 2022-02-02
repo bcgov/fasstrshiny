@@ -131,7 +131,7 @@ ui_data_screen <- fluidRow(
         title = "Data Summary Plot",
         selectInput("screen_summary", "Review annual daily metric",
                     c("Mean","Maximum","Minimum","StandardDeviation")),
-        plotlyOutput("screen_plot1")
+        girafeOutput("screen_plot1", height = "450px")
       ),
 
       ### Availability Plot -----------------
@@ -151,7 +151,7 @@ ui_data_screen <- fluidRow(
                    selected = c(1:12),
                    direction = "vertical")
           ),
-          column(width = 11, plotlyOutput("screen_plot2"))
+          column(width = 11, girafeOutput("screen_plot2", height = "450px"))
         )
       ),
 
@@ -198,7 +198,8 @@ ui_sum_general <- fluidRow(
       tabPanel(
         title = "Plot",
         uiOutput("ui_sum_plot_options", align = "right"),
-        plotOutput("sum_plot")
+        girafeOutput("sum_plot", height = "450px"),
+        plotlyOutput("sum_plot_test", height = "450px")
       ),
 
       ### Table ---------------------
@@ -535,7 +536,7 @@ ui_comp_annual <- fluidRow(
                    helpText("Click on a point to add year to ",
                             "'Years to exclude'. Remember to re-Compute ",
                             "Trends.")),
-                 ggiraphOutput("at_plot", height = "450px")))
+                 girafeOutput("at_plot", height = "450px")))
       ),
 
       ### Table ---------------------
@@ -626,7 +627,7 @@ ui_comp_volume_freq <- fluidRow(
           helpText("Click on a point to add that year to ",
                    "'Years to exclude'. Remember to re-Compute ",
                    "Analysis.")),
-        ggiraphOutput("vf_plot")
+        girafeOutput("vf_plot")
       ),
 
       ### Table - Plot Data ---------------------
