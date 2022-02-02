@@ -1,0 +1,105 @@
+
+/* Custom classes */
+.narrowHr {
+  margin-top: 10px;
+  margin-bottom:10px;
+}
+
+.centreButton {
+  position: relative;
+  left: 50%;
+  -ms-transform: translate(-50%, 0);
+  transform: translate(-50%, 0);
+}
+
+
+/* BC Gov themeing */
+
+/* Gold bottom border */
+.main-header {
+  border-bottom: 2px solid #fcba19;
+  position: fixed !important;
+  top: 0;
+  width: 100%;
+}
+
+.content {
+  padding-top: 50px !important;
+}
+
+.bcgov-footer {
+  /*logo*/
+  background-image: url("BCID_H_cmyk_rev.svg");
+  background-position: left; /* Center the image */
+  background-repeat: no-repeat; /* Do not repeat the image */
+  background-size: 150px;
+  padding-left: 10px;
+
+  /*bar*/
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 50px;   /* Height of the footer */
+  background-color: #036;
+  border-top: 2px solid #fcba19;
+  z-index: 1000;
+
+  /* links */
+  padding-top: 15px;
+  text-align: center;
+  color: white !important;
+  font-size: 12pt;
+}
+
+.bcgov-footer a {
+  color: white;
+}
+
+
+.bcgov-footer a:hover {
+  text-decoration: underline;
+}
+
+
+/*
+* Adapted from shinydashboard blue skin for BC Gov theme
+* Skin: Blue
+* ----------
+*/
+.skin-blue .main-header .navbar {
+  background-color: #036 !important;
+}
+
+.skin-blue .main-header .navbar .sidebar-toggle:hover {
+  background-color: #036 !important;
+}
+
+@media (max-width: 767px) {
+  .skin-blue .main-header .navbar .dropdown-menu li a:hover {
+    background: #036 !important;
+  }
+}
+.skin-blue .main-header .logo {
+  background-color: #036 !important;
+  color: #ffffff;
+  border-bottom: 0 solid transparent;
+}
+.skin-blue .main-header .logo:hover {
+  background-color: #036 !important;
+}
+.skin-blue .main-header li.user-header {
+  background-color: #036 !important;
+}
+.skin-blue .sidebar-menu > li:hover > a,
+.skin-blue .sidebar-menu > li.active > a {
+  border-left-color: #036 !important;
+}
+.skin-blue.layout-top-nav .main-header > .logo {
+  background-color: #036 !important;
+    color: #ffffff;
+    border-bottom: 0 solid transparent;
+}
+.skin-blue.layout-top-nav .main-header > .logo:hover {
+  background-color: #036 !important;
+}
+

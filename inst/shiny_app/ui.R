@@ -749,66 +749,74 @@ ui_comp_hydat_peak <- fluidRow(
 
 
 # Combine -------------------------------------------------------------------
-dashboardPage(skin = "green",
-  dashboardHeader(title = "fasstr Shiny"),
-  dashboardSidebar(
-    tags$script(src = "tips.js"),
-    useShinyjs(),
-    sidebarMenu(
-      id = "menu",
-      menuItem("Home", tabName = "home", icon = icon("home")),
-      menuItem("Settings", tabName = "settings", icon = icon("cog")),
-      menuItem("Data", tabName = "data", icon = icon("table"),
-               menuSubItem("Loading", tabName = "data_load"),
-               menuSubItem("Screening", tabName = "data_screen")),
-      menuItem("Summary statistics", tabName = "summary",
-               icon=icon("chart-bar"),
-               menuSubItem("General", tabName = "sum_general"),
-               menuSubItem("Flow duration and percentiles",
-                           tabName = "sum_flow")),
-      menuItem("Cumulative Stats", tabName = "cumulative",
-               icon = icon("chart-area")),
-      menuItem("Annual Hydrograph Stats", tabName = "annual",
-               icon = icon("calendar"),
-               menuSubItem("Flow timing", tabName = "ah_flow_timing"),
-               menuSubItem("Low Flows", tabName = "ah_low_flows"),
-               menuSubItem("Peak Flows", tabName = "ah_peak"),
-               menuSubItem("Days outside normal", tabName = "ah_outside_normal")),
-      menuItem("Computations", tabName = "computed",
-               icon = icon("chart-line"),
-               menuSubItem("Annual Trends", tabName = "comp_annual"),
-               menuSubItem("Volume Frequency", tabName = "comp_volume_freq"),
-               menuSubItem("HYDAT Peak", tabName = "comp_hydat_peak"))
+tagList(
+  dashboardPage(
+    dashboardHeader(title = "fasstr Shiny"),
+    dashboardSidebar(
+      tags$script(src = "tips.js"),
+      useShinyjs(),
+      sidebarMenu(
+        id = "menu",
+        menuItem("Home", tabName = "home", icon = icon("home")),
+        menuItem("Settings", tabName = "settings", icon = icon("cog")),
+        menuItem("Data", tabName = "data", icon = icon("table"),
+                 menuSubItem("Loading", tabName = "data_load"),
+                 menuSubItem("Screening", tabName = "data_screen")),
+        menuItem("Summary statistics", tabName = "summary",
+                 icon=icon("chart-bar"),
+                 menuSubItem("General", tabName = "sum_general"),
+                 menuSubItem("Flow duration and percentiles",
+                             tabName = "sum_flow"),
+                 menuSubItem("Annual Means", tabName = "sum_annual")),
+        menuItem("Cumulative Stats", tabName = "cumulative",
+                 icon = icon("chart-area")),
+        menuItem("Annual Hydrograph Stats", tabName = "annual",
+                 icon = icon("calendar"),
+                 menuSubItem("Flow timing", tabName = "ah_flow_timing"),
+                 menuSubItem("Low Flows", tabName = "ah_low_flows"),
+                 menuSubItem("Peak Flows", tabName = "ah_peak"),
+                 menuSubItem("Days outside normal", tabName = "ah_outside_normal")),
+        menuItem("Computations", tabName = "computed",
+                 icon = icon("chart-line"),
+                 menuSubItem("Annual Trends", tabName = "comp_annual"),
+                 menuSubItem("Volume Frequency", tabName = "comp_volume_freq"),
+                 menuSubItem("HYDAT Peak", tabName = "comp_hydat_peak"))
+      )
+    ),
+    dashboardBody(
+      tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "bcgov.css")),
+      tabItems(
+        tabItem("home", ui_home),
+        tabItem("settings", ui_settings),
+        tabItem("data_load", ui_data_load),
+        tabItem("data_screen", ui_data_screen),
+        tabItem("sum_general", ui_sum_general),
+        tabItem("sum_flow", ui_sum_flow),
+        tabItem("sum_annual", ui_sum_annual),
+        tabItem("cumulative", ui_cumulative),
+        tabItem("ah_flow_timing", ui_ah_flow_timing),
+        tabItem("ah_low_flows", ui_ah_low_flows),
+        tabItem("ah_peak", ui_ah_peak),
+        tabItem("ah_outside_normal", ui_ah_outside_normal),
+        tabItem("comp_annual", ui_comp_annual),
+        tabItem("comp_volume_freq", ui_comp_volume_freq),
+        tabItem("comp_hydat_peak", ui_comp_hydat_peak)
+      )
     )
   ),
-  dashboardBody(
-    tags$head(tags$style(HTML('
-    .narrowHr {
-      margin-top: 10px;
-      margin-bottom:10px;
-    }
-    .centreButton {
-      position: relative;
-      left: 50%;
-      -ms-transform: translate(-50%, 0);
-      transform: translate(-50%, 0);
-    }'))),
-    tabItems(
-      tabItem("home", ui_home),
-      tabItem("settings", ui_settings),
-      tabItem("data_load", ui_data_load),
-      tabItem("data_screen", ui_data_screen),
-      tabItem("sum_general", ui_sum_general),
-      tabItem("sum_flow", ui_sum_flow),
-      tabItem("cumulative", ui_cumulative),
-      tabItem("ah_flow_timing", ui_ah_flow_timing),
-      tabItem("ah_low_flows", ui_ah_low_flows),
-      tabItem("ah_peak", ui_ah_peak),
-      tabItem("ah_outside_normal", ui_ah_outside_normal),
-      tabItem("comp_annual", ui_comp_annual),
-      tabItem("comp_volume_freq", ui_comp_volume_freq),
-      tabItem("comp_hydat_peak", ui_comp_hydat_peak)
-    )
+  tags$footer(
+    div(
+      a(href="https://www2.gov.bc.ca/gov/content/home", "Home"),
+      " | ",
+      a(href="https://www2.gov.bc.ca/gov/content/home/disclaimer", "Disclaimer"),
+      " | ",
+      a(href="https://www2.gov.bc.ca/gov/content/home/privacy", "Privacy"),
+      " | ",
+      a(href="https://www2.gov.bc.ca/gov/content/home/accessibility", "Accessibility"),
+      " | ",
+      a(href="https://www2.gov.bc.ca/gov/content/home/copyright", "Copyright"),
+      " | ",
+      a(href="https://www2.gov.bc.ca/StaticWebResources/static/gov3/html/contact-us.html", "Contact"), class = "bcgov-footer")
   )
 )
 
