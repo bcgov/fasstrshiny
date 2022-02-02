@@ -31,7 +31,7 @@ library(plotly)
 library(patchwork)
 library(ggiraph)
 
-library(fasstr)
+library(fasstrshiny)
 library(tidyhydat)
 library(bcmaps)
 
