@@ -101,15 +101,32 @@ server <- function(input, output, session) {
   })
 
 
-  # Enable/disable add_year and add_dates
+  # Enable/disable based on type of Stat
   observe({
+
+    # add year
     if(input$sum_type %in% c("Long-term", "Daily")) {
       enable("sum_add_year")
     } else {
       disable("sum_add_year")
     }
 
-    if(input$sum_type == "Daily") enable("sum_add_dates") else disable("sum_add_dates")
+    # add dates
+    if(input$sum_type == "Daily") {
+      enable("sum_add_dates")
+    } else {
+      disable("sum_add_dates")
+    }
+
+    # custom months
+    if(input$sum_type == "Long-term") {
+      enable("sum_custom_months")
+      enable("sum_custom_months_label")
+    } else {
+      disable("sum_custom_months")
+      disable("sum_custom_months_label")
+    }
+
   }) %>%
     bindEvent(input$sum_type)
 
