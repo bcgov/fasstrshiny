@@ -198,7 +198,9 @@ ui_sum_general <- fluidRow(
       tabPanel(
         title = "Plot",
         uiOutput("ui_sum_plot_options", align = "right"),
+        h4("ggiraph example"),
         girafeOutput("sum_plot", height = "450px"),
+        h4("plotly example"),
         plotlyOutput("sum_plot_test", height = "450px")
       ),
 

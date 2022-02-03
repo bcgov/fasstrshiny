@@ -536,11 +536,14 @@ server <- function(input, output, session) {
         pivot_longer(-STATION_NUMBER, names_to = "type")
 
       g <- g +
-        geom_hline_interactive(tooltip = glue(mad$type, ": ", mad$value),
-                               yintercept = mad$value,
-                               size = c(1, rep(0.5, nrow(mad) - 1)),
-                               inherit.aes = FALSE) +
-        geom_text(data = mad, aes(y = value, label = type), inherit.aes = FALSE,
+        geom_hline(data = mad,
+                   aes(yintercept = value),
+                   size = c(2, rep(1, nrow(mad) - 1))) +
+        geom_hline_interactive(data = mad,
+                               aes(tooltip = paste0(type, ": ", round(value, 4)),
+                                   yintercept = value), alpha = 0.01,
+                               size = 3) +
+        geom_text(data = mad, aes(y = value, label = type),
                   x = c(Inf, rep(-Inf, nrow(mad) - 1)),
                   hjust = c(1.1, rep(-0.1, nrow(mad) -1)), vjust = -0.5)
     }
@@ -559,61 +562,63 @@ server <- function(input, output, session) {
 
     flow_data <- data_raw()
 
-    e <- NULL
-    if(input$sum_type %in% c("Long-term", "Daily") & input$sum_year_add != "") {
-      e <- glue("add_year = {input$sum_year_add}")
+    if(input$sum_type == "Long-term") {
+      e <- NULL
+      if(input$sum_type %in% c("Long-term", "Daily") & input$sum_year_add != "") {
+        e <- glue("add_year = {input$sum_year_add}")
+      }
+
+      g <- switch(input$sum_type,
+                  "Long-term" = "plot_longterm_daily_stats",
+                  "Annual" = "plot_annual_stats",
+                  "Monthly" = "plot_monthly_stats",
+                  "Daily" = "plot_daily_stats") %>%
+        create_fun("flow_data", id = "sum", input,
+                   params = c(if_else(input$sum_type %in% c("Long-term", "Daily"),
+                                      "missing", "allowed"),
+                              "log"),
+                   extra = e,
+                   end = "[[1]]")
+
+      code$sum_plot <- g
+
+      g <- eval(parse(text = g))
+
+      # Add dates
+      if(input$sum_type == "Daily" & !is.null(input$sum_dates_add)){
+        dts <- data.frame(
+          Date = get_date(input$sum_dates_add,
+                          water_year = as.numeric(input$data_water_year))) %>%
+          mutate(labs = format(Date, '%b-%d'),
+                 hjust = if_else(as.numeric(input$data_water_year) ==
+                                   as.numeric(format(Date, "%m")),
+                                 -0.05, 1.05))
+
+        g <- g +
+          geom_vline_interactive(xintercept = dts$Date, colour = 'grey20',
+                                 tooltip = dts$labs) +
+          geom_text(data = dts, aes(x = Date, label = labs, hjust = hjust),
+                    y = Inf, vjust = 2)
+      }
+
+      # Add mad
+      if(!is.null(input$sum_mad_add) && input$sum_mad_add &&
+         input$sum_type != "Monthly") {
+        mad <- sum_mad() %>%
+          pivot_longer(-STATION_NUMBER, names_to = "type")
+
+        g <- g +
+          geom_hline_interactive(tooltip = glue(mad$type, ": ", mad$value),
+                                 yintercept = mad$value,
+                                 size = c(1, rep(0.5, nrow(mad) - 1)),
+                                 inherit.aes = FALSE) +
+          geom_text(data = mad, aes(y = value, label = type), inherit.aes = FALSE,
+                    x = c(Inf, rep(-Inf, nrow(mad) - 1)),
+                    hjust = c(1.1, rep(-0.1, nrow(mad) -1)), vjust = -0.5)
+      }
+
+      ggplotly(g)
     }
-
-    g <- switch(input$sum_type,
-                "Long-term" = "plot_longterm_daily_stats",
-                "Annual" = "plot_annual_stats",
-                "Monthly" = "plot_monthly_stats",
-                "Daily" = "plot_daily_stats") %>%
-      create_fun("flow_data", id = "sum", input,
-                 params = c(if_else(input$sum_type %in% c("Long-term", "Daily"),
-                                    "missing", "allowed"),
-                            "log"),
-                 extra = e,
-                 end = "[[1]]")
-
-    code$sum_plot <- g
-
-    g <- eval(parse(text = g))
-
-    # Add dates
-    if(input$sum_type == "Daily" & !is.null(input$sum_dates_add)){
-      dts <- data.frame(
-        Date = get_date(input$sum_dates_add,
-                        water_year = as.numeric(input$data_water_year))) %>%
-        mutate(labs = format(Date, '%b-%d'),
-               hjust = if_else(as.numeric(input$data_water_year) ==
-                                 as.numeric(format(Date, "%m")),
-                               -0.05, 1.05))
-
-      g <- g +
-        geom_vline_interactive(xintercept = dts$Date, colour = 'grey20',
-                               tooltip = dts$labs) +
-        geom_text(data = dts, aes(x = Date, label = labs, hjust = hjust),
-                  y = Inf, vjust = 2)
-    }
-
-    # Add mad
-    if(!is.null(input$sum_mad_add) && input$sum_mad_add &&
-       input$sum_type != "Monthly") {
-      mad <- sum_mad() %>%
-        pivot_longer(-STATION_NUMBER, names_to = "type")
-
-      g <- g +
-        geom_hline_interactive(tooltip = glue(mad$type, ": ", mad$value),
-                               yintercept = mad$value,
-                               size = c(1, rep(0.5, nrow(mad) - 1)),
-                               inherit.aes = FALSE) +
-        geom_text(data = mad, aes(y = value, label = type), inherit.aes = FALSE,
-                  x = c(Inf, rep(-Inf, nrow(mad) - 1)),
-                  hjust = c(1.1, rep(-0.1, nrow(mad) -1)), vjust = -0.5)
-    }
-
-    ggplotly(g)
   })
 
 
