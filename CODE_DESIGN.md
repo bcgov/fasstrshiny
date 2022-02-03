@@ -117,12 +117,5 @@ then be parsed and evaluated with `eval(parse(text = t))`.
 
 ## IDs
 
-- `discharge`
-- `percentiles`
-- `custom_months`
-- `custom_months_label`
-- `months`
-- `water_year`
-
-- `missing`
-- `complete`
+See the internal dataset, `parameters`. It is created in `data-raw/parameters.R` 
+and includes parameter `id`s, `tooltips` and how they correspond to fasstr arguments.

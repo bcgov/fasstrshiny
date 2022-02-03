@@ -129,7 +129,7 @@ ui_data_screen <- fluidRow(
       ### Summary Plot -----------------
       tabPanel(
         title = "Data Summary Plot",
-        selectInput("screen_summary", "Review annual daily metric",
+        selectizeInput("screen_summary", "Review annual daily metric",
                     c("Mean","Maximum","Minimum","StandardDeviation")),
         girafeOutput("screen_plot1", height = "450px")
       ),
@@ -183,7 +183,7 @@ ui_sum_general <- fluidRow(
                    label = "Summary type",
                    choices = list("Long-term", "Annual",
                                   "Monthly", "Daily")),
-      selectInput("sum_mad",
+      selectizeInput("sum_mad",
                   label = "Mean Annual Discharge percentiles",
                   choices = c(1:99),
                   selected = c(1, 5, 50, 95, 99),
@@ -309,7 +309,7 @@ ui_cumulative <- fluidRow(
       materialSwitch("cum_seasons",
                      label = "Include seasons",
                      value = TRUE, status = "success")
-      ),
+    ),
     tabBox(
       width = 9, height = min_height,
 
@@ -318,7 +318,7 @@ ui_cumulative <- fluidRow(
         title = "Plot",
         uiOutput("ui_cum_plot_options", align = "right"),
         plotOutput("cum_plot", height = "500px")
-        ),
+      ),
 
       ## Table ---------------------
       tabPanel(
@@ -346,11 +346,12 @@ ui_ah_flow_timing <- fluidRow(
     box(
       width = 12,
       div(style = "max-width: 300px;",
-          selectInput("ahft_percent",
+          selectizeInput("ahft_percent",
                       label = "Percents of total annual flows",
                       choices = c(1:99),
                       selected = c(25, 33, 50, 75),
-                      multiple = TRUE)),
+                      multiple = TRUE)
+      ),
 
       tabBox(
         width = 12, height = min_height,
@@ -383,11 +384,7 @@ ui_ah_low_flows <- fluidRow(
     width = 12, h2("Low Flows"),
     box(
       width = 3,
-      selectInput("ahlf_roll",
-                  label = "Days to calculate rolling averages over",
-                  choices = c(1:31),
-                  selected = c(1, 3, 7, 30),
-                  multiple = TRUE),
+      select_rolling("ahlf", set = FALSE, multiple = TRUE),
       uiOutput("ui_ahlf")
     ),
     tabBox(
@@ -420,11 +417,8 @@ ui_ah_peak <- fluidRow(
     width = 12, h2("Peak Flows"),
     box(
       width = 3,
-      selectInput("ahp_roll",
-                  label = "Days to calculate rolling averages over",
-                  choices = c(1:31),
-                  selected = 1),
-      uiOutput("ui_ahp")
+      uiOutput("ui_ahp"),
+      select_rolling("ahp", set = FALSE)
     ),
     tabBox(
       width = 9, height = min_height,
@@ -450,12 +444,8 @@ ui_ah_outside_normal <- fluidRow(
     width = 12, h2("Days Outside Normal"),
     box(
       width = 3,
-      selectInput("ahon_percentiles",
-                  label = "Normal range (percentiles)",
-                  choices = c(1:99),
-                  selected = c(25, 75),
-                  multiple = TRUE),
-      uiOutput("ui_ahon")
+      sliderInput("ahon_normal", label = "Normal range ",
+                  value = c(25, 75), min = 1, max = 99, step = 1)
     ),
     tabBox(
       width = 9, height = min_height,
@@ -496,8 +486,9 @@ ui_comp_annual <- fluidRow(
         hr(class = "narrowHr"),
 
         # Other options
+        uiOutput("ui_at_exclude"),
+
         fluidRow(
-          uiOutput("ui_at_exclude"),
           column(width = 6,
                  awesomeRadio("at_zyp",
                               label = "Trend method",
@@ -505,41 +496,30 @@ ui_comp_annual <- fluidRow(
                                              "Yue-Pilon" = "yuepilon"),
                               selected = "zhang")),
           column(width = 6,
-                 numericInput("at_alpha", label = "Trend Alpha",
+                 numericInput("at_alpha", label = "Trend alpha",
                               value = 0.05, min = 0, max = 0.3, step = 0.05))),
-        strong("Percentiles"),
         fluidRow(
           column(6, selectizeInput("at_annual_percentiles",
-                                   label = "Annual",
+                                   label = "Annual perc.",
                                    choices = c(1:99),
                                    selected = c(10,90),
                                    multiple = TRUE)),
           column(6, selectizeInput("at_monthly_percentiles",
-                                   label = "Monthly",
+                                   label = "Monthly perc.",
                                    choices = c(1:99),
                                    selected = c(10,20),
                                    multiple = TRUE))),
 
         strong("Low Flows"),
-        fluidRow(
-          column(6, selectizeInput("at_low_roll_days",
-                                   label = "Rolling days",
-                                   choices = c(1:180),
-                                   selected = c(1,3,7,30),
-                                   multiple = TRUE)),
-          column(6,selectInput("at_low_roll_align", label = "Rolling alignment",
-                               choices = list("Right" = "right",
-                                              "Left" = "left",
-                                              "Center" = "center"),
-                               selected = "right"))),
+        select_rolling("at_low", set = FALSE, multiple = TRUE),
 
-        selectInput("at_percent",
-                    label = "Flow Timing: No. days for rolling",
-                    choices = c(1:31),
-                    selected = c(1, 3, 7, 30),
-                    multiple = TRUE),
+        selectizeInput("at_percent",
+                       label = "Percents of total annual flows",
+                       choices = c(1:99),
+                       selected = c(25, 33, 50, 75),
+                       multiple = TRUE),
 
-        sliderInput("at_normal", label = "Normal Days: Percentile range",
+        sliderInput("at_normal", label = "Days Outside Normal - Range",
                     value = c(25, 75), min = 1, max = 99, step = 1),
 
         uiOutput("ui_at_allowed")
@@ -592,44 +572,45 @@ ui_comp_volume_freq <- fluidRow(
 
         # Other
         uiOutput("ui_vf_exclude"),
-        selectInput("vf_roll_extra",
-                    label = "Days to calculate rolling averages over",
-                    choices = c(1:31),
-                    selected = c(1, 3, 7, 30),
-                    multiple = TRUE),
+        select_rolling("vf", set = FALSE, multiple = TRUE),
         uiOutput("ui_vf"),
 
         fluidRow(
           column(
             width = 6,
-            radioGroupButtons("vf_use_max",
-                              label = "Low or High Flow",
-                              choices = list("Low" = FALSE,
-                                             "High" = TRUE),
-                              selected = FALSE,
-                              justified = TRUE)),
+            awesomeRadio("vf_use_max",
+                         label = "Flow type",
+                         choices = list("Low" = FALSE,
+                                        "High" = TRUE),
+                         selected = FALSE)),
           column(
             width = 6,
-            materialSwitch("vf_log",
-                           label = "Log transform data",
-                           value = FALSE, status = "success"))
+            awesomeRadio("vf_fit_distr",
+                         label = "Distribution",
+                         choices = list("PIII" = "PIII",
+                                        "Weibull" = "weibull")))
+
         ),
 
-        fluidRow(
-          column(6, radioGroupButtons("vf_fit_distr",
-                                      label = "Distribution used to fit data",
-                                      choices = list("PIII" = "PIII",
-                                                     "Weibull" = "weibull"))),
-          column(6, selectizeInput(
-            "vf_quantiles",
-            label = "Quantiles to estimate",
-            choices = seq(0.01, 0.999, 0.0025),
-            selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
-                         0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
-            multiple = TRUE))),
+        selectizeInput(
+          "vf_fit_quantiles",
+          label = "Quantiles to estimate",
+          choices = seq(0.01, 0.999, 0.0025),
+          selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
+                       0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
+          multiple = TRUE),
 
-        materialSwitch("vf_plot_curve", label = "Plot curve", value = TRUE,
-                       status = "success"),
+        fluidRow(
+          column(
+            width = 6,
+            materialSwitch("vf_plot_curve", label = "Plot curve", value = TRUE,
+                           status = "success")),
+          column(
+            width = 6,
+            materialSwitch("vf_use_log",
+                           label = "Log trans",
+                           value = FALSE, status = "success"))
+        ),
 
         fluidRow(
           column(6, awesomeRadio("vf_prob_plot",
@@ -696,36 +677,36 @@ ui_comp_hydat_peak <- fluidRow(
         hr(class = "narrowHr"),
 
         fluidRow(
-          column(
-            width = 6,
-            radioGroupButtons("hp_use_max",
-                              label = "Low or High Flow",
+          column(width = 6,
+                 awesomeRadio("hp_use_max",
+                              label = "Flow type",
                               choices = list("Low" = FALSE,
                                              "High" = TRUE),
-                              selected = FALSE,
-                              justified = TRUE)),
-          column(
-            width = 6,
-            materialSwitch("hp_log",
-                           label = "Log transform data",
-                           value = FALSE, status = "success"))
+                              selected = FALSE)),
+          column(width = 6,
+                 awesomeRadio("hp_fit_distr",
+                              label = "Distribution",
+                              choices = list("PIII" = "PIII",
+                                             "Weibull" = "weibull")))
         ),
 
-        fluidRow(
-          column(6, radioGroupButtons("hp_fit_distr",
-                                      label = "Distribution used to fit data",
-                                      choices = list("PIII" = "PIII",
-                                                     "Weibull" = "weibull"))),
-          column(6, selectizeInput(
-            "hp_quantiles",
-            label = "Quantiles to estimate",
-            choices = seq(0.01, 0.999, 0.0025),
-            selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
-                         0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
-            multiple = TRUE))),
+        selectizeInput(
+          "hp_fit_quantiles",
+          label = "Quantiles to estimate",
+          choices = seq(0.01, 0.999, 0.0025),
+          selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
+                       0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
+          multiple = TRUE),
 
-        materialSwitch("hp_plot_curve", label = "Plot curve", value = TRUE,
-                       status = "success"),
+        fluidRow(
+          column(width = 6,
+                 materialSwitch("hp_plot_curve", label = "Plot curve", value = TRUE,
+                                status = "success")),
+          column(width = 6,
+                 materialSwitch("hp_use_log",
+                                label = "Log trans",
+                                value = FALSE, status = "success"))
+        ),
 
         fluidRow(
           column(6, awesomeRadio("hp_prob_plot",

@@ -45,7 +45,7 @@ server <- function(input, output, session) {
     req(data_raw())
     tagList(
       h4("Filter Dates"),
-      selectInput("data_water_year",
+      selectizeInput("data_water_year",
                   label = "Water year",
                   choices = list("Jan-Dec" = 1, "Feb-Jan" = 2,
                                  "Mar-Feb" = 3, "Apr-Mar" = 4,
@@ -82,7 +82,7 @@ server <- function(input, output, session) {
   output$ui_data_plot_options <- renderUI({
     req(data_raw())
     select_plot_options(data = data_raw(), id = "data", input,
-                        include = c("log", "daterange"))
+                        include = c("plot_log", "daterange"))
   })
 
   ## SS - General -------------------------------------------------------------
@@ -96,7 +96,7 @@ server <- function(input, output, session) {
     req(input$data_years_range)
 
     select_plot_options(id = "sum", input,
-                        include = c("log", "year_add", "dates_add", "mad_add"))
+                        include = c("plot_log", "year_add", "dates_add", "mad_add"))
     # Add inner/outer percentiles?
   })
 
@@ -121,13 +121,13 @@ server <- function(input, output, session) {
   ## SS - Flow ----------------------------------------------------------
   output$ui_sumfl <- renderUI({
     build_ui(id = "sumfl", input,
-             include = c("discharge", "missing", "custom_months"))
+             include = c("discharge", "complete", "missing", "custom_months"))
   })
 
   # Plot options
   output$ui_sumfl_plot_options <- renderUI({
     select_plot_options(data = data_raw(), id = "sumfl", input,
-                        include = "log")
+                        include = c("plot_log"))
   })
 
   ## SS - Annual Means ----------------------------------------------------------
@@ -140,7 +140,7 @@ server <- function(input, output, session) {
 
   # Plot options
   output$ui_cum_plot_options <- renderUI({
-    select_plot_options(data = data_raw(), id = "cum", input, include = "log")
+    select_plot_options(data = data_raw(), id = "cum", input, include = "plot_log")
   })
 
   # Table options
@@ -160,7 +160,7 @@ server <- function(input, output, session) {
 
 
   ## AH - Flow timing --------------------------------------------------------
-  # None
+  # None (months set globally, not per tab)
 
   ## AH - Low flows --------------------------------------------------------
   output$ui_ahlf <- renderUI({
@@ -173,6 +173,9 @@ server <- function(input, output, session) {
     build_ui(id = "ahp", input,
              include = c("discharge", "allowed"))
   })
+
+  ## AH - Days outside normal -----------------------------------------------
+  # None
 
 
   ## Annual Trends ------------------------------------------------
@@ -323,7 +326,7 @@ server <- function(input, output, session) {
   ## Plot ----------------
   output$data_plot <- renderPlotly({
     req(data_raw(),
-        !is.null(input$data_log),
+        !is.null(input$data_plot_log),
         input$data_daterange,
         input$data_years_range,
         input$data_water_year)
@@ -332,7 +335,7 @@ server <- function(input, output, session) {
 
     g <- create_fun(
       "plot_flow_data", "flow_data", id = "data", input,
-      params = c("log", "daterange"),
+      params = c("plot_log", "daterange"),
       end = "[[1]] + scale_color_manual(values = 'dodgerblue4')")
 
     code$data_plot <- g
@@ -464,7 +467,7 @@ server <- function(input, output, session) {
   ## Plot --------------------
   output$sum_plot <- renderGirafe({
     req(data_raw(), input$sum_type,
-        !is.null(input$sum_log), !is.null(input$sum_year_add))
+        !is.null(input$sum_plot_log), !is.null(input$sum_year_add))
 
     flow_data <- data_raw()
 
@@ -481,7 +484,7 @@ server <- function(input, output, session) {
       create_fun("flow_data", id = "sum", input,
                  params = c(if_else(input$sum_type %in% c("Long-term", "Daily"),
                                     "missing", "allowed"),
-                            "log"),
+                            "plot_log"),
                  extra = e,
                  end = "[[1]]")
 
@@ -558,7 +561,7 @@ server <- function(input, output, session) {
   ## Plot Test--------------------
   output$sum_plot_test <- renderPlotly({
     req(data_raw(), input$sum_type,
-        !is.null(input$sum_log), !is.null(input$sum_year_add))
+        !is.null(input$sum_plot_log), !is.null(input$sum_year_add))
 
     flow_data <- data_raw()
 
@@ -576,7 +579,7 @@ server <- function(input, output, session) {
         create_fun("flow_data", id = "sum", input,
                    params = c(if_else(input$sum_type %in% c("Long-term", "Daily"),
                                       "missing", "allowed"),
-                              "log"),
+                              "plot_log"),
                    extra = e,
                    end = "[[1]]")
 
@@ -715,7 +718,7 @@ server <- function(input, output, session) {
 
   ## Plot --------------------
   output$sumfl_plot <- renderPlot({
-    req(data_raw(), !is.null(input$sumfl_log))
+    req(data_raw(), !is.null(input$sumfl_plot_log))
 
     flow_data <- data_raw()
 
@@ -724,8 +727,8 @@ server <- function(input, output, session) {
 
     g <- create_fun(
       fun = "plot_flow_duration", data = "flow_data", id = "sumfl", input,
-      params = c("custom_months", "custom_months_label",
-                 "missing", "log"),
+      params = c("custom_months", "custom_months_label", "complete",
+                 "missing", "plot_log"),
       end = "[[1]]")
 
     code$sumfl_plot <- g
@@ -815,7 +818,7 @@ server <- function(input, output, session) {
       e <- glue("{e}, include_seasons = {input$cum_seasons}")
       end <- glue("%>% wrap_plots(nrow = 2, byrow = FALSE, design = '{d}')")
     } else {
-      p <- "log"
+      p <- "plot_log"
       end <- "[[1]]"
     }
 
@@ -941,9 +944,10 @@ server <- function(input, output, session) {
       "plot_annual_lowflows", data = "flow_data",
       id = "ahlf", input,
       params = c("discharge", "allowed"),
-      params_ignore = "roll_days",
-      extra = glue("roll_days = ",
-                   "c({glue_collapse(input$ahlf_roll, sep = ',')})"),
+      params_ignore = c("roll_days", "roll_align"),
+      extra = glue(
+        "roll_days = c({glue_collapse(input$ahlf_roll_days, sep = ',')}), ",
+        "roll_align = '{input$ahlf_roll_align}'"),
       end = " %>% wrap_plots()")
 
     code$ahlf_plot <- g
@@ -964,7 +968,7 @@ server <- function(input, output, session) {
       params = c("discharge", "allowed"),
       params_ignore = "roll_days",
       extra = glue("roll_days = ",
-                   "c({glue_collapse(input$ahlf_roll, sep = ',')})"))
+                   "c({glue_collapse(input$ahlf_roll_days, sep = ',')})"))
 
     code$ahlf_table <- t
 
@@ -998,7 +1002,7 @@ server <- function(input, output, session) {
       params = c("discharge", "missing", "allowed"),
       params_ignore = "roll_days",
       extra = glue("roll_days = ",
-                   "c({glue_collapse(input$ahp_roll, sep = ',')})"))
+                   "c({glue_collapse(input$ahp_roll_days, sep = ',')})"))
 
     code$ahp_table <- t
 
@@ -1021,11 +1025,7 @@ server <- function(input, output, session) {
   # AH - Days outside normal ---------------------------------------
   ## Plot --------------------
   output$ahon_plot <- renderPlot({
-    req(data_raw(), input$ahon_discharge)
-    validate(
-      need(length(input$ahon_percentiles) == 2,
-           paste0("Can only have 2 percentiles defining lower and upper ",
-                  "bounds of the normal range")))
+    req(data_raw(), input$ahon_normal)
 
     flow_data <- data_raw()
 
@@ -1033,7 +1033,7 @@ server <- function(input, output, session) {
       "plot_annual_outside_normal", data = "flow_data",
       id = "ahon", input,
       extra = glue("normal_percentiles = ",
-                   "c({glue_collapse(input$ahon_percentiles, sep = ',')})"),
+                   "c({glue_collapse(input$ahon_normal, sep = ',')})"),
       end = "[[1]]")
 
     code$ahon_plot <- g
@@ -1044,11 +1044,7 @@ server <- function(input, output, session) {
 
   ## Table -----------------------
   output$ahon_table <- DT::renderDT({
-    req(data_raw(), input$ahon_discharge)
-    validate(
-      need(length(input$ahon_percentiles) == 2,
-           paste0("Can only have 2 percentiles defining lower and upper ",
-                  "bounds of the normal range")))
+    req(data_raw(), input$ahon_normal)
 
     flow_data <- data_raw()
 
@@ -1057,7 +1053,7 @@ server <- function(input, output, session) {
       id = "ahon", input,
       params = "discharge",
       extra = glue("normal_percentiles = ",
-                   "c({glue_collapse(input$ahon_percentiles, sep = ',')})"))
+                   "c({glue_collapse(input$ahon_normal, sep = ',')})"))
 
     code$ahon_table <- t
 
@@ -1236,20 +1232,17 @@ server <- function(input, output, session) {
 
     flow_data <- data_raw()
 
-    #
-    # roll_align
-
-
     # Define parameters
     p <- c(
       glue("exclude_years = c({glue_collapse(input$vf_years_exclude, sep = ', ')})"),
       glue("use_max = {input$vf_use_max}"),
       glue("use_log = {input$vf_log}"),
-      glue("roll_days = c({glue_collapse(input$vf_roll_extra, sep = ', ')})"),
+      glue("roll_days = c({glue_collapse(input$vf_roll_days, sep = ', ')})"),
+      glue("roll_align = '{input$vf_roll_align}'"),
       glue("prob_plot_position = '{input$vf_prob_plot}'"),
       glue("prob_scale_points = c({input$vf_prob_scale})"),
       glue("fit_distr = '{input$vf_fit_distr}'"),
-      glue("fit_quantiles = c({glue_collapse(input$vf_quantiles, sep = ', ')})"),
+      glue("fit_quantiles = c({glue_collapse(input$vf_fit_quantiles, sep = ', ')})"),
       glue("plot_curve = {input$vf_plot_curve}")) %>%
       glue_collapse(sep = ", ")
 
@@ -1257,7 +1250,7 @@ server <- function(input, output, session) {
       "compute_annual_frequencies",
       data = "flow_data", id = "vf", input,
       params = c("discharge", "allowed"),
-      params_ignore = c("roll_days", "years_exclude"),
+      params_ignore = c("roll_days", "roll_align", "years_exclude"),
       extra = p)
 
     code$vf_data <- r
@@ -1369,7 +1362,7 @@ server <- function(input, output, session) {
       glue("prob_plot_position = '{input$hp_prob_plot}'"),
       glue("prob_scale_points = c({input$hp_prob_scale})"),
       glue("fit_distr = '{input$hp_fit_distr}'"),
-      glue("fit_quantiles = c({glue_collapse(input$hp_quantiles, sep = ', ')})"),
+      glue("fit_quantiles = c({glue_collapse(input$hp_fit_quantiles, sep = ', ')})"),
       glue("plot_curve = {input$vf_plot_curve}")) %>%
       glue_collapse(sep = ", ")
 
@@ -1432,10 +1425,6 @@ server <- function(input, output, session) {
 }
 
 
-# TO ADD ----- Functions to add from fasstr: ------------------
-# - calc_longterm_monthly_stats
-# - plot_longterm_monthly_stats
-# - plot_annual_means
-# - compute_frequency_quantile ??? only gives single value
+
 
 

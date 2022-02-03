@@ -101,7 +101,7 @@ select_months <- function(id, input = NULL, set = TRUE) {
   }
 
   tagList(
-    selectInput(paste0(id, "_months"),
+    selectizeInput(paste0(id, "_months"),
                 label = "Months to Include",
                 choices = list("Jan" = 1,  "Feb" = 2,
                                "Mar" = 3,  "Apr" = 4,
@@ -124,7 +124,7 @@ select_custom_months <- function(id, input = NULL, set = TRUE) {
   }
 
   tagList(
-    selectInput(paste0(id, "_custom_months"),
+    selectizeInput(paste0(id, "_custom_months"),
                 label = "Months to combine and summarize",
                 choices = list("Jan" = 1,  "Feb" = 2,
                                "Mar" = 3,  "Apr" = 4,
@@ -152,22 +152,24 @@ select_discharge <- function(id, input = NULL, set = TRUE) {
                selected = selected)
 }
 
-select_rolling <- function(id, input = NULL, set = TRUE) {
+select_rolling <- function(id, input = NULL, set = TRUE, multiple = FALSE) {
     if(set & !is.null(input)) {
       value <- input$opts_roll_days
       selected <- input$opts_roll_align
     } else {
-      value <- 1
+      if(!multiple) value <- 1 else value <- c(1, 3, 7, 30)
       selected <- "right"
     }
 
     fluidRow(
       column(6,
-             numericInput(paste0(id, "_roll_days"),
-                          label = "Rolling avg. days",
-                          value = value, min = 1, max = 180, step = 1)),
+             selectizeInput(paste0(id, "_roll_days"),
+                         label = "Rolling days",
+                         choices = 1:180,
+                         selected = value,
+                         multiple = multiple)),
       column(6,
-             selectInput(paste0(id, "_roll_align"),
+             selectizeInput(paste0(id, "_roll_align"),
                          label = "Rolling align",
                          selected = selected,
                          choices = list("Right" = "right",
@@ -182,7 +184,7 @@ select_percentiles <- function(id, input = NULL, set = TRUE) {
     selected <- input$opts_percentiles
   } else selected <- c(10,90)
 
-  selectInput(paste0(id, "_percentiles"),
+  selectizeInput(paste0(id, "_percentiles"),
               label = "Percentiles to calculate",
               choices = c(1:99),
               selected = selected,
@@ -193,6 +195,7 @@ select_complete <- function(id, input = NULL, set = TRUE) {
   if(set & !is.null(input)) value <- input$opts_complete else value <- FALSE
   materialSwitch(paste0(id, "_complete"),
                  label = "Complete years only",
+                 value = value,
                  status = "success")
 }
 
@@ -242,12 +245,12 @@ select_parameters <- function(id, params) {
                        selected = params)
 }
 
-select_plot_options <- function(id, input, include = "log",
+select_plot_options <- function(id, input, include = "plot_log",
                                 params = NULL, data = NULL) {
 
   i <- tagList()
-  if("log" %in% include) {
-    i <- tagList(i, materialSwitch(glue("{id}_log"),
+  if("plot_log" %in% include) {
+    i <- tagList(i, materialSwitch(glue("{id}_plot_log"),
                                    label = "Use log scale", value = TRUE,
                                    status = "success"))
   }
@@ -464,7 +467,7 @@ create_fun <- function(fun, data = NULL, id, input, params = NULL,
       # Plot
       params[i] == "daterange" ~
         glue("start_date = '{id[[i]][1]}', end_date = '{id[[i]][2]}'"),
-      params[i] == "log" ~ glue("log_discharge = {id[i]}")
+      params[i] == "plot_log" ~ glue("log_discharge = {id[i]}")
       )
   }
 
@@ -473,4 +476,3 @@ create_fun <- function(fun, data = NULL, id, input, params = NULL,
 
   glue("{fun}({args}){end}")
 }
-

@@ -3,3 +3,4 @@
 ^LICENSE\.md$
 ^DEVTESTS.R$
 ^CODE_DESIGN.md$
+^data-raw$

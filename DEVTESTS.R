@@ -9,6 +9,11 @@ d <- fill_missing_dates(station_number = "08HB048") %>%
   add_daily_volume() %>%
   add_daily_yield()
 
+plot_annual_outside_normal(d, normal_percentiles = c(1,99))
+
+calc_flow_percentile(d, flow_value = 10)
+calc_longterm_percentile(d, percentiles = c(10, 90))
+
 screen_data <- screen_flow_data(d)
 
 g <- "ggplot(data = screen_data,
