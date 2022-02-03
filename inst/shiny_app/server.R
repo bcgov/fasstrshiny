@@ -96,20 +96,20 @@ server <- function(input, output, session) {
     req(input$data_years_range)
 
     select_plot_options(id = "sum", input,
-                        include = c("plot_log", "year_add", "dates_add", "mad_add"))
+                        include = c("plot_log", "add_year", "add_dates", "add_mad"))
     # Add inner/outer percentiles?
   })
 
 
-  # Enable/disable year_add and dates_add
+  # Enable/disable add_year and add_dates
   observe({
     if(input$sum_type %in% c("Long-term", "Daily")) {
-      enable("sum_year_add")
+      enable("sum_add_year")
     } else {
-      disable("sum_year_add")
+      disable("sum_add_year")
     }
 
-    if(input$sum_type == "Daily") enable("sum_dates_add") else disable("sum_dates_add")
+    if(input$sum_type == "Daily") enable("sum_add_dates") else disable("sum_add_dates")
   }) %>%
     bindEvent(input$sum_type)
 
@@ -207,7 +207,10 @@ server <- function(input, output, session) {
                   value = input$opts_allowed, step = 5, min = 0, max = 100),
       sliderInput("at_allowed_monthly",
                   label = "Monthly - Allowed missing (%)",
-                  value = input$opts_allowed, step = 5, min = 0, max = 100))
+                  value = input$opts_allowed, step = 5, min = 0, max = 100),
+      bsTooltip("at_allowed_annual", tips$allowed),
+      bsTooltip("at_allowed_monthly", tips$allowed)
+      )
   })
 
 
@@ -360,7 +363,7 @@ server <- function(input, output, session) {
 
   ## R Code ----------------
   output$data_code <- renderText({
-    code_format(code, id = "data")
+    fasstrshiny:::code_format(code, id = "data")
   })
 
   # Data - Screening ---------------
@@ -418,8 +421,12 @@ server <- function(input, output, session) {
     req(data_raw())
 
     flow_data <- data_raw()
-    g <- create_fun("plot_missing_dates", data = "flow_data",
-                    id = "screen", input, end = "[[1]]")
+    g <- create_fun(
+      "plot_missing_dates", data = "flow_data",
+      id = "screen", input,
+      params_ignore = "months",
+      extra = glue("months = c({glue_collapse(input$screen_months, sep = ', ')})"),
+      end = "[[1]]")
 
     code$screen_miss <- g
 
@@ -457,7 +464,7 @@ server <- function(input, output, session) {
 
   ## R Code -----------------
   output$screen_code <- renderText({
-    code_format(code, id = "screen")
+    fasstrshiny:::code_format(code, id = "screen")
   })
 
 
@@ -467,13 +474,13 @@ server <- function(input, output, session) {
   ## Plot --------------------
   output$sum_plot <- renderGirafe({
     req(data_raw(), input$sum_type,
-        !is.null(input$sum_plot_log), !is.null(input$sum_year_add))
+        !is.null(input$sum_plot_log), !is.null(input$sum_add_year))
 
     flow_data <- data_raw()
 
     e <- NULL
-    if(input$sum_type %in% c("Long-term", "Daily") & input$sum_year_add != "") {
-      e <- glue("add_year = {input$sum_year_add}")
+    if(input$sum_type %in% c("Long-term", "Daily") & input$sum_add_year != "") {
+      e <- glue("add_year = {input$sum_add_year}")
     }
 
     g <- switch(input$sum_type,
@@ -516,10 +523,11 @@ server <- function(input, output, session) {
     }
 
     # Add dates
-    if(input$sum_type == "Daily" & !is.null(input$sum_dates_add)){
+    if(input$sum_type == "Daily" & !is.null(input$sum_add_dates)){
       dts <- data.frame(
-        Date = get_date(input$sum_dates_add,
-                        water_year = as.numeric(input$data_water_year))) %>%
+        Date = fasstrshiny:::get_date(
+          input$sum_add_dates,
+          water_year = as.numeric(input$data_water_year))) %>%
         mutate(labs = format(Date, '%b-%d'),
                hjust = if_else(as.numeric(input$data_water_year) ==
                                  as.numeric(format(Date, "%m")),
@@ -533,7 +541,7 @@ server <- function(input, output, session) {
     }
 
     # Add mad
-    if(!is.null(input$sum_mad_add) && input$sum_mad_add &&
+    if(!is.null(input$sum_add_mad) && input$sum_add_mad &&
        input$sum_type != "Monthly") {
       mad <- sum_mad() %>%
         pivot_longer(-STATION_NUMBER, names_to = "type")
@@ -561,14 +569,14 @@ server <- function(input, output, session) {
   ## Plot Test--------------------
   output$sum_plot_test <- renderPlotly({
     req(data_raw(), input$sum_type,
-        !is.null(input$sum_plot_log), !is.null(input$sum_year_add))
+        !is.null(input$sum_plot_log), !is.null(input$sum_add_year))
 
     flow_data <- data_raw()
 
     if(input$sum_type == "Long-term") {
       e <- NULL
-      if(input$sum_type %in% c("Long-term", "Daily") & input$sum_year_add != "") {
-        e <- glue("add_year = {input$sum_year_add}")
+      if(input$sum_type %in% c("Long-term", "Daily") & input$sum_add_year != "") {
+        e <- glue("add_year = {input$sum_add_year}")
       }
 
       g <- switch(input$sum_type,
@@ -588,10 +596,11 @@ server <- function(input, output, session) {
       g <- eval(parse(text = g))
 
       # Add dates
-      if(input$sum_type == "Daily" & !is.null(input$sum_dates_add)){
+      if(input$sum_type == "Daily" & !is.null(input$sum_add_dates)){
         dts <- data.frame(
-          Date = get_date(input$sum_dates_add,
-                          water_year = as.numeric(input$data_water_year))) %>%
+          Date = fasstrshiny:::get_date(
+            input$sum_add_dates,
+            water_year = as.numeric(input$data_water_year))) %>%
           mutate(labs = format(Date, '%b-%d'),
                  hjust = if_else(as.numeric(input$data_water_year) ==
                                    as.numeric(format(Date, "%m")),
@@ -605,7 +614,7 @@ server <- function(input, output, session) {
       }
 
       # Add mad
-      if(!is.null(input$sum_mad_add) && input$sum_mad_add &&
+      if(!is.null(input$sum_add_mad) && input$sum_add_mad &&
          input$sum_type != "Monthly") {
         mad <- sum_mad() %>%
           pivot_longer(-STATION_NUMBER, names_to = "type")
@@ -690,7 +699,7 @@ server <- function(input, output, session) {
 
   ## R Code -----------------
   output$sum_code <- renderText({
-    code_format(code, id = "sum")
+    fasstrshiny:::code_format(code, id = "sum")
   })
 
 
@@ -768,7 +777,7 @@ server <- function(input, output, session) {
 
   ## R Code -----------------
   output$sumfl_code <- renderText({
-    code_format(code, id = "sumfl")
+    fasstrshiny:::code_format(code, id = "sumfl")
   })
 
 
@@ -795,7 +804,7 @@ server <- function(input, output, session) {
 
   ## R Code -----------------
   output$sumam_code <- renderText({
-    code_format(code, id = "sumam")
+    fasstrshiny:::code_format(code, id = "sumam")
   })
 
 
@@ -876,7 +885,7 @@ server <- function(input, output, session) {
 
   ## R Code -----------------
   output$cum_code <- renderText({
-    code_format(code, id = "cum")
+    fasstrshiny:::code_format(code, id = "cum")
   })
 
 
@@ -929,7 +938,7 @@ server <- function(input, output, session) {
 
   ## R Code -----------------
   output$ahft_code <- renderText({
-    code_format(code, id = "ahft")
+    fasstrshiny:::code_format(code, id = "ahft")
   })
 
 
@@ -985,7 +994,7 @@ server <- function(input, output, session) {
 
   ## R Code -----------------
   output$ahlf_code <- renderText({
-    code_format(code, id = "ahlf")
+    fasstrshiny:::code_format(code, id = "ahlf")
   })
 
   # AH - Peaks ---------------------------------------
@@ -1019,7 +1028,7 @@ server <- function(input, output, session) {
 
   ## R Code -----------------
   output$ahp_code <- renderText({
-    code_format(code, id = "ahp")
+    fasstrshiny:::code_format(code, id = "ahp")
   })
 
   # AH - Days outside normal ---------------------------------------
@@ -1070,7 +1079,7 @@ server <- function(input, output, session) {
 
   ## R Code -----------------
   output$ahon_code <- renderText({
-    code_format(code, id = "ahon")
+    fasstrshiny:::code_format(code, id = "ahon")
   })
 
 
@@ -1209,7 +1218,7 @@ server <- function(input, output, session) {
 
   ## R Code -----------------
   output$at_code <- renderText({
-    code_format(code, id = "at")
+    fasstrshiny:::code_format(code, id = "at")
   })
 
 
@@ -1332,7 +1341,7 @@ server <- function(input, output, session) {
 
   ## R Code -----------------
   output$vf_code <- renderText({
-    code_format(code, id = "vf")
+    fasstrshiny:::code_format(code, id = "vf")
   })
 
 
@@ -1418,7 +1427,7 @@ server <- function(input, output, session) {
 
   ## R Code -----------------
   output$hp_code <- renderText({
-    code_format(code, id = "hp")
+    fasstrshiny:::code_format(code, id = "hp")
   })
 
 

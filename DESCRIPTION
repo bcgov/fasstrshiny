@@ -15,5 +15,25 @@ License: Apache License (>= 2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
+Depends: 
+    R (>= 2.10)
+LazyData: true
 Imports: 
+    shinydashboard (>= 0.7.2),
+    shiny (>= 1.7.1),
+    shinyBS (>= 0.61),
+    shinyWidgets (>= 0.6.2),
+    shinyjs (>= 2.0.0),
+    glue (>= 1.6.1),
+    dplyr (>= 1.0.7),
+    tidyr (>= 1.1.4),
+    purrr (>= 0.3.4),
+    stringr (>= 1.4.0),
+    leaflet (>= 2.0.4.1),
+    DT (>= 0.20),
+    gt (>= 0.3.1),
+    plotly (>= 4.10.0),
+    patchwork (>= 1.1.1),
+    tidyhydat (>= 0.5.4),
+    bcmaps (>= 1.0.2),
     fasstr (>= 0.4.1)

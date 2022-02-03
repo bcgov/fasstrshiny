@@ -1,14 +1,20 @@
 ## code to prepare `parameters` dataset goes here
-library(tidyverse)
+library(dplyr)
+library(glue)
 
 parameters <- tribble(
   ~id,                    ~fasstr_arg,           ~tooltip,                             ~add_arg,
+  "stats",                "",                    "Choose statistic to display",       FALSE,
+  "add_dates",            "",                    "Choose dates to highlight on the plot",   FALSE,
+  "add_mad",              "",                    "Add the calculated Mean Annual Discharge percentiles to the plot", FALSE,
+
   "discharge",            "values / use_yield",  "Discharge to use in calculations",   FALSE,
   "roll_days",            "roll_days",           "Number of days over which to roll the mean", TRUE,
   "roll_align",           "roll_align",          "Alignment of the rolling day window", TRUE,
   "water_year",           "water_year_start",    "Month range defining the water year", TRUE,
   "years_range",          "start_year/end_year", "Years to include in calculations", TRUE,
   "years_exclude",        "exclude_years",       "Years to exclude from calculations", TRUE,
+  "add_year",             "add_year",            "Add data from a given year to the plot", TRUE,
   "months",               "months",              "Months to include in calculations", TRUE,
   "percentiles",          "percentiles",         "Percentiles to add to calculations", TRUE,
   "plot_log",             "log_discharge",       "Plot data on log scale",            TRUE,
@@ -17,12 +23,12 @@ parameters <- tribble(
   "missing",              "ignore_missing",      "Whether dates with missing values should be included in calculations", TRUE,
   "allowed",              "allowed_missing",     "Percentage of data that can be missing", TRUE,
   "complete",             "complete_years",      "Whether to include only years with complete data in calculations", TRUE,
+  "seasons",              "include_seasons",     "Whether or not to include seasonal calculations", TRUE,
   "mad",                  "percent_MAD",         "Mean annual discharge percentiles to add to the MAD table", TRUE,        #Unique
   "flow",                 "flow_value",          "Flow value from which to determine percentile rank", TRUE,               #Unique
   "percent",              "percent_total",       "Percentiles of total annual flows for which to dermine dates", TRUE,     #Unique
-  "ahlf_roll",            "roll_days",           "Multiple number of days over which to roll the mean", FALSE,             #Unique (ahlf)
-  "normal",               "normal_percentiles",  "Range of percentiles in which data are considered 'normal'", TRUE,       #Limited
-  "zyp",                  "zyp_method",          "Prewhitened trend method to use. 'zhang' is recommended over 'yuepilon' for hydrologic applications (Bürger 2017; Zhang and Zwiers 2004)", TRUE,
+  "normal",               "normal_percentiles",  "Range of percentiles in which data are considered normal", TRUE,       #Limited
+  "zyp",                  "zyp_method",          "Prewhitened trend method to use. zhang is recommended over yuepilon for hydrologic applications", TRUE,
   "alpha",                "zyp_alpha",           "Alpha to use for determining significance of trends", TRUE,
   "prob_plot", "prob_plot_position", "Type of calculation used to determine plotting positions in the frequency plot", TRUE,
   "prob_scale", "prob_scale_points", "Probabilities to be plotted along the X axis in the frequency plot", TRUE,
@@ -31,14 +37,22 @@ parameters <- tribble(
   "fit_distr", "fit_distr", "Distribution used to fit annual data", TRUE,
   "fit_quantiles", "fit_quantiles", "Quantiles to be estimated from the fitted distribution", TRUE,
   "plot_curve", "plot_curve", "Whether to add the computed curve to the probability plot", TRUE
-)
+) %>%
+  mutate(tooltip = if_else(add_arg,
+                           paste0(tooltip, "<br>(<code>", fasstr_arg, "</code>)"),
+                           tooltip))
+
+tips <- as.list(parameters$tooltip)
+names(tips) <- parameters$id
+
+usethis::use_data(parameters, tips, internal = TRUE, overwrite = TRUE)
 
 # Many parameters in compute_annual_trends are already covered here,
 # e.g., annual_percentiles, monthly_percentiles get the "percentiles" tooltip, etc.
 
 
 
-usethis::use_data(parameters, overwrite = TRUE)
+
 
 # TO ADD ----- Functions to add from fasstr: ------------------
 # - calc_longterm_monthly_stats

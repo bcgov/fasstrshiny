@@ -55,6 +55,7 @@ ui_data_load <- fluidRow(
         textInput("data_station_num", label = "Station Number",
                   value = "08HB048",
                   placeholder = "type station number or select from map")),
+
       conditionalPanel(
         "input.data_source != 'HYDAT'",
         fileInput("data_file", label = "Select File",
@@ -69,11 +70,11 @@ ui_data_load <- fluidRow(
         h4("Station Information"),
         fluidRow(column(width = 6,
                         textInput('data_station_name',
-                                  label = "Station/stream name:",
+                                  label = "Name",
                                   placeholder = "ex. Mission Creek")),
                  column(width = 6,
                         numericInput("data_basin_area",
-                                     label = "Basin area (sq. km):", value = 0,
+                                     label = html("Basin area (km<sup>2</sup>)"), value = 0,
                                      min = 0, step = 0.1)))),
 
       uiOutput("ui_data_water_year"),
@@ -129,7 +130,7 @@ ui_data_screen <- fluidRow(
       ### Summary Plot -----------------
       tabPanel(
         title = "Data Summary Plot",
-        selectizeInput("screen_summary", "Review annual daily metric",
+        selectizeInput("screen_summary", "Statistic to explore",
                     c("Mean","Maximum","Minimum","StandardDeviation")),
         girafeOutput("screen_plot1", height = "450px")
       ),
@@ -149,7 +150,9 @@ ui_data_screen <- fluidRow(
                                   "Sep" = 9, "Oct" = 10,
                                   "Nov" = 11, "Dec" = 12),
                    selected = c(1:12),
-                   direction = "vertical")
+                   direction = "vertical"),
+                 bsTooltip("screen_months",
+                           "Months to include/exclude from the plot"),
           ),
           column(width = 11, girafeOutput("screen_plot2", height = "450px"))
         )
@@ -179,15 +182,20 @@ ui_sum_general <- fluidRow(
     width = 12, h2("General Summary Statistics"),
     box(
       width = 3,
-      awesomeRadio("sum_type",
-                   label = "Summary type",
-                   choices = list("Long-term", "Annual",
-                                  "Monthly", "Daily")),
+      radioGroupButtons("sum_type",
+                        label = "Summary type", size = "sm",
+                        choices = list("Long-term",
+                                       "Annual",
+                                       "Monthly", "Daily"),
+                        selected = "Long-term",
+                        status = "primary", justified = TRUE),
+      bsTooltip("sum_type", "Type of summary statistics to calculate"),
       selectizeInput("sum_mad",
                   label = "Mean Annual Discharge percentiles",
                   choices = c(1:99),
                   selected = c(1, 5, 50, 95, 99),
                   multiple = TRUE),
+      bsTooltip("sum_mad", tips$mad),
       uiOutput("ui_sum"),
     ),
     tabBox(
@@ -236,6 +244,7 @@ ui_sum_flow <- fluidRow(
       numericInput("sumfl_flow",
                    label = "Flow value for percentile",
                    value = 10, min = 0),
+      bsTooltip("sumfl_flow", tips$flow),
       uiOutput("ui_sumfl"),
     ),
     tabBox(
@@ -301,14 +310,17 @@ ui_cumulative <- fluidRow(
       radioGroupButtons("cum_type",
                         label = "Cumulative type",
                         choices = list("Annual", "Monthly", "Daily"),
-                        justified = TRUE),
+                        justified = TRUE, status = "primary"),
+      bsTooltip("cum_type", "Type of cumulative statistics to calculate"),
       radioButtons("cum_discharge",
                    label = "Discharge type",
                    choices = list("Volumetric Discharge (m3)" = FALSE,
                                   "Runoff Yield (mm)" = TRUE)),
+      bsTooltip("cum_discharge", tips$discharge),
       materialSwitch("cum_seasons",
-                     label = "Include seasons",
-                     value = TRUE, status = "success")
+                     label = tags$span("Include seasons", id = "cum_seasons_tip"),
+                     value = TRUE, status = "success"),
+      bsTooltip("cum_seasons_tip", tips$seasons),
     ),
     tabBox(
       width = 9, height = min_height,
@@ -350,7 +362,8 @@ ui_ah_flow_timing <- fluidRow(
                       label = "Percents of total annual flows",
                       choices = c(1:99),
                       selected = c(25, 33, 50, 75),
-                      multiple = TRUE)
+                      multiple = TRUE),
+          bsTooltip("ahft_percent", tips$percent)
       ),
 
       tabBox(
@@ -445,7 +458,8 @@ ui_ah_outside_normal <- fluidRow(
     box(
       width = 3,
       sliderInput("ahon_normal", label = "Normal range ",
-                  value = c(25, 75), min = 1, max = 99, step = 1)
+                  value = c(25, 75), min = 1, max = 99, step = 1),
+      bsTooltip("ahon_normal", tips$normal)
     ),
     tabBox(
       width = 9, height = min_height,
@@ -497,7 +511,11 @@ ui_comp_annual <- fluidRow(
                               selected = "zhang")),
           column(width = 6,
                  numericInput("at_alpha", label = "Trend alpha",
-                              value = 0.05, min = 0, max = 0.3, step = 0.05))),
+                              value = 0.05, min = 0, max = 0.3, step = 0.05))
+        ),
+        bsTooltip("at_zyp", tips$zyp),
+        bsTooltip("at_alpha", tips$alpha),
+
         fluidRow(
           column(6, selectizeInput("at_annual_percentiles",
                                    label = "Annual perc.",
@@ -508,7 +526,10 @@ ui_comp_annual <- fluidRow(
                                    label = "Monthly perc.",
                                    choices = c(1:99),
                                    selected = c(10,20),
-                                   multiple = TRUE))),
+                                   multiple = TRUE))
+        ),
+        bsTooltip("at_annual_percentiles", tips$percentiles),
+        bsTooltip("at_monthly_percentiles", tips$percentiles),
 
         strong("Low Flows"),
         select_rolling("at_low", set = FALSE, multiple = TRUE),
@@ -518,9 +539,11 @@ ui_comp_annual <- fluidRow(
                        choices = c(1:99),
                        selected = c(25, 33, 50, 75),
                        multiple = TRUE),
+        bsTooltip("at_percent", tips$percent),
 
         sliderInput("at_normal", label = "Days Outside Normal - Range",
                     value = c(25, 75), min = 1, max = 99, step = 1),
+        bsTooltip("at_normal", tips$normal),
 
         uiOutput("ui_at_allowed")
     ),
@@ -589,8 +612,9 @@ ui_comp_volume_freq <- fluidRow(
                          label = "Distribution",
                          choices = list("PIII" = "PIII",
                                         "Weibull" = "weibull")))
-
         ),
+        bsTooltip("vf_use_max", tips$use_max),
+        bsTooltip("vf_fit_distr", tips$fit_distr),
 
         selectizeInput(
           "vf_fit_quantiles",
@@ -599,6 +623,7 @@ ui_comp_volume_freq <- fluidRow(
           selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
                        0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
           multiple = TRUE),
+        bsTooltip("vf_fit_quantiles", tips$fit_quantiles),
 
         fluidRow(
           column(
@@ -611,6 +636,8 @@ ui_comp_volume_freq <- fluidRow(
                            label = "Log trans",
                            value = FALSE, status = "success"))
         ),
+        bsTooltip("vf_plot_curve", tips$plot_curve),
+        bsTooltip("vf_use_log", tips$use_log),
 
         fluidRow(
           column(6, awesomeRadio("vf_prob_plot",
@@ -618,9 +645,13 @@ ui_comp_volume_freq <- fluidRow(
                                  choices = list("Weibull" = "weibull",
                                                 "Median" = "median",
                                                 "Hazen" = "hazen"))),
-          column(6, textInput("vf_prob_scale",
-                              label = "Probabilies to plot",
-                              value = "0.9999, 0.999, 0.99, 0.9, .5, .2, .1, .02, .01, .001, .0001")))
+          column(6, textInput(
+            "vf_prob_scale",
+            label = "Probabilies to plot",
+            value = "0.9999, 0.999, 0.99, 0.9, .5, .2, .1, .02, .01, .001, .0001"))
+        ),
+        bsTooltip("vf_prob_plot", tips$prob_plot),
+        bsTooltip("vf_prob_scale", tips$prob_scale)
     ),
 
     tabBox(
@@ -689,6 +720,8 @@ ui_comp_hydat_peak <- fluidRow(
                               choices = list("PIII" = "PIII",
                                              "Weibull" = "weibull")))
         ),
+        bsTooltip("hp_use_max", tips$use_max),
+        bsTooltip("hp_fit_distr", tips$fit_distr),
 
         selectizeInput(
           "hp_fit_quantiles",
@@ -697,6 +730,7 @@ ui_comp_hydat_peak <- fluidRow(
           selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
                        0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
           multiple = TRUE),
+        bsTooltip("hp_fit_quantiles", tips$fit_quantiles),
 
         fluidRow(
           column(width = 6,
@@ -707,6 +741,8 @@ ui_comp_hydat_peak <- fluidRow(
                                 label = "Log trans",
                                 value = FALSE, status = "success"))
         ),
+        bsTooltip("hp_plot_curve", tips$plot_curve),
+        bsTooltip("hp_use_log", tips$use_log),
 
         fluidRow(
           column(6, awesomeRadio("hp_prob_plot",
@@ -714,9 +750,13 @@ ui_comp_hydat_peak <- fluidRow(
                                  choices = list("Weibull" = "weibull",
                                                 "Median" = "median",
                                                 "Hazen" = "hazen"))),
-          column(6, textInput("hp_prob_scale",
-                              label = "Probabilies to plot",
-                              value = "0.9999, 0.999, 0.99, 0.9, .5, .2, .1, .02, .01, .001, .0001")))
+          column(6, textInput(
+            "hp_prob_scale",
+            label = "Probabilies to plot",
+            value = "0.9999, 0.999, 0.99, 0.9, .5, .2, .1, .02, .01, .001, .0001"))
+        ),
+        bsTooltip("hp_prob_plot", tips$prob_plot),
+        bsTooltip("hp_prob_scale", tips$prob_scale),
     ),
 
     tabBox(
@@ -763,6 +803,7 @@ tagList(
     dashboardSidebar(
       tags$script(src = "tips.js"),
       useShinyjs(),
+      use_bs_tooltip(),
       sidebarMenu(
         id = "menu",
         menuItem("Home", tabName = "home", icon = icon("home")),
