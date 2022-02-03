@@ -317,10 +317,7 @@ ui_cumulative <- fluidRow(
                    choices = list("Volumetric Discharge (m3)" = FALSE,
                                   "Runoff Yield (mm)" = TRUE)),
       bsTooltip("cum_discharge", tips$discharge),
-      materialSwitch("cum_seasons",
-                     label = tags$span("Include seasons", id = "cum_seasons_tip"),
-                     value = TRUE, status = "success"),
-      bsTooltip("cum_seasons_tip", tips$seasons),
+      uiOutput("ui_cum_seasons"),
     ),
     tabBox(
       width = 9, height = min_height,

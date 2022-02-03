@@ -139,6 +139,31 @@ server <- function(input, output, session) {
   ## Cumulative ----------------------------------------------------------
 
   # Plot options
+  output$ui_cum_seasons <- renderUI({
+    # Enable/disable season
+    req(input$cum_type)
+
+    # Get previous value
+    if(!is.null(input$cum_seasons)) value <- input$cum_seasons else value <- TRUE
+
+    # If not annual, disable
+    if(input$cum_type != "Annual") {
+      m <- materialSwitch("cum_seasons",
+                          label = tags$span("Include seasons",
+                                            id = "cum_seasons_tip"),
+                          value = value, status = "default") %>%
+        disabled()
+    } else {
+      m <- materialSwitch("cum_seasons",
+                          label = tags$span("Include seasons",
+                                            id = "cum_seasons_tip"),
+                          value = value, status = "success")
+    }
+
+    tagList(m, bsTooltip("cum_seasons_tip", tips$seasons))
+  }) %>%
+    bindEvent(input$cum_type)
+
   output$ui_cum_plot_options <- renderUI({
     select_plot_options(data = data_raw(), id = "cum", input, include = "plot_log")
   })
@@ -149,14 +174,7 @@ server <- function(input, output, session) {
                          include = "percentiles")
   })
 
-  # Enable/disable seasons
-  observe({
-    req(input$cum_seasons)
-    if(input$cum_type != "Annual") {
-      disable("cum_seasons")
-    } else enable("cum_seasons")
-  }) %>%
-    bindEvent(input$cum_type)
+
 
 
   ## AH - Flow timing --------------------------------------------------------
