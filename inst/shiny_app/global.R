@@ -144,7 +144,7 @@ select_custom_months <- function(id, input = NULL, set = TRUE) {
 
 select_discharge <- function(id, input = NULL, set = TRUE) {
   if(set & !is.null(input)) selected <- input$opts_discharge else selected <- NULL
-  radioButtons(paste0(id, "_discharge"),
+  awesomeRadio(paste0(id, "_discharge"),
                label = "Discharge type",
                choices = list("Discharge (cms)" = "Value",
                               "Volumetric Discharge (m3)" = "Volume_m3",
@@ -192,7 +192,8 @@ select_percentiles <- function(id, input = NULL, set = TRUE) {
 select_complete <- function(id, input = NULL, set = TRUE) {
   if(set & !is.null(input)) value <- input$opts_complete else value <- FALSE
   materialSwitch(paste0(id, "_complete"),
-                 label = "Complete years only")
+                 label = "Complete years only",
+                 status = "success")
 }
 
 select_missing <- function(id, input = NULL, set = TRUE, value = NULL) {

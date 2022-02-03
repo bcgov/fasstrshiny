@@ -179,11 +179,10 @@ ui_sum_general <- fluidRow(
     width = 12, h2("General Summary Statistics"),
     box(
       width = 3,
-      radioGroupButtons("sum_type",
-                        label = "Summary type",
-                        choices = list("Long-term", "Annual",
-                                       "Monthly", "Daily"),
-                        justified = TRUE, direction = "vertical"),
+      awesomeRadio("sum_type",
+                   label = "Summary type",
+                   choices = list("Long-term", "Annual",
+                                  "Monthly", "Daily")),
       selectInput("sum_mad",
                   label = "Mean Annual Discharge percentiles",
                   choices = c(1:99),
@@ -309,7 +308,7 @@ ui_cumulative <- fluidRow(
                                   "Runoff Yield (mm)" = TRUE)),
       materialSwitch("cum_seasons",
                      label = "Include seasons",
-                     value = TRUE)
+                     value = TRUE, status = "success")
       ),
     tabBox(
       width = 9, height = min_height,
@@ -613,7 +612,7 @@ ui_comp_volume_freq <- fluidRow(
             width = 6,
             materialSwitch("vf_log",
                            label = "Log transform data",
-                           value = FALSE))
+                           value = FALSE, status = "success"))
         ),
 
         fluidRow(
@@ -629,14 +628,15 @@ ui_comp_volume_freq <- fluidRow(
                          0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
             multiple = TRUE))),
 
-        materialSwitch("vf_plot_curve", label = "Plot curve", value = TRUE),
+        materialSwitch("vf_plot_curve", label = "Plot curve", value = TRUE,
+                       status = "success"),
 
         fluidRow(
-          column(6, radioGroupButtons("vf_prob_plot",
-                                      label = "Plotting positions",
-                                      choices = list("Weibull" = "weibull",
-                                                     "Median" = "median",
-                                                     "Hazen" = "hazen"))),
+          column(6, awesomeRadio("vf_prob_plot",
+                                 label = "Plotting positions",
+                                 choices = list("Weibull" = "weibull",
+                                                "Median" = "median",
+                                                "Hazen" = "hazen"))),
           column(6, textInput("vf_prob_scale",
                               label = "Probabilies to plot",
                               value = "0.9999, 0.999, 0.99, 0.9, .5, .2, .1, .02, .01, .001, .0001")))
@@ -708,7 +708,7 @@ ui_comp_hydat_peak <- fluidRow(
             width = 6,
             materialSwitch("hp_log",
                            label = "Log transform data",
-                           value = FALSE))
+                           value = FALSE, status = "success"))
         ),
 
         fluidRow(
@@ -724,14 +724,15 @@ ui_comp_hydat_peak <- fluidRow(
                          0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
             multiple = TRUE))),
 
-        materialSwitch("hp_plot_curve", label = "Plot curve", value = TRUE),
+        materialSwitch("hp_plot_curve", label = "Plot curve", value = TRUE,
+                       status = "success"),
 
         fluidRow(
-          column(6, radioGroupButtons("hp_prob_plot",
-                                      label = "Plotting positions",
-                                      choices = list("Weibull" = "weibull",
-                                                     "Median" = "median",
-                                                     "Hazen" = "hazen"))),
+          column(6, awesomeRadio("hp_prob_plot",
+                                 label = "Plotting positions",
+                                 choices = list("Weibull" = "weibull",
+                                                "Median" = "median",
+                                                "Hazen" = "hazen"))),
           column(6, textInput("hp_prob_scale",
                               label = "Probabilies to plot",
                               value = "0.9999, 0.999, 0.99, 0.9, .5, .2, .1, .02, .01, .001, .0001")))
