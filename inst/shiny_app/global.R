@@ -40,12 +40,19 @@ source("functions.R")
 
 # Setup HYDAT dat -----------------------------
 
+# Be verbose if on a shiny server
+if(!identical(serverInfo(), list(shinyServer = FALSE))) msg <- TRUE
+
 # Don't move HYDAT but create a symlink so we can use it as if it was where
 # tidyhydat wanted it to be
 h <- normalizePath(fasstrshiny:::find_hydat())   # Where Hydat is
 th <- normalizePath(hy_dir())      # Where tidyhydat wants it to be
+if(msg) cat(file=stderr(), "Where hydat is: ", h, "\n")
+if(msg) cat(file=stderr(), "Where should be: ", th, "\n")
 unlink(file.path(th, basename(h))) # Delete any existing links
 file.symlink(h, th)                # Create a new link
+
+if(msg) list.files(th, full.names = TRUE) %>% cat(file = stderr(), "Link: ", ., "\n")
 
 # Get Tootips ---------------------------------
 tips <- fasstrshiny:::tips

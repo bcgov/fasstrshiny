@@ -91,16 +91,16 @@ get_date <- function(n, water_year) {
 }
 
 find_hydat <- function() {
- local <- tidyhydat::hy_dir()
- shinyapps <- file.path("inst", "shiny_app")
+  h <- "Hydat.sqlite3"
+  locs <- c("local" = file.path(tidyhydat::hy_dir(), h),
+            "dev" = file.path("inst", "shiny_app", h),
+            "shinyapps" = h)
 
- h <- list.files(c(local, shinyapps), "sqlite3", full.names = TRUE) %>%
-   stringr::str_subset(stringr::regex("hydat.sqlite3", ignore_case = TRUE))
+  locs <- locs[file.exists(locs)]
 
- if(length(h) > 1) h <- stringr::str_subset(h, "shiny_app")
- if(length(h) == 0) {
-   stop("Cannot find 'Hydat.sqlite3' needed by tidyhydat. Consider running ",
-        "tidyhydat::download_hydat()", call. = FALSE)
- }
- h
+  if(length(h) == 0) {
+    stop("Cannot find 'Hydat.sqlite3' needed by tidyhydat. Consider running ",
+         "tidyhydat::download_hydat()", call. = FALSE)
+  }
+  h[1]
 }
