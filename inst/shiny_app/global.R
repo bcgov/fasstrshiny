@@ -38,6 +38,15 @@ library(bcmaps)
 
 source("functions.R")
 
+# Setup HYDAT dat -----------------------------
+
+# Don't move HYDAT but create a symlink so we can use it as if it was where
+# tidyhydat wanted it to be
+h <- normalizePath(fasstrshiny:::find_hydat())   # Where Hydat is
+th <- normalizePath(hy_dir())      # Where tidyhydat wants it to be
+unlink(file.path(th, basename(h))) # Delete any existing links
+file.symlink(h, th)                # Create a new link
+
 # Get Tootips ---------------------------------
 tips <- fasstrshiny:::tips
 
@@ -48,7 +57,7 @@ stations_list <- hy_stn_data_range(prov_terr_state_loc = "BC") %>%
 
 
 ## Create a dataframe of all station metadata and a list of all stations
-stations <- hy_stations(station_number = stations_list) %>%  #c("AB","BC","SK","MB","ON","QC","NB","NS","PE","NL","YT","NT","NU")
+stations <- hy_stations(station_number = stations_list) %>%
   left_join(hy_agency_list(), by = c("CONTRIBUTOR_ID" = "AGENCY_ID")) %>%
   rename("CONTRIBUTOR" = AGENCY_EN) %>%
   left_join(hy_agency_list(), by = c("OPERATOR_ID" = "AGENCY_ID")) %>%
@@ -88,7 +97,6 @@ bc_hydrozones <- hydrozones(ask = FALSE) %>%
   sf::st_transform(crs = 4326)
 
 # Settings --------------------------
-min_height <- "250px" # Minimum placeholder height for boxes (will expand to content)
-global_settings <- c("rolling", "months",                          # Settings tab
-                     "years_range", "years_exclude", "water_year") # Data tab
+
+min_height <- "250px" # Min. height for boxes (will expand to content)
 

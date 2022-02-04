@@ -802,7 +802,6 @@ tagList(
     dashboardSidebar(
       tags$script(src = "tips.js"),
       useShinyjs(),
-      use_bs_tooltip(),
       sidebarMenu(
         id = "menu",
         menuItem("Home", tabName = "home", icon = icon("home")),

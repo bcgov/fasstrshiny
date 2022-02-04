@@ -293,8 +293,10 @@ select_table_options <- function(id, input,
 
 ## Generic Functions -----------------------------------
 
-build_ui <- function(id, input = NULL, define_options = FALSE,
-                     include, global = global_settings) {
+build_ui <- function(
+  id, input = NULL, define_options = FALSE, include,
+  global = c("rolling", "months",                             # Settings tab
+             "years_range", "years_exclude", "water_year")) { # Data tab
 
   if(any(global %in% include) & !define_options){
     stop("Some ui elements included here (",
