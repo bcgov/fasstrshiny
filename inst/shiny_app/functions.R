@@ -125,13 +125,20 @@ select_percentiles <- function(id, input = NULL, set = TRUE) {
 select_complete <- function(id, input = NULL, set = TRUE) {
   value <- set_input("complete", input, set, FALSE)
 
+  if(id == "sum") {
+    tip <- glue("{tips$complete}<br>(applies only to long-term, ",
+                "daily and MAD calculations")
+  } else {
+    tip <- tips$complete
+  }
+
   tagList(
     materialSwitch(glue("{id}_complete"),
                    label = tags$span("Complete years only",
                                     id = glue("{id}_complete_tip")),
                    value = value,
                    status = "success"),
-    bsTooltip(glue("{id}_complete_tip"), tips$complete))
+    bsTooltip(glue("{id}_complete_tip"), tip))
 }
 
 select_missing <- function(id, input = NULL, set = TRUE, value = NULL) {
@@ -169,14 +176,14 @@ select_miss_allowed <- function(id, input = NULL, set = TRUE) {
 }
 
 select_plot_stats <- function(id, stats) {
-  if(is.null(stats)) stop("Require 'stats' to create plot_stats UI",
-                           call. = FALSE)
-  tagList(
-    checkboxGroupButtons(glue("{id}_stats"),
-                         label = "Statistics",
-                         choices = stats,
-                         selected = stats),
-    bsTooltip(glue("{id}_stats"), tips$stats))
+  if(!is.null(stats)) {
+    tagList(
+      radioGroupButtons(glue("{id}_stats"),
+                        label = "Statistics",
+                        choices = stats,
+                        selected = stats),
+      bsTooltip(glue("{id}_stats"), tips$stats))
+  }
 }
 
 select_plot_log <- function(id, input = NULL, set = TRUE) {
@@ -249,6 +256,7 @@ select_plot_options <- function(id, input, include = "plot_log",
 
   i <- tagList()
   if("plot_log" %in% include) i <- tagList(i, select_plot_log(id, input))
+  if("percentiles" %in% include) i <- tagList(i, select_percentiles(id, input))
   if("daterange" %in% include) i <- tagList(i, select_daterange(id, data))
   if("discharge" %in% include) i <- tagList(i, select_discharge(id, input))
   if("plot_stats" %in% include) i <- tagList(i, select_plot_stats(id, params))

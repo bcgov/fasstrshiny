@@ -65,47 +65,28 @@ usethis::use_data(parameters, tips, internal = TRUE, overwrite = TRUE)
 
 # Arguments to add ------------------------
 
-# calc_longterm_mean
-# - complete_years
-
-# calc_daily_stats
-# - complete_years
-
 # calc_longterm_daily_stats
-# - complete_years
 # - include_longterm (always included)
 # - custom months - what happens if months chosen are not sequential, is that an issue?
 
 # plot_daily_stats
-# - complete_years
 # - include_extremes
 # - inner_percentiles
 # - outer_percentiles
 
 # plot_longterm_daily_stats
-# - complete_years
 # - include_extremes
 # - inner_percentiles
 # - outer_percentiles
 
-# plot_monthly_stats
-# - percentiles
-
-# plot_annual_stats
-# - percentiles
-
-
 # plot_flow_duration
 # - include_longterm
 
-
 # plot_daily_cumulative_stats
 # - basin_area
-# - add_year
 
 # plot_monthly_cumulative_stats
 # - basin_area
-# - add_year
 
 # plot_annual_cumulative_stats
 # - basin_area
@@ -124,4 +105,4 @@ usethis::use_data(parameters, tips, internal = TRUE, overwrite = TRUE)
 
 
 # compute_annual_frequencies
-# - fit_distr_method -> Deliberately not included, allow default use dpendeing on fit distribution
+# - fit_distr_method -> Deliberately not included, allow default use depending on fit distribution

@@ -197,6 +197,7 @@ ui_sum_general <- fluidRow(
                   multiple = TRUE),
       bsTooltip("sum_mad", tips$mad),
       uiOutput("ui_sum"),
+      uiOutput("ui_sum_miss_allowed")
     ),
     tabBox(
       width = 9, height = min_height,
@@ -204,6 +205,7 @@ ui_sum_general <- fluidRow(
       ### Plot ---------------------
       tabPanel(
         title = "Plot",
+        uiOutput("ui_sum_monthly_plot"), #Only when monthly
         uiOutput("ui_sum_plot_options", align = "right"),
         h4("ggiraph example"),
         girafeOutput("sum_plot", height = "450px"),

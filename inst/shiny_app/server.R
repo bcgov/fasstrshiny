@@ -88,22 +88,38 @@ server <- function(input, output, session) {
   ## SS - General -------------------------------------------------------------
   output$ui_sum <- renderUI({
     build_ui(id = "sum", input,
-             include = c("discharge", "miss_allowed"))
+             include = c("discharge", "complete"))
+  })
+
+  output$ui_sum_monthly_plot <- renderUI({
+    req(input$sum_type == "Monthly")
+
+    p <- c("Mean", "Median", "Maximum", "Minimum")
+    if(!is.null(input$sum_percentiles)) p <- c(p, glue("P{input$sum_percentiles}"))
+
+    selectizeInput("sum_monthly_plot", label = "Statistic to plot",
+                   choices = p, selected = 1)
+
+  })
+
+  # Separate so when it recomputes, not all the other inputs also change
+  output$ui_sum_miss_allowed <- renderUI({
+    select_miss_allowed("sum", input)
   })
 
   # Plot options
   output$ui_sum_plot_options <- renderUI({
-    req(input$data_years_range)
 
     select_plot_options(id = "sum", input,
-                        include = c("plot_log", "add_year", "add_dates", "add_mad"))
+                        include = c("percentiles",
+                                    "plot_log", "add_year",
+                                    "add_dates", "add_mad"))
     # Add inner/outer percentiles?
   })
 
 
-  # Enable/disable based on type of Stat
+  # Enable/disable based on type
   observe({
-
     # add year
     if(input$sum_type %in% c("Long-term", "Daily")) {
       enable("sum_add_year")
@@ -182,7 +198,8 @@ server <- function(input, output, session) {
     bindEvent(input$cum_type)
 
   output$ui_cum_plot_options <- renderUI({
-    select_plot_options(data = data_raw(), id = "cum", input, include = "plot_log")
+    select_plot_options(data = data_raw(), id = "cum", input,
+                        include = c("plot_log", "add_year"))
   })
 
   # Table options
@@ -191,6 +208,17 @@ server <- function(input, output, session) {
                          include = "percentiles")
   })
 
+
+  # Enable/disable based on type
+  observe({
+    # add year
+    if(input$cum_type %in% c("Monthly", "Daily")) {
+      enable("cum_add_year")
+    } else {
+      disable("cum_add_year")
+    }
+  }) %>%
+  bindEvent(input$cum_type)
 
 
 
@@ -518,17 +546,29 @@ server <- function(input, output, session) {
       e <- glue("add_year = {input$sum_add_year}")
     }
 
+    if(input$sum_type %in% c("Long-term", "Daily")) {
+      p <- c("complete", "missing")
+    } else {
+      p <- c("allowed", "percentiles")
+    }
+
+    p <- c(p, "plot_log")
+
+    end <- "[[1]]"
+
+    if(input$sum_type == "Monthly" & !is.null(input$sum_monthly_plot)) {
+      end <- glue("[['{input$sum_monthly_plot}_Monthly_Statistics']]")
+    }
+
     g <- switch(input$sum_type,
                 "Long-term" = "plot_longterm_daily_stats",
                 "Annual" = "plot_annual_stats",
                 "Monthly" = "plot_monthly_stats",
                 "Daily" = "plot_daily_stats") %>%
       create_fun("flow_data", id = "sum", input,
-                 params = c(if_else(input$sum_type %in% c("Long-term", "Daily"),
-                                    "missing", "allowed"),
-                            "plot_log"),
+                 params = p,
                  extra = e,
-                 end = "[[1]]")
+                 end = end)
 
     code$sum_plot <- g
 
@@ -705,19 +745,24 @@ server <- function(input, output, session) {
 
     flow_data <- data_raw()
 
+    p <- "percentiles"
+
+    p <- switch(input$sum_type,
+                "Long-term" = c("complete", "missing", "custom_months",
+                                "custom_months_label"),
+                "Annual" = "allowed",
+                "Monthly" = "allowed",
+                "Daily" = "complete", "missing")
+
+    p <- c(p, "percentiles")
+
     t <- switch(input$sum_type,
                 "Long-term" = "calc_longterm_daily_stats",
                 "Annual" = "calc_annual_stats",
                 "Monthly" = "calc_monthly_stats",
                 "Daily" = "calc_daily_stats") %>%
       create_fun("flow_data", id = "sum", input,
-                 params = c("percentiles",
-                            case_when(
-                              input$sum_type == "Daily" ~ "missing",
-                              input$sum_type == "Long-term" ~
-                                c("missing", "custom_months", "custom_months_label"),
-                              TRUE ~ "allowed")))
-
+                 params = p)
 
     code$sum_table <- t
 
@@ -849,7 +894,8 @@ server <- function(input, output, session) {
   # Cumulative ---------------------------------------
   ## Plot --------------------
   output$cum_plot <- renderPlot({
-    req(data_raw(), input$cum_type)
+    req(data_raw(), input$cum_type, !is.null(input$sum_add_year),
+        !is.null(input$cum_seasons))
 
     flow_data <- data_raw()
 
@@ -857,6 +903,7 @@ server <- function(input, output, session) {
     d <- "AC\\nBC"
 
     e <- glue("use_yield = {input$cum_discharge}")
+
     if(input$cum_type == "Annual") {
       p <- NULL
       e <- glue("{e}, include_seasons = {input$cum_seasons}")
@@ -864,6 +911,9 @@ server <- function(input, output, session) {
     } else {
       p <- "plot_log"
       end <- "[[1]]"
+      if(input$cum_add_year != "") {
+        e <- glue("{e}, add_year = {input$cum_add_year}")
+      }
     }
 
     g <- switch(input$cum_type,

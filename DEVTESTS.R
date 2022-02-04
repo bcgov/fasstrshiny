@@ -9,6 +9,8 @@ d <- fill_missing_dates(station_number = "08HB048") %>%
   add_daily_volume() %>%
   add_daily_yield()
 
+
+plot_monthly_stats(d, percentiles = 50)
 plot_annual_outside_normal(d, normal_percentiles = c(1,99))
 
 calc_flow_percentile(d, flow_value = 10)
