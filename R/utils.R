@@ -44,35 +44,25 @@ gg_fitdistr <- function(fit, title) {
     ggplot2::theme(legend.position = "none")
 }
 
+create_vline_interactive <- function(data, stats, date_fmt = "%b %d", digits = 4) {
+  x <- stats[1]
 
-to_girafe <- function(g, value = NULL, type = "trends", digits = 4) {
+  date <- glue::glue("'Date: ', format(.data[['{x}']], '{date_fmt}')")
+  s <- stats[2:length(stats)]
+  s <- glue::glue("'{names(s)}: ', round(.data[['{s}']], digits = {digits})")
+  s <- glue::glue_collapse(c(date, s), sep = ", '\n', ")
 
-  if(type == "trends") {
-    g$layers[[1]] <- ggiraph::geom_point_interactive(
-      ggplot2::aes(tooltip = paste0(
-        "Year: ", Year, "\n",
-        value, ": ", round(Value, digits = digits)),
-        data_id = Year), size = 4)
-  } else if(type == "flow") {
-    g$layers[[1]] <- ggiraph::geom_point_interactive(
-      ggplot2::aes(tooltip = paste0(
-        "Year: ", Year, "\n",
-        "Discharge: ", round(Value, digits = digits), "\n",
-        "Probability: ", round(prob, digits = digits)),
-        data_id = Year), size = 2)
-    g <- g + ggplot2::scale_color_viridis_d(end = 0.8)
-  } else if(type == "raw") {
-    g$layers[[1]] <- ggiraph::geom_line_interactive(
-      ggplot2::aes(tooltip = paste0(
-        "Date: ", Date, "\n",
-        value, ": ", round(Value, digits = digits)),
-        data_id = Date), colour = "dodgerblue4",
-      na.rm = TRUE)
-  }
+  s <- paste0("paste0(", s, ")")
 
-  ggiraph::girafe(ggobj = g, width_svg = 8, height_svg = 5,
-                  options = list(ggiraph::opts_selection(type = "multiple")))
+  geom_vline_interactive(aes(xintercept = .data[[x]],
+                             tooltip = eval(parse(text = s)),
+                             data_id = .data[[x]]), alpha = 0.01)
 }
+
+
+
+
+
 
 
 
@@ -96,11 +86,12 @@ find_hydat <- function() {
             "dev" = file.path("inst", "shiny_app", h),
             "shinyapps" = h)
 
-  locs <- locs[file.exists(locs)]
+  locs <- locs[file.exists(locs)] %>%
+    normalizePath()
 
   if(length(h) == 0) {
     stop("Cannot find 'Hydat.sqlite3' needed by tidyhydat. Consider running ",
          "tidyhydat::download_hydat()", call. = FALSE)
   }
-  h[1]
+  locs[1]
 }
