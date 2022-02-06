@@ -1321,7 +1321,7 @@ server <- function(input, output, session) {
   vf_freqs <- reactive({
     req(data_raw(), input$vf_use_max)
 
-    validate(need(all(!is.na(text_to_num(input$vf_prob_scale))),
+    validate(need(all(!is.na(fasstrshiny:::text_to_num(input$vf_prob_scale))),
                   "Probabilies to plot must be a comma separated list of numbers"))
 
     flow_data <- data_raw()
@@ -1419,7 +1419,7 @@ server <- function(input, output, session) {
                   "Choose your settings and click 'Compute Analysis'"))
     req(input$vf_day)
     vf_freqs()[["Freq_Fitting"]][[input$vf_day]] %>%
-      gg_fitdistr(title = input$vf_day)
+      fasstrshiny:::gg_fitdistr(title = input$vf_day)
   })
 
 
@@ -1443,7 +1443,7 @@ server <- function(input, output, session) {
       paste0("This analysis is only available for HYDAT data with a ",
              "valid STATION_NUMBER")))
 
-    validate(need(all(!is.na(text_to_num(input$hp_prob_scale))),
+    validate(need(all(!is.na(fasstrshiny:::text_to_num(input$hp_prob_scale))),
                   "Probabilies to plot must be a comma separated list of numbers"))
 
     flow_data <- data_raw()
@@ -1505,7 +1505,7 @@ server <- function(input, output, session) {
     validate(need(hp_freqs(),
                   "Choose your settings and click 'Compute Analysis'"))
     hp_freqs()[["Freq_Fitting"]][[11]] %>%
-      gg_fitdistr(title = "")
+      fasstrshiny:::gg_fitdistr(title = "")
   })
 
 

@@ -23,6 +23,7 @@ library(dplyr)
 library(tidyr)
 library(purrr)
 library(stringr)
+library(styler)
 
 library(leaflet)
 library(DT)
@@ -41,21 +42,29 @@ source("functions.R")
 # Setup HYDAT dat -----------------------------
 
 # Be verbose if on a shiny server
-if(!identical(serverInfo(), list(shinyServer = FALSE))) msg <- TRUE
+on_shinyapps <- !identical(serverInfo(), list(shinyServer = FALSE))
+msg <- on_shinyapps
 
-# Don't move HYDAT but create a symlink so we can use it as if it was where
-# tidyhydat wanted it to be
-h <- normalizePath(fasstrshiny:::find_hydat())   # Where Hydat is
-th <- normalizePath(hy_dir())      # Where tidyhydat wants it to be
-if(msg) cat(file=stderr(), "Where hydat is: ", h, "\n")
-if(msg) cat(file=stderr(), "Where should be: ", th, "\n")
-unlink(file.path(th, basename(h))) # Delete any existing links
-file.symlink(h, th)                # Create a new link
+if(on_shinyapps) {
 
-if(msg) list.files(th, full.names = TRUE) %>% cat(file = stderr(), "Link: ", ., "\n")
+  # Don't move HYDAT but create a symlink so we can use it as if it was where
+  # tidyhydat wanted it to be
+  h <- fasstrshiny:::find_hydat()   # Where Hydat is
+  th <- hy_dir()      # Where tidyhydat wants it to be
+
+  cat(file = stderr(), "Where hydat is: ", h, "\n")
+  cat(file = stderr(), "Where should be: ", th, "\n")
+  if(!dir.exists(th)) dir.create(th, recursive = TRUE)
+  unlink(file.path(th, basename(h))) # Delete any existing links
+  file.symlink(h, th)                # Create a new link
+
+  cat(file = stderr(), "Link: ", list.files(th, full.names = TRUE)[1], " \n")
+}
 
 # Get Tootips ---------------------------------
 tips <- fasstrshiny:::tips
+
+if(msg)  cat(file = stderr(), "Getting tidyhydat stations \n")
 
 # tidyhydat Stations data -----------------------
 stations_list <- hy_stn_data_range(prov_terr_state_loc = "BC") %>%
