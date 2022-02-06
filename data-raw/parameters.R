@@ -57,10 +57,8 @@ usethis::use_data(parameters, tips, internal = TRUE, overwrite = TRUE)
 # TO ADD ----- Functions to add from fasstr: ------------------
 # - calc_longterm_monthly_stats
 # - plot_longterm_monthly_stats
-# - plot_annual_means
 # - compute_frequency_quantile ??? only gives single value
 # - compute_frequency_analysis (not necessary?)
-
 # - calc_longterm_percentile - Deliberately not included (redundant with other tables)
 
 # Arguments to add ------------------------

@@ -57,4 +57,4 @@ usethis::use_git_ignore("inst/shiny_app/Hydat.sqlite3")
 ## Deploy shiny app --------------------------------
 
 rsconnect::deployApp(appDir = "inst/shiny_app/", account = "bcgov-env",
-                     appName = "fasstrshiny")
+                     appName = "fasstrshiny", forceUpdate = TRUE)

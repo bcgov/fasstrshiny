@@ -4,3 +4,4 @@
 ^DEVTESTS.R$
 ^CODE_DESIGN.md$
 ^data-raw$
+^inst\shiny_app\Hydat.sqlite3$
