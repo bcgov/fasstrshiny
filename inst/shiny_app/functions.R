@@ -293,6 +293,17 @@ select_table_options <- function(id, input,
 
 ## Generic Functions -----------------------------------
 
+check_data <- function(input){
+  validate(need(input$data_load,
+                "You'll need to first load some data under Data > Loading"))
+}
+
+# For multiple, sequential validates
+`%then%` <- function(a, b) {
+  if (is.null(a)) b else a
+}
+
+
 build_ui <- function(
   id, input = NULL, define_options = FALSE, include,
   global = c("rolling", "months",                             # Settings tab

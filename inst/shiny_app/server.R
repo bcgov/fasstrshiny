@@ -391,6 +391,7 @@ server <- function(input, output, session) {
 
   ## Plot ----------------
   output$data_plot <- renderPlotly({
+    check_data(input)
     req(data_raw(),
         !is.null(input$data_plot_log),
         input$data_daterange,
@@ -416,6 +417,7 @@ server <- function(input, output, session) {
 
   ## Table ----------------
   output$data_table <- renderDT({
+    check_data(input)
     data_raw() %>%
       rename("StationNumber" = "STATION_NUMBER") %>%
       select(-"Month") %>%
@@ -452,6 +454,7 @@ server <- function(input, output, session) {
 
   ## Summary plot ------------------
   output$screen_plot1 <- renderGirafe({
+    check_data(input)
     req(screen_raw())
 
     xlab <- if_else(input$data_water_year != 1, "Water Year", "Year")
@@ -486,6 +489,7 @@ server <- function(input, output, session) {
 
   ## Missing Data Plot ---------------------------
   output$screen_plot2 <- renderGirafe({
+    check_data(input)
     req(data_raw())
 
     flow_data <- data_raw()
@@ -513,6 +517,7 @@ server <- function(input, output, session) {
 
   ## Summary table ------------------
   output$screen_table <- DT::renderDT({
+    check_data(input)
     screen_raw() %>%
       select(-dplyr::contains("STATION_NUMBER")) %>%
       rename("Total days" = "n_days",
@@ -542,6 +547,7 @@ server <- function(input, output, session) {
 
   ## Plot --------------------
   output$sum_plot <- renderGirafe({
+    check_data(input)
     req(data_raw(), input$sum_type,
         !is.null(input$sum_plot_log), !is.null(input$sum_add_year))
 
@@ -687,6 +693,7 @@ server <- function(input, output, session) {
   })
 
   output$sum_mad <- render_gt({
+    check_data(input)
      sum_mad() %>%
       gt() %>%
       fmt_number(columns = where(is.numeric), decimals = 4)
@@ -694,6 +701,7 @@ server <- function(input, output, session) {
 
   ## Table -----------------------
   output$sum_table <- DT::renderDT({
+    check_data(input)
     req(input$sum_type, input$sum_discharge)
 
     flow_data <- data_raw()
@@ -760,6 +768,7 @@ server <- function(input, output, session) {
 
   ## Plot --------------------
   output$sumfl_plot <- renderGirafe({
+    check_data(input)
     req(data_raw(), !is.null(input$sumfl_plot_log))
 
     flow_data <- data_raw()
@@ -793,6 +802,7 @@ server <- function(input, output, session) {
 
   ## Table -----------------------
   output$sumfl_table <- DT::renderDT({
+    check_data(input)
     req(data_raw(), input$sumfl_discharge)
 
     flow_data <- data_raw()
@@ -832,6 +842,7 @@ server <- function(input, output, session) {
 
   ## Plot --------------------
   output$sumam_plot <- renderGirafe({
+    check_data(input)
     req(data_raw(), input$sumam_missing)
 
     flow_data <- data_raw()
@@ -868,6 +879,7 @@ server <- function(input, output, session) {
   # Cumulative ---------------------------------------
   ## Plot --------------------
   output$cum_plot <- renderGirafe({
+    check_data(input)
     req(data_raw(), input$cum_type, !is.null(input$cum_add_year),
         !is.null(input$cum_seasons))
 
@@ -940,6 +952,7 @@ server <- function(input, output, session) {
 
   ## Table -----------------------
   output$cum_table <- DT::renderDT({
+    check_data(input)
     req(data_raw(), input$cum_discharge)
 
     flow_data <- data_raw()
@@ -983,6 +996,7 @@ server <- function(input, output, session) {
   # AH - Flow timing ---------------------------------------
   ## Plot --------------------
   output$ahft_plot <- renderGirafe({
+    check_data(input)
     req(data_raw(), input$ahft_percent)
 
     flow_data <- data_raw()
@@ -1016,6 +1030,7 @@ server <- function(input, output, session) {
 
   ## Table -----------------------
   output$ahft_table <- DT::renderDT({
+    check_data(input)
     req(data_raw(), input$ahft_percent)
 
     flow_data <- data_raw()
@@ -1049,6 +1064,7 @@ server <- function(input, output, session) {
   # AH - Low Flows ---------------------------------------
   ## Plot --------------------
   output$ahlf_plot <- renderGirafe({
+    check_data(input)
     req(data_raw(), input$ahlf_discharge)
 
     flow_data <- data_raw()
@@ -1093,6 +1109,7 @@ server <- function(input, output, session) {
 
   ## Table -----------------------
   output$ahlf_table <- DT::renderDT({
+    check_data(input)
     req(data_raw(), input$ahlf_discharge)
 
     flow_data <- data_raw()
@@ -1127,6 +1144,7 @@ server <- function(input, output, session) {
 
   ## Table -----------------------
   output$ahp_table <- DT::renderDT({
+    check_data(input)
     req(data_raw(), input$ahp_discharge)
 
     flow_data <- data_raw()
@@ -1160,6 +1178,7 @@ server <- function(input, output, session) {
   # AH - Days outside normal ---------------------------------------
   ## Plot --------------------
   output$ahon_plot <- renderGirafe({
+    check_data(input)
     req(data_raw(), input$ahon_normal)
 
     flow_data <- data_raw()
@@ -1275,8 +1294,11 @@ server <- function(input, output, session) {
 
   ## Table - Fit -----------------------
   output$at_table_fit <- DT::renderDT({
-    validate(need(input$at_compute,
-                  "Choose your settings and click 'Compute Trends'"))
+    validate(
+      need(input$data_load,
+           "You'll need to first load some data under Data > Loading") %then%
+        need(input$at_compute,
+             "Choose your settings and click 'Compute Trends'"))
 
     req(at_trends())
 
@@ -1306,6 +1328,11 @@ server <- function(input, output, session) {
 
   ## Plot --------------------
   output$at_plot <- renderGirafe({
+    validate(
+      need(input$data_load,
+           "You'll need to first load some data under Data > Loading") %then%
+        need(input$at_compute,
+             "Choose your settings and click 'Compute Trends'"))
 
     g <- at_trends()[[at_stat()]] +
       geom_point_interactive(aes(
@@ -1349,8 +1376,13 @@ server <- function(input, output, session) {
 
   ## Table - years -----------------------
   output$at_table_years <- renderDT({
-    validate(need(input$at_compute,
-                  "Choose your settings and click 'Compute Trends'"))
+
+    validate(
+      need(input$data_load,
+           "You'll need to first load some data under Data > Loading") %then%
+        need(input$at_compute,
+             "Choose your settings and click 'Compute Trends'"))
+
     req(at_trends())
 
     at_trends()[[1]] %>%
@@ -1417,8 +1449,12 @@ server <- function(input, output, session) {
 
   ## Plot --------------------
   output$vf_plot <- renderGirafe({
-    validate(need(input$vf_compute,
-                  "Choose your settings and click 'Compute Analysis'"))
+
+    validate(
+      need(input$data_load,
+           "You'll need to first load some data under Data > Loading") %then%
+        need(input$vf_compute,
+             "Choose your settings and click 'Compute Analysis'"))
 
     g <- vf_freqs()[["Freq_Plot"]] +
       geom_point_interactive(aes(
@@ -1453,8 +1489,11 @@ server <- function(input, output, session) {
 
   ## Table - Plot data -----------------------
   output$vf_table_plot <- DT::renderDT({
-    validate(need(input$vf_compute,
-                  "Choose your settings and click 'Compute Analysis'"))
+    validate(
+      need(input$data_load,
+           "You'll need to first load some data under Data > Loading") %then%
+        need(input$vf_compute,
+             "Choose your settings and click 'Compute Analysis'"))
 
     vf_freqs()[["Freq_Plot_Data"]] %>%
       mutate(across(where(is.numeric), ~round(., 4))) %>%
@@ -1467,8 +1506,11 @@ server <- function(input, output, session) {
 
   ## Table - Fitted Quantiles -----------------------
   output$vf_table_fit <- DT::renderDT({
-    validate(need(input$vf_compute,
-                  "Choose your settings and click 'Compute Analysis'"))
+    validate(
+      need(input$data_load,
+           "You'll need to first load some data under Data > Loading") %then%
+        need(input$vf_compute,
+             "Choose your settings and click 'Compute Analysis'"))
 
     vf_freqs()[["Freq_Fitted_Quantiles"]] %>%
       mutate(across(where(is.numeric), ~round(., 4))) %>%
@@ -1486,8 +1528,12 @@ server <- function(input, output, session) {
   })
 
   output$vf_fit_plot <- renderPlot({
-    validate(need(vf_freqs(),
-                  "Choose your settings and click 'Compute Analysis'"))
+    validate(
+      need(input$data_load,
+           "You'll need to first load some data under Data > Loading") %then%
+        need(input$vf_compute,
+             "Choose your settings and click 'Compute Analysis'"))
+
     req(input$vf_day)
     vf_freqs()[["Freq_Fitting"]][[input$vf_day]] %>%
       fasstrshiny:::gg_fitdistr(title = input$vf_day)
@@ -1544,8 +1590,12 @@ server <- function(input, output, session) {
 
   ## Plot --------------------
   output$hp_plot <- renderGirafe({
-    validate(need(input$hp_compute,
-                  "Choose your settings and click 'Compute Analysis'"))
+
+    validate(
+      need(input$data_load,
+           "You'll need to first load some data under Data > Loading") %then%
+        need(input$hp_compute,
+             "Choose your settings and click 'Compute Analysis'"))
 
     req(hp_freqs())
 
@@ -1566,8 +1616,11 @@ server <- function(input, output, session) {
 
   ## Table -----------------------
   output$hp_table <- DT::renderDT({
-    validate(need(input$hp_compute,
-                  "Choose your settings and click 'Compute Analysis'"))
+    validate(
+      need(input$data_load,
+           "You'll need to first load some data under Data > Loading") %then%
+        need(input$hp_compute,
+             "Choose your settings and click 'Compute Analysis'"))
 
     hp_freqs()[["Freq_Fitted_Quantiles"]] %>%
       mutate(across(where(is.numeric), ~round(., 4))) %>%
@@ -1585,8 +1638,11 @@ server <- function(input, output, session) {
   })
 
   output$hp_fit_plot <- renderPlot({
-    validate(need(hp_freqs(),
-                  "Choose your settings and click 'Compute Analysis'"))
+    validate(
+      need(input$data_load,
+           "You'll need to first load some data under Data > Loading") %then%
+        need(input$hp_compute,
+             "Choose your settings and click 'Compute Analysis'"))
     hp_freqs()[["Freq_Fitting"]][[11]] %>%
       fasstrshiny:::gg_fitdistr(title = "")
   })

@@ -14,7 +14,21 @@
 
 # Home -------------------------
 ui_home <- fluidRow(
-  column(width = 12)
+  column(
+    width = 12, h2("Welcome to fasstrshiny"),
+    box(
+      width = 12,
+      h4("Welcome!"),
+      p("This is an R Shiny app offering a user interface to the fasstr R package.",
+        "To get started, first go to the Data tab on the Navigation menu, ",
+        "choose a HYDAT station and load some data!"),
+      p(strong("(Note that loading CSV data is not yet implemented)")),
+      br(),
+      p("Once you have loaded data you'll be able to explore the other tabs."),
+      p("Remeber that this is a work in progress so keep track of what you like,",
+        "don't like and what broke so we can make it better!")
+    )
+  )
 )
 
 # Settings ---------------------
@@ -45,6 +59,7 @@ ui_data_load <- fluidRow(
     width = 12, h2("Loading Data"),
     box(
       width = 3,
+      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
       radioGroupButtons(inputId = "data_source",
                         label = "Source", choices = c("HYDAT", "CSV"),
                         justified = TRUE,
@@ -127,6 +142,7 @@ ui_data_screen <- fluidRow(
     tabBox(
       width = 12, height = min_height,
 
+      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
       ### Summary Plot -----------------
       tabPanel(
         title = "Data Summary Plot",
@@ -182,6 +198,7 @@ ui_sum_general <- fluidRow(
     width = 12, h2("General Summary Statistics"),
     box(
       width = 3,
+      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
       radioGroupButtons("sum_type",
                         label = "Summary type", size = "sm",
                         choices = list("Long-term",
@@ -240,6 +257,7 @@ ui_sum_flow <- fluidRow(
     width = 12, h2("Flow duration and percentiles"),
     box(
       width = 3,
+      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
       numericInput("sumfl_flow",
                    label = "Flow value for percentile",
                    value = 10, min = 0),
@@ -282,6 +300,7 @@ ui_sum_annual <- fluidRow(
     width = 12, h2("Annual Means"),
     tabBox(
       width = 12, height = min_height,
+      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
       ### Plot ---------------------
       tabPanel(
         title = "Plot",
@@ -306,6 +325,7 @@ ui_cumulative <- fluidRow(
     width = 12, h2("Cumulative Statistics"),
     box(
       width = 3,
+      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
       radioGroupButtons("cum_type",
                         label = "Cumulative type",
                         choices = list("Annual", "Monthly", "Daily"),
@@ -353,6 +373,7 @@ ui_ah_flow_timing <- fluidRow(
     width = 12, h2("Flow Timing"),
     box(
       width = 12,
+      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
       div(style = "max-width: 300px;",
           selectizeInput("ahft_percent",
                       label = "Percents of total annual flows",
@@ -393,6 +414,7 @@ ui_ah_low_flows <- fluidRow(
     width = 12, h2("Low Flows"),
     box(
       width = 3,
+      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
       select_rolling("ahlf", set = FALSE, multiple = TRUE),
       uiOutput("ui_ahlf")
     ),
@@ -426,6 +448,7 @@ ui_ah_peak <- fluidRow(
     width = 12, h2("Peak Flows"),
     box(
       width = 3,
+      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
       uiOutput("ui_ahp"),
       select_rolling("ahp", set = FALSE)
     ),
@@ -453,6 +476,7 @@ ui_ah_outside_normal <- fluidRow(
     width = 12, h2("Days Outside Normal"),
     box(
       width = 3,
+      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
       sliderInput("ahon_normal", label = "Normal range ",
                   value = c(25, 75), min = 1, max = 99, step = 1),
       bsTooltip("ahon_normal", tips$normal)
@@ -493,6 +517,7 @@ ui_comp_annual <- fluidRow(
         # Compute button
         bsButton("at_compute", "Compute Trends", style = "primary",
                  class = "centreButton"),
+        helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
         hr(class = "narrowHr"),
 
         # Other options
@@ -587,6 +612,7 @@ ui_comp_volume_freq <- fluidRow(
         # Buttons
         bsButton("vf_compute", "Compute Analysis", style = "primary",
                  class = "centreButton"),
+        helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
         hr(class = "narrowHr"),
 
         # Other
@@ -696,11 +722,12 @@ ui_comp_volume_freq <- fluidRow(
 ## Volume Frequency - HYDAT Peaks ------------------
 ui_comp_hydat_peak <- fluidRow(
   column(
-    width = 12, h2("HYDATE Peak Volume Frequency Analysis"),
+    width = 12, h2("HYDAT Peak Volume Frequency Analysis"),
     box(width = 3,
 
         bsButton("hp_compute", "Compute Analysis", style = "primary",
                  class = "centreButton"),
+        helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
         hr(class = "narrowHr"),
 
         fluidRow(
