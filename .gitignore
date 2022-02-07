@@ -39,3 +39,5 @@ vignettes/*.pdf
 .Renviron
 .Rproj.user
 inst/shiny_app/Hydat.sqlite3
+
+inst/shiny_app/rsconnect

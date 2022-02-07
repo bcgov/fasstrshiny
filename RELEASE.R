@@ -13,21 +13,7 @@
 # the License.
 
 
-# Deplying on shinyapps.io ----------------------------------------------------
-
-## Configuring -------------------
-# Make sure you have configured rsconnect
-# (https://docs.rstudio.com/shinyapps.io/getting-started.html#configure-rsconnect)
-
-# rsconnect::setAccountInfo(name='bcgov-env', token=XXXXX, secret=XXXX)
-
-# Make sure you first install package from a remote host (i.e. CRAN, GitHub, etc.)
-# In particular, fasstrshiny should be installed from GitHub
-
-# remotes::install_github("bcgov/fasstrshiny", ref = "steffi-dev")
-
-
-## Set up HYDAT data base ------
+# Set up HYDAT data base ------------------------------------------------------
 
 # We need to include HYDAT data in the shinyapps.io, but NOT in the fasstrshiny
 # package. The shiny app will check for HYDAT data in either the inst/shiny_app
@@ -53,6 +39,20 @@ if(v1 != v2) tidyhydat::download_hydat("inst/shiny_app/")
 # Make sure ignored
 usethis::use_git_ignore("inst/shiny_app/Hydat.sqlite3")
 
+# Deplying on shinyapps.io ----------------------------------------------------
+
+## Configuring -------------------
+# Make sure you have configured rsconnect
+# (https://docs.rstudio.com/shinyapps.io/getting-started.html#configure-rsconnect)
+
+# rsconnect::setAccountInfo(name='bcgov-env', token=XXXXX, secret=XXXX)
+
+
+## Update fasstrshiny from GitHub ----------------------------------------------
+# Make sure you first install package from a remote host (i.e. CRAN, GitHub, etc.)
+# In particular, fasstrshiny should be installed from GitHub
+
+remotes::install_github("bcgov/fasstrshiny", ref = "steffi-dev")
 
 ## Deploy shiny app --------------------------------
 
