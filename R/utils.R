@@ -45,33 +45,43 @@ gg_fitdistr <- function(fit, title) {
 }
 
 create_vline_interactive <- function(data, stats, date_fmt = "%b %d",
-                                     combine = FALSE, digits = 4) {
+                                     combine = FALSE, digits = 4, size = 1,
+                                     alpha = 0.005) {
 
-  # If not named, make name from value
+  # If not named (NULL or ""/NA), make name from value
   if(is.null(names(stats))) {
     names(stats) <- stats
   } else {
-    names(stats)[names(stats) == ""] <- stats[names(stats) == ""]
+    names(stats)[is.na(names(stats)) | names(stats) == ""] <-
+      stats[is.na(names(stats)) | names(stats) == ""]
   }
 
-  # Create tooltips
+  # Split stats into first stat (usually Year, Month or Date) and the rest
+  date <- stats[1]
+  stats <- stats[2:length(stats)]
 
-  # First assumed to be date unless date_fmt is NULL
-  if(!is.null(date_fmt)) {
-    date <- glue::glue("'Date: ', format(.data[['{x}']], '{date_fmt}')")
-    s <- stats[2:length(stats)]
-  } else s <- stats
+  # Check if first is date or date/time, if not date_fmt is NULL
+  if(!any(class(data[[date]]) %in% c("Date", "POSIXct"))) date_fmt <- NULL
 
-  # The rest are assumed to be numeric
-  s <- glue::glue("'{names(s)}: ', round(.data[['{s}']], digits = {digits})")
-  s <- glue::glue_collapse(c(date, s), sep = ", '\n', ")
+  # If date/datetime, format appropriately otherwise leave as is
+  if(is.null(date_fmt)) {
+    date_tt <- glue::glue("'{names(date)}: ', .data[['{date}']]")
+  } else {
+    date_tt <- glue::glue("'Date: ', format(.data[['{date}']], '{date_fmt}')")
+  }
 
-  s <- paste0("paste0(", s, ")")
+  # All stats except the first are assumed to be numeric
+  stats <- glue::glue("'{names(stats)}: ', round(.data[['{stats}']], digits = {digits})")
+
+  # Combine
+  tips <- glue::glue_collapse(c(date_tt, stats), sep = ", '\n', ")
+  tips <- paste0("paste0(", tips, ")")
 
   # First stats is assumed to be X value and data_id
-  geom_vline_interactive(aes(xintercept = .data[[stats[1]]],
-                             tooltip = eval(parse(text = s)),
-                             data_id = .data[[stats[1]]]), alpha = 0.01)
+  geom_vline_interactive(aes(xintercept = .data[[date]],
+                             tooltip = eval(parse(text = tips)),
+                             data_id = .data[[date]]),
+                         alpha = alpha, size = size)
 }
 
 

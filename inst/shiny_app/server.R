@@ -583,26 +583,16 @@ server <- function(input, output, session) {
 
     # Add interactivity
     if(input$sum_type == "Long-term") {
-      g <- g +
-        geom_point_interactive(
-          aes(y = Mean,
-              tooltip = paste0("Month: ", Month, "\nMean: ", round(Mean, 4)),
-              data_id = paste0(Month, "-mean")),
-          colour = "paleturquoise", size = 4) +
-        geom_point_interactive(
-          aes(y = Median,
-              tooltip = paste0("Month: ", Month, "\nMedian: ", round(Median, 4)),
-              data_id = paste0(Month, "-median")),
-          colour = "dodgerblue4", size = 4)
+      stats <- names(g$data) # Get stats from plot data
+      stats <- stats[!stats %in% c("LT_Mean", "LT_Med")] # Omit these
 
-      if(!is.null(input$sum_add_year) && input$sum_add_year != "") {
-        g <- g + geom_point_interactive(
-          aes(y = Year_mean,
-              tooltip = paste0("Month: ", Month, "\n",
-                               input$sum_add_year, ": ", round(Year_mean, 4)),
-              data_id = paste0(Month, "-year")),
-          colour = "red", size = 4)
-      }
+      # For tooltips labels...
+      names(stats)[stats == "Year_mean"] <- input$sum_add_year
+
+      # Add interactive vline
+      g <- g + fasstrshiny:::create_vline_interactive(
+        data = g$data, stats = stats, size = 20)
+
     } else if(input$sum_type == "Annual") {
       # Replace point layers with interactive ones
       which_pt <- map_lgl(g$layers, ~any(class(.$geom) %in% "GeomPoint"))
@@ -618,13 +608,14 @@ server <- function(input, output, session) {
                          Stat2, ": ", round(Value, 4)),
         data_id = Year))
     } else if(input$sum_type == "Daily") {
-      stats <-  c("Day" = "Date",
-                  "Median" = "Median",
-                  "Mean" = "Mean")
+      stats <- names(g$data) # Get stats from plot data
+      stats <- stats[!stats %in% c("DayofYear", "AnalysisDate")] # Omit these
 
-      if(!is.null(input$sum_add_year) && input$sum_add_year != "") {
-        stats <- c(stats, setNames("RollingValue", input$sum_add_year))
-      }
+      # For tooltips labels...
+      names(stats)[stats == "Date"] <- "Day"
+      names(stats)[stats == "RollingValue"] <- input$sum_add_year
+
+      # Add Interactive vline
       g <- g + fasstrshiny:::create_vline_interactive(data = g$data, stats)
     }
 
@@ -672,7 +663,7 @@ server <- function(input, output, session) {
            options = list(
              opts_toolbar(position = "topleft"),
              opts_selection(type = "none"),
-             opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:1;")))
+             opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
   })
 
 
@@ -911,24 +902,39 @@ server <- function(input, output, session) {
     # Add interactivity
     g <- eval(parse(text = g))
 
-    # Add individual geoms to each plot (annual has more than one)
-    for(i in seq_along(g)) {
-      g[[i]] <- g[[i]] + geom_point_interactive(
-        aes(tooltip = paste0("Year: ", Year, "\n",
-                             Statistic, ": ", round(Value, 4)),
-            data_id = Year), size = 3)
-    }
-
     if(input$cum_type == "Annual") {
+
+      # Add individual geoms to each plot (annual has more than one)
+      for(i in seq_along(g)) {
+        g[[i]] <- g[[i]] + geom_point_interactive(
+          aes(tooltip = paste0("Year: ", Year, "\n",
+                               Statistic, ": ", round(Value, 4)),
+              data_id = Year), size = 3)
+      }
+
       g <- g %>%
         wrap_plots(nrow = 2, byrow = FALSE, design = "AC
                                                       BC")
+    } else {
+      stats <- names(g$data) # Get stats from plot data
+      stats <- stats[!stats %in% c("WaterYear", "AnalysisDate", "DayofYear")] # Omit these
+
+      # For tooltips labels...
+      names(stats)[stats == "Monthly_Total"] <- input$cum_add_year
+      names(stats)[stats == "Cumul_Flow"] <- input$cum_add_year
+
+      # Add interactive vline
+      g <- g + fasstrshiny:::create_vline_interactive(
+        data = g$data, stats = stats,
+        size = if_else(input$cum_type == "Monthly", 20, 1))
+
     }
 
     girafe(ggobj = g, width_svg = 14, height_svg = 6,
            options = list(
              opts_toolbar(position = "topleft"),
-             opts_selection(type = "none")))
+             opts_selection(type = "none"),
+             opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
   })
 
 
@@ -976,7 +982,7 @@ server <- function(input, output, session) {
 
   # AH - Flow timing ---------------------------------------
   ## Plot --------------------
-  output$ahft_plot <- renderPlot({
+  output$ahft_plot <- renderGirafe({
     req(data_raw(), input$ahft_percent)
 
     flow_data <- data_raw()
@@ -991,7 +997,20 @@ server <- function(input, output, session) {
 
     code$ahft_plot <- g
 
-    eval(parse(text = g))
+    # Add interactivity
+    g <- eval(parse(text = g))
+
+    g <- g +
+      geom_point_interactive(
+        aes(tooltip = paste0("Year: ", Year, "\n",
+                             Statistic, "\n",
+                             "Day of Year: ", Value),
+            data_id = Year), size = 3)
+
+    girafe(ggobj = g, width_svg = 14, height_svg = 6,
+           options = list(
+             opts_toolbar(position = "topleft"),
+             opts_selection(type = "none")))
   })
 
 
@@ -1029,7 +1048,7 @@ server <- function(input, output, session) {
 
   # AH - Low Flows ---------------------------------------
   ## Plot --------------------
-  output$ahlf_plot <- renderPlot({
+  output$ahlf_plot <- renderGirafe({
     req(data_raw(), input$ahlf_discharge)
 
     flow_data <- data_raw()
@@ -1041,12 +1060,34 @@ server <- function(input, output, session) {
       params_ignore = c("roll_days", "roll_align"),
       extra = glue(
         "roll_days = c({glue_collapse(input$ahlf_roll_days, sep = ',')}), ",
-        "roll_align = '{input$ahlf_roll_align}'"),
-      end = " %>% wrap_plots()")
+        "roll_align = '{input$ahlf_roll_align}'"))
 
     code$ahlf_plot <- g
 
-    eval(parse(text = g))
+    # Add interactivity
+    g <- eval(parse(text = g))
+
+    g[["Annual_Low_Flows"]] <- g[["Annual_Low_Flows"]] +
+      geom_point_interactive(
+        aes(tooltip = paste0("Year: ", Year, "\n",
+                             Statistic, "\n",
+                             "Discharge: ", round(Value, 4)),
+            data_id = Year), size = 3)
+
+    g[["Annual_Low_Flows_Dates"]] <- g[["Annual_Low_Flows_Dates"]] +
+      geom_point_interactive(
+        aes(tooltip = paste0("Year: ", Year, "\n",
+                             Statistic, "\n",
+                             "Day of Year: ", round(Value, 4)),
+            data_id = Year), size = 3)
+
+    # Combine plots
+    g <- wrap_plots(g)
+
+    girafe(ggobj = g, width_svg = 12, height_svg = 6,
+           options = list(
+             opts_toolbar(position = "topleft"),
+             opts_selection(type = "none")))
   })
 
 
@@ -1118,7 +1159,7 @@ server <- function(input, output, session) {
 
   # AH - Days outside normal ---------------------------------------
   ## Plot --------------------
-  output$ahon_plot <- renderPlot({
+  output$ahon_plot <- renderGirafe({
     req(data_raw(), input$ahon_normal)
 
     flow_data <- data_raw()
@@ -1132,7 +1173,20 @@ server <- function(input, output, session) {
 
     code$ahon_plot <- g
 
-    eval(parse(text = g))
+    # Add interactivity
+    g <- eval(parse(text = g))
+
+    g <- g + geom_point_interactive(
+      aes(tooltip = paste0("Year: ", Year, "\n",
+                           Statistic, "\n",
+                           "No. Days: ", round(Value, 4)),
+          data_id = Year), size = 3)
+
+    girafe(ggobj = g, width_svg = 12, height_svg = 6,
+           options = list(
+             opts_toolbar(position = "topleft"),
+             opts_selection(type = "none"),
+             opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
   })
 
 
@@ -1252,6 +1306,7 @@ server <- function(input, output, session) {
 
   ## Plot --------------------
   output$at_plot <- renderGirafe({
+
     g <- at_trends()[[at_stat()]] +
       geom_point_interactive(aes(
         tooltip = paste0("Year: ", Year, "\n",
@@ -1259,7 +1314,8 @@ server <- function(input, output, session) {
         data_id = Year), size = 4)
 
     girafe(ggobj = g, width_svg = 7, height_svg = 5,
-           options = list(opts_selection(type = "multiple")))
+           options = list(opts_selection(type = "multiple"),
+                          opts_toolbar(position = "topleft")))
   })
 
   # Add/Remove selected points if changing the numericInput
@@ -1369,11 +1425,12 @@ server <- function(input, output, session) {
         tooltip = paste0("Year: ", Year, "\n",
                          "Discharge", ": ", round(Value, 4), "\n",
                          "Probability", ": ", round(prob, 4)),
-        data_id = Year), size = 4) +
+        data_id = Year), size = 3) +
       scale_colour_viridis_d(end = 0.8)
 
-    girafe(ggobj = g, width_svg = 7, height_svg = 5,
-           options = list(opts_selection(type = "multiple")))
+    girafe(ggobj = g, width_svg = 8, height_svg = 5,
+           options = list(opts_selection(type = "multiple"),
+                          opts_toolbar(position = "topleft")))
   })
 
   # Remove selected points if changing the numericInput
@@ -1486,12 +1543,24 @@ server <- function(input, output, session) {
     bindEvent(input$hp_compute)
 
   ## Plot --------------------
-  output$hp_plot <- renderPlot({
+  output$hp_plot <- renderGirafe({
     validate(need(input$hp_compute,
                   "Choose your settings and click 'Compute Analysis'"))
+
     req(hp_freqs())
 
-    hp_freqs()[["Freq_Plot"]]
+    # Add interactivity
+    g <- hp_freqs()[["Freq_Plot"]] +
+      geom_point_interactive(aes(
+        tooltip = paste0("Year: ", Year, "\n",
+                         "Probabily: ", round(prob, 4), "\n",
+                         "Discharge: ", round(Value, 4), "\n",
+                         "Return Period: ", round(Return_P)),
+        data_id = Year), size = 4)
+
+    girafe(ggobj = g,
+           options = list(opts_selection(type = "none"),
+                          opts_toolbar(position = "topleft")))
   })
 
 

@@ -114,6 +114,8 @@ then be parsed and evaluated with `eval(parse(text = t))`.
 ## `ggiraph`
 - Always use `girafe`, `girafeOutput` and `renderGirafe` (not any of the ggiraph variantes)
 - Always use `girafe(ggobj = PLOT)` (`ggobj` is the important argument here)
+- When using the vline tooltip (`create_vline_interactive()`) you'll need to 
+  adjust the `opts_hover()` option in the girafe output to make opacity 1. 
 
 ## IDs
 

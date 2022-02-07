@@ -368,7 +368,7 @@ ui_ah_flow_timing <- fluidRow(
         ### Plot ---------------------
         tabPanel(
           title = "Plot",
-          plotOutput("ahft_plot")
+          girafeOutput("ahft_plot", height = "400px")
         ),
 
         ### Table ---------------------
@@ -402,7 +402,7 @@ ui_ah_low_flows <- fluidRow(
       ### Plot ---------------------
       tabPanel(
         title = "Plot",
-        plotOutput("ahlf_plot")
+        girafeOutput("ahlf_plot", height = "450px")
       ),
 
       ### Table ---------------------
@@ -463,7 +463,7 @@ ui_ah_outside_normal <- fluidRow(
       ### Plot ---------------------
       tabPanel(
         title = "Plot",
-        plotOutput("ahon_plot", height = "550px")
+        girafeOutput("ahon_plot", height = "500px")
       ),
 
       ### Table ---------------------
@@ -761,7 +761,7 @@ ui_comp_hydat_peak <- fluidRow(
       ### Plot ---------------------
       tabPanel(
         title = "Plot",
-        plotOutput("hp_plot")
+        girafeOutput("hp_plot")
       ),
 
       ### Table ---------------------
