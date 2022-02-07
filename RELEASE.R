@@ -52,7 +52,8 @@ usethis::use_git_ignore("inst/shiny_app/Hydat.sqlite3")
 # Make sure you first install package from a remote host (i.e. CRAN, GitHub, etc.)
 # In particular, fasstrshiny should be installed from GitHub
 
-remotes::install_github("bcgov/fasstrshiny", ref = "steffi-dev")
+remotes::install_github("bcgov/fasstrshiny", ref = "steffi-dev", upgrade = "always")
+remotes::install_github("bcgov/fasstr", upgrade = "always")
 
 ## Deploy shiny app --------------------------------
 
