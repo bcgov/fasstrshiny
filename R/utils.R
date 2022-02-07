@@ -44,19 +44,34 @@ gg_fitdistr <- function(fit, title) {
     ggplot2::theme(legend.position = "none")
 }
 
-create_vline_interactive <- function(data, stats, date_fmt = "%b %d", digits = 4) {
-  x <- stats[1]
+create_vline_interactive <- function(data, stats, date_fmt = "%b %d",
+                                     combine = FALSE, digits = 4) {
 
-  date <- glue::glue("'Date: ', format(.data[['{x}']], '{date_fmt}')")
-  s <- stats[2:length(stats)]
+  # If not named, make name from value
+  if(is.null(names(stats))) {
+    names(stats) <- stats
+  } else {
+    names(stats)[names(stats) == ""] <- stats[names(stats) == ""]
+  }
+
+  # Create tooltips
+
+  # First assumed to be date unless date_fmt is NULL
+  if(!is.null(date_fmt)) {
+    date <- glue::glue("'Date: ', format(.data[['{x}']], '{date_fmt}')")
+    s <- stats[2:length(stats)]
+  } else s <- stats
+
+  # The rest are assumed to be numeric
   s <- glue::glue("'{names(s)}: ', round(.data[['{s}']], digits = {digits})")
   s <- glue::glue_collapse(c(date, s), sep = ", '\n', ")
 
   s <- paste0("paste0(", s, ")")
 
-  geom_vline_interactive(aes(xintercept = .data[[x]],
+  # First stats is assumed to be X value and data_id
+  geom_vline_interactive(aes(xintercept = .data[[stats[1]]],
                              tooltip = eval(parse(text = s)),
-                             data_id = .data[[x]]), alpha = 0.01)
+                             data_id = .data[[stats[1]]]), alpha = 0.01)
 }
 
 

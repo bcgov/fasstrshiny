@@ -408,7 +408,10 @@ server <- function(input, output, session) {
 
     parse(text = g) %>%
       eval() %>%
-      ggplotly()
+      ggplotly() %>%
+      config(modeBarButtonsToRemove =
+               c("pan", "autoscale", "zoomIn2d", "zoomOut2d",
+                 "hoverCompareCartesian", "hoverClosestCartesian"))
   })
 
   ## Table ----------------
@@ -470,12 +473,14 @@ server <- function(input, output, session) {
 
     g <- parse(text = g) %>%
       eval() +
-      geom_point_interactive(aes(tooltip = paste0(
-        "Year: ", Year, "\n",
-        input$screen_summary, ": ", round(.data[[input$screen_summary]], 4))),
+      geom_point_interactive(aes(
+        tooltip = paste0("Year: ", Year, "\n",
+                         input$screen_summary, ": ",
+                         round(.data[[input$screen_summary]], 4)),
+        data_id = Year),
         colour = 'firebrick3', size = 3)
 
-    girafe(ggobj = g, width_svg = 13, height_svg = 5)
+    girafe(ggobj = g, width_svg = 13, height_svg = 4.5)
   })
 
 
@@ -496,6 +501,7 @@ server <- function(input, output, session) {
     g <- parse(text = g) %>%
       eval()
 
+    # Replace layers with interactive
     g$layers[[1]] <- geom_bar_interactive(
       aes(tooltip = paste0("Year: ", Year, "\nMissing: ", Value),
           data_id = paste0(Year, "-", Month)), colour = "cornflowerblue",
@@ -576,7 +582,6 @@ server <- function(input, output, session) {
 
 
     # Add interactivity
-
     if(input$sum_type == "Long-term") {
       g <- g +
         geom_point_interactive(
@@ -603,7 +608,7 @@ server <- function(input, output, session) {
       which_pt <- map_lgl(g$layers, ~any(class(.$geom) %in% "GeomPoint"))
       g$layers[which_pt][[1]] <- geom_point_interactive(aes(
         tooltip = paste0("Year: ", Year, "\n", Statistic, ": ", round(Value, 4)),
-        data_id = paste0(Year, "-", Statistic)))
+        data_id = Year), size = 4)
 
     } else if(input$sum_type == "Monthly") {
       req(input$sum_monthly_plot)
@@ -611,7 +616,7 @@ server <- function(input, output, session) {
         geom_point_interactive(aes(
         tooltip = paste0("Year: ", Year, "\n", "Month: ", Month, "\n",
                          Stat2, ": ", round(Value, 4)),
-        data_id = paste0(Year, "-", Month)))
+        data_id = Year))
     } else if(input$sum_type == "Daily") {
       stats <-  c("Day" = "Date",
                   "Median" = "Median",
@@ -620,7 +625,7 @@ server <- function(input, output, session) {
       if(!is.null(input$sum_add_year) && input$sum_add_year != "") {
         stats <- c(stats, setNames("RollingValue", input$sum_add_year))
       }
-      g <- g + create_vline_interactive(data = g$data, stats)
+      g <- g + fasstrshiny:::create_vline_interactive(data = g$data, stats)
     }
 
     # Add dates
@@ -644,6 +649,7 @@ server <- function(input, output, session) {
     # Add mad
     if(!is.null(input$sum_add_mad) && input$sum_add_mad &&
        input$sum_type != "Monthly") {
+
       mad <- sum_mad() %>%
         pivot_longer(-STATION_NUMBER, names_to = "type")
 
@@ -651,18 +657,22 @@ server <- function(input, output, session) {
         geom_hline(data = mad,
                    aes(yintercept = value),
                    size = c(2, rep(1, nrow(mad) - 1))) +
-        geom_hline_interactive(data = mad,
-                               aes(tooltip = paste0(type, ": ", round(value, 4)),
-                                   yintercept = value), alpha = 0.01,
-                               size = 3) +
+        geom_hline_interactive(
+          data = mad,
+          aes(tooltip = paste0(str_replace(type, "%", "% "),
+                               ": ", round(value, 4)),
+              yintercept = value), alpha = 0.01,
+          size = 3) +
         geom_text(data = mad, aes(y = value, label = type),
-                  x = c(Inf, rep(-Inf, nrow(mad) - 1)),
+                  x = c(Inf, rep(-Inf, nrow(mad) - 1)), colour = NA,
                   hjust = c(1.1, rep(-0.1, nrow(mad) -1)), vjust = -0.5)
     }
 
     girafe(ggobj = g, width_svg = 12, height = 6,
-           options = list(opts_toolbar(position = "topleft"),
-                          opts_selection(type = "none")))
+           options = list(
+             opts_toolbar(position = "topleft"),
+             opts_selection(type = "none"),
+             opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:1;")))
   })
 
 
@@ -758,7 +768,7 @@ server <- function(input, output, session) {
   })
 
   ## Plot --------------------
-  output$sumfl_plot <- renderPlot({
+  output$sumfl_plot <- renderGirafe({
     req(data_raw(), !is.null(input$sumfl_plot_log))
 
     flow_data <- data_raw()
@@ -774,7 +784,19 @@ server <- function(input, output, session) {
 
     code$sumfl_plot <- g
 
-    eval(parse(text = g))
+    g <- eval(parse(text = g))
+    g <- g +
+      geom_point_interactive(
+        aes(tooltip = paste0("% Time: ", Percentile, "\n",
+                             "Month: ", Month),
+            data_id = Percentile),
+        show.legend = FALSE, alpha = 0.01, size = 3)
+
+    girafe(ggobj = g, width_svg = 12, height = 6,
+           options = list(
+             opts_toolbar(position = "topleft"),
+             opts_selection(type = "none"),
+             opts_hover(css = "fill:orange; stroke:gray;fill-opacity:1;")))
   })
 
 
@@ -818,7 +840,7 @@ server <- function(input, output, session) {
 
 
   ## Plot --------------------
-  output$sumam_plot <- renderPlot({
+  output$sumam_plot <- renderGirafe({
     req(data_raw(), input$sumam_missing)
 
     flow_data <- data_raw()
@@ -830,7 +852,16 @@ server <- function(input, output, session) {
 
     code$sumam_plot <- g
 
-    eval(parse(text = g))
+    g <- eval(parse(text = g))
+
+    # Replace layers with interactive
+    g$layers[[1]] <- geom_bar_interactive(
+      aes(tooltip = paste0("Year: ", Year, "\nMAD: ", round(Mean, 4)),
+          data_id = Year), colour = "cornflowerblue",
+      fill = "cornflowerblue", stat = "identity")
+
+    girafe(ggobj = g, width_svg = 14, height_svg = 4,
+           options = list(opts_selection(type = "none")))
   })
 
 
@@ -845,21 +876,18 @@ server <- function(input, output, session) {
 
   # Cumulative ---------------------------------------
   ## Plot --------------------
-  output$cum_plot <- renderPlot({
-    req(data_raw(), input$cum_type, !is.null(input$sum_add_year),
+  output$cum_plot <- renderGirafe({
+    req(data_raw(), input$cum_type, !is.null(input$cum_add_year),
         !is.null(input$cum_seasons))
 
     flow_data <- data_raw()
-
-    # Patchwork plot design
-    d <- "AC\\nBC"
 
     e <- glue("use_yield = {input$cum_discharge}")
 
     if(input$cum_type == "Annual") {
       p <- NULL
       e <- glue("{e}, include_seasons = {input$cum_seasons}")
-      end <- glue("%>% wrap_plots(nrow = 2, byrow = FALSE, design = '{d}')")
+      end <- ""
     } else {
       p <- "plot_log"
       end <- "[[1]]"
@@ -880,7 +908,27 @@ server <- function(input, output, session) {
 
     code$cum_plot <- g
 
-    eval(parse(text = g))
+    # Add interactivity
+    g <- eval(parse(text = g))
+
+    # Add individual geoms to each plot (annual has more than one)
+    for(i in seq_along(g)) {
+      g[[i]] <- g[[i]] + geom_point_interactive(
+        aes(tooltip = paste0("Year: ", Year, "\n",
+                             Statistic, ": ", round(Value, 4)),
+            data_id = Year), size = 3)
+    }
+
+    if(input$cum_type == "Annual") {
+      g <- g %>%
+        wrap_plots(nrow = 2, byrow = FALSE, design = "AC
+                                                      BC")
+    }
+
+    girafe(ggobj = g, width_svg = 14, height_svg = 6,
+           options = list(
+             opts_toolbar(position = "topleft"),
+             opts_selection(type = "none")))
   })
 
 

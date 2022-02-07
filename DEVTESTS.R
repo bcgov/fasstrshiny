@@ -9,6 +9,38 @@ d <- fill_missing_dates(station_number = "08HB048") %>%
   add_daily_volume() %>%
   add_daily_yield()
 
+plot_flow_data(d)[[1]] %>%
+  plotly::ggplotly() %>%
+  config(modeBarButtonsToRemove = c("pan", "autoscale", "zoomIn2d", "zoomOut2d",
+                                    "hoverCompareCartesian", "hoverClosestCartesian"))
+
+
+screen_data <- screen_flow_data(
+  data = d,
+  start_year = 1972,
+  end_year = 2019,
+  water_year_start = 1
+)
+
+g <- ggplot(data = screen_data, aes(x = Year, y = Maximum)) +
+  theme_bw() +
+  theme(
+    axis.title = element_text(size = 15),
+    plot.title = element_text(
+      size = 15,
+      hjust = 0.5
+    ),
+    axis.text = element_text(size = 13)
+  ) +
+  geom_line(colour = "dodgerblue4") +
+  geom_point(colour = "firebrick3", size = 2) +
+  labs(
+    x = "Year",
+    y = "Discharge (cms)",
+    title = "Annual Daily Maximum - Carnation creek at the mouth"
+  )
+
+girafe(ggobj, g)
 
 dts <- as.Date(c("1900-06-30", "1900-07-30", "1900-04-30"))
 daily_stat <- plot_daily_stats(d, values = Yield_mm, ignore_missing = TRUE,

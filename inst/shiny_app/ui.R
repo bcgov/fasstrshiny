@@ -132,7 +132,7 @@ ui_data_screen <- fluidRow(
         title = "Data Summary Plot",
         selectizeInput("screen_summary", "Statistic to explore",
                     c("Mean","Maximum","Minimum","StandardDeviation")),
-        girafeOutput("screen_plot1", height = "450px")
+        girafeOutput("screen_plot1", height = "425px")
       ),
 
       ### Availability Plot -----------------
@@ -253,7 +253,7 @@ ui_sum_flow <- fluidRow(
       tabPanel(
         title = "Plot - Flow duration",
         uiOutput("ui_sumfl_plot_options", align = "right"),
-        plotOutput("sumfl_plot"),
+        girafeOutput("sumfl_plot", height = "400px"),
         p(style = "margin-bottom: 20px"),
         h4("Percentile Rank of Flow"),
         textOutput("sumfl_perc")
@@ -286,7 +286,7 @@ ui_sum_annual <- fluidRow(
       tabPanel(
         title = "Plot",
         uiOutput("ui_sumam"),
-        plotOutput("sumam_plot")
+        girafeOutput("sumam_plot", height = "400px")
       ),
 
       ### R Code ---------------------
@@ -325,7 +325,7 @@ ui_cumulative <- fluidRow(
       tabPanel(
         title = "Plot",
         uiOutput("ui_cum_plot_options", align = "right"),
-        plotOutput("cum_plot", height = "500px")
+        girafeOutput("cum_plot", height = "400px")
       ),
 
       ## Table ---------------------
