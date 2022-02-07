@@ -118,6 +118,15 @@ then be parsed and evaluated with `eval(parse(text = t))`.
   adjust the `opts_hover()` option in the girafe output to make opacity 1. 
 
 ## IDs
-
 See the internal dataset, `parameters`. It is created in `data-raw/parameters.R` 
 and includes parameter `id`s, `tooltips` and how they correspond to fasstr arguments.
+
+## Future considerations
+
+### Interactive Plots
+Right now we use the static plots created by fasstr and then *add* interactivity 
+to these plots with either ggiraph (adding/replacing interactive geoms) or 
+with plotly (ggplotly). In the future, interactivity *could* be added to fasstr
+plots, however, there is the risk of making it necessary to update the fasstr 
+app when all you to do is tweak something in fasstrshiny. It would also 
+require more dependencies in fasstr.

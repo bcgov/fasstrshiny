@@ -65,7 +65,6 @@ usethis::use_data(parameters, tips, internal = TRUE, overwrite = TRUE)
 
 # calc_longterm_daily_stats
 # - include_longterm (always included)
-# - custom months - what happens if months chosen are not sequential, is that an issue?
 
 # plot_daily_stats
 # - include_extremes
