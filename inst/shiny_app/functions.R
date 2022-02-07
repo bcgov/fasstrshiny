@@ -18,7 +18,7 @@
 # Determine the default value, if input exists and set is TRUE, returns
 # global options preset, otherwise default
 set_input <- function(type, input, set, value) {
-  if(set & !is.null(input)) {
+  if(set & !is.null(input[[glue("opts_{type}")]])) {
     value <- input[[glue("opts_{type}")]]
   }
   value
@@ -243,12 +243,12 @@ select_add_dates <- function(id) {
 
 select_add_mad <- function(id) {
   tagList(
-    materialSwitch(glue("{id}_mad_add"),
+    materialSwitch(glue("{id}_add_mad"),
                    label = tags$span("Add MAD values",
-                                     id = glue("{id}_mad_add_tip")),
+                                     id = glue("{id}_add_mad_tip")),
                    value = FALSE,
                    status = "success"),
-    bsTooltip(glue("{id}_mad_add_tip"), tips$add_mad))
+    bsTooltip(glue("{id}_add_mad_tip"), tips$add_mad))
 }
 
 select_plot_options <- function(id, input, include = "plot_log",
