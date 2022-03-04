@@ -380,7 +380,7 @@ server <- function(input, output, session) {
       meta$basin_area <- as.numeric(m$drainage_area_gross)
 
       d <- glue(
-        "flow_data <- fill_missing_dates(",
+        "data_flow <- fill_missing_dates(",
         "        station_number = '{input$data_station_num}') %>%",
         "  add_date_variables(water_year_start = {wy}) %>%",
         "  add_daily_volume() %>%",
@@ -393,7 +393,7 @@ server <- function(input, output, session) {
       meta$station_name <- input$data_station_name
       meta$basin_area <- as.numeric(input$data_basin_area)
 
-      d <- glue("flow_data <- read.csv({inFile$datapath}) %>%",
+      d <- glue("data_flow <- read.csv({inFile$datapath}) %>%",
                 "  fill_missing_dates() %>%",
                 "  add_date_variables(water_year_start = {wy})")
 
@@ -402,7 +402,7 @@ server <- function(input, output, session) {
     # Save unevaluated code for code tab
     code$data_raw <- d
 
-    eval(parse(text = d)) # Evaluate and create flow_data
+    eval(parse(text = d)) # Evaluate and create data_flow
   }) %>%
     bindEvent(input$data_load, input$data_water_year,
               ignoreInit = TRUE)
@@ -416,10 +416,10 @@ server <- function(input, output, session) {
         input$data_years_range,
         input$data_water_year)
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     g <- create_fun(
-      "plot_flow_data", "flow_data", id = "data", input,
+      "plot_flow_data", "data_flow", id = "data", input,
       params = c("plot_log", "daterange"))
 
     code$data_plot <- g
@@ -457,36 +457,36 @@ server <- function(input, output, session) {
     fasstrshiny:::code_format(code, id = "data")
   })
 
-  # Data - Screening ---------------
+  # Data - Availability ---------------
   ## Data --------------
-  screen_raw <- reactive({
+  available_raw <- reactive({
     req(data_raw())
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
     d <- glue("
-      screen_data <- screen_flow_data(
-        data = flow_data,
+      data_available <- screen_flow_data(
+        data = data_flow,
         start_year = {input$data_years_range[1]},
         end_year = {input$data_years_range[2]},
         water_year_start = {as.numeric(input$data_water_year)})
         ")
 
-    code$screen_data <- d
+    code$available_data <- d
     eval(parse(text = d))
   })
 
   ## Summary plot ------------------
-  output$screen_plot1 <- renderGirafe({
+  output$available_plot1 <- renderGirafe({
     check_data(input)
-    req(screen_raw())
+    req(available_raw())
 
     xlab <- if_else(input$data_water_year != 1, "Water Year", "Year")
-    title <- paste0("Annual Daily ", input$screen_summary, " - ", meta$station_name)
-    screen_data <- screen_raw()
+    title <- paste0("Annual Daily ", input$available_summary, " - ", meta$station_name)
+    data_available <- available_raw()
 
     g <- glue(
-      "ggplot(data = screen_data,
-              aes(x = Year, y = {input$screen_summary})) +
+      "ggplot(data = data_available,
+              aes(x = Year, y = {input$available_summary})) +
         theme_bw() +
         theme(axis.title = element_text(size = 15),
               plot.title = element_text(size = 15, hjust = 0.5),
@@ -495,14 +495,14 @@ server <- function(input, output, session) {
         geom_point(colour = 'firebrick3', size = 2) +
         labs(x = '{xlab}', y = 'Discharge (cms)', title = '{title}')")
 
-    code$screen_plot <- g
+    code$available_plot <- g
 
     g <- parse(text = g) %>%
       eval() +
       geom_point_interactive(aes(
         tooltip = paste0("Year: ", Year, "\n",
-                         input$screen_summary, ": ",
-                         round(.data[[input$screen_summary]], 4)),
+                         input$available_summary, ": ",
+                         round(.data[[input$available_summary]], 4)),
         data_id = Year),
         colour = 'firebrick3', size = 3)
 
@@ -511,19 +511,19 @@ server <- function(input, output, session) {
 
 
   ## Missing Data Plot ---------------------------
-  output$screen_plot2 <- renderGirafe({
+  output$available_plot2 <- renderGirafe({
     check_data(input)
     req(data_raw())
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
     g <- create_fun(
-      "plot_missing_dates", data = "flow_data",
-      id = "screen", input,
+      "plot_missing_dates", data = "data_flow",
+      id = "available", input,
       params_ignore = "months",
-      extra = glue("months = c({glue_collapse(input$screen_months, sep = ', ')})"),
+      extra = glue("months = c({glue_collapse(input$available_months, sep = ', ')})"),
       end = "[[1]]")
 
-    code$screen_miss <- g
+    code$available_miss <- g
 
     g <- parse(text = g) %>%
       eval()
@@ -539,9 +539,9 @@ server <- function(input, output, session) {
   })
 
   ## Summary table ------------------
-  output$screen_table <- DT::renderDT({
+  output$available_table <- DT::renderDT({
     check_data(input)
-    screen_raw() %>%
+    available_raw() %>%
       select(-dplyr::contains("STATION_NUMBER")) %>%
       rename("Total days" = "n_days",
              "Total flow days" = "n_Q",
@@ -560,8 +560,8 @@ server <- function(input, output, session) {
   })
 
   ## R Code -----------------
-  output$screen_code <- renderText({
-    fasstrshiny:::code_format(code, id = "screen")
+  output$available_code <- renderText({
+    fasstrshiny:::code_format(code, id = "available")
   })
 
 
@@ -574,7 +574,7 @@ server <- function(input, output, session) {
     req(data_raw(), input$sum_type,
         !is.null(input$sum_plot_log), !is.null(input$sum_add_year))
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     e <- NULL
     if(input$sum_type %in% c("Long-term", "Daily") & input$sum_add_year != "") {
@@ -600,7 +600,7 @@ server <- function(input, output, session) {
                 "Annual" = "plot_annual_stats",
                 "Monthly" = "plot_monthly_stats",
                 "Daily" = "plot_daily_stats") %>%
-      create_fun("flow_data", id = "sum", input,
+      create_fun("data_flow", id = "sum", input,
                  params = p,
                  extra = e,
                  end = end)
@@ -701,11 +701,11 @@ server <- function(input, output, session) {
   sum_mad <- reactive({
     req(input$sum_discharge, input$sum_mad)
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     t <- create_fun(
       fun = "calc_longterm_mean",
-      data = "flow_data", id = "sum", input,
+      data = "data_flow", id = "sum", input,
       params = "complete",
       extra = glue("percent_MAD = c({glue_collapse(input$sum_mad, sep = ',')})"))
 
@@ -727,7 +727,7 @@ server <- function(input, output, session) {
     check_data(input)
     req(input$sum_type, input$sum_discharge)
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     p <- "percentiles"
 
@@ -745,7 +745,7 @@ server <- function(input, output, session) {
                 "Annual" = "calc_annual_stats",
                 "Monthly" = "calc_monthly_stats",
                 "Daily" = "calc_daily_stats") %>%
-      create_fun("flow_data", id = "sum", input,
+      create_fun("data_flow", id = "sum", input,
                  params = p)
 
     code$sum_table <- t
@@ -773,11 +773,11 @@ server <- function(input, output, session) {
   output$sumfl_perc <- renderText({
     req(input$sumfl_discharge, input$sumfl_flow)
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     # Flow
     t <- create_fun(fun = "calc_flow_percentile",
-                    data = "flow_data", id = "sumfl", input,
+                    data = "data_flow", id = "sumfl", input,
                     params = "complete",
                     extra = glue("flow_value = {input$sumfl_flow}"))
 
@@ -794,13 +794,13 @@ server <- function(input, output, session) {
     check_data(input)
     req(data_raw(), !is.null(input$sumfl_plot_log))
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     # missing arguments
     # - include_longterm
 
     g <- create_fun(
-      fun = "plot_flow_duration", data = "flow_data", id = "sumfl", input,
+      fun = "plot_flow_duration", data = "data_flow", id = "sumfl", input,
       params = c("custom_months", "custom_months_label", "complete",
                  "missing", "plot_log"),
       end = "[[1]]")
@@ -828,10 +828,10 @@ server <- function(input, output, session) {
     check_data(input)
     req(data_raw(), input$sumfl_discharge)
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     t <- create_fun(fun = "calc_longterm_daily_stats",
-                    data = "flow_data", id = "sumfl", input,
+                    data = "data_flow", id = "sumfl", input,
                     params = c("custom_months", "custom_months_label",
                                "missing"),
                     extra = "percentiles = 1:99",
@@ -868,10 +868,10 @@ server <- function(input, output, session) {
     check_data(input)
     req(data_raw(), input$sumam_missing)
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     g <- create_fun(
-      fun = "plot_annual_means", data = "flow_data", id = "sumam", input,
+      fun = "plot_annual_means", data = "data_flow", id = "sumam", input,
       params = c("missing"),
       end = "[[1]]")
 
@@ -906,7 +906,7 @@ server <- function(input, output, session) {
     req(data_raw(), input$cum_type, !is.null(input$cum_add_year),
         !is.null(input$cum_seasons))
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     e <- glue("use_yield = {input$cum_discharge}")
 
@@ -926,7 +926,7 @@ server <- function(input, output, session) {
                 "Annual"  = "plot_annual_cumulative_stats",
                 "Monthly" = "plot_monthly_cumulative_stats",
                 "Daily"   = "plot_daily_cumulative_stats") %>%
-      create_fun("flow_data",
+      create_fun("data_flow",
                  id = "cum", input, params = p,
                  params_ignore = c("discharge", "roll_days", "roll_align"),
                  extra = e,
@@ -978,7 +978,7 @@ server <- function(input, output, session) {
     check_data(input)
     req(data_raw(), input$cum_discharge)
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     e <- glue("use_yield = {input$cum_discharge}")
     if(input$cum_type == "Annual") {
@@ -992,7 +992,7 @@ server <- function(input, output, session) {
                 "Annual"  = "calc_annual_cumulative_stats",
                 "Monthly" = "calc_monthly_cumulative_stats",
                 "Daily"   = "calc_daily_cumulative_stats") %>%
-      create_fun("flow_data",
+      create_fun("data_flow",
                  id = "cum", input, params = p,
                  params_ignore = c("discharge", "roll_days", "roll_align"),
                  extra = e)
@@ -1022,10 +1022,10 @@ server <- function(input, output, session) {
     check_data(input)
     req(data_raw(), input$ahft_percent)
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     g <- create_fun(
-      "plot_annual_flow_timing", data = "flow_data",
+      "plot_annual_flow_timing", data = "data_flow",
       id = "ahft", input,
       params_ignore = c("roll_days", "roll_align"),
       extra = glue("percent_total = ",
@@ -1056,10 +1056,10 @@ server <- function(input, output, session) {
     check_data(input)
     req(data_raw(), input$ahft_percent)
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     t <- create_fun(
-      "calc_annual_flow_timing", data = "flow_data",
+      "calc_annual_flow_timing", data = "data_flow",
       id = "ahft", input,
       params_ignore = c("roll_days", "roll_align"),
       extra = glue("percent_total = ",
@@ -1090,10 +1090,10 @@ server <- function(input, output, session) {
     check_data(input)
     req(data_raw(), input$ahlf_discharge)
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     g <- create_fun(
-      "plot_annual_lowflows", data = "flow_data",
+      "plot_annual_lowflows", data = "data_flow",
       id = "ahlf", input,
       params = c("discharge", "allowed"),
       params_ignore = c("roll_days", "roll_align"),
@@ -1135,10 +1135,10 @@ server <- function(input, output, session) {
     check_data(input)
     req(data_raw(), input$ahlf_discharge)
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     t <- create_fun(
-      "calc_annual_lowflows", data = "flow_data",
+      "calc_annual_lowflows", data = "data_flow",
       id = "ahlf", input,
       params = c("discharge", "allowed"),
       params_ignore = "roll_days",
@@ -1170,10 +1170,10 @@ server <- function(input, output, session) {
     check_data(input)
     req(data_raw(), input$ahp_discharge)
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     t <- create_fun(
-      "calc_annual_peaks", data = "flow_data",
+      "calc_annual_peaks", data = "data_flow",
       id = "ahp", input,
       params = c("discharge", "missing", "allowed"),
       params_ignore = "roll_days",
@@ -1204,10 +1204,10 @@ server <- function(input, output, session) {
     check_data(input)
     req(data_raw(), input$ahon_normal)
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     g <- create_fun(
-      "plot_annual_outside_normal", data = "flow_data",
+      "plot_annual_outside_normal", data = "data_flow",
       id = "ahon", input,
       extra = glue("normal_percentiles = ",
                    "c({glue_collapse(input$ahon_normal, sep = ',')})"),
@@ -1236,10 +1236,10 @@ server <- function(input, output, session) {
   output$ahon_table <- DT::renderDT({
     req(data_raw(), input$ahon_normal)
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     t <- create_fun(
-      "calc_annual_outside_normal", data = "flow_data",
+      "calc_annual_outside_normal", data = "data_flow",
       id = "ahon", input,
       params = "discharge",
       extra = glue("normal_percentiles = ",
@@ -1281,7 +1281,7 @@ server <- function(input, output, session) {
   at_trends <- reactive({
     req(data_raw(), input$at_zyp)
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     # ingore_missing / allowed missing
     #basin area?
@@ -1305,7 +1305,7 @@ server <- function(input, output, session) {
 
     r <- create_fun(
       "compute_annual_trends",
-      data = "flow_data", id = "at", input,
+      data = "data_flow", id = "at", input,
       params_ignore = c("roll_days", "roll_align", "years_exclude"),
       extra = p)
 
@@ -1441,7 +1441,7 @@ server <- function(input, output, session) {
     validate(need(all(!is.na(fasstrshiny:::text_to_num(input$vf_prob_scale))),
                   "Probabilies to plot must be a comma separated list of numbers"))
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     # Define parameters
     p <- c(
@@ -1459,7 +1459,7 @@ server <- function(input, output, session) {
 
     r <- create_fun(
       "compute_annual_frequencies",
-      data = "flow_data", id = "vf", input,
+      data = "data_flow", id = "vf", input,
       params = c("discharge", "allowed"),
       params_ignore = c("roll_days", "roll_align", "years_exclude"),
       extra = p)
@@ -1586,11 +1586,11 @@ server <- function(input, output, session) {
     validate(need(all(!is.na(fasstrshiny:::text_to_num(input$hp_prob_scale))),
                   "Probabilies to plot must be a comma separated list of numbers"))
 
-    flow_data <- data_raw()
+    data_flow <- data_raw()
 
     # Define parameters
     p <- c(
-      glue("station_number = '{unique(flow_data$STATION_NUMBER)}'"),
+      glue("station_number = '{unique(data_flow$STATION_NUMBER)}'"),
       glue("use_max = {input$hp_use_max}"),
       glue("use_log = {input$hp_log}"),
       glue("prob_plot_position = '{input$hp_prob_plot}'"),

@@ -145,10 +145,10 @@ ui_data_load <- fluidRow(
 )
 
 
-## Data Screening ---------------------
-ui_data_screen <- fluidRow(
+## Data Availability ---------------------
+ui_data_available <- fluidRow(
   column(
-    width = 12, h2("Data Screening"),
+    width = 12, h2("Data Availability"),
     tabBox(
       width = 12, height = min_height,
 
@@ -156,9 +156,9 @@ ui_data_screen <- fluidRow(
       ### Summary Plot -----------------
       tabPanel(
         title = "Data Summary Plot",
-        selectizeInput("screen_summary", "Statistic to explore",
+        selectizeInput("available_summary", "Statistic to explore",
                     c("Mean","Maximum","Minimum","StandardDeviation")),
-        girafeOutput("screen_plot1", height = "425px")
+        girafeOutput("available_plot1", height = "425px")
       ),
 
       ### Availability Plot -----------------
@@ -167,7 +167,7 @@ ui_data_screen <- fluidRow(
         fluidRow(
           column(width = 1,
                  checkboxGroupButtons(
-                   "screen_months",
+                   "available_months",
                    label = "Months",
                    choices = list("Jan" = 1, "Feb" = 2,
                                   "Mar" = 3, "Apr" = 4,
@@ -177,23 +177,23 @@ ui_data_screen <- fluidRow(
                                   "Nov" = 11, "Dec" = 12),
                    selected = c(1:12),
                    direction = "vertical"),
-                 bsTooltip("screen_months",
+                 bsTooltip("available_months",
                            "Months to include/exclude from the plot"),
           ),
-          column(width = 11, girafeOutput("screen_plot2", height = "450px"))
+          column(width = 11, girafeOutput("available_plot2", height = "450px"))
         )
       ),
 
       ### Table -----------------
       tabPanel(
         title = "Table",
-        DT::dataTableOutput("screen_table")
+        DT::dataTableOutput("available_table")
       ),
 
       ### R Code -----------------
       tabPanel(
         title = "R Code",
-        verbatimTextOutput("screen_code")
+        verbatimTextOutput("available_code")
       )
     )
   )
@@ -841,7 +841,7 @@ tagList(
         menuItem("Home", tabName = "home", icon = icon("home")),
         menuItem("Data", tabName = "data", icon = icon("table"),
                  menuSubItem("Loading", tabName = "data_load"),
-                 menuSubItem("Screening", tabName = "data_screen")),
+                 menuSubItem("Availability", tabName = "data_available")),
         menuItem("Summary statistics", tabName = "summary",
                  icon=icon("chart-bar"),
                  menuSubItem("General", tabName = "sum_general"),
@@ -868,7 +868,7 @@ tagList(
       tabItems(
         tabItem("home", ui_home),
         tabItem("data_load", ui_data_load),
-        tabItem("data_screen", ui_data_screen),
+        tabItem("data_available", ui_data_available),
         tabItem("sum_general", ui_sum_general),
         tabItem("sum_flow", ui_sum_flow),
         tabItem("sum_annual", ui_sum_annual),
