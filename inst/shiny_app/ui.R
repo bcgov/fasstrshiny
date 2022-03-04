@@ -200,6 +200,23 @@ ui_data_available <- fluidRow(
 )
 
 
+# Overview ---------------------------------------------------------------
+ui_overview <- fluidRow(
+  column(
+    width = 12, h2("Overview"),
+    box(width = 3,
+        helpText("Placeholder descriptive text to describe this section, what it does and how to use it")),
+    tabBox(
+      width = 9, height = min_height,
+
+      ### Plot ---------------------
+      tabPanel(
+        title = "Overview")
+    )
+  )
+)
+
+
 # Stats Summary ---------------------------------------------------------------
 
 ## General ----------------
@@ -842,6 +859,7 @@ tagList(
         menuItem("Data", tabName = "data", icon = icon("table"),
                  menuSubItem("Loading", tabName = "data_load"),
                  menuSubItem("Availability", tabName = "data_available")),
+        menuItem("Overview", tabName = "overview", icon = icon("binoculars")),
         menuItem("Summary statistics", tabName = "summary",
                  icon=icon("chart-bar"),
                  menuSubItem("General", tabName = "sum_general"),
@@ -869,6 +887,7 @@ tagList(
         tabItem("home", ui_home),
         tabItem("data_load", ui_data_load),
         tabItem("data_available", ui_data_available),
+        tabItem("overview", ui_overview),
         tabItem("sum_general", ui_sum_general),
         tabItem("sum_flow", ui_sum_flow),
         tabItem("sum_annual", ui_sum_annual),
