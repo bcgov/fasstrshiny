@@ -106,8 +106,7 @@ server <- function(input, output, session) {
 
   ##  Hydro graphs -------------------------------------------------------------
   output$ui_hydro <- renderUI({
-    build_ui(id = "hydro", input,
-             include = c("discharge", "complete"))
+    build_ui(id = "hydro", input, include = "complete")
   })
 
   output$ui_hydro_monthly_plot <- renderUI({
@@ -119,11 +118,6 @@ server <- function(input, output, session) {
     selectizeInput("hydro_monthly_plot", label = "Statistic to plot",
                    choices = p, selected = 1)
 
-  })
-
-  # Separate so when it recomputes, not all the other inputs also change
-  output$ui_hydro_miss_allowed <- renderUI({
-    select_miss_allowed("hydro", input)
   })
 
   # Plot options
@@ -170,21 +164,16 @@ server <- function(input, output, session) {
     select_table_options(id = "hydro", input)
   })
 
-  ## SS - Flow ----------------------------------------------------------
+  ## Flows ----------------------------------------------------------
   output$ui_flows <- renderUI({
     build_ui(id = "flows", input,
-             include = c("discharge", "complete", "missing", "custom_months"))
+             include = c("complete", "custom_months"))
   })
 
   # Plot options
   output$ui_flows_plot_options <- renderUI({
     select_plot_options(data = data_raw(), id = "flows", input,
                         include = c("plot_log"))
-  })
-
-  ## SS - Annual Means ----------------------------------------------------------
-  output$ui_am <- renderUI({
-    build_ui(id = "am", input, include = "missing")
   })
 
 
@@ -240,26 +229,6 @@ server <- function(input, output, session) {
   bindEvent(input$cum_type)
 
 
-
-  ## Flow timing --------------------------------------------------------
-  # None (months set globally, not per tab)
-
-  ## Low flows --------------------------------------------------------
-  output$ui_lf <- renderUI({
-    build_ui(id = "lf", input,
-             include = c("discharge", "allowed"))
-  })
-
-  ## Peak flows --------------------------------------------------------
-  output$ui_pf <- renderUI({
-    build_ui(id = "pf", input,
-             include = c("discharge", "allowed"))
-  })
-
-  ## AS - Days outside normal -----------------------------------------------
-  # None
-
-
   ## Annual Trends ------------------------------------------------
 
   # Excluded years, takes defaults from input$data_years_exclude,
@@ -286,10 +255,10 @@ server <- function(input, output, session) {
     tagList(
       sliderInput("at_allowed_annual",
                   label = "Annual - Allowed missing (%)",
-                  value = input$opts_allowed, step = 5, min = 0, max = 100),
+                  value = input$data_allowed, step = 5, min = 0, max = 100),
       sliderInput("at_allowed_monthly",
                   label = "Monthly - Allowed missing (%)",
-                  value = input$opts_allowed, step = 5, min = 0, max = 100),
+                  value = input$data_allowed, step = 5, min = 0, max = 100),
       bsTooltip("at_allowed_annual", tips$allowed),
       bsTooltip("at_allowed_monthly", tips$allowed)
       )
@@ -1298,8 +1267,8 @@ server <- function(input, output, session) {
       glue("zyp_method = '{input$at_zyp}'"),
       glue("annual_percentiles = c({glue_collapse(input$at_annual_percentiles, sep = ', ')})"),
       glue("monthly_percentiles = c({glue_collapse(input$at_monthly_percentiles, sep = ', ')})"),
-      glue("stats_days = {input$opts_roll_days}"),
-      glue("stats_align = '{input$opts_roll_align}'"),
+      glue("stats_days = {input$data_roll_days}"),
+      glue("stats_align = '{input$data_roll_align}'"),
       glue("lowflow_days = c({glue_collapse(input$at_low_roll_days, sep = ', ')})"),
       glue("lowflow_align = '{input$at_low_roll_align}'"),
       glue("timing_percent = c({glue_collapse(input$at_percent, sep = ', ')})"),

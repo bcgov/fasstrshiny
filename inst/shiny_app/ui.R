@@ -371,7 +371,6 @@ ui_as_means <- fluidRow(
       ### Plot ---------------------
       tabPanel(
         title = "Plot",
-        uiOutput("ui_am"),
         girafeOutput("am_plot", height = "400px")
       ),
 
@@ -434,8 +433,7 @@ ui_as_low_flows <- fluidRow(
     box(
       width = 3,
       helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
-      select_rolling("lf", set = FALSE, multiple = TRUE),
-      uiOutput("ui_lf")
+      select_rolling("lf", set = FALSE, multiple = TRUE)
     ),
     tabBox(
       width = 9, height = min_height,
@@ -468,7 +466,6 @@ ui_as_peak_flows <- fluidRow(
     box(
       width = 3,
       helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
-      uiOutput("ui_pf"),
       select_rolling("pf", set = FALSE)
     ),
     tabBox(
