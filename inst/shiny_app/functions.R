@@ -18,8 +18,8 @@
 # Determine the default value, if input exists and set is TRUE, returns
 # global options preset, otherwise default
 set_input <- function(type, input, set, value) {
-  if(set & !is.null(input[[glue("opts_{type}")]])) {
-    value <- input[[glue("opts_{type}")]]
+  if(set & !is.null(input[[glue("data_{type}")]])) {
+    value <- input[[glue("data_{type}")]]
   }
   value
 }
@@ -29,23 +29,6 @@ set_input <- function(type, input, set, value) {
 
 
 ## Functions for inputs ------------
-select_months <- function(id, input = NULL, set = TRUE) {
-  selected <- set_input("month", input, set, 1:12)
-
-  tagList(
-    selectizeInput(glue("{id}_months"),
-                   label = "Months to Include",
-                   choices = list("Jan" = 1,  "Feb" = 2,
-                                  "Mar" = 3,  "Apr" = 4,
-                                  "May" = 5,  "Jun" = 6,
-                                  "Jul" = 7,  "Aug" = 8,
-                                  "Sep" = 9,  "Oct" = 10,
-                                  "Nov" = 11, "Dec" = 12),
-                   selected = selected,
-                   multiple = TRUE),
-    bsTooltip(glue("{id}_months"), tips$months)
-  )
-}
 
 select_custom_months <- function(id, input = NULL, set = TRUE) {
   selected <- set_input("custom_months", input, set, NULL)
@@ -251,6 +234,12 @@ select_add_mad <- function(id) {
     bsTooltip(glue("{id}_add_mad_tip"), tips$add_mad))
 }
 
+show <- function(id, name) {
+  h4(materialSwitch(inputId = id,
+                    label = name,
+                    status = "success"))
+}
+
 select_plot_options <- function(id, input, include = "plot_log",
                                 params = NULL, data = NULL) {
 
@@ -390,8 +379,8 @@ create_fun <- function(fun, data = NULL, id, input, params = NULL,
   if(is.null(names(params))) {
     n <- rep(NA_character_, length(params))
   } else n <- names(params)
-  n[params %in% c("roll_days", "roll_align", "months")] <- "opts"
-  n[params %in% c("water_year", "years_range", "years_exclude")] <- "data"
+  n[params %in% c("water_year", "years_range", "years_exclude",
+                  "roll_days", "roll_align", "months")] <- "data"
   n[is.na(n)] <- id
   names(params) <- glue("{n}_{params}")
 
@@ -421,12 +410,6 @@ create_fun <- function(fun, data = NULL, id, input, params = NULL,
       params[i] == "allowed" ~ glue("allowed_missing = {id[i]}"),
       params[i] == "complete" ~ glue("complete_years = {id[i]}"),
 
-      # Opts
-      params[i] == "roll_days" ~ glue("roll_days = {id[i]}"),
-      params[i] == "roll_align" ~ glue("roll_align = '{id[i]}'"),
-      params[i] == "months" ~
-        glue("months = c({glue_collapse(id[[i]], sep = ', ')})"),
-
       # Data
       params[i] == "water_year" ~
         glue("water_year_start = {id[i]}"),
@@ -434,6 +417,10 @@ create_fun <- function(fun, data = NULL, id, input, params = NULL,
         glue("start_year = {id[[i]][1]}, end_year = {id[[i]][2]}"),
       params[i] == "years_exclude" ~
         glue("exclude_years = c({glue_collapse(id[[i]], sep = ', ')})"),
+      params[i] == "roll_days" ~ glue("roll_days = {id[i]}"),
+      params[i] == "roll_align" ~ glue("roll_align = '{id[i]}'"),
+      params[i] == "months" ~
+        glue("months = c({glue_collapse(id[[i]], sep = ', ')})"),
 
       # Plot
       params[i] == "daterange" ~

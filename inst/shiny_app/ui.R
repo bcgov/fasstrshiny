@@ -16,37 +16,34 @@
 ui_home <- fluidRow(
   column(
     width = 12, h2("Welcome to fasstrshiny"),
-    box(
-      width = 12,
-      h4("Welcome!"),
-      p("This is an R Shiny app offering a user interface to the fasstr R package.",
-        "To get started, first go to the Data tab on the Navigation menu, ",
-        "choose a HYDAT station and load some data!"),
-      p(strong("(Note that loading CSV data is not yet implemented)")),
-      br(),
-      p("Once you have loaded data you'll be able to explore the other tabs."),
-      p("Remeber that this is a work in progress so keep track of what you like,",
-        "don't like and what broke so we can make it better!")
-    )
-  )
-)
 
-# Settings ---------------------
-ui_settings <- fluidRow(
-  column(
-    width = 12, h2("Settings"),
-    box(title = "Global Settings", width = 6,
-        p("Set once here, apply to whole app"),
+    tabBox(
+      width = 12, height = min_height,
 
-        build_ui(id = "opts", define_options = TRUE,
-                 include = c("rolling", "months"))),
+      # Disclaimer
+      tabPanel(
+        title = "Disclaimer", width = 12,
+        p("This is an R Shiny app offering a user interface to the fasstr R package.",
+          "To get started, first go to the Data tab on the Navigation menu, ",
+          "choose a HYDAT station and load some data!"),
+        p(strong("(Note that loading CSV data is not yet implemented)")),
+        br(),
+        p("Once you have loaded data you'll be able to explore the other tabs."),
+        p("Remeber that this is a work in progress so keep track of what you like,",
+          "don't like and what broke so we can make it better!")
+      ),
 
-    box(title = "Default Settings", width = 6,
-        p("Set defaults here, but can change throughout the app as needed"),
+      # Overview
+      tabPanel(
+        title = "Overview", width = 12,
+        p("Blah, blah, blah")
+      ),
 
-        build_ui(id = "opts", define_options = TRUE,
-                 include = c("discharge", "missing", "allowed", "percentiles",
-                             "custom_months"))
+      # R Workflow - Setup
+      tabPanel(
+        title = "Getting Setup", width = 12,
+        p("Blah, blah, blah")
+      ),
     )
   )
 )
@@ -59,7 +56,8 @@ ui_data_load <- fluidRow(
     width = 12, h2("Loading Data"),
     box(
       width = 3,
-      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
+      helpText("Placeholder descriptive text to describe this section, ",
+               "what it does and how to use it"),
       radioGroupButtons(inputId = "data_source",
                         label = "Source", choices = c("HYDAT", "CSV"),
                         justified = TRUE,
@@ -80,21 +78,33 @@ ui_data_load <- fluidRow(
       bsButton("data_load", "Load Data", style = "primary"),
       hr(),
 
+      show("data_show_stn", "Station Information"),
       conditionalPanel(
-        "input.data_source != 'HYDAT'",
-        h4("Station Information"),
-        fluidRow(column(width = 6,
-                        textInput('data_station_name',
-                                  label = "Name",
-                                  placeholder = "ex. Mission Creek")),
-                 column(width = 6,
-                        numericInput("data_basin_area",
-                                     label = html("Basin area (km<sup>2</sup>)"), value = 0,
-                                     min = 0, step = 0.1)))),
+        "input.data_show_stn == true",
+        fluidRow(
+          column(
+            width = 6,
+            textInput('data_station_name',
+                      label = "Name",
+                      placeholder = "ex. Mission Creek")),
+          column(
+            width = 6,
+            numericInput("data_basin_area",
+                         label = html("Basin area (km<sup>2</sup>)"), value = 0,
+                         min = 0, step = 0.1)))),
 
-      uiOutput("ui_data_water_year"),
-      uiOutput("ui_data_years_range"),
-      uiOutput("ui_data_years_exclude")
+      show("data_show_dates", "Dates"),
+      conditionalPanel("input.data_show_dates == true",
+                       uiOutput("ui_data_water_year"),
+                       uiOutput("ui_data_years_range"),
+                       uiOutput("ui_data_years_exclude"),
+                       uiOutput("ui_data_months")),
+
+      show("data_show_types", "Data types"),
+      conditionalPanel("input.data_show_types == true",
+                       build_ui(id = "data", define_options = TRUE,
+                                include = c("rolling", "discharge",
+                                            "missing", "allowed")))
     ),
 
     tabBox(
@@ -114,7 +124,7 @@ ui_data_load <- fluidRow(
 
       ### Plot --------
       tabPanel(
-        title = "Plot", value = "data_plot",
+        title = "Plot", value = "data_tabs_plot",
         uiOutput("ui_data_plot_options", align = "right"),
         plotlyOutput('data_plot')
       ),
@@ -142,7 +152,7 @@ ui_data_screen <- fluidRow(
     tabBox(
       width = 12, height = min_height,
 
-      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
+      #helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
       ### Summary Plot -----------------
       tabPanel(
         title = "Data Summary Plot",
@@ -300,7 +310,7 @@ ui_sum_annual <- fluidRow(
     width = 12, h2("Annual Means"),
     tabBox(
       width = 12, height = min_height,
-      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
+      #helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
       ### Plot ---------------------
       tabPanel(
         title = "Plot",
@@ -829,7 +839,6 @@ tagList(
       sidebarMenu(
         id = "menu",
         menuItem("Home", tabName = "home", icon = icon("home")),
-        menuItem("Settings", tabName = "settings", icon = icon("cog")),
         menuItem("Data", tabName = "data", icon = icon("table"),
                  menuSubItem("Loading", tabName = "data_load"),
                  menuSubItem("Screening", tabName = "data_screen")),
@@ -858,7 +867,6 @@ tagList(
       tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "bcgov.css")),
       tabItems(
         tabItem("home", ui_home),
-        tabItem("settings", ui_settings),
         tabItem("data_load", ui_data_load),
         tabItem("data_screen", ui_data_screen),
         tabItem("sum_general", ui_sum_general),

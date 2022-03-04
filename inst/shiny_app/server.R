@@ -24,6 +24,62 @@ server <- function(input, output, session) {
   # UI elements ---------------------------------------
 
   ## Data ----------------------
+  output$ui_data_water_year <- renderUI({
+    validate(need(input$data_load,
+                  "You'll need to first load some data"))
+    radioGroupButtons(
+      "data_water_year",
+      label = "Water year start",
+      choices = setNames(1:12, month.abb),
+      selected = 1, size = "sm", width = "100%")
+  })
+
+  output$ui_data_years_range <- renderUI({
+    req(data_raw())
+    sliderInput("data_years_range",
+                label = "Start and end years",
+                min = min(data_raw()$WaterYear),
+                max = max(data_raw()$WaterYear),
+                value = c(min(data_raw()$WaterYear),
+                          max(data_raw()$WaterYear)),
+                dragRange = TRUE, sep = "")
+  })
+
+  output$ui_data_years_exclude <- renderUI({
+    req(input$data_years_range)
+
+    # If updating, use old values where within range
+    isolate({
+      if(!is.null(input$data_years_exclude)) {
+        s <- as.numeric(input$data_years_exclude)
+        s <- s[s >= input$data_years_range[1] & s <= input$data_years_range[2]]
+      } else s <- NULL
+    })
+
+    selectizeInput("data_years_exclude",
+                   label = "Years to exclude",
+                   choices = seq(from = input$data_years_range[1],
+                                 to = input$data_years_range[2], by = 1),
+                   selected = s,
+                   multiple = TRUE)
+  })
+
+  output$ui_data_months <- renderUI({
+    req(input$data_water_year)
+
+    # Arrange months by water year
+    m <- setNames(1:12, month.abb)
+    m <- c(m[m >= as.numeric(input$data_water_year)],
+           m[m < as.numeric(input$data_water_year)])
+
+    tagList(
+      selectizeInput("data_months",
+                     label = "Months to Include",
+                     choices = m,
+                     selected = 1:12,
+                     multiple = TRUE),
+      bsTooltip("data_months", tips$months))
+  })
 
   # Update station from Map button
   observe({
@@ -40,43 +96,6 @@ server <- function(input, output, session) {
   }) %>%
     bindEvent(input$data_hydat_table_rows_selected)
 
-  # Year selection/slider UI
-  output$ui_data_water_year <- renderUI({
-    req(data_raw())
-    tagList(
-      h4("Filter Dates"),
-      selectizeInput("data_water_year",
-                  label = "Water year",
-                  choices = list("Jan-Dec" = 1, "Feb-Jan" = 2,
-                                 "Mar-Feb" = 3, "Apr-Mar" = 4,
-                                 "May-Apr" = 5, "Jun-May" = 6,
-                                 "Jul-Jun" = 7, "Aug-Jul" = 8,
-                                 "Sep-Aug" = 9, "Oct-Sep" = 10,
-                                 "Nov-Oct" = 11, "Dec-Nov" = 12),
-                  selected = 1))
-  })
-
-  # Years range
-  output$ui_data_years_range <- renderUI({
-    req(data_raw(), input$data_water_year)
-    sliderInput("data_years_range",
-                label = "Start and end years",
-                min = min(data_raw()$WaterYear),
-                max = max(data_raw()$WaterYear),
-                value = c(min(data_raw()$WaterYear), max(data_raw()$WaterYear)),
-                dragRange = TRUE, sep = "")
-  })
-
-  # Exclude years selection
-  output$ui_data_years_exclude <- renderUI({
-    req(data_raw(), input$data_years_range)
-    selectizeInput("data_years_exclude",
-                   label = "Years to exclude",
-                   choices = seq(from = input$data_years_range[1],
-                                 to = input$data_years_range[2], by = 1),
-                   selected = NULL,
-                   multiple = TRUE)
-  })
 
   # Add plot options as Gear in corner
   output$ui_data_plot_options <- renderUI({
@@ -380,14 +399,13 @@ server <- function(input, output, session) {
 
     }
 
-    updateTabsetPanel(session, inputId = "data_tabs", selected = "data_plot")
-
     # Save unevaluated code for code tab
     code$data_raw <- d
 
     eval(parse(text = d)) # Evaluate and create flow_data
   }) %>%
-    bindEvent(input$data_load)
+    bindEvent(input$data_load, input$data_water_year,
+              ignoreInit = TRUE)
 
   ## Plot ----------------
   output$data_plot <- renderPlotly({
@@ -402,13 +420,13 @@ server <- function(input, output, session) {
 
     g <- create_fun(
       "plot_flow_data", "flow_data", id = "data", input,
-      params = c("plot_log", "daterange"),
-      end = "[[1]] + scale_color_manual(values = 'dodgerblue4')")
+      params = c("plot_log", "daterange"))
 
     code$data_plot <- g
 
     parse(text = g) %>%
       eval() %>%
+      .[[1]] %>%
       ggplotly() %>%
       config(modeBarButtonsToRemove =
                c("pan", "autoscale", "zoomIn2d", "zoomOut2d",
@@ -417,10 +435,15 @@ server <- function(input, output, session) {
 
   ## Table ----------------
   output$data_table <- renderDT({
+    req(input$data_years_range)
     check_data(input)
     data_raw() %>%
       rename("StationNumber" = "STATION_NUMBER") %>%
       select(-"Month") %>%
+      filter(WaterYear >= input$data_years_range[1],
+             WaterYear <= input$data_years_range[2],
+             !WaterYear %in% input$data_years_exclude,
+             MonthName %in% month.abb[as.numeric(input$data_months)]) %>%
       mutate(Value = round(Value, 4)) %>%
       datatable(rownames = FALSE,
                 filter = 'top',
