@@ -217,132 +217,99 @@ ui_overview <- fluidRow(
 )
 
 
-# Stats Summary ---------------------------------------------------------------
+# Hydrographs and Long-term -------------------------------------------------
 
-## General ----------------
-ui_sum_general <- fluidRow(
+ui_hydro <- fluidRow(
   column(
-    width = 12, h2("General Summary Statistics"),
+    width = 12, h2("Hydrographs and Long-term Stats"),
     box(
       width = 3,
       helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
-      radioGroupButtons("sum_type",
+      radioGroupButtons("hydro_type",
                         label = "Summary type", size = "sm",
-                        choices = list("Long-term",
-                                       "Annual",
-                                       "Monthly", "Daily"),
-                        selected = "Long-term",
+                        choices = list("Daily",
+                                       "Long-term Daily",
+                                       "Long-term Monthly"),
+                        selected = "Daily",
                         status = "primary", justified = TRUE),
-      bsTooltip("sum_type", "Type of summary statistics to calculate"),
-      selectizeInput("sum_mad",
-                  label = "Mean Annual Discharge percentiles",
+      bsTooltip("hydro_type", "Type of statistic to calculate"),
+      selectizeInput("hydro_mad",
+                  label = "Percent Mean Annual Discharge",
                   choices = c(1:99),
                   selected = c(1, 5, 50, 95, 99),
                   multiple = TRUE),
-      bsTooltip("sum_mad", tips$mad),
-      uiOutput("ui_sum"),
-      uiOutput("ui_sum_miss_allowed")
+      bsTooltip("hydro_mad", tips$mad),
+      uiOutput("ui_hydro")
     ),
     tabBox(
       width = 9, height = min_height,
 
-      ### Plot ---------------------
+      ## Plot ---------------------
       tabPanel(
         title = "Plot",
-        uiOutput("ui_sum_monthly_plot"), #Only when monthly
-        uiOutput("ui_sum_plot_options", align = "right"),
-        girafeOutput("sum_plot", height = "450px")
+        uiOutput("ui_hydro_plot_options", align = "right"),
+        girafeOutput("hydro_plot", height = "450px")
       ),
 
-      ### Table ---------------------
+      ## Table ---------------------
       tabPanel(
         title = "Table",
-        uiOutput("ui_sum_table_options", align = "right"),
-        DTOutput("sum_table")
+        uiOutput("ui_hydro_table_options", align = "right"),
+        DTOutput("hydro_table")
       ),
 
-      ### MAD --------------------
-      tabPanel(
-        title = "MAD",
-        h4("Mean Annual Discharge (MAD)"),
-        gt_output("sum_mad")
-      ),
-
-      ### R Code ---------------------
+      ## R Code ---------------------
       tabPanel(
         title = "R Code",
-        verbatimTextOutput("sum_code")
+        verbatimTextOutput("hydro_code")
       )
     )
   )
 )
 
 
-## Flow ----------------
-ui_sum_flow <- fluidRow(
+# Flow ----------------
+ui_flows <- fluidRow(
   column(
     width = 12, h2("Flow duration and percentiles"),
     box(
       width = 3,
       helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
-      numericInput("sumfl_flow",
+      numericInput("flows_flow",
                    label = "Flow value for percentile",
                    value = 10, min = 0),
-      bsTooltip("sumfl_flow", tips$flow),
-      uiOutput("ui_sumfl"),
+      bsTooltip("flows_flow", tips$flow),
+      uiOutput("ui_flows"),
     ),
     tabBox(
       width = 9, height = min_height,
 
-      ### Plot ---------------------
+      ## Plot ---------------------
       tabPanel(
         title = "Plot - Flow duration",
-        uiOutput("ui_sumfl_plot_options", align = "right"),
-        girafeOutput("sumfl_plot", height = "400px"),
+        uiOutput("ui_flows_plot_options", align = "right"),
+        girafeOutput("flows_plot", height = "400px"),
         p(style = "margin-bottom: 20px"),
         h4("Percentile Rank of Flow"),
-        textOutput("sumfl_perc")
+        textOutput("flows_perc")
       ),
 
-      ### Table ---------------------
+      ## Table ---------------------
       tabPanel(
         title = "Table - Percentiles",
-        uiOutput("ui_sumfl_table_options", align = "right"),
-        DTOutput("sumfl_table")
+        uiOutput("ui_flows_table_options", align = "right"),
+        DTOutput("flows_table")
       ),
 
-      ### R Code ---------------------
+      ## R Code ---------------------
       tabPanel(
         title = "R Code",
-        verbatimTextOutput("sumfl_code")
+        verbatimTextOutput("flows_code")
       )
     )
   )
 )
 
-
-## Annual Means -----------------------
-ui_sum_annual <- fluidRow(
-  column(
-    width = 12, h2("Annual Means"),
-    tabBox(
-      width = 12, height = min_height,
-      #helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
-      ### Plot ---------------------
-      tabPanel(
-        title = "Plot",
-        uiOutput("ui_sumam"),
-        girafeOutput("sumam_plot", height = "400px")
-      ),
-
-      ### R Code ---------------------
-      tabPanel(
-        title = "R Code",
-        verbatimTextOutput("sumam_code")
-      )
-    )
-  )
-)
 
 
 # Cumulative -------------
@@ -392,22 +359,47 @@ ui_cumulative <- fluidRow(
 )
 
 
-# Annual Hydrograph Stats -----------------------------------------------------
+# Annual Statistics -----------------------------------------------------
+
+## Annual Means -----------------------
+ui_as_means <- fluidRow(
+  column(
+    width = 12, h2("Annual Means"),
+    tabBox(
+      width = 12, height = min_height,
+      #helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
+      ### Plot ---------------------
+      tabPanel(
+        title = "Plot",
+        uiOutput("ui_am"),
+        girafeOutput("am_plot", height = "400px")
+      ),
+
+      ### R Code ---------------------
+      tabPanel(
+        title = "R Code",
+        verbatimTextOutput("am_code")
+      )
+    )
+  )
+)
+
+
 
 ## Flow timing ------------------------------
-ui_ah_flow_timing <- fluidRow(
+ui_as_flow_timing <- fluidRow(
   column(
     width = 12, h2("Flow Timing"),
     box(
       width = 12,
       helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
       div(style = "max-width: 300px;",
-          selectizeInput("ahft_percent",
+          selectizeInput("ft_percent",
                       label = "Percents of total annual flows",
                       choices = c(1:99),
                       selected = c(25, 33, 50, 75),
                       multiple = TRUE),
-          bsTooltip("ahft_percent", tips$percent)
+          bsTooltip("ft_percent", tips$percent)
       ),
 
       tabBox(
@@ -416,19 +408,19 @@ ui_ah_flow_timing <- fluidRow(
         ### Plot ---------------------
         tabPanel(
           title = "Plot",
-          girafeOutput("ahft_plot", height = "400px")
+          girafeOutput("ft_plot", height = "400px")
         ),
 
         ### Table ---------------------
         tabPanel(
           title = "Table",
-          DTOutput("ahft_table")
+          DTOutput("ft_table")
         ),
 
         ### R Code ---------------------
         tabPanel(
           title = "R Code",
-          verbatimTextOutput("ahft_code")
+          verbatimTextOutput("ft_code")
         )
       )
     )
@@ -436,14 +428,14 @@ ui_ah_flow_timing <- fluidRow(
 )
 
 ## Low flows ------------------------
-ui_ah_low_flows <- fluidRow(
+ui_as_low_flows <- fluidRow(
   column(
     width = 12, h2("Low Flows"),
     box(
       width = 3,
       helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
-      select_rolling("ahlf", set = FALSE, multiple = TRUE),
-      uiOutput("ui_ahlf")
+      select_rolling("lf", set = FALSE, multiple = TRUE),
+      uiOutput("ui_lf")
     ),
     tabBox(
       width = 9, height = min_height,
@@ -451,33 +443,33 @@ ui_ah_low_flows <- fluidRow(
       ### Plot ---------------------
       tabPanel(
         title = "Plot",
-        girafeOutput("ahlf_plot", height = "450px")
+        girafeOutput("lf_plot", height = "450px")
       ),
 
       ### Table ---------------------
       tabPanel(
         title = "Table",
-        DTOutput("ahlf_table")
+        DTOutput("lf_table")
       ),
 
       ### R Code ---------------------
       tabPanel(
         title = "R Code",
-        verbatimTextOutput("ahlf_code")
+        verbatimTextOutput("lf_code")
       )
     )
   )
 )
 
-## Flow peak ------------------------
-ui_ah_peak <- fluidRow(
+## Peak flows ------------------------
+ui_as_peak_flows <- fluidRow(
   column(
     width = 12, h2("Peak Flows"),
     box(
       width = 3,
       helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
-      uiOutput("ui_ahp"),
-      select_rolling("ahp", set = FALSE)
+      uiOutput("ui_pf"),
+      select_rolling("pf", set = FALSE)
     ),
     tabBox(
       width = 9, height = min_height,
@@ -485,28 +477,28 @@ ui_ah_peak <- fluidRow(
       ### Table ---------------------
       tabPanel(
         title = "Table",
-        DTOutput("ahp_table")
+        DTOutput("pf_table")
       ),
 
       ### R Code ---------------------
       tabPanel(
         title = "R Code",
-        verbatimTextOutput("ahp_code")
+        verbatimTextOutput("pf_code")
       )
     )
   )
 )
 
 ## Days outside normal ------------------------
-ui_ah_outside_normal <- fluidRow(
+ui_as_outside_normal <- fluidRow(
   column(
     width = 12, h2("Days Outside Normal"),
     box(
       width = 3,
       helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
-      sliderInput("ahon_normal", label = "Normal range ",
+      sliderInput("on_normal", label = "Normal range ",
                   value = c(25, 75), min = 1, max = 99, step = 1),
-      bsTooltip("ahon_normal", tips$normal)
+      bsTooltip("on_normal", tips$normal)
     ),
     tabBox(
       width = 9, height = min_height,
@@ -514,29 +506,29 @@ ui_ah_outside_normal <- fluidRow(
       ### Plot ---------------------
       tabPanel(
         title = "Plot",
-        girafeOutput("ahon_plot", height = "500px")
+        girafeOutput("on_plot", height = "500px")
       ),
 
       ### Table ---------------------
       tabPanel(
         title = "Table",
-        DTOutput("ahon_table")
+        DTOutput("on_table")
       ),
 
       ### R Code ---------------------
       tabPanel(
         title = "R Code",
-        verbatimTextOutput("ahon_code")
+        verbatimTextOutput("on_code")
       )
     )
   )
 )
 
 
-# Computations ---------------
+# Analyses ---------------
 
 ## Annual Trends -----------------------
-ui_comp_annual <- fluidRow(
+ui_analysis_annual <- fluidRow(
   column(
     width = 12, h2("Annual Trends"),
     box(width = 3,
@@ -631,7 +623,7 @@ ui_comp_annual <- fluidRow(
 )
 
 ## Volume Frequency - High/Low ------------------
-ui_comp_volume_freq <- fluidRow(
+ui_analysis_volume_freq <- fluidRow(
   column(
     width = 12, h2("High/Low Volume Frequency Analysis"),
     box(width = 3,
@@ -747,7 +739,7 @@ ui_comp_volume_freq <- fluidRow(
 )
 
 ## Volume Frequency - HYDAT Peaks ------------------
-ui_comp_hydat_peak <- fluidRow(
+ui_analysis_hydat_peak <- fluidRow(
   column(
     width = 12, h2("HYDAT Peak Volume Frequency Analysis"),
     box(width = 3,
@@ -860,25 +852,23 @@ tagList(
                  menuSubItem("Loading", tabName = "data_load"),
                  menuSubItem("Availability", tabName = "data_available")),
         menuItem("Overview", tabName = "overview", icon = icon("binoculars")),
-        menuItem("Summary statistics", tabName = "summary",
-                 icon=icon("chart-bar"),
-                 menuSubItem("General", tabName = "sum_general"),
-                 menuSubItem("Flow duration and percentiles",
-                             tabName = "sum_flow"),
-                 menuSubItem("Annual Means", tabName = "sum_annual")),
-        menuItem("Cumulative Stats", tabName = "cumulative",
+        menuItem("Hydrographs & Long-term Stats", tabName = "hydro",
+                 icon=icon("chart-bar")),
+        menuItem("Cumulative Hydrographs", tabName = "cumulative",
                  icon = icon("chart-area")),
-        menuItem("Annual Hydrograph Stats", tabName = "annual",
+        menuItem("Flow duration and percentiles", tabName = "flows"),
+        menuItem("Annual Statistics", tabName = "annual",
                  icon = icon("calendar"),
-                 menuSubItem("Flow timing", tabName = "ah_flow_timing"),
-                 menuSubItem("Low Flows", tabName = "ah_low_flows"),
-                 menuSubItem("Peak Flows", tabName = "ah_peak"),
-                 menuSubItem("Days outside normal", tabName = "ah_outside_normal")),
-        menuItem("Computations", tabName = "computed",
+                 menuSubItem("Annual Means", tabName = "as_means"),
+                 menuSubItem("Flow timing", tabName = "as_flow_timing"),
+                 menuSubItem("Low Flows", tabName = "as_low_flows"),
+                 menuSubItem("Peak Flows", tabName = "as_peak_flows"),
+                 menuSubItem("Days outside normal", tabName = "as_outside_normal")),
+        menuItem("Analyses", tabName = "analyses",
                  icon = icon("chart-line"),
-                 menuSubItem("Annual Trends", tabName = "comp_annual"),
-                 menuSubItem("Volume Frequency", tabName = "comp_volume_freq"),
-                 menuSubItem("HYDAT Peak", tabName = "comp_hydat_peak"))
+                 menuSubItem("Annual Trends", tabName = "analysis_annual"),
+                 menuSubItem("Volume Frequency", tabName = "analysis_volume_freq"),
+                 menuSubItem("HYDAT Peak", tabName = "analysis_hydat_peak"))
       )
     ),
     dashboardBody(
@@ -888,17 +878,17 @@ tagList(
         tabItem("data_load", ui_data_load),
         tabItem("data_available", ui_data_available),
         tabItem("overview", ui_overview),
-        tabItem("sum_general", ui_sum_general),
-        tabItem("sum_flow", ui_sum_flow),
-        tabItem("sum_annual", ui_sum_annual),
+        tabItem("hydro", ui_hydro),
         tabItem("cumulative", ui_cumulative),
-        tabItem("ah_flow_timing", ui_ah_flow_timing),
-        tabItem("ah_low_flows", ui_ah_low_flows),
-        tabItem("ah_peak", ui_ah_peak),
-        tabItem("ah_outside_normal", ui_ah_outside_normal),
-        tabItem("comp_annual", ui_comp_annual),
-        tabItem("comp_volume_freq", ui_comp_volume_freq),
-        tabItem("comp_hydat_peak", ui_comp_hydat_peak)
+        tabItem("flows", ui_flows),
+        tabItem("as_means", ui_as_means),
+        tabItem("as_flow_timing", ui_as_flow_timing),
+        tabItem("as_low_flows", ui_as_low_flows),
+        tabItem("as_peak_flows", ui_as_peak_flows),
+        tabItem("as_outside_normal", ui_as_outside_normal),
+        tabItem("analysis_annual", ui_analysis_annual),
+        tabItem("analysis_volume_freq", ui_analysis_volume_freq),
+        tabItem("analysis_hydat_peak", ui_analysis_hydat_peak)
       )
     )
   ),

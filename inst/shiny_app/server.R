@@ -104,32 +104,32 @@ server <- function(input, output, session) {
                         include = c("plot_log", "daterange"))
   })
 
-  ## SS - General -------------------------------------------------------------
-  output$ui_sum <- renderUI({
-    build_ui(id = "sum", input,
+  ##  Hydro graphs -------------------------------------------------------------
+  output$ui_hydro <- renderUI({
+    build_ui(id = "hydro", input,
              include = c("discharge", "complete"))
   })
 
-  output$ui_sum_monthly_plot <- renderUI({
-    req(input$sum_type == "Monthly")
+  output$ui_hydro_monthly_plot <- renderUI({
+    req(input$hydro_type == "Monthly")
 
     p <- c("Mean", "Median", "Maximum", "Minimum")
-    if(!is.null(input$sum_percentiles)) p <- c(p, glue("P{input$sum_percentiles}"))
+    if(!is.null(input$hydro_percentiles)) p <- c(p, glue("P{input$hydro_percentiles}"))
 
-    selectizeInput("sum_monthly_plot", label = "Statistic to plot",
+    selectizeInput("hydro_monthly_plot", label = "Statistic to plot",
                    choices = p, selected = 1)
 
   })
 
   # Separate so when it recomputes, not all the other inputs also change
-  output$ui_sum_miss_allowed <- renderUI({
-    select_miss_allowed("sum", input)
+  output$ui_hydro_miss_allowed <- renderUI({
+    select_miss_allowed("hydro", input)
   })
 
   # Plot options
-  output$ui_sum_plot_options <- renderUI({
+  output$ui_hydro_plot_options <- renderUI({
 
-    select_plot_options(id = "sum", input,
+    select_plot_options(id = "hydro", input,
                         include = c("percentiles",
                                     "plot_log", "add_year",
                                     "add_dates", "add_mad"))
@@ -140,51 +140,51 @@ server <- function(input, output, session) {
   # Enable/disable based on type
   observe({
     # add year
-    if(input$sum_type %in% c("Long-term", "Daily")) {
-      enable("sum_add_year")
+    if(input$hydro_type %in% c("Long-term", "Daily")) {
+      enable("hydro_add_year")
     } else {
-      disable("sum_add_year")
+      disable("hydro_add_year")
     }
 
     # add dates
-    if(input$sum_type == "Daily") {
-      enable("sum_add_dates")
+    if(input$hydro_type == "Daily") {
+      enable("hydro_add_dates")
     } else {
-      disable("sum_add_dates")
+      disable("hydro_add_dates")
     }
 
     # custom months
-    if(input$sum_type == "Long-term") {
-      enable("sum_custom_months")
-      enable("sum_custom_months_label")
+    if(input$hydro_type == "Long-term") {
+      enable("hydro_custom_months")
+      enable("hydro_custom_months_label")
     } else {
-      disable("sum_custom_months")
-      disable("sum_custom_months_label")
+      disable("hydro_custom_months")
+      disable("hydro_custom_months_label")
     }
 
   }) %>%
-    bindEvent(input$sum_type)
+    bindEvent(input$hydro_type)
 
   # Table options
-  output$ui_sum_table_options <- renderUI({
-    select_table_options(id = "sum", input)
+  output$ui_hydro_table_options <- renderUI({
+    select_table_options(id = "hydro", input)
   })
 
   ## SS - Flow ----------------------------------------------------------
-  output$ui_sumfl <- renderUI({
-    build_ui(id = "sumfl", input,
+  output$ui_flows <- renderUI({
+    build_ui(id = "flows", input,
              include = c("discharge", "complete", "missing", "custom_months"))
   })
 
   # Plot options
-  output$ui_sumfl_plot_options <- renderUI({
-    select_plot_options(data = data_raw(), id = "sumfl", input,
+  output$ui_flows_plot_options <- renderUI({
+    select_plot_options(data = data_raw(), id = "flows", input,
                         include = c("plot_log"))
   })
 
   ## SS - Annual Means ----------------------------------------------------------
-  output$ui_sumam <- renderUI({
-    build_ui(id = "sumam", input, include = "missing")
+  output$ui_am <- renderUI({
+    build_ui(id = "am", input, include = "missing")
   })
 
 
@@ -241,22 +241,22 @@ server <- function(input, output, session) {
 
 
 
-  ## AH - Flow timing --------------------------------------------------------
+  ## Flow timing --------------------------------------------------------
   # None (months set globally, not per tab)
 
-  ## AH - Low flows --------------------------------------------------------
-  output$ui_ahlf <- renderUI({
-    build_ui(id = "ahlf", input,
+  ## Low flows --------------------------------------------------------
+  output$ui_lf <- renderUI({
+    build_ui(id = "lf", input,
              include = c("discharge", "allowed"))
   })
 
-  ## AH - Peak flows --------------------------------------------------------
-  output$ui_ahp <- renderUI({
-    build_ui(id = "ahp", input,
+  ## Peak flows --------------------------------------------------------
+  output$ui_pf <- renderUI({
+    build_ui(id = "pf", input,
              include = c("discharge", "allowed"))
   })
 
-  ## AH - Days outside normal -----------------------------------------------
+  ## AS - Days outside normal -----------------------------------------------
   # None
 
 
@@ -574,22 +574,22 @@ server <- function(input, output, session) {
 
 
 
-  # Summary Stats - General ---------------------------------------
+  # Hydrographs ---------------------------------------
 
   ## Plot --------------------
-  output$sum_plot <- renderGirafe({
+  output$hydro_plot <- renderGirafe({
     check_data(input)
-    req(data_raw(), input$sum_type,
-        !is.null(input$sum_plot_log), !is.null(input$sum_add_year))
+    req(data_raw(), input$hydro_type,
+        !is.null(input$hydro_plot_log), !is.null(input$hydro_add_year))
 
     data_flow <- data_raw()
 
     e <- NULL
-    if(input$sum_type %in% c("Long-term", "Daily") & input$sum_add_year != "") {
-      e <- glue("add_year = {input$sum_add_year}")
+    if(input$hydro_type %in% c("Long-term", "Daily") & input$hydro_add_year != "") {
+      e <- glue("add_year = {input$hydro_add_year}")
     }
 
-    if(input$sum_type %in% c("Long-term", "Daily")) {
+    if(input$hydro_type %in% c("Long-term", "Daily")) {
       p <- c("complete", "missing")
     } else {
       p <- c("allowed", "percentiles")
@@ -599,68 +599,68 @@ server <- function(input, output, session) {
 
     end <- "[[1]]"
 
-    if(input$sum_type == "Monthly" & !is.null(input$sum_monthly_plot)) {
-      end <- glue("[['{input$sum_monthly_plot}_Monthly_Statistics']]")
+    if(input$hydro_type == "Monthly" & !is.null(input$hydro_monthly_plot)) {
+      end <- glue("[['{input$hydro_monthly_plot}_Monthly_Statistics']]")
     }
 
-    g <- switch(input$sum_type,
+    g <- switch(input$hydro_type,
                 "Long-term" = "plot_longterm_daily_stats",
                 "Annual" = "plot_annual_stats",
                 "Monthly" = "plot_monthly_stats",
                 "Daily" = "plot_daily_stats") %>%
-      create_fun("data_flow", id = "sum", input,
+      create_fun("data_flow", id = "hydro", input,
                  params = p,
                  extra = e,
                  end = end)
 
-    code$sum_plot <- g
+    code$hydro_plot <- g
 
     g <- eval(parse(text = g))
 
 
     # Add interactivity
-    if(input$sum_type == "Long-term") {
+    if(input$hydro_type == "Long-term") {
       stats <- names(g$data) # Get stats from plot data
       stats <- stats[!stats %in% c("LT_Mean", "LT_Med")] # Omit these
 
       # For tooltips labels...
-      names(stats)[stats == "Year_mean"] <- input$sum_add_year
+      names(stats)[stats == "Year_mean"] <- input$hydro_add_year
 
       # Add interactive vline
       g <- g + fasstrshiny:::create_vline_interactive(
         data = g$data, stats = stats, size = 20)
 
-    } else if(input$sum_type == "Annual") {
+    } else if(input$hydro_type == "Annual") {
       # Replace point layers with interactive ones
       which_pt <- map_lgl(g$layers, ~any(class(.$geom) %in% "GeomPoint"))
       g$layers[which_pt][[1]] <- geom_point_interactive(aes(
         tooltip = paste0("Year: ", Year, "\n", Statistic, ": ", round(Value, 4)),
         data_id = Year), size = 4)
 
-    } else if(input$sum_type == "Monthly") {
-      req(input$sum_monthly_plot)
+    } else if(input$hydro_type == "Monthly") {
+      req(input$hydro_monthly_plot)
       g <- g +
         geom_point_interactive(aes(
         tooltip = paste0("Year: ", Year, "\n", "Month: ", Month, "\n",
                          Stat2, ": ", round(Value, 4)),
         data_id = Year))
-    } else if(input$sum_type == "Daily") {
+    } else if(input$hydro_type == "Daily") {
       stats <- names(g$data) # Get stats from plot data
       stats <- stats[!stats %in% c("DayofYear", "AnalysisDate")] # Omit these
 
       # For tooltips labels...
       names(stats)[stats == "Date"] <- "Day"
-      names(stats)[stats == "RollingValue"] <- input$sum_add_year
+      names(stats)[stats == "RollingValue"] <- input$hydro_add_year
 
       # Add Interactive vline
       g <- g + fasstrshiny:::create_vline_interactive(data = g$data, stats)
     }
 
     # Add dates
-    if(input$sum_type == "Daily" & !is.null(input$sum_add_dates)){
+    if(input$hydro_type == "Daily" & !is.null(input$hydro_add_dates)){
       dts <- data.frame(
         Date = fasstrshiny:::get_date(
-          input$sum_add_dates,
+          input$hydro_add_dates,
           water_year = as.numeric(input$data_water_year))) %>%
         mutate(labs = format(Date, '%b-%d'),
                hjust = if_else(as.numeric(input$data_water_year) ==
@@ -675,10 +675,10 @@ server <- function(input, output, session) {
     }
 
     # Add mad
-    if(!is.null(input$sum_add_mad) && input$sum_add_mad &&
-       input$sum_type != "Monthly") {
+    if(!is.null(input$hydro_add_mad) && input$hydro_add_mad &&
+       input$hydro_type != "Monthly") {
 
-      mad <- sum_mad() %>%
+      mad <- hydro_mad() %>%
         pivot_longer(-STATION_NUMBER, names_to = "type")
 
       g <- g +
@@ -706,40 +706,33 @@ server <- function(input, output, session) {
 
 
   ## MAD -----------------------
-  sum_mad <- reactive({
-    req(input$sum_discharge, input$sum_mad)
+  hydro_mad <- reactive({
+    req(input$hydro_discharge, input$hydro_mad)
 
     data_flow <- data_raw()
 
     t <- create_fun(
       fun = "calc_longterm_mean",
-      data = "data_flow", id = "sum", input,
+      data = "data_flow", id = "hydro", input,
       params = "complete",
-      extra = glue("percent_MAD = c({glue_collapse(input$sum_mad, sep = ',')})"))
+      extra = glue("percent_MAD = c({glue_collapse(input$hydro_mad, sep = ',')})"))
 
-    code$sum_mad <- t
+    code$hydro_mad <- t
 
     parse(text = t) %>%
       eval()
   })
 
-  output$sum_mad <- render_gt({
-    check_data(input)
-     sum_mad() %>%
-      gt() %>%
-      fmt_number(columns = where(is.numeric), decimals = 4)
-  })
-
   ## Table -----------------------
-  output$sum_table <- DT::renderDT({
+  output$hydro_table <- DT::renderDT({
     check_data(input)
-    req(input$sum_type, input$sum_discharge)
+    req(input$hydro_type, input$hydro_discharge)
 
     data_flow <- data_raw()
 
     p <- "percentiles"
 
-    p <- switch(input$sum_type,
+    p <- switch(input$hydro_type,
                 "Long-term" = c("complete", "missing", "custom_months",
                                 "custom_months_label"),
                 "Annual" = "allowed",
@@ -748,15 +741,15 @@ server <- function(input, output, session) {
 
     p <- c(p, "percentiles")
 
-    t <- switch(input$sum_type,
+    t <- switch(input$hydro_type,
                 "Long-term" = "calc_longterm_daily_stats",
                 "Annual" = "calc_annual_stats",
                 "Monthly" = "calc_monthly_stats",
                 "Daily" = "calc_daily_stats") %>%
-      create_fun("data_flow", id = "sum", input,
+      create_fun("data_flow", id = "hydro", input,
                  params = p)
 
-    code$sum_table <- t
+    code$hydro_table <- t
 
     parse(text = t) %>%
       eval() %>%
@@ -770,144 +763,13 @@ server <- function(input, output, session) {
 
 
   ## R Code -----------------
-  output$sum_code <- renderText({
-    fasstrshiny:::code_format(code, id = "sum")
+  output$hydro_code <- renderText({
+    fasstrshiny:::code_format(code, id = "hydro")
   })
 
 
-  # Summary Stats - Flow ---------------------------------------
+  # Cumulative Hydrographs --------------------------------------------------
 
-  ## Flow Percentile -----------------------
-  output$sumfl_perc <- renderText({
-    req(input$sumfl_discharge, input$sumfl_flow)
-
-    data_flow <- data_raw()
-
-    # Flow
-    t <- create_fun(fun = "calc_flow_percentile",
-                    data = "data_flow", id = "sumfl", input,
-                    params = "complete",
-                    extra = glue("flow_value = {input$sumfl_flow}"))
-
-    code$sumfl_flow <- t
-
-    parse(text = t) %>%
-      eval() %>%
-      pull(Percentile) %>%
-      round(4)
-  })
-
-  ## Plot --------------------
-  output$sumfl_plot <- renderGirafe({
-    check_data(input)
-    req(data_raw(), !is.null(input$sumfl_plot_log))
-
-    data_flow <- data_raw()
-
-    # missing arguments
-    # - include_longterm
-
-    g <- create_fun(
-      fun = "plot_flow_duration", data = "data_flow", id = "sumfl", input,
-      params = c("custom_months", "custom_months_label", "complete",
-                 "missing", "plot_log"),
-      end = "[[1]]")
-
-    code$sumfl_plot <- g
-
-    g <- eval(parse(text = g))
-    g <- g +
-      geom_point_interactive(
-        aes(tooltip = paste0("% Time: ", Percentile, "\n",
-                             "Month: ", Month),
-            data_id = Percentile),
-        show.legend = FALSE, alpha = 0.01, size = 3)
-
-    girafe(ggobj = g, width_svg = 12, height = 6,
-           options = list(
-             opts_toolbar(position = "topleft"),
-             opts_selection(type = "none"),
-             opts_hover(css = "fill:orange; stroke:gray;fill-opacity:1;")))
-  })
-
-
-  ## Table -----------------------
-  output$sumfl_table <- DT::renderDT({
-    check_data(input)
-    req(data_raw(), input$sumfl_discharge)
-
-    data_flow <- data_raw()
-
-    t <- create_fun(fun = "calc_longterm_daily_stats",
-                    data = "data_flow", id = "sumfl", input,
-                    params = c("custom_months", "custom_months_label",
-                               "missing"),
-                    extra = "percentiles = 1:99",
-                    end = "%>% select(-Mean, -Median, -Minimum, -Maximum)")
-
-    code$sumfl_table <- t
-
-    parse(text = t) %>%
-      eval() %>%
-      mutate(across(where(is.numeric), ~round(., 4))) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 500, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Brtip'))
-  })
-
-
-
-
-
-  ## R Code -----------------
-  output$sumfl_code <- renderText({
-    fasstrshiny:::code_format(code, id = "sumfl")
-  })
-
-
-
-  # Summary Stats - Annual Means ---------------------------------------
-
-
-  ## Plot --------------------
-  output$sumam_plot <- renderGirafe({
-    check_data(input)
-    req(data_raw(), input$sumam_missing)
-
-    data_flow <- data_raw()
-
-    g <- create_fun(
-      fun = "plot_annual_means", data = "data_flow", id = "sumam", input,
-      params = c("missing"),
-      end = "[[1]]")
-
-    code$sumam_plot <- g
-
-    g <- eval(parse(text = g))
-
-    # Replace layers with interactive
-    g$layers[[1]] <- geom_bar_interactive(
-      aes(tooltip = paste0("Year: ", Year, "\nMAD: ", round(Mean, 4)),
-          data_id = Year), colour = "cornflowerblue",
-      fill = "cornflowerblue", stat = "identity")
-
-    girafe(ggobj = g, width_svg = 14, height_svg = 4,
-           options = list(opts_selection(type = "none")))
-  })
-
-
-  ## R Code -----------------
-  output$sumam_code <- renderText({
-    fasstrshiny:::code_format(code, id = "sumam")
-  })
-
-
-
-
-
-  # Cumulative ---------------------------------------
   ## Plot --------------------
   output$cum_plot <- renderGirafe({
     check_data(input)
@@ -1024,23 +886,159 @@ server <- function(input, output, session) {
   })
 
 
-  # AH - Flow timing ---------------------------------------
+
+  # Flows ---------------------------------------
+
+  ## Flow Percentile -----------------------
+  output$flows_perc <- renderText({
+    req(input$flows_discharge, input$flows_flow)
+
+    data_flow <- data_raw()
+
+    # Flow
+    t <- create_fun(fun = "calc_flow_percentile",
+                    data = "data_flow", id = "flows", input,
+                    params = "complete",
+                    extra = glue("flow_value = {input$flows_flow}"))
+
+    code$flows_flow <- t
+
+    parse(text = t) %>%
+      eval() %>%
+      pull(Percentile) %>%
+      round(4)
+  })
+
   ## Plot --------------------
-  output$ahft_plot <- renderGirafe({
+  output$flows_plot <- renderGirafe({
     check_data(input)
-    req(data_raw(), input$ahft_percent)
+    req(data_raw(), !is.null(input$flows_plot_log))
+
+    data_flow <- data_raw()
+
+    # missing arguments
+    # - include_longterm
+
+    g <- create_fun(
+      fun = "plot_flow_duration", data = "data_flow", id = "flows", input,
+      params = c("custom_months", "custom_months_label", "complete",
+                 "missing", "plot_log"),
+      end = "[[1]]")
+
+    code$flows_plot <- g
+
+    g <- eval(parse(text = g))
+    g <- g +
+      geom_point_interactive(
+        aes(tooltip = paste0("% Time: ", Percentile, "\n",
+                             "Month: ", Month),
+            data_id = Percentile),
+        show.legend = FALSE, alpha = 0.01, size = 3)
+
+    girafe(ggobj = g, width_svg = 12, height = 6,
+           options = list(
+             opts_toolbar(position = "topleft"),
+             opts_selection(type = "none"),
+             opts_hover(css = "fill:orange; stroke:gray;fill-opacity:1;")))
+  })
+
+
+  ## Table -----------------------
+  output$flows_table <- DT::renderDT({
+    check_data(input)
+    req(data_raw(), input$flows_discharge)
+
+    data_flow <- data_raw()
+
+    t <- create_fun(fun = "calc_longterm_daily_stats",
+                    data = "data_flow", id = "flows", input,
+                    params = c("custom_months", "custom_months_label",
+                               "missing"),
+                    extra = "percentiles = 1:99",
+                    end = "%>% select(-Mean, -Median, -Minimum, -Maximum)")
+
+    code$flows_table <- t
+
+    parse(text = t) %>%
+      eval() %>%
+      mutate(across(where(is.numeric), ~round(., 4))) %>%
+      datatable(rownames = FALSE,
+                filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE, scrollY = 500, scroller = TRUE,
+                               deferRender = TRUE, dom = 'Brtip'))
+  })
+
+
+
+
+
+  ## R Code -----------------
+  output$flows_code <- renderText({
+    fasstrshiny:::code_format(code, id = "flows")
+  })
+
+
+
+  # Annual Statistics -----------------
+
+  # Annual Means ---------------------------------------
+
+
+  ## Plot --------------------
+  output$am_plot <- renderGirafe({
+    check_data(input)
+    req(data_raw(), input$am_missing)
+
+    data_flow <- data_raw()
+
+    g <- create_fun(
+      fun = "plot_annual_means", data = "data_flow", id = "am", input,
+      params = c("missing"),
+      end = "[[1]]")
+
+    code$am_plot <- g
+
+    g <- eval(parse(text = g))
+
+    # Replace layers with interactive
+    g$layers[[1]] <- geom_bar_interactive(
+      aes(tooltip = paste0("Year: ", Year, "\nMAD: ", round(Mean, 4)),
+          data_id = Year), colour = "cornflowerblue",
+      fill = "cornflowerblue", stat = "identity")
+
+    girafe(ggobj = g, width_svg = 14, height_svg = 4,
+           options = list(opts_selection(type = "none")))
+  })
+
+
+  ## R Code -----------------
+  output$am_code <- renderText({
+    fasstrshiny:::code_format(code, id = "am")
+  })
+
+
+
+
+
+
+  # Flow timing ---------------------------------------
+  ## Plot --------------------
+  output$ft_plot <- renderGirafe({
+    check_data(input)
+    req(data_raw(), input$ft_percent)
 
     data_flow <- data_raw()
 
     g <- create_fun(
       "plot_annual_flow_timing", data = "data_flow",
-      id = "ahft", input,
+      id = "ft", input,
       params_ignore = c("roll_days", "roll_align"),
       extra = glue("percent_total = ",
-                   "c({glue_collapse(input$ahft_percent, sep = ',')})"),
+                   "c({glue_collapse(input$ft_percent, sep = ',')})"),
       end = "[[1]]")
 
-    code$ahft_plot <- g
+    code$ft_plot <- g
 
     # Add interactivity
     g <- eval(parse(text = g))
@@ -1060,20 +1058,20 @@ server <- function(input, output, session) {
 
 
   ## Table -----------------------
-  output$ahft_table <- DT::renderDT({
+  output$ft_table <- DT::renderDT({
     check_data(input)
-    req(data_raw(), input$ahft_percent)
+    req(data_raw(), input$ft_percent)
 
     data_flow <- data_raw()
 
     t <- create_fun(
       "calc_annual_flow_timing", data = "data_flow",
-      id = "ahft", input,
+      id = "ft", input,
       params_ignore = c("roll_days", "roll_align"),
       extra = glue("percent_total = ",
-                   "c({glue_collapse(input$ahft_percent, sep = ',')})"))
+                   "c({glue_collapse(input$ft_percent, sep = ',')})"))
 
-    code$ahft_table <- t
+    code$ft_table <- t
 
     parse(text = t) %>%
       eval() %>%
@@ -1087,29 +1085,29 @@ server <- function(input, output, session) {
 
 
   ## R Code -----------------
-  output$ahft_code <- renderText({
-    fasstrshiny:::code_format(code, id = "ahft")
+  output$ft_code <- renderText({
+    fasstrshiny:::code_format(code, id = "ft")
   })
 
 
-  # AH - Low Flows ---------------------------------------
+  # Low Flows ---------------------------------------
   ## Plot --------------------
-  output$ahlf_plot <- renderGirafe({
+  output$lf_plot <- renderGirafe({
     check_data(input)
-    req(data_raw(), input$ahlf_discharge)
+    req(data_raw(), input$lf_discharge)
 
     data_flow <- data_raw()
 
     g <- create_fun(
       "plot_annual_lowflows", data = "data_flow",
-      id = "ahlf", input,
+      id = "lf", input,
       params = c("discharge", "allowed"),
       params_ignore = c("roll_days", "roll_align"),
       extra = glue(
-        "roll_days = c({glue_collapse(input$ahlf_roll_days, sep = ',')}), ",
-        "roll_align = '{input$ahlf_roll_align}'"))
+        "roll_days = c({glue_collapse(input$lf_roll_days, sep = ',')}), ",
+        "roll_align = '{input$lf_roll_align}'"))
 
-    code$ahlf_plot <- g
+    code$lf_plot <- g
 
     # Add interactivity
     g <- eval(parse(text = g))
@@ -1139,21 +1137,21 @@ server <- function(input, output, session) {
 
 
   ## Table -----------------------
-  output$ahlf_table <- DT::renderDT({
+  output$lf_table <- DT::renderDT({
     check_data(input)
-    req(data_raw(), input$ahlf_discharge)
+    req(data_raw(), input$lf_discharge)
 
     data_flow <- data_raw()
 
     t <- create_fun(
       "calc_annual_lowflows", data = "data_flow",
-      id = "ahlf", input,
+      id = "lf", input,
       params = c("discharge", "allowed"),
       params_ignore = "roll_days",
       extra = glue("roll_days = ",
-                   "c({glue_collapse(input$ahlf_roll_days, sep = ',')})"))
+                   "c({glue_collapse(input$lf_roll_days, sep = ',')})"))
 
-    code$ahlf_table <- t
+    code$lf_table <- t
 
     parse(text = t) %>%
       eval() %>%
@@ -1167,28 +1165,28 @@ server <- function(input, output, session) {
 
 
   ## R Code -----------------
-  output$ahlf_code <- renderText({
-    fasstrshiny:::code_format(code, id = "ahlf")
+  output$lf_code <- renderText({
+    fasstrshiny:::code_format(code, id = "lf")
   })
 
-  # AH - Peaks ---------------------------------------
+  # Peak Flows ---------------------------------------
 
   ## Table -----------------------
-  output$ahp_table <- DT::renderDT({
+  output$pf_table <- DT::renderDT({
     check_data(input)
-    req(data_raw(), input$ahp_discharge)
+    req(data_raw(), input$pf_discharge)
 
     data_flow <- data_raw()
 
     t <- create_fun(
       "calc_annual_peaks", data = "data_flow",
-      id = "ahp", input,
+      id = "pf", input,
       params = c("discharge", "missing", "allowed"),
       params_ignore = "roll_days",
       extra = glue("roll_days = ",
-                   "c({glue_collapse(input$ahp_roll_days, sep = ',')})"))
+                   "c({glue_collapse(input$pf_roll_days, sep = ',')})"))
 
-    code$ahp_table <- t
+    code$pf_table <- t
 
     parse(text = t) %>%
       eval() %>%
@@ -1202,26 +1200,26 @@ server <- function(input, output, session) {
 
 
   ## R Code -----------------
-  output$ahp_code <- renderText({
-    fasstrshiny:::code_format(code, id = "ahp")
+  output$pf_code <- renderText({
+    fasstrshiny:::code_format(code, id = "pf")
   })
 
-  # AH - Days outside normal ---------------------------------------
+  # Days outside normal ---------------------------------------
   ## Plot --------------------
-  output$ahon_plot <- renderGirafe({
+  output$on_plot <- renderGirafe({
     check_data(input)
-    req(data_raw(), input$ahon_normal)
+    req(data_raw(), input$on_normal)
 
     data_flow <- data_raw()
 
     g <- create_fun(
       "plot_annual_outside_normal", data = "data_flow",
-      id = "ahon", input,
+      id = "on", input,
       extra = glue("normal_percentiles = ",
-                   "c({glue_collapse(input$ahon_normal, sep = ',')})"),
+                   "c({glue_collapse(input$on_normal, sep = ',')})"),
       end = "[[1]]")
 
-    code$ahon_plot <- g
+    code$on_plot <- g
 
     # Add interactivity
     g <- eval(parse(text = g))
@@ -1241,19 +1239,19 @@ server <- function(input, output, session) {
 
 
   ## Table -----------------------
-  output$ahon_table <- DT::renderDT({
-    req(data_raw(), input$ahon_normal)
+  output$on_table <- DT::renderDT({
+    req(data_raw(), input$on_normal)
 
     data_flow <- data_raw()
 
     t <- create_fun(
       "calc_annual_outside_normal", data = "data_flow",
-      id = "ahon", input,
+      id = "on", input,
       params = "discharge",
       extra = glue("normal_percentiles = ",
-                   "c({glue_collapse(input$ahon_normal, sep = ',')})"))
+                   "c({glue_collapse(input$on_normal, sep = ',')})"))
 
-    code$ahon_table <- t
+    code$on_table <- t
 
     parse(text = t) %>%
       eval() %>%
@@ -1267,8 +1265,8 @@ server <- function(input, output, session) {
 
 
   ## R Code -----------------
-  output$ahon_code <- renderText({
-    fasstrshiny:::code_format(code, id = "ahon")
+  output$on_code <- renderText({
+    fasstrshiny:::code_format(code, id = "on")
   })
 
 
