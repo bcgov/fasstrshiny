@@ -102,7 +102,7 @@ ui_data_load <- fluidRow(
       div(id = "data_types",
           build_ui(id = "data", define_options = TRUE,
                    include = c("rolling", "discharge",
-                               "missing", "allowed")))
+                               "complete", "missing", "allowed")))
     ),
 
     tabBox(
