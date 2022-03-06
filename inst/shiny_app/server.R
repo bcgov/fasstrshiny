@@ -649,39 +649,20 @@ server <- function(input, output, session) {
 
     data_flow <- data_raw()
 
-    e <- NULL
-    if(input$hydro_type %in% c("Long-term", "Daily") & input$hydro_add_year != "") {
+    if(input$hydro_add_year != "") {
       e <- glue("add_year = {input$hydro_add_year}")
-    }
-
-    if(input$hydro_type %in% c("Long-term", "Daily")) {
-      p <- c("complete", "missing")
-    } else {
-      p <- c("allowed", "percentiles")
-    }
-
-    p <- c(p, "plot_log")
-
-    end <- "[[1]]"
-
-    if(input$hydro_type == "Monthly" & !is.null(input$hydro_monthly_plot)) {
-      end <- glue("[['{input$hydro_monthly_plot}_Monthly_Statistics']]")
-    }
+    } else e <- NULL
 
     g <- switch(input$hydro_type,
-                "Long-term" = "plot_longterm_daily_stats",
-                "Annual" = "plot_annual_stats",
-                "Monthly" = "plot_monthly_stats",
-                "Daily" = "plot_daily_stats") %>%
+                "Daily" = "plot_daily_stats",
+                "Long-term Monthly" = "plot_longterm_monthly_stats",
+                "Long-term Daily" = "plot_longterm_daily_stats") %>%
       create_fun("data_flow", id = "hydro", input,
-                 params = p,
-                 extra = e,
-                 end = end)
+                 params = c("plot_log", "complete", "missing"),
+                 extra = e)
 
     code$hydro_plot <- g
-
-    g <- eval(parse(text = g))
-
+    g <- eval(parse(text = g))[[1]]
 
     # Add interactivity
     if(input$hydro_type == "Long-term") {
@@ -695,20 +676,6 @@ server <- function(input, output, session) {
       g <- g + fasstrshiny:::create_vline_interactive(
         data = g$data, stats = stats, size = 20)
 
-    } else if(input$hydro_type == "Annual") {
-      # Replace point layers with interactive ones
-      which_pt <- map_lgl(g$layers, ~any(class(.$geom) %in% "GeomPoint"))
-      g$layers[which_pt][[1]] <- geom_point_interactive(aes(
-        tooltip = paste0("Year: ", Year, "\n", Statistic, ": ", round(Value, 4)),
-        data_id = Year), size = 4)
-
-    } else if(input$hydro_type == "Monthly") {
-      req(input$hydro_monthly_plot)
-      g <- g +
-        geom_point_interactive(aes(
-        tooltip = paste0("Year: ", Year, "\n", "Month: ", Month, "\n",
-                         Stat2, ": ", round(Value, 4)),
-        data_id = Year))
     } else if(input$hydro_type == "Daily") {
       stats <- names(g$data) # Get stats from plot data
       stats <- stats[!stats %in% c("DayofYear", "AnalysisDate")] # Omit these
@@ -740,8 +707,7 @@ server <- function(input, output, session) {
     }
 
     # Add mad
-    if(!is.null(input$hydro_add_mad) && input$hydro_add_mad &&
-       input$hydro_type != "Monthly") {
+    if(!is.null(input$hydro_add_mad) && input$hydro_add_mad) {
 
       mad <- hydro_mad() %>%
         pivot_longer(-STATION_NUMBER, names_to = "type")

@@ -383,7 +383,7 @@ create_fun <- function(fun, data = NULL, id, input, params = NULL,
   n[params %in%
       c("water_year", "years_range", "years_exclude",
         "roll_days", "roll_align", "months",
-        "ignore_missing", "complete_years", "allowed_missing")] <- "data"
+        "missing", "complete", "allowed")] <- "data"
   n[is.na(n)] <- id
   names(params) <- glue("{n}_{params}")
 
