@@ -380,8 +380,10 @@ create_fun <- function(fun, data = NULL, id, input, params = NULL,
   if(is.null(names(params))) {
     n <- rep(NA_character_, length(params))
   } else n <- names(params)
-  n[params %in% c("water_year", "years_range", "years_exclude",
-                  "roll_days", "roll_align", "months")] <- "data"
+  n[params %in%
+      c("water_year", "years_range", "years_exclude",
+        "roll_days", "roll_align", "months",
+        "ignore_missing", "complete_years", "allowed_missing")] <- "data"
   n[is.na(n)] <- id
   names(params) <- glue("{n}_{params}")
 
@@ -392,6 +394,11 @@ create_fun <- function(fun, data = NULL, id, input, params = NULL,
   nulls <- map_lgl(id, ~is.null(.) || (is.character(.) && . == ""))
   id <- id[!nulls]
   params <- params[!nulls]
+
+  # Find and remove defaults
+  defaults <- remove_defaults(fun, params, input)
+  params <- params[!defaults]
+  id <- id[!defaults]
 
   # Create standard parameters
   #
@@ -434,4 +441,37 @@ create_fun <- function(fun, data = NULL, id, input, params = NULL,
   args <- glue_collapse(c(data, p, extra), sep = ', ')
 
   glue("{fun}({args}){end}")
+}
+
+
+remove_defaults <- function(fun, params, input) {
+
+  # Get defaults (omitting symbols)
+  defaults <- as.list(formals(get(fun))) %>%
+    .[!map_lgl(., ~typeof(.) == "symbol")] %>%
+    .[!names(.) == "log_ticks"] %>%  # Don't worry about log_ticks
+    map(., eval) %>% # Eval into what they are, effectively
+    tibble::enframe(name = "fasstr_arg", value = "default")
+
+  input_values <- map(names(params), ~input[[.]]) %>%
+    setNames(params) %>%
+    tibble::enframe(name = "id", value = "input")
+
+   id <- parameters %>%
+     left_join(defaults, by = "fasstr_arg") %>%
+     left_join(input_values, by = "id") %>%
+     select(id, default, input) %>%
+     mutate(same = map2_lgl(default, input, params_equal)) %>%
+     filter(same) %>%
+     pull(id)
+
+   # Return default params
+   params %in% id
+}
+
+
+params_equal <- function(x, y) {
+  if(length(x) > 0 & length(y) > 0) {
+    all.equal(sort(as.character(x)), sort(as.character(y)))[1] == TRUE
+  } else FALSE
 }
