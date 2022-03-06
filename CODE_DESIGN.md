@@ -113,6 +113,12 @@ then be parsed and evaluated with `eval(parse(text = t))`.
 See the internal dataset, `parameters`. It is created in `data-raw/parameters.R` 
 and includes parameter `id`s, `tooltips` and how they correspond to fasstr arguments.
 
+## Spinners
+Spinners are created with the `shinycssloaders` package. The global options 
+are set in `global.R`. Every output that requires a progress spinner needs to be 
+wrapped with `withSpinner()` in `ui.R`.
+
+
 ## Future considerations
 
 ### Interactive Plots

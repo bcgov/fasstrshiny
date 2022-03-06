@@ -24,6 +24,7 @@ Imports:
     shinyBS (>= 0.61),
     shinyWidgets (>= 0.6.2),
     shinyjs (>= 2.0.0),
+    shinycssloaders (>= 1.0.0),
     glue (>= 1.6.1),
     dplyr (>= 1.0.7),
     tidyr (>= 1.1.4),

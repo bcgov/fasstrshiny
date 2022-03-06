@@ -17,6 +17,7 @@ library(shinydashboard)
 library(shinyBS)
 library(shinyWidgets)
 library(shinyjs)
+library(shinycssloaders)
 
 library(glue)
 library(dplyr)
@@ -38,6 +39,12 @@ library(tidyhydat)
 library(bcmaps)
 
 source("functions.R")
+
+# Setup defaults ----------------------
+options(
+  spinner.color = "#003366", spinner.type = 5, spinner.size = 0.5, # Spinners
+  scipen=999)                                             # No sci notations
+
 
 # Setup HYDAT dat -----------------------------
 

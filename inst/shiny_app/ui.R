@@ -124,7 +124,7 @@ ui_data_load <- fluidRow(
       tabPanel(
         title = "Plot", value = "data_tabs_plot",
         uiOutput("ui_data_plot_options", align = "right"),
-        plotlyOutput('data_plot')
+        withSpinner(plotlyOutput('data_plot'))
       ),
 
       ### Table --------
@@ -591,10 +591,10 @@ ui_analysis_annual <- fluidRow(
     tabBox(
       width = 9, height = min_height,
 
-      ### Plot ---------------------
+      ### Plot/Table ---------------------
       tabPanel(
         title = "Explore statistics",
-        DTOutput("at_table_fit"),
+        withSpinner(DTOutput("at_table_fit")),
         p(style = "margin-bottom:30px"), # A bit of space
         fluidRow(
           column(4, gt_output("at_table_years_sub")),
@@ -610,7 +610,7 @@ ui_analysis_annual <- fluidRow(
       ### Table ---------------------
       tabPanel(
         title = "Table - Yearly stats",
-        DTOutput("at_table_years")
+        withSpinner(DTOutput("at_table_years"))
       ),
 
       ### R Code ---------------------
@@ -711,19 +711,19 @@ ui_analysis_volume_freq <- fluidRow(
           helpText("Click on a point to add that year to ",
                    "'Years to exclude'. Remember to re-Compute ",
                    "Analysis.")),
-        girafeOutput("vf_plot")
+        withSpinner(girafeOutput("vf_plot"))
       ),
 
       ### Table - Plot Data ---------------------
       tabPanel(
         title = "Table - Plot Data",
-        DTOutput("vf_table_plot")
+        withSpinner(DTOutput("vf_table_plot"))
       ),
 
       ### Table - Fitted Quantiles ---------------------
       tabPanel(
         title = "Table - Fitted Quantiles",
-        DTOutput("vf_table_fit")
+        withSpinner(DTOutput("vf_table_fit"))
       ),
 
       ### Plot ---------------------
@@ -731,7 +731,7 @@ ui_analysis_volume_freq <- fluidRow(
         title = "Fit Checks",
         uiOutput("ui_vf_day"),
         verbatimTextOutput("vf_fit_stats"),
-        plotOutput("vf_fit_plot", height = "550px")
+        withSpinner(plotOutput("vf_fit_plot", height = "550px"))
       ),
 
       ### R Code ---------------------
@@ -812,20 +812,20 @@ ui_analysis_hydat_peak <- fluidRow(
       ### Plot ---------------------
       tabPanel(
         title = "Plot",
-        girafeOutput("hp_plot")
+        withSpinner(girafeOutput("hp_plot"))
       ),
 
       ### Table ---------------------
       tabPanel(
         title = "Table",
-        DTOutput("hp_table")
+        withSpinner(DTOutput("hp_table"))
       ),
 
       ### Plot ---------------------
       tabPanel(
         title = "Fit Checks",
         verbatimTextOutput("hp_fit_stats"),
-        plotOutput("hp_fit_plot", height = "550px")
+        withSpinner(plotOutput("hp_fit_plot", height = "550px"))
       ),
 
       ### R Code ---------------------
@@ -875,7 +875,8 @@ tagList(
                  menuSubItem("Annual Trends", tabName = "analysis_annual"),
                  menuSubItem("Volume Frequency", tabName = "analysis_volume_freq"),
                  menuSubItem("HYDAT Peak", tabName = "analysis_hydat_peak"))
-      )
+      ),
+      div(style = "margin-top: 10px", gt_output("data_info"))
     ),
     ## Body -----------------
     dashboardBody(
@@ -900,6 +901,8 @@ tagList(
       )
     )
   ),
+
+  ## Footer --------------------
   tags$footer(
     div(
       a(href="https://www2.gov.bc.ca/gov/content/home", "Home"),

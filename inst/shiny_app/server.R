@@ -17,7 +17,8 @@ server <- function(input, output, session) {
   # Global reactives ----------------------------------
   code <- reactiveValues()                # Holds code
 
-  meta <- reactiveValues(station_name = "",
+  meta <- reactiveValues(station_id = "",
+                         station_name = "",
                          basin_area = NA_real_)
 
   # UI elements ---------------------------------------
@@ -445,6 +446,73 @@ server <- function(input, output, session) {
   output$data_code <- renderText({
     fasstrshiny:::code_format(code, id = "data")
   })
+
+
+  ## Sidebar: Data Info ------------------------
+  output$data_info <- render_gt({
+
+    d <- tibble(name = "", value = "", .rows = 0)
+    t <- "Current Data: None"
+    s <- NULL
+
+    if(!is.null(input$data_water_year) & !is.null(input$data_years_range) &
+       !is.null(input$data_months)) {
+
+      if(is.null(input$data_years_exclude)) {
+        ye <- ""
+      } else ye <- glue_collapse(input$data_years_exclude, sep = ", ")
+
+      t <- glue("Current Data: {meta$station_id}")
+      s <- meta$station_name
+
+      m <- input$data_months
+      if(all(1:12 %in% m)) m <- "all" else m <- glue_collapse(m, sep = ", ")
+
+      n <- data_raw() %>%
+        filter(WaterYear >= input$data_years_range[1],
+               WaterYear <= input$data_years_range[2],
+               !WaterYear %in% input$data_years_exclude) %>%
+        pull(WaterYear) %>%
+        unique() %>%
+        length()
+
+
+      d <- list(`Water Year` = month.abb[as.numeric(input$data_water_year)],
+                `Year Range` = glue_collapse(input$data_years_range, sep = "-"),
+                `Years Excl.` = ye,
+                `Total Years` = as.character(n),
+                `Months` = m) %>%
+        tibble::enframe() %>%
+        unnest(value)
+    }
+
+    gt(d) %>%
+      cols_align("left") %>%
+      cols_width(name ~ px(65)) %>%
+      tab_header(title = t, subtitle = s) %>%
+      tab_options(column_labels.hidden = TRUE,
+                  heading.subtitle.font.size = 14,
+                  heading.align = "left",
+                  #table.border.top.width = 0,
+                  table.border.bottom.width = 0,
+                  heading.border.bottom.width = 0,
+                  table.font.size = 12,
+                  data_row.padding = 1,
+                  table.background.color = "#FFFFFF00",  # Transparent
+                  table.font.color = "#b8c7ce",
+                  table.align = "center",
+                  table.width = "90%") %>%
+      tab_style(
+        style = cell_borders(
+          sides = c("top", "bottom"),
+          weight = 0),
+        locations = cells_body(
+          columns = everything(),
+          rows = everything()
+        ))
+  })
+
+
 
   # Data - Availability ---------------
   ## Data --------------
