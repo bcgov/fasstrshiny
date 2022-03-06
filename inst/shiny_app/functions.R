@@ -45,13 +45,15 @@ select_custom_months <- function(id, input = NULL, set = TRUE) {
                                   "Nov" = 11, "Dec" = 12),
                    selected = selected,
                    multiple = TRUE),
-    bsTooltip(glue("{id}_custom_months"), tips$custom_months),
+    bsTooltip(glue("{id}_custom_months"), tips$custom_months,
+              placement = "left"),
 
     textInput(glue("{id}_custom_months_label"),
               label = "Summary months label",
               placeholder = "ex. Jun-Aug",
               value = value),
-    bsTooltip(glue("{id}_custom_months_label"), tips$custom_months_label)
+    bsTooltip(glue("{id}_custom_months_label"), tips$custom_months_label,
+              placement = "left")
   )
 }
 
@@ -65,7 +67,8 @@ select_discharge <- function(id, input = NULL, set = TRUE) {
                                 "Volumetric Discharge (m3)" = "Volume_m3",
                                 "Runoff Yield (mm)" = "Yield_mm"),
                  selected = selected),
-    bsTooltip(glue("{id}_discharge"), tips$discharge, placement = "left"))
+    bsTooltip(glue("{id}_discharge"), tips$discharge,
+              placement = "left"))
 }
 
 select_rolling <- function(id, input = NULL, set = TRUE, multiple = FALSE) {
@@ -73,23 +76,25 @@ select_rolling <- function(id, input = NULL, set = TRUE, multiple = FALSE) {
   value <- set_input("roll_days", input, set, d)
   selected <- set_input("roll_align", input, set, "right")
 
-  fluidRow(
-    column(6,
-           selectizeInput(glue("{id}_roll_days"),
-                          label = "Rolling days",
-                          choices = 1:180,
-                          selected = value,
-                          multiple = multiple),
-           bsTooltip(glue("{id}_roll_days"), tips$roll_days)),
-    column(6,
-           selectizeInput(glue("{id}_roll_align"),
-                          label = "Rolling align",
-                          selected = selected,
-                          choices = list("Right" = "right",
-                                         "Left" = "left",
-                                         "Center" = "center")),
-           bsTooltip(glue("{id}_roll_align"), tips$roll_align)),
-  )
+  tagList(
+    fluidRow(id = glue("{id}_rolling"),
+             column(6,
+                    selectizeInput(glue("{id}_roll_days"),
+                                   label = "Rolling days",
+                                   choices = 1:180,
+                                   selected = value,
+                                   multiple = multiple)),
+             column(6,
+                    selectizeInput(glue("{id}_roll_align"),
+                                   label = "Rolling align",
+                                   selected = selected,
+                                   choices = list("Right" = "right",
+                                                  "Left" = "left",
+                                                  "Center" = "center")))
+    ),
+    bsTooltip(id = glue("{id}_rolling"),
+              title = glue("Days: {tips$roll_days}<br>Align: {tips$roll_align}"),
+              placement = "left"))
 }
 
 
@@ -102,7 +107,8 @@ select_percentiles <- function(id, input = NULL, set = TRUE) {
                    choices = c(1:99),
                    selected = selected,
                    multiple = TRUE),
-    bsTooltip(glue("{id}_percentiles"), tips$percentiles))
+    bsTooltip(glue("{id}_percentiles"), tips$percentiles,
+              placement = "left"))
 }
 
 select_complete <- function(id, input = NULL, set = TRUE) {
@@ -121,7 +127,8 @@ select_complete <- function(id, input = NULL, set = TRUE) {
                                     id = glue("{id}_complete_tip")),
                    value = value,
                    status = "success"),
-    bsTooltip(glue("{id}_complete_tip"), tip))
+    bsTooltip(glue("{id}_complete_tip"), tip,
+              placement = "left"))
 }
 
 select_missing <- function(id, input = NULL, set = TRUE, value = NULL) {
@@ -133,7 +140,8 @@ select_missing <- function(id, input = NULL, set = TRUE, value = NULL) {
                    value = value, status = "danger",
                    label = tags$span("Ignore missing values",
                                      id = glue("{id}_missing_tip"))),
-    bsTooltip(glue("{id}_missing_tip"), tips$missing))
+    bsTooltip(glue("{id}_missing_tip"), tips$missing,
+              placement = "left"))
 }
 
 select_allowed <- function(id, input = NULL, set = TRUE, value = NULL) {
@@ -144,7 +152,8 @@ select_allowed <- function(id, input = NULL, set = TRUE, value = NULL) {
     sliderInput(glue("{id}_allowed"),
                 label = "Allowed missing (%)",
                 value = value, step = 5, min = 0, max = 100),
-    bsTooltip(glue("{id}_allowed"), tips$allowed))
+    bsTooltip(glue("{id}_allowed"), tips$allowed,
+              placement = "left"))
 }
 
 # Special one for when there is a "type" to calculate
@@ -165,7 +174,8 @@ select_plot_stats <- function(id, stats) {
                         label = "Statistics",
                         choices = stats,
                         selected = stats),
-      bsTooltip(glue("{id}_stats"), tips$stats))
+      bsTooltip(glue("{id}_stats"), tips$stats,
+                placement = "left"))
   }
 }
 
@@ -178,7 +188,8 @@ select_plot_log <- function(id, input = NULL, set = TRUE) {
                                      id = glue("{id}_plot_log_tip")),
                    value = value,
                    status = "success"),
-    bsTooltip(glue("{id}_plot_log_tip"), tips$plot_log))
+    bsTooltip(glue("{id}_plot_log_tip"), tips$plot_log,
+              placement = "left"))
 }
 
 select_daterange <- function(id, data) {
@@ -203,7 +214,8 @@ select_add_year <- function(id, input) {
                                    to = input$data_years_range[2], by = 1)),
                    selected = NULL,
                    multiple = FALSE),
-    bsTooltip(glue("{id}_add_year"), tips$add_year)
+    bsTooltip(glue("{id}_add_year"), tips$add_year,
+              placement = "left")
   )
 }
 
@@ -220,7 +232,8 @@ select_add_dates <- function(id) {
       label = "Date to show",
       choices = c("Choose date(s)" = "", d),
       selected = NULL, multiple = TRUE)),
-    bsTooltip(glue("{id}_add_dates"), tips$add_dates))
+    bsTooltip(glue("{id}_add_dates"), tips$add_dates,
+              placement = "left"))
 }
 
 
@@ -231,7 +244,8 @@ select_add_mad <- function(id) {
                                      id = glue("{id}_add_mad_tip")),
                    value = FALSE,
                    status = "success"),
-    bsTooltip(glue("{id}_add_mad_tip"), tips$add_mad))
+    bsTooltip(glue("{id}_add_mad_tip"), tips$add_mad,
+              placement = "left"))
 }
 
 show <- function(id, name) {

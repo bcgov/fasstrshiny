@@ -20,29 +20,42 @@ server <- function(input, output, session) {
   meta <- reactiveValues(station_name = "",
                          basin_area = NA_real_)
 
-
   # UI elements ---------------------------------------
 
   ## Data ----------------------
   output$ui_data_water_year <- renderUI({
-    validate(need(input$data_load,
-                  "You'll need to first load some data"))
-    radioGroupButtons(
-      "data_water_year",
-      label = "Water year start",
-      choices = setNames(1:12, month.abb),
-      selected = 1, size = "sm", width = "100%")
+    tagList(
+      radioGroupButtons(
+        "data_water_year",
+        label = "Water year start",
+        choices = setNames(1:12, month.abb),
+        selected = 1, size = "sm", width = "100%"),
+      bsTooltip("data_water_year",
+                title = tips$water_year, placement = "left"))
   })
 
   output$ui_data_years_range <- renderUI({
     req(data_raw())
-    sliderInput("data_years_range",
-                label = "Start and end years",
-                min = min(data_raw()$WaterYear),
-                max = max(data_raw()$WaterYear),
-                value = c(min(data_raw()$WaterYear),
-                          max(data_raw()$WaterYear)),
-                dragRange = TRUE, sep = "")
+
+
+    yr_orig <- c(min(data_raw()$WaterYear), max(data_raw()$WaterYear))
+    yr <- input$data_years_range
+    if(is.null(yr)) {
+      yr <- yr_orig
+    } else {
+      if(yr[1] < yr_orig[1]) yr[1] <- yr_orig[1]
+      if(yr[2] > yr_orig[2]) yr[2] <- yr_orig[2]
+    }
+
+    tagList(
+      sliderInput("data_years_range",
+                  label = "Start and end years",
+                  min = min(data_raw()$WaterYear),
+                  max = max(data_raw()$WaterYear),
+                  value = yr,
+                  dragRange = TRUE, sep = ""),
+      bsTooltip("data_years_range", title = tips$years_range,
+                placement = "left"))
   })
 
   output$ui_data_years_exclude <- renderUI({
@@ -56,12 +69,15 @@ server <- function(input, output, session) {
       } else s <- NULL
     })
 
-    selectizeInput("data_years_exclude",
-                   label = "Years to exclude",
-                   choices = seq(from = input$data_years_range[1],
-                                 to = input$data_years_range[2], by = 1),
-                   selected = s,
-                   multiple = TRUE)
+    tagList(
+      selectizeInput("data_years_exclude",
+                     label = "Years to exclude",
+                     choices = seq(from = input$data_years_range[1],
+                                   to = input$data_years_range[2], by = 1),
+                     selected = s,
+                     multiple = TRUE),
+      bsTooltip("data_years_exclude", title = tips$years_exclude,
+                placement = "left"))
   })
 
   output$ui_data_months <- renderUI({
@@ -78,7 +94,7 @@ server <- function(input, output, session) {
                      choices = m,
                      selected = 1:12,
                      multiple = TRUE),
-      bsTooltip("data_months", tips$months))
+      bsTooltip("data_months", tips$months, placement = "left"))
   })
 
   # Update station from Map button
@@ -95,6 +111,11 @@ server <- function(input, output, session) {
       value = stations$station_number[input$data_hydat_table_rows_selected])
   }) %>%
     bindEvent(input$data_hydat_table_rows_selected)
+
+  # Hide/Show based on toggle
+  observe(toggle("data_stn", condition = input$data_show_stn))
+  observe(toggle("data_dates", condition = input$data_show_dates))
+  observe(toggle("data_types", condition = input$data_show_types))
 
 
   # Add plot options as Gear in corner
@@ -201,7 +222,7 @@ server <- function(input, output, session) {
                           value = value, status = "success")
     }
 
-    tagList(m, bsTooltip("cum_seasons_tip", tips$seasons))
+    tagList(m, bsTooltip("cum_seasons_tip", tips$seasons, placement = "left"))
   }) %>%
     bindEvent(input$cum_type)
 
@@ -235,12 +256,15 @@ server <- function(input, output, session) {
   # but allowed to modify here
   output$ui_at_exclude <- renderUI({
     req(input$data_years_range)
-    selectizeInput("at_years_exclude",
-                   label = "Years to exclude",
-                   choices = seq(from = input$data_years_range[1],
-                                 to = input$data_years_range[2], by = 1),
-                   selected = input$data_years_exclude,
-                   multiple = TRUE)
+    tagList(
+      selectizeInput("at_years_exclude",
+                     label = "Years to exclude",
+                     choices = seq(from = input$data_years_range[1],
+                                   to = input$data_years_range[2], by = 1),
+                     selected = input$data_years_exclude,
+                     multiple = TRUE),
+      bsTooltip(id = "at_years_exclude", title = tips$years_exclude,
+                placement = "left"))
   })
 
   # Update years_exclude as points selected/unselected
@@ -259,8 +283,8 @@ server <- function(input, output, session) {
       sliderInput("at_allowed_monthly",
                   label = "Monthly - Allowed missing (%)",
                   value = input$data_allowed, step = 5, min = 0, max = 100),
-      bsTooltip("at_allowed_annual", tips$allowed),
-      bsTooltip("at_allowed_monthly", tips$allowed)
+      bsTooltip("at_allowed_annual", tips$allowed, placement = "left"),
+      bsTooltip("at_allowed_monthly", tips$allowed, placement = "left")
       )
   })
 
@@ -287,10 +311,6 @@ server <- function(input, output, session) {
                                  input$vf_plot_selected))
   }) %>%
     bindEvent(input$vf_plot_selected)
-
-  output$ui_vf <- renderUI({
-    build_ui(id = "vf", input, include = c("discharge", "allowed"))
-  })
 
   output$ui_vf_day <- renderUI({
     req(vf_freqs())
@@ -337,21 +357,19 @@ server <- function(input, output, session) {
 
   ## Raw data ------------------
   data_raw <- reactive({
-    req(input$data_station_num)
-
-    wy <- 1
-    if(!is.null(input$data_water_year)) wy <- as.numeric(input$data_water_year)
-
+    req(input$data_station_num, input$data_water_year,
+        input$data_load > 0)
 
     if (input$data_source == "HYDAT") {
       m <- filter(stations, .data$station_number == input$data_station_num)
+      meta$station_id <- input$data_station_num
       meta$station_name <- m$station_name
       meta$basin_area <- as.numeric(m$drainage_area_gross)
 
       d <- glue(
         "data_flow <- fill_missing_dates(",
         "        station_number = '{input$data_station_num}') %>%",
-        "  add_date_variables(water_year_start = {wy}) %>%",
+        "  add_date_variables(water_year_start = {as.numeric(input$data_water_year)}) %>%",
         "  add_daily_volume() %>%",
         "  add_daily_yield()")
 
@@ -359,12 +377,13 @@ server <- function(input, output, session) {
       inFile <- input$data_file
       if (is.null(inFile)) return(NULL)
 
+      meta$station_id <- basename(input$data_file)
       meta$station_name <- input$data_station_name
       meta$basin_area <- as.numeric(input$data_basin_area)
 
       d <- glue("data_flow <- read.csv({inFile$datapath}) %>%",
                 "  fill_missing_dates() %>%",
-                "  add_date_variables(water_year_start = {wy})")
+                "  add_date_variables(water_year_start = {as.numeric(input$data_water_year)})")
 
     }
 
@@ -383,7 +402,7 @@ server <- function(input, output, session) {
         !is.null(input$data_plot_log),
         input$data_daterange,
         input$data_years_range,
-        input$data_water_year)
+        !is.null(input$data_water_year))
 
     data_flow <- data_raw()
 
@@ -405,6 +424,7 @@ server <- function(input, output, session) {
   ## Table ----------------
   output$data_table <- renderDT({
     req(input$data_years_range)
+
     check_data(input)
     data_raw() %>%
       rename("StationNumber" = "STATION_NUMBER") %>%
@@ -1326,11 +1346,6 @@ server <- function(input, output, session) {
 
   ## Plot --------------------
   output$at_plot <- renderGirafe({
-    validate(
-      need(input$data_load,
-           "You'll need to first load some data under Data > Loading") %then%
-        need(input$at_compute,
-             "Choose your settings and click 'Compute Trends'"))
 
     g <- at_trends()[[at_stat()]] +
       geom_point_interactive(aes(
@@ -1653,6 +1668,11 @@ server <- function(input, output, session) {
   })
 
 
+  # Outputs to NOT suspend when hidden -------------
+
+  # Ensure that ui elements are not suspended when hidden
+  map(str_subset(names(outputOptions(output)), "^ui_"),
+      ~outputOptions(output, ., suspendWhenHidden = FALSE))
 }
 
 
