@@ -122,8 +122,10 @@ server <- function(input, output, session) {
   # Add plot options as Gear in corner
   output$ui_data_plot_options <- renderUI({
     req(data_raw())
-    select_plot_options(data = data_raw(), id = "data", input,
-                        include = c("plot_log", "daterange"))
+
+    select_plot_options(
+      select_plot_log("data", value = formals(plot_flow_data)$log_discharge), # Default
+      select_daterange("data", data_raw()))
   })
 
   ##  Hydro graphs -------------------------------------------------------------
@@ -144,11 +146,13 @@ server <- function(input, output, session) {
 
   # Plot options
   output$ui_hydro_plot_options <- renderUI({
-
-    select_plot_options(id = "hydro", input,
-                        include = c("percentiles",
-                                    "plot_log", "add_year",
-                                    "add_dates", "add_mad"))
+    id <- "hydro"
+    select_plot_options(
+      select_plot_log(id,
+                      value = formals(plot_longterm_daily_stats)$log_discharge),
+      select_add_year(id, input),
+      select_add_dates(id),
+      select_add_mad(id))
     # Add inner/outer percentiles?
   })
 
@@ -194,8 +198,9 @@ server <- function(input, output, session) {
 
   # Plot options
   output$ui_flows_plot_options <- renderUI({
-    select_plot_options(data = data_raw(), id = "flows", input,
-                        include = c("plot_log"))
+    select_plot_options(
+      select_plot_log(id = "flows",
+                      value = formals(plot_flow_duration)$log_discharge))
   })
 
 
@@ -228,8 +233,11 @@ server <- function(input, output, session) {
     bindEvent(input$cum_type)
 
   output$ui_cum_plot_options <- renderUI({
-    select_plot_options(data = data_raw(), id = "cum", input,
-                        include = c("plot_log", "add_year"))
+    id <- "cum"
+    select_plot_options(
+      select_plot_log(
+        id, value = formals(plot_daily_cumulative_stats)$log_discharge),
+      select_add_year(id, input))
   })
 
   # Table options

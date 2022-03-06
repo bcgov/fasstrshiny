@@ -179,8 +179,7 @@ select_plot_stats <- function(id, stats) {
   }
 }
 
-select_plot_log <- function(id, input = NULL, set = TRUE) {
-  value <- set_input("plot_log", input, set, TRUE)
+select_plot_log <- function(id, value = TRUE) {
 
   tagList(
     materialSwitch(glue("{id}_plot_log"),
@@ -254,26 +253,14 @@ show <- function(id, name) {
                     status = "success"))
 }
 
-select_plot_options <- function(id, input, include = "plot_log",
-                                params = NULL, data = NULL) {
-
-  i <- tagList()
-  if("plot_log" %in% include) i <- tagList(i, select_plot_log(id, input))
-  if("percentiles" %in% include) i <- tagList(i, select_percentiles(id, input))
-  if("daterange" %in% include) i <- tagList(i, select_daterange(id, data))
-  if("discharge" %in% include) i <- tagList(i, select_discharge(id, input))
-  if("plot_stats" %in% include) i <- tagList(i, select_plot_stats(id, params))
-  if("add_year" %in% include) i <- tagList(i, select_add_year(id, input))
-  if("add_dates" %in% include) i <- tagList(i, select_add_dates(id))
-  if("add_mad" %in% include) i <- tagList(i, select_add_mad(id))
-
-  t <- dropdownButton(
-    tags$h3("Plot options"),
-    i,
-    status = "primary", icon = icon("gear", verify_fa = FALSE),
-    size = "sm", width = "300px", right = TRUE,
-    tooltip = tooltipOptions(title = "Plot options", placement = "left")
-  )
+select_plot_options <- function(...) {
+    dropdownButton(
+      tags$h3("Plot options"),
+      tagList(...),
+      status = "primary", icon = icon("gear", verify_fa = FALSE),
+      size = "sm", width = "300px", right = TRUE,
+      tooltip = tooltipOptions(title = "Plot options", placement = "left")
+    )
 }
 
 select_table_options <- function(id, input,
