@@ -585,13 +585,13 @@ server <- function(input, output, session) {
       "plot_missing_dates", data = "data_flow",
       id = "available", input,
       params_ignore = "months",
-      extra = glue("months = c({glue_collapse(input$available_months, sep = ', ')})"),
-      end = "[[1]]")
+      extra = glue("months = c({glue_collapse(input$available_months, sep = ', ')})"))
 
     code$available_miss <- g
 
     g <- parse(text = g) %>%
-      eval()
+      eval() %>%
+      .[[1]]
 
     # Replace layers with interactive
     g$layers[[1]] <- geom_bar_interactive(
