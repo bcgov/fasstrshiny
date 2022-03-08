@@ -36,8 +36,6 @@ server <- function(input, output, session) {
   })
 
   output$ui_data_years_range <- renderUI({
-    req(data_raw())
-
 
     yr_orig <- c(min(data_raw()$WaterYear), max(data_raw()$WaterYear))
     yr <- input$data_years_range
@@ -116,28 +114,12 @@ server <- function(input, output, session) {
 
   # Add plot options as Gear in corner
   output$ui_data_plot_options <- renderUI({
-    req(data_raw())
-
     select_plot_options(
       select_plot_log("data", value = formals(plot_flow_data)$log_discharge), # Default
       select_daterange("data", data_raw()))
   })
 
   ##  Hydro graphs -------------------------------------------------------------
-  output$ui_hydro <- renderUI({
-    build_ui(id = "hydro", input, include = "complete")
-  })
-
-  output$ui_hydro_monthly_plot <- renderUI({
-    req(input$hydro_type == "Monthly")
-
-    p <- c("Mean", "Median", "Maximum", "Minimum")
-    if(!is.null(input$hydro_percentiles)) p <- c(p, glue("P{input$hydro_percentiles}"))
-
-    selectizeInput("hydro_monthly_plot", label = "Statistic to plot",
-                   choices = p, selected = 1)
-
-  })
 
   # Plot options
   output$ui_hydro_plot_options <- renderUI({
@@ -151,45 +133,7 @@ server <- function(input, output, session) {
     # Add inner/outer percentiles?
   })
 
-
-  # Enable/disable based on type
-  observe({
-    # add year
-    if(input$hydro_type %in% c("Long-term", "Daily")) {
-      enable("hydro_add_year")
-    } else {
-      disable("hydro_add_year")
-    }
-
-    # add dates
-    if(input$hydro_type == "Daily") {
-      enable("hydro_add_dates")
-    } else {
-      disable("hydro_add_dates")
-    }
-
-    # custom months
-    if(input$hydro_type == "Long-term") {
-      enable("hydro_custom_months")
-      enable("hydro_custom_months_label")
-    } else {
-      disable("hydro_custom_months")
-      disable("hydro_custom_months_label")
-    }
-
-  }) %>%
-    bindEvent(input$hydro_type)
-
-  # Table options
-  output$ui_hydro_table_options <- renderUI({
-    select_table_options(id = "hydro", input)
-  })
-
   ## Flows ----------------------------------------------------------
-  output$ui_flows <- renderUI({
-    build_ui(id = "flows", input,
-             include = c("complete", "custom_months"))
-  })
 
   # Plot options
   output$ui_flows_plot_options <- renderUI({
@@ -209,12 +153,15 @@ server <- function(input, output, session) {
       select_add_year(id, input))
   })
 
-  # Table options
-  output$ui_cum_table_options <- renderUI({
-    select_table_options(data = data_raw(), id = "cum", input,
-                         include = "percentiles")
+  ## Annual Statistics --------------------------------------------
+  # Plot options
+  output$ui_as_plot_options <- renderUI({
+    id <- "as"
+    select_plot_options(
+      select_plot_log(id,
+                      value = formals(plot_monthly_stats2)$log_discharge))
+    # Add inner/outer percentiles?
   })
-
 
   ## Annual Trends ------------------------------------------------
 
@@ -279,24 +226,28 @@ server <- function(input, output, session) {
     bindEvent(input$vf_plot_selected)
 
   output$ui_vf_day <- renderUI({
-    req(vf_freqs())
     radioGroupButtons("vf_day",
                       choices = names(vf_freqs()$Freq_Fitting),
                       selected = names(vf_freqs()$Freq_Fitting)[1])
   })
 
 
-  ## General ---------------------
+  ## General Toggles ---------------------
   # Hide/Show based on toggle
   observe(toggle("data_stn", condition = input$data_show_stn))
   observe(toggle("data_dates", condition = input$data_show_dates))
   observe(toggle("data_types", condition = input$data_show_types))
+
   observe(toggle("at_methods", condition = input$at_show_methods))
   observe(toggle("at_options", condition = input$at_show_options))
   observe(toggle("ui_at_allowed", condition = input$at_show_allowed))
   observe(toggle("vf_data", condition = input$vf_show_data))
   observe(toggle("vf_plotting", condition = input$vf_show_plotting))
   observe(toggle("vf_fitting", condition = input$vf_show_fitting))
+
+  # Enable/Disable based on toggle
+  observe(toggleState("hydro_add_dates", condition = input$hydro_type == "Daily"))
+  observe(toggleState("hydro_custom_months_all", condition = input$hydro_type != "Daily"))
 
   # Data - Loading ---------------
 
@@ -376,11 +327,9 @@ server <- function(input, output, session) {
   ## Plot ----------------
   output$data_plot <- renderPlotly({
     check_data(input)
-    req(data_raw(),
-        !is.null(input$data_plot_log),
-        input$data_daterange,
+    req(input$data_daterange,
         input$data_years_range,
-        !is.null(input$data_water_year))
+        input$data_water_year)
 
     data_flow <- data_raw()
 
@@ -494,8 +443,6 @@ server <- function(input, output, session) {
   # Data - Availability ---------------
   ## Data --------------
   available_raw <- reactive({
-    req(data_raw())
-
     data_flow <- data_raw()
     d <- glue("
       data_available <- screen_flow_data(
@@ -512,7 +459,6 @@ server <- function(input, output, session) {
   ## Summary plot ------------------
   output$available_plot1 <- renderGirafe({
     check_data(input)
-    req(available_raw())
 
     xlab <- if_else(input$data_water_year != 1, "Water Year", "Year")
     title <- paste0("Annual Daily ", input$available_summary, " - ", meta$station_name)
@@ -547,7 +493,6 @@ server <- function(input, output, session) {
   ## Missing Data Plot ---------------------------
   output$available_plot2 <- renderGirafe({
     check_data(input)
-    req(data_raw())
 
     data_flow <- data_raw()
     g <- create_fun(
@@ -613,8 +558,12 @@ server <- function(input, output, session) {
   ## Plot --------------------
   output$hydro_plot <- renderGirafe({
     check_data(input)
-    req(data_raw(), input$hydro_type,
-        !is.null(input$hydro_plot_log), !is.null(input$hydro_add_year))
+    validate(
+      need(length(input$hydro_inner_percentiles) == 2 &
+           length(input$hydro_outer_percentiles) == 2,
+           glue("Inner and outer percentiles must each have two values, ",
+                "corresponding to the limits of the plot ribbons")))
+    req(input$hydro_type, !is.null(input$hydro_add_year))
 
     data_flow <- data_raw()
 
@@ -676,11 +625,9 @@ server <- function(input, output, session) {
     }
 
     # Add mad
-    if(!is.null(input$hydro_add_mad) && input$hydro_add_mad) {
-
+    if(isTRUE(input$hydro_add_mad)) {
       mad <- hydro_mad() %>%
         pivot_longer(-STATION_NUMBER, names_to = "type")
-
       g <- g +
         geom_hline(data = mad,
                    aes(yintercept = value),
@@ -707,7 +654,7 @@ server <- function(input, output, session) {
 
   ## MAD -----------------------
   hydro_mad <- reactive({
-    req(input$hydro_discharge, input$hydro_mad)
+    req(input$hydro_mad)
 
     data_flow <- data_raw()
 
@@ -726,7 +673,7 @@ server <- function(input, output, session) {
   ## Table -----------------------
   output$hydro_table <- DT::renderDT({
     check_data(input)
-    req(input$hydro_type, input$hydro_discharge)
+    req(input$hydro_type)
 
     data_flow <- data_raw()
 
@@ -773,7 +720,7 @@ server <- function(input, output, session) {
   ## Plot --------------------
   output$cum_plot <- renderGirafe({
     check_data(input)
-    req(data_raw(), input$cum_type, !is.null(input$cum_add_year))
+    req(input$cum_type)
 
     data_flow <- data_raw()
 
@@ -820,7 +767,7 @@ server <- function(input, output, session) {
   ## Table -----------------------
   output$cum_table <- DT::renderDT({
     check_data(input)
-    req(data_raw(), input$cum_discharge)
+    req(input$cum_discharge)
 
     data_flow <- data_raw()
 
@@ -877,7 +824,6 @@ server <- function(input, output, session) {
   ## Plot --------------------
   output$flows_plot <- renderGirafe({
     check_data(input)
-    req(data_raw(), !is.null(input$flows_plot_log))
 
     data_flow <- data_raw()
 
@@ -911,7 +857,6 @@ server <- function(input, output, session) {
   ## Table -----------------------
   output$flows_table <- DT::renderDT({
     check_data(input)
-    req(data_raw(), input$flows_discharge)
 
     data_flow <- data_raw()
 
@@ -991,7 +936,7 @@ server <- function(input, output, session) {
   ## Plot --------------------
   output$ft_plot <- renderGirafe({
     check_data(input)
-    req(data_raw(), input$ft_percent)
+    req(input$ft_percent)
 
     data_flow <- data_raw()
 
@@ -1025,7 +970,7 @@ server <- function(input, output, session) {
   ## Table -----------------------
   output$ft_table <- DT::renderDT({
     check_data(input)
-    req(data_raw(), input$ft_percent)
+    req(input$ft_percent)
 
     data_flow <- data_raw()
 
@@ -1059,7 +1004,6 @@ server <- function(input, output, session) {
   ## Plot --------------------
   output$lf_plot <- renderGirafe({
     check_data(input)
-    req(data_raw(), input$lf_discharge)
 
     data_flow <- data_raw()
 
@@ -1104,7 +1048,6 @@ server <- function(input, output, session) {
   ## Table -----------------------
   output$lf_table <- DT::renderDT({
     check_data(input)
-    req(data_raw(), input$lf_discharge)
 
     data_flow <- data_raw()
 
@@ -1139,7 +1082,6 @@ server <- function(input, output, session) {
   ## Table -----------------------
   output$pf_table <- DT::renderDT({
     check_data(input)
-    req(data_raw(), input$pf_discharge)
 
     data_flow <- data_raw()
 
@@ -1173,7 +1115,7 @@ server <- function(input, output, session) {
   ## Plot --------------------
   output$on_plot <- renderGirafe({
     check_data(input)
-    req(data_raw(), input$on_normal)
+    req(input$on_normal)
 
     data_flow <- data_raw()
 
@@ -1205,7 +1147,7 @@ server <- function(input, output, session) {
 
   ## Table -----------------------
   output$on_table <- DT::renderDT({
-    req(data_raw(), input$on_normal)
+    req(input$on_normal)
 
     data_flow <- data_raw()
 
@@ -1250,7 +1192,7 @@ server <- function(input, output, session) {
 
   ## Trends -----------------------
   at_trends <- reactive({
-    req(data_raw(), input$at_zyp)
+    req(input$at_zyp)
 
     data_flow <- data_raw()
 
@@ -1351,7 +1293,6 @@ server <- function(input, output, session) {
 
   ## Table - years sub -----------------------
   output$at_table_years_sub <- render_gt({
-    req(at_trends(), at_stat())
 
     at_trends()[[1]] %>%
       filter(Statistic == at_stat()) %>%
@@ -1402,7 +1343,6 @@ server <- function(input, output, session) {
 
   ## Frequencies -----------------------
   vf_freqs <- reactive({
-    req(data_raw(), input$vf_use_max)
 
     validate(need(all(!is.na(fasstrshiny:::text_to_num(input$vf_prob_scale))),
                   "Probabilies to plot must be a comma separated list of numbers"))
@@ -1512,7 +1452,7 @@ server <- function(input, output, session) {
 
   ## Fit checks --------------------
   output$vf_fit_stats <- renderPrint({
-    req(vf_freqs(), input$vf_day)
+    req(input$vf_day)
     vf_freqs()[["Freq_Fitting"]][[input$vf_day]]
   })
 
@@ -1541,7 +1481,6 @@ server <- function(input, output, session) {
 
   ## Frequencies -----------------------
   hp_freqs <- reactive({
-    req(data_raw(), input$hp_use_max)
 
     validate(need(
       isTruthy(data_raw()$STATION_NUMBER) &
@@ -1586,8 +1525,6 @@ server <- function(input, output, session) {
         need(input$hp_compute,
              "Choose your settings and click 'Compute Analysis'"))
 
-    req(hp_freqs())
-
     # Add interactivity
     g <- hp_freqs()[["Freq_Plot"]] +
       geom_point_interactive(aes(
@@ -1622,7 +1559,6 @@ server <- function(input, output, session) {
 
   ## Fit checks --------------------
   output$hp_fit_stats <- renderPrint({
-    req(hp_freqs())
     hp_freqs()[["Freq_Fitting"]][[1]]
   })
 

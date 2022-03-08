@@ -220,28 +220,46 @@ ui_overview <- fluidRow(
 
 ui_hydro <- fluidRow(
   column(
-    width = 12, h2("Hydrographs and Long-term Stats"),
+    width = 12, h2("Daily and Long-term Hydrographs"),
+
+    ## Settings -----------------
     box(
       width = 3,
-      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
+      helpText("Placeholder descriptive text to describe this section, ",
+               "what it does and how to use it"),
+
+      # Analysis type
       div(align = "left",
-          radioGroupButtons("hydro_type",
-                            label = "Summary type",
-                            choices = list("Daily",
-                                           "Long-term Daily",
-                                           "Long-term Monthly"),
-                            selected = "Daily",
-                            status = "primary", direction = "vertical", size = "sm")),
+          awesomeRadio("hydro_type", label = "Summary type",
+                       choices = list("Daily",
+                                      "Long-term Daily",
+                                      "Long-term Monthly"),
+                       selected = "Daily",
+                       status = "primary")),
       bsTooltip("hydro_type", "Type of statistic to calculate",
                 placement = "left"),
+
+      # MAD Percents
       selectizeInput("hydro_mad",
-                  label = "Percent Mean Annual Discharge",
+                  label = "Percent of Mean Annual Discharge (MAD)",
                   choices = c(1:99),
-                  selected = c(1, 5, 50, 95, 99),
+                  selected = c(5, 10, 20),
                   multiple = TRUE),
       bsTooltip("hydro_mad", tips$mad, placement = "left"),
-      uiOutput("ui_hydro")
+
+      # Percentiles
+      select_percentiles(
+        "hydro_inner", label = "Inner percentiles",
+        selected = eval(formals("plot_daily_stats")$inner_percentiles)),
+      select_percentiles(
+        "hydro_outer", label = "Outer percentiles",
+        selected = eval(formals("plot_daily_stats")$outer_percentiles)),
+      select_percentiles(
+        "hydro", label = "Additional percentiles (table)",
+        selected = eval(formals("calc_daily_stats")$percentiles))
     ),
+
+    # Outputs
     tabBox(
       width = 9, height = min_height,
 
@@ -255,7 +273,7 @@ ui_hydro <- fluidRow(
       ## Table ---------------------
       tabPanel(
         title = "Table",
-        uiOutput("ui_hydro_table_options", align = "right"),
+        select_table_options(id = "hydro"),
         DTOutput("hydro_table")
       ),
 
@@ -298,8 +316,8 @@ ui_flows <- fluidRow(
       ## Table ---------------------
       tabPanel(
         title = "Table - Percentiles",
-        uiOutput("ui_flows_table_options", align = "right"),
-        DTOutput("flows_table")
+        select_table_options("flows", include = "custom_months"),
+        withSpinner(DTOutput("flows_table"))
       ),
 
       ## R Code ---------------------
@@ -317,18 +335,18 @@ ui_flows <- fluidRow(
 
 ui_cumulative <- fluidRow(
   column(
-    width = 12, h2("Cumulative Statistics"),
+    width = 12, h2("Cumulative Hydrographs"),
     box(
       width = 3,
       helpText("Placeholder descriptive text to describe this section, ",
                "what it does and how to use it"),
-      radioGroupButtons("cum_type",
-                        label = "Cumulative type",
-                        choices = list("Daily", "Monthly"),
-                        justified = TRUE, status = "primary"),
+      awesomeRadio("cum_type",
+                   label = "Cumulative type",
+                   choices = list("Daily", "Monthly"),
+                   status = "primary"),
       bsTooltip("cum_type", "Type of cumulative statistics to calculate",
                 placement = "left"),
-      radioButtons("cum_discharge",
+      awesomeRadio("cum_discharge",
                    label = "Discharge type",
                    choices = list("Volumetric Discharge (m3)" = FALSE,
                                   "Runoff Yield (mm)" = TRUE),
@@ -348,7 +366,7 @@ ui_cumulative <- fluidRow(
       ## Table ---------------------
       tabPanel(
         title = "Table",
-        uiOutput("ui_cum_table_options", align = "right"),
+        select_table_options(id = "cum", include = "percentiles"),
         DTOutput("cum_table")
       ),
 
@@ -536,7 +554,8 @@ ui_analysis_annual <- fluidRow(
         # Compute button
         bsButton("at_compute", "Compute Trends", style = "primary",
                  class = "centreButton"),
-        helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
+        helpText("Placeholder descriptive text to describe this section, ",
+                 "what it does and how to use it"),
         hr(class = "narrowHr"),
 
         # Other options
@@ -798,12 +817,12 @@ ui_analysis_hydat_peak <- fluidRow(
 
         fluidRow(
           column(width = 6,
-                 materialSwitch("hp_plot_curve", label = "Plot curve", value = TRUE,
-                                status = "success")),
+                 prettySwitch("hp_plot_curve", label = "Plot curve", value = TRUE,
+                              status = "success", slim = TRUE)),
           column(width = 6,
-                 materialSwitch("hp_use_log",
-                                label = "Log trans",
-                                value = FALSE, status = "success"))
+                 prettySwitch("hp_use_log",
+                              label = "Log trans", slim = TRUE,
+                              value = FALSE, status = "success"))
         ),
         bsTooltip("hp_plot_curve", tips$plot_curve, placement = "left"),
         bsTooltip("hp_use_log", tips$use_log, placement = "left"),
@@ -875,11 +894,11 @@ tagList(
                  menuSubItem("Loading", tabName = "data_load"),
                  menuSubItem("Availability", tabName = "data_available")),
         menuItem("Overview", tabName = "overview", icon = icon("binoculars")),
-        menuItem("Hydrographs & Long-term Stats", tabName = "hydro",
-                 icon=icon("chart-bar")),
-        menuItem("Cumulative Hydrographs", tabName = "cumulative",
-                 icon = icon("chart-area")),
-        menuItem("Flow duration and percentiles", tabName = "flows"),
+        menuItem("Hydrographs", icon = icon("chart-area"),
+                 menuSubItem("Daily and Long-term", tabName = "hydro"),
+                 menuSubItem("Cumulative", tabName = "cumulative")),
+        menuItem("Flow duration and percentiles", tabName = "flows",
+                 icon = icon("clock")),
         menuItem("Annual Statistics", tabName = "annual",
                  icon = icon("calendar"),
                  menuSubItem("Annual Means", tabName = "as_means"),

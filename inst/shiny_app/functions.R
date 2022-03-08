@@ -30,30 +30,26 @@ set_input <- function(type, input, set, value) {
 
 ## Functions for inputs ------------
 
-select_custom_months <- function(id, input = NULL, set = TRUE) {
-  selected <- set_input("custom_months", input, set, NULL)
-  value <- set_input("custom_months_label", input, set, "")
-
-  tagList(
-    selectizeInput(glue("{id}_custom_months"),
-                   label = "Months to combine and summarize",
-                   choices = list("Jan" = 1,  "Feb" = 2,
-                                  "Mar" = 3,  "Apr" = 4,
-                                  "May" = 5,  "Jun" = 6,
-                                  "Jul" = 7,  "Aug" = 8,
-                                  "Sep" = 9,  "Oct" = 10,
-                                  "Nov" = 11, "Dec" = 12),
-                   selected = selected,
-                   multiple = TRUE),
-    bsTooltip(glue("{id}_custom_months"), tips$custom_months,
-              placement = "left"),
-
-    textInput(glue("{id}_custom_months_label"),
-              label = "Summary months label",
-              placeholder = "ex. Jun-Aug",
-              value = value),
-    bsTooltip(glue("{id}_custom_months_label"), tips$custom_months_label,
-              placement = "left")
+select_custom_months <- function(id) {
+  div(id = glue("{id}_custom_months_all"),
+      selectizeInput(glue("{id}_custom_months"),
+                     label = "Months to combine and summarize",
+                     choices = list("Jan" = 1,  "Feb" = 2,
+                                    "Mar" = 3,  "Apr" = 4,
+                                    "May" = 5,  "Jun" = 6,
+                                    "Jul" = 7,  "Aug" = 8,
+                                    "Sep" = 9,  "Oct" = 10,
+                                    "Nov" = 11, "Dec" = 12),
+                     selected = NULL,
+                     multiple = TRUE),
+      textInput(glue("{id}_custom_months_label"),
+                label = "Summary months label",
+                placeholder = "ex. Jun-Aug",
+                value = ""),
+      bsTooltip(id = glue("{id}_custom_months_all"),
+                title = glue("Months: {tips$custom_months}<br>",
+                             "Label: {tips$custom_months_label}"),
+                placement = "left")
   )
 }
 
@@ -98,12 +94,11 @@ select_rolling <- function(id, input = NULL, set = TRUE, multiple = FALSE) {
 }
 
 
-select_percentiles <- function(id, input = NULL, set = TRUE) {
-  selected <- set_input("percentiles", input, set, c(10, 90))
-
+select_percentiles <- function(id, selected = c(10, 90),
+                               label = "Percentiles to calculate") {
   tagList(
     selectizeInput(glue("{id}_percentiles"),
-                   label = "Percentiles to calculate",
+                   label = label,
                    choices = c(1:99),
                    selected = selected,
                    multiple = TRUE),
@@ -114,20 +109,13 @@ select_percentiles <- function(id, input = NULL, set = TRUE) {
 select_complete <- function(id, input = NULL, set = TRUE) {
   value <- set_input("complete", input, set, FALSE)
 
-  if(id == "sum") {
-    tip <- glue("{tips$complete}<br>(applies only to long-term, ",
-                "daily and MAD calculations")
-  } else {
-    tip <- tips$complete
-  }
-
   tagList(
-    materialSwitch(glue("{id}_complete"),
-                   label = tags$span("Complete years only",
-                                    id = glue("{id}_complete_tip")),
-                   value = value,
-                   status = "success"),
-    bsTooltip(glue("{id}_complete_tip"), tip,
+    prettySwitch(glue("{id}_complete"),
+                 label = tags$span("Complete years only",
+                                   id = glue("{id}_complete_tip")),
+                 value = value,
+                 status = "success", slim = TRUE),
+    bsTooltip(glue("{id}_complete_tip"), tips$complete,
               placement = "left"))
 }
 
@@ -136,10 +124,11 @@ select_missing <- function(id, input = NULL, set = TRUE, value = NULL) {
                      if_else(is.null(value), TRUE, value))
 
   tagList(
-    materialSwitch(glue("{id}_missing"),
-                   value = value, status = "danger",
-                   label = tags$span("Ignore missing values",
-                                     id = glue("{id}_missing_tip"))),
+    prettySwitch(glue("{id}_missing"),
+                 value = value, status = "danger",
+                 label = tags$span("Ignore missing values",
+                                   id = glue("{id}_missing_tip")),
+                 slim = TRUE),
     bsTooltip(glue("{id}_missing_tip"), tips$missing,
               placement = "left"))
 }
@@ -154,17 +143,6 @@ select_allowed <- function(id, input = NULL, set = TRUE, value = NULL) {
                 value = value, step = 5, min = 0, max = 100),
     bsTooltip(glue("{id}_allowed"), tips$allowed,
               placement = "left"))
-}
-
-# Special one for when there is a "type" to calculate
-select_miss_allowed <- function(id, input = NULL, set = TRUE) {
-  req(input[[glue("{id}_type")]])
-
-  if(input[[glue("{id}_type")]] %in% c("Long-term", "Daily")) {
-    select_missing(id, input, set, value = input[[glue("{id}_missing")]])
-  } else {
-    select_allowed(id, input, set, value = input[[glue("{id}_allowed")]])
-  }
 }
 
 select_plot_stats <- function(id, stats) {
@@ -182,11 +160,11 @@ select_plot_stats <- function(id, stats) {
 select_plot_log <- function(id, value = TRUE) {
 
   tagList(
-    materialSwitch(glue("{id}_plot_log"),
-                   label = tags$span("Use log scale",
-                                     id = glue("{id}_plot_log_tip")),
-                   value = value,
-                   status = "success"),
+    prettySwitch(glue("{id}_plot_log"),
+                 label = tags$span("Use log scale",
+                                   id = glue("{id}_plot_log_tip")),
+                 value = value,
+                 status = "success", slim = TRUE),
     bsTooltip(glue("{id}_plot_log_tip"), tips$plot_log,
               placement = "left"))
 }
@@ -226,23 +204,24 @@ select_add_dates <- function(id) {
   # Updated depending on water year in UI section of server.R
 
   tagList(
-    disabled(selectizeInput(
-      "sum_add_dates",
+    selectizeInput(
+      glue("{id}_add_dates"),
       label = "Date to show",
       choices = c("Choose date(s)" = "", d),
-      selected = NULL, multiple = TRUE)),
+      selected = NULL, multiple = TRUE),
     bsTooltip(glue("{id}_add_dates"), tips$add_dates,
-              placement = "left"))
+              placement = "left")
+  )
 }
 
 
 select_add_mad <- function(id) {
   tagList(
-    materialSwitch(glue("{id}_add_mad"),
-                   label = tags$span("Add MAD values",
-                                     id = glue("{id}_add_mad_tip")),
-                   value = FALSE,
-                   status = "success"),
+    prettySwitch(glue("{id}_add_mad"),
+                 label = tags$span("Add MAD values",
+                                   id = glue("{id}_add_mad_tip")),
+                 value = FALSE,
+                 status = "success", slim = TRUE),
     bsTooltip(glue("{id}_add_mad_tip"), tips$add_mad,
               placement = "left"))
 }
@@ -254,6 +233,8 @@ show <- function(id, name) {
 }
 
 select_plot_options <- function(...) {
+  div(
+    align = "right",
     dropdownButton(
       tags$h3("Plot options"),
       tagList(...),
@@ -261,22 +242,26 @@ select_plot_options <- function(...) {
       size = "sm", width = "300px", right = TRUE,
       tooltip = tooltipOptions(title = "Plot options", placement = "left")
     )
+  )
 }
 
-select_table_options <- function(id, input,
+select_table_options <- function(id,
                                  include = c("percentiles", "custom_months"),
                                  params = NULL, data = NULL) {
 
   i <- tagList()
-  if("percentiles" %in% include) i <- tagList(i, select_percentiles(id, input))
-  if("custom_months" %in% include) i <- tagList(i, select_custom_months(id, input))
+  if("percentiles" %in% include) i <- tagList(i, select_percentiles(id))
+  if("custom_months" %in% include) i <- tagList(i, select_custom_months(id))
 
-  t <- dropdownButton(
-    tags$h3("Table options"),
-    i,
-    status = "primary", icon = icon("gear", verify_fa = FALSE),
-    size = "sm", width = "300px", right = TRUE,
-    tooltip = tooltipOptions(title = "Table options", placement = "left")
+  div(
+    align = "right",
+    dropdownButton(
+      tags$h3("Table options"),
+      i,
+      status = "primary", icon = icon("gear", verify_fa = FALSE),
+      size = "sm", width = "300px", right = TRUE,
+      tooltip = tooltipOptions(title = "Table options", placement = "left")
+    )
   )
 }
 
@@ -294,19 +279,7 @@ check_data <- function(input){
 }
 
 
-build_ui <- function(
-  id, input = NULL, define_options = FALSE, include,
-  global = c("rolling", "months",                             # Settings tab
-             "years_range", "years_exclude", "water_year")) { # Data tab
-
-  if(any(global %in% include) & !define_options){
-    stop("Some ui elements included here (",
-         paste0(include[include %in% c("rolling", "months")],
-                collapse = ", "),
-         ") should only be set once on the 'Settings' tab.\n",
-         "They should not be set on individual tabs.",
-         call. = FALSE)
-  }
+build_ui <- function(id, input = NULL, define_options = FALSE, include) {
 
   # Set up all options in the settings
   # - Don't set defaults
