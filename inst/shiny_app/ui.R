@@ -320,10 +320,11 @@ ui_cumulative <- fluidRow(
     width = 12, h2("Cumulative Statistics"),
     box(
       width = 3,
-      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
+      helpText("Placeholder descriptive text to describe this section, ",
+               "what it does and how to use it"),
       radioGroupButtons("cum_type",
                         label = "Cumulative type",
-                        choices = list("Annual", "Monthly", "Daily"),
+                        choices = list("Daily", "Monthly"),
                         justified = TRUE, status = "primary"),
       bsTooltip("cum_type", "Type of cumulative statistics to calculate",
                 placement = "left"),
@@ -331,8 +332,7 @@ ui_cumulative <- fluidRow(
                    label = "Discharge type",
                    choices = list("Volumetric Discharge (m3)" = FALSE,
                                   "Runoff Yield (mm)" = TRUE)),
-      bsTooltip("cum_discharge", tips$discharge, placement = "left"),
-      uiOutput("ui_cum_seasons"),
+      bsTooltip("cum_discharge", tips$discharge, placement = "left")
     ),
     tabBox(
       width = 9, height = min_height,

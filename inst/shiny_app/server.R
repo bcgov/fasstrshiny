@@ -206,32 +206,6 @@ server <- function(input, output, session) {
 
   ## Cumulative ----------------------------------------------------------
 
-  # Plot options
-  output$ui_cum_seasons <- renderUI({
-    # Enable/disable season
-    req(input$cum_type)
-
-    # Get previous value
-    if(!is.null(input$cum_seasons)) value <- input$cum_seasons else value <- TRUE
-
-    # If not annual, disable
-    if(input$cum_type != "Annual") {
-      m <- materialSwitch("cum_seasons",
-                          label = tags$span("Include seasons",
-                                            id = "cum_seasons_tip"),
-                          value = value, status = "default") %>%
-        disabled()
-    } else {
-      m <- materialSwitch("cum_seasons",
-                          label = tags$span("Include seasons",
-                                            id = "cum_seasons_tip"),
-                          value = value, status = "success")
-    }
-
-    tagList(m, bsTooltip("cum_seasons_tip", tips$seasons, placement = "left"))
-  }) %>%
-    bindEvent(input$cum_type)
-
   output$ui_cum_plot_options <- renderUI({
     id <- "cum"
     select_plot_options(
@@ -245,18 +219,6 @@ server <- function(input, output, session) {
     select_table_options(data = data_raw(), id = "cum", input,
                          include = "percentiles")
   })
-
-
-  # Enable/disable based on type
-  observe({
-    # add year
-    if(input$cum_type %in% c("Monthly", "Daily")) {
-      enable("cum_add_year")
-    } else {
-      disable("cum_add_year")
-    }
-  }) %>%
-  bindEvent(input$cum_type)
 
 
   ## Annual Trends ------------------------------------------------
@@ -804,67 +766,41 @@ server <- function(input, output, session) {
   ## Plot --------------------
   output$cum_plot <- renderGirafe({
     check_data(input)
-    req(data_raw(), input$cum_type, !is.null(input$cum_add_year),
-        !is.null(input$cum_seasons))
+    req(data_raw(), input$cum_type, !is.null(input$cum_add_year))
 
     data_flow <- data_raw()
 
     e <- glue("use_yield = {input$cum_discharge}")
-
-    if(input$cum_type == "Annual") {
-      p <- NULL
-      e <- glue("{e}, include_seasons = {input$cum_seasons}")
-      end <- ""
-    } else {
-      p <- "plot_log"
-      end <- "[[1]]"
-      if(input$cum_add_year != "") {
-        e <- glue("{e}, add_year = {input$cum_add_year}")
-      }
+    if(input$cum_add_year != "") {
+      e <- glue("{e}, add_year = {input$cum_add_year}")
     }
 
+
     g <- switch(input$cum_type,
-                "Annual"  = "plot_annual_cumulative_stats",
                 "Monthly" = "plot_monthly_cumulative_stats",
                 "Daily"   = "plot_daily_cumulative_stats") %>%
       create_fun("data_flow",
-                 id = "cum", input, params = p,
+                 id = "cum", input, params = "plot_log",
                  params_ignore = c("discharge", "roll_days", "roll_align"),
-                 extra = e,
-                 end = end)
+                 extra = e)
 
     code$cum_plot <- g
 
     # Add interactivity
-    g <- eval(parse(text = g))
+    g <- eval(parse(text = g))[[1]]
 
-    if(input$cum_type == "Annual") {
+    stats <- names(g$data) # Get stats from plot data
+    stats <- stats[!stats %in% c("WaterYear", "AnalysisDate", "DayofYear")] # Omit these
 
-      # Add individual geoms to each plot (annual has more than one)
-      for(i in seq_along(g)) {
-        g[[i]] <- g[[i]] + geom_point_interactive(
-          aes(tooltip = paste0("Year: ", Year, "\n",
-                               Statistic, ": ", round(Value, 4)),
-              data_id = Year), size = 3)
-      }
+    # For tooltips labels...
+    names(stats)[stats == "Monthly_Total"] <- input$cum_add_year
+    names(stats)[stats == "Cumul_Flow"] <- input$cum_add_year
 
-      g <- g %>%
-        wrap_plots(nrow = 2, byrow = FALSE, design = "AC
-                                                      BC")
-    } else {
-      stats <- names(g$data) # Get stats from plot data
-      stats <- stats[!stats %in% c("WaterYear", "AnalysisDate", "DayofYear")] # Omit these
+    # Add interactive vline
+    g <- g + fasstrshiny:::create_vline_interactive(
+      data = g$data, stats = stats,
+      size = if_else(input$cum_type == "Monthly", 20, 1))
 
-      # For tooltips labels...
-      names(stats)[stats == "Monthly_Total"] <- input$cum_add_year
-      names(stats)[stats == "Cumul_Flow"] <- input$cum_add_year
-
-      # Add interactive vline
-      g <- g + fasstrshiny:::create_vline_interactive(
-        data = g$data, stats = stats,
-        size = if_else(input$cum_type == "Monthly", 20, 1))
-
-    }
 
     girafe(ggobj = g, width_svg = 14, height_svg = 6,
            options = list(
@@ -881,22 +817,13 @@ server <- function(input, output, session) {
 
     data_flow <- data_raw()
 
-    e <- glue("use_yield = {input$cum_discharge}")
-    if(input$cum_type == "Annual") {
-      e <- glue("{e}, include_seasons = {input$cum_seasons}")
-      p <- NULL
-    } else {
-      p <- "percentiles"
-    }
-
     t <- switch(input$cum_type,
-                "Annual"  = "calc_annual_cumulative_stats",
                 "Monthly" = "calc_monthly_cumulative_stats",
                 "Daily"   = "calc_daily_cumulative_stats") %>%
       create_fun("data_flow",
-                 id = "cum", input, params = p,
+                 id = "cum", input, params = "percentiles",
                  params_ignore = c("discharge", "roll_days", "roll_align"),
-                 extra = e)
+                 extra = glue("use_yield = {input$cum_discharge}"))
 
     code$cum_table <- t
 
