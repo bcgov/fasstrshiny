@@ -458,6 +458,7 @@ server <- function(input, output, session) {
   ## Summary plot ------------------
   output$available_plot1 <- renderGirafe({
     check_data(input)
+    req(input$data_water_year)
 
     xlab <- if_else(input$data_water_year != 1, "Water Year", "Year")
     title <- paste0("Annual Daily ", input$available_summary, " - ", meta$station_name)
