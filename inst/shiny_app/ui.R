@@ -291,14 +291,17 @@ ui_hydro <- fluidRow(
 ui_flows <- fluidRow(
   column(
     width = 12, h2("Flow duration and percentiles"),
+
+    ## Settings -----------------------------
     box(
       width = 3,
-      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
-      numericInput("flows_flow",
-                   label = "Flow value for percentile",
-                   value = 10, min = 0),
-      bsTooltip("flows_flow", tips$flow, placement = "left"),
-      uiOutput("ui_flows"),
+      helpText("Placeholder descriptive text to describe this section, ",
+               "what it does and how to use it"),
+      #numericInput("flows_flow",
+      #             label = "Flow value for percentile",
+      #             value = 10, min = 0),
+      #bsTooltip("flows_flow", tips$flow, placement = "left"),
+      select_custom_months("flows"),
     ),
     tabBox(
       width = 9, height = min_height,
@@ -307,10 +310,10 @@ ui_flows <- fluidRow(
       tabPanel(
         title = "Plot - Flow duration",
         uiOutput("ui_flows_plot_options", align = "right"),
-        girafeOutput("flows_plot", height = "400px"),
-        p(style = "margin-bottom: 20px"),
-        h4("Percentile Rank of Flow"),
-        textOutput("flows_perc")
+        withSpinner(girafeOutput("flows_plot", height = "400px"))
+        #p(style = "margin-bottom: 20px"),
+        #h4("Percentile Rank of Flow"),
+        #textOutput("flows_perc")
       ),
 
       ## Table ---------------------

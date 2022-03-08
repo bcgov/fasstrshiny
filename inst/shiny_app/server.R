@@ -794,24 +794,24 @@ server <- function(input, output, session) {
   # Flows ---------------------------------------
 
   ## Flow Percentile -----------------------
-  output$flows_perc <- renderText({
-    req(input$flows_discharge, input$flows_flow)
-
-    data_flow <- data_raw()
-
-    # Flow
-    t <- create_fun(fun = "calc_flow_percentile",
-                    data = "data_flow", id = "flows", input,
-                    params = "complete",
-                    extra = glue("flow_value = {input$flows_flow}"))
-
-    code$flows_flow <- t
-
-    parse(text = t) %>%
-      eval() %>%
-      pull(Percentile) %>%
-      round(4)
-  })
+  # output$flows_perc <- renderText({
+  #   req(input$flows_flow)
+  #
+  #   data_flow <- data_raw()
+  #
+  #   # Flow
+  #   t <- create_fun(fun = "calc_flow_percentile",
+  #                   data = "data_flow", id = "flows", input,
+  #                   params = "complete",
+  #                   extra = glue("flow_value = {input$flows_flow}"))
+  #
+  #   code$flows_flow <- t
+  #
+  #   parse(text = t) %>%
+  #     eval() %>%
+  #     pull(Percentile) %>%
+  #     round(4)
+  # })
 
   ## Plot --------------------
   output$flows_plot <- renderGirafe({
@@ -825,12 +825,11 @@ server <- function(input, output, session) {
     g <- create_fun(
       fun = "plot_flow_duration", data = "data_flow", id = "flows", input,
       params = c("custom_months", "custom_months_label", "complete",
-                 "missing", "plot_log"),
-      end = "[[1]]")
+                 "missing", "plot_log"))
 
     code$flows_plot <- g
 
-    g <- eval(parse(text = g))
+    g <- eval(parse(text = g))[[1]]
     g <- g +
       geom_point_interactive(
         aes(tooltip = paste0("% Time: ", Percentile, "\n",
