@@ -31,25 +31,28 @@ set_input <- function(type, input, set, value) {
 ## Functions for inputs ------------
 
 select_custom_months <- function(id) {
-  div(id = glue("{id}_custom_months_all"),
-      selectizeInput(glue("{id}_custom_months"),
-                     label = "Months to combine and summarize",
-                     choices = list("Jan" = 1,  "Feb" = 2,
-                                    "Mar" = 3,  "Apr" = 4,
-                                    "May" = 5,  "Jun" = 6,
-                                    "Jul" = 7,  "Aug" = 8,
-                                    "Sep" = 9,  "Oct" = 10,
-                                    "Nov" = 11, "Dec" = 12),
-                     selected = NULL,
-                     multiple = TRUE),
-      textInput(glue("{id}_custom_months_label"),
-                label = "Summary months label",
-                placeholder = "ex. Jun-Aug",
-                value = ""),
-      bsTooltip(id = glue("{id}_custom_months_all"),
-                title = glue("Months: {tips$custom_months}<br>",
-                             "Label: {tips$custom_months_label}"),
-                placement = "left")
+  fluidRow(id = glue("{id}_custom_months_all"),
+           h4("Combine and summarize months"),
+           column(width = 6,
+                  selectizeInput(glue("{id}_custom_months"),
+                                 label = "Months to combine",
+                                 choices = list("Jan" = 1,  "Feb" = 2,
+                                                "Mar" = 3,  "Apr" = 4,
+                                                "May" = 5,  "Jun" = 6,
+                                                "Jul" = 7,  "Aug" = 8,
+                                                "Sep" = 9,  "Oct" = 10,
+                                                "Nov" = 11, "Dec" = 12),
+                                 selected = NULL,
+                                 multiple = TRUE)),
+           column(width = 6,
+                  textInput(glue("{id}_custom_months_label"),
+                            label = "Label for group",
+                            placeholder = "ex. Jun-Aug",
+                            value = "")),
+           bsTooltip(id = glue("{id}_custom_months_all"),
+                     title = glue("Months: {tips$custom_months}<br>",
+                                  "Label: {tips$custom_months_label}"),
+                     placement = "left")
   )
 }
 
