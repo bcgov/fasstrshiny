@@ -831,7 +831,8 @@ server <- function(input, output, session) {
              opts_toolbar(position = "topleft"),
              opts_selection(type = "none"),
              opts_hover(css = "fill:orange; stroke:gray;fill-opacity:1;")))
-  })
+  }) %>%
+    bindEvent(input$flows_compute, ignoreNULL = FALSE)
 
 
   ## Table -----------------------
@@ -850,13 +851,17 @@ server <- function(input, output, session) {
 
     parse(text = t) %>%
       eval() %>%
+      pivot_longer(cols = -c(STATION_NUMBER, Month),
+                   names_to = "percentiles", values_to = "value") %>%
+      pivot_wider(names_from = Month, values_from = value) %>%
       mutate(across(where(is.numeric), ~round(., 4))) %>%
       datatable(rownames = FALSE,
                 filter = 'top',
                 extensions = c("Scroller"),
                 options = list(scrollX = TRUE, scrollY = 500, scroller = TRUE,
                                deferRender = TRUE, dom = 'Brtip'))
-  })
+  }) %>%
+    bindEvent(input$flows_compute, ignoreNULL = FALSE)
 
 
 

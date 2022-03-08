@@ -301,7 +301,23 @@ ui_flows <- fluidRow(
       #             label = "Flow value for percentile",
       #             value = 10, min = 0),
       #bsTooltip("flows_flow", tips$flow, placement = "left"),
+      checkboxGroupButtons(
+        "flows_months",
+        label = "Months to plot",
+        choices = list("Jan" = 1, "Feb" = 2,
+                       "Mar" = 3, "Apr" = 4,
+                       "May" = 5, "Jun" = 6,
+                       "Jul" = 7, "Aug" = 8,
+                       "Sep" = 9, "Oct" = 10,
+                       "Nov" = 11, "Dec" = 12),
+        selected = c(1:12)),
+      bsTooltip("flows_months", "Months to include/exclude from the plot",
+                placement = "left"),
       select_custom_months("flows"),
+
+      # Update button
+      bsButton("flows_compute", "Update", style = "primary",
+               class = "centreButton", ),
     ),
     tabBox(
       width = 9, height = min_height,
