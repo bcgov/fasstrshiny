@@ -302,76 +302,96 @@ build_ui <- function(id, input = NULL, define_options = FALSE, include) {
 
 #' Combine elements for functions
 #'
+#' This function looks for common inputs into fasstr functions. It uses general
+#' inputs prefaced by `data_` unless a specific input prefaced by the values of
+#' `id` exists.
+#'
+#' For example, `fun = "plot_daily_stats"` would use `input$data_months`,
+#' because there is no `input$hydro_months`. On the other hand,
+#' `fun = "plot_missing_dates"` would use `input$available_months` before
+#' `input$data_months`.
+#'
+#' You can specify inputs to ignore with `params_ignore`. This can be useful
+#' when you need to combine inputs, for example, `percentiles` are combined
+#' in daily hydrograph tables (e.g., `calc_daily_stats()`).
+#'
+#' Note that the `remove_defaults` function is used to compare parameter values
+#' to their default values. Default values are removed to simplify the code
+#' output (this only applies to parameters defined directly in `create_fun`, not
+#' parameters defined in the argument `extra`).
+#'
+#'
 #' @param fun Character. Name of the fasstr function to use
 #' @param data Character. Name of the data to use
-#' @param id Character. Input/output id (e.g., "sum")
+#' @param id Character. Input/output id (e.g., "hydro")
 #' @param input Shiny input object
-#' @param params Character vector of inputs to become arguments. Unnamed inputs
-#'   are assumed to be "id_input". Any input not part of id can be named (e.g.,
-#'   "data" = "water_year").
-#' @param extra Character. String with extra arguments not related to shiny
-#'   inputs
-#' @param end Character. String to put after the function (e.g., "[[1]]" for
-#'   plots)
+#' @param extra Character. String adding extra arguments unrelated to the
+#'   common parameters defined at the end of `create_fun`
+#' @param end Character. String to put after the function (e.g., " %>% ...")
 #'
-#' @return
+#' @return String defining the function. Can be evaluated with `eval(parse(x))`.
 #' @noRd
 #'
 #' @examples
 #'
 #' \dontrun{
 #' t <- create_fun(fun = "calc_longterm_daily_stats",
-#'                 data = "flow_data", id = "sumfl", input,
-#'                 params = c("discharge", "roll_days", "roll_align",
-#'                            "data" = "water_year",
-#'                            "data" = "years_range",
-#'                            "data" = "years_exclude",
-#'                            "months", "missing"))
+#'                 data = "flow_data", id = "hyrdo", input)
 #'
 #'
 #' t <- create_fun(fun = "calc_longterm_mean",
 #'                 data = "flow_data", id = "sumsi", input,
-#'                 params = c("discharge", "roll_days", "roll_align",
-#'                            "water_year", "years_range", "years_exclude",
-#'                            "months", "mad"),
-#'                params_extra = c("mad" = "percent_MAD = c(input$sumsi_mad)"))
+#'                 params_extra = c("mad" = "percent_MAD = c(input$sumsi_mad)"))
 #' }
 
-create_fun <- function(fun, data = NULL, id, input, params = NULL,
+create_fun <- function(fun, data = NULL, id, input,
                        params_ignore = NULL, extra = NULL, end = "") {
 
-  params_default <- c("discharge", "roll_days", "roll_align", "water_year",
-                      "years_range", "years_exclude", "months")
+  # Inputs from Data tab
+  params_data <- c("discharge", "water_year", "years_range", "years_exclude",
+                   "roll_days", "roll_align", "months",
+                   "missing", "complete", "allowed") %>%
+    setNames(rep("data", length(.)))
 
-  if(!is.null(params_ignore)) {
-    params_default <- params_default[!params_default %in% params_ignore]
-  }
+  # Inputs from this section (id)
+  params_id <- str_subset(names(input), glue("^{id}_")) %>%
+    str_remove(glue("^{id}_")) %>%
+    setNames(rep(id, length(.)))
 
-  params <- unique(c(params, params_default))
+  # Inputs expected by the function (getting the app input equivalents)
+  params_fun <- names(formals(get(fun)))
+  params_fun <- filter(parameters, fasstr_arg %in% params_fun) %>%
+    pull(id) %>%
+    unique()
 
-  # Figure out where parameters come from
-  if(is.null(names(params))) {
-    n <- rep(NA_character_, length(params))
-  } else n <- names(params)
-  n[params %in%
-      c("water_year", "years_range", "years_exclude",
-        "roll_days", "roll_align", "months",
-        "missing", "complete", "allowed")] <- "data"
-  n[is.na(n)] <- id
-  names(params) <- glue("{n}_{params}")
+  # Combine inputs but
+  # - only data not in id
+  # - only ones expected by the function
+  params <- c(params_data[!params_data %in% params_id], params_id)
+  params <- params[params %in% params_fun]
+
+  # Omit any to be ignored
+  if(!is.null(params_ignore)) params <- params[!params %in% params_ignore]
 
   # Retrieve inputs for these parameters
-  id <- map(names(params), ~input[[.]])
+  names(params) <- glue("{names(params)}_{params}")
+  values <- map(names(params), ~input[[.]])
 
   # Remove NULL/empty
-  nulls <- map_lgl(id, ~is.null(.) || (is.character(.) && . == ""))
-  id <- id[!nulls]
+  nulls <- map_lgl(values, ~is.null(.) || (is.character(.) && . == ""))
+  values <- values[!nulls]
   params <- params[!nulls]
 
   # Find and remove defaults
   defaults <- remove_defaults(fun, params, input)
   params <- params[!defaults]
-  id <- id[!defaults]
+  values <- values[!defaults]
+
+  # If we have allowed_missing (allowed), omit ignore_missing (missing)
+  if("allowed" %in% params) {
+    values <- values[params != "missing"]
+    params <- params[params != "missing"]
+  }
 
   # Create standard parameters
   #
@@ -381,41 +401,40 @@ create_fun <- function(fun, data = NULL, id, input, params = NULL,
     p[i] <- case_when(
 
       # Specific
-      params[i] == "discharge" ~ glue("values = '{id[i]}'"),
+      params[i] == "discharge" ~ glue("values = '{values[i]}'"),
       params[i] == "percentiles" ~
-        glue("percentiles = c({glue_collapse(id[[i]], sep = ', ')})"),
+        glue("percentiles = c({glue_collapse(values[[i]], sep = ', ')})"),
       params[i] == "inner_percentiles" ~
-        glue("inner_percentiles = c({glue_collapse(id[[i]], sep = ', ')})"),
+        glue("inner_percentiles = c({glue_collapse(values[[i]], sep = ', ')})"),
       params[i] == "outer_percentiles" ~
-        glue("outer_percentiles = c({glue_collapse(id[[i]], sep = ', ')})"),
+        glue("outer_percentiles = c({glue_collapse(values[[i]], sep = ', ')})"),
       params[i] == "custom_months" ~
-        glue("custom_months = c({glue_collapse(id[[i]], sep = ', ')})"),
-      params[i] == "custom_months_label" ~ glue("custom_months_label = '{id[i]}'"),
-      params[i] == "missing" ~ glue("ignore_missing = {id[i]}"),
-      params[i] == "allowed" ~ glue("allowed_missing = {id[i]}"),
-      params[i] == "complete" ~ glue("complete_years = {id[i]}"),
+        glue("custom_months = c({glue_collapse(values[[i]], sep = ', ')})"),
+      params[i] == "custom_months_label" ~ glue("custom_months_label = '{values[i]}'"),
+      params[i] == "missing" ~ glue("ignore_missing = {values[i]}"),
+      params[i] == "allowed" ~ glue("allowed_missing = {values[i]}"),
+      params[i] == "complete" ~ glue("complete_years = {values[i]}"),
 
       # Data
       params[i] == "water_year" ~
-        glue("water_year_start = {id[i]}"),
+        glue("water_year_start = {values[i]}"),
       params[i] == "years_range" ~
-        glue("start_year = {id[[i]][1]}, end_year = {id[[i]][2]}"),
+        glue("start_year = {values[[i]][1]}, end_year = {values[[i]][2]}"),
       params[i] == "years_exclude" ~
-        glue("exclude_years = c({glue_collapse(id[[i]], sep = ', ')})"),
-      params[i] == "roll_days" ~ glue("roll_days = {id[i]}"),
-      params[i] == "roll_align" ~ glue("roll_align = '{id[i]}'"),
+        glue("exclude_years = c({glue_collapse(values[[i]], sep = ', ')})"),
+      params[i] == "roll_days" ~ glue("roll_days = {values[i]}"),
+      params[i] == "roll_align" ~ glue("roll_align = '{values[i]}'"),
       params[i] == "months" ~
-        glue("months = c({glue_collapse(id[[i]], sep = ', ')})"),
+        glue("months = c({glue_collapse(values[[i]], sep = ', ')})"),
 
       # Plot
       params[i] == "daterange" ~
-        glue("start_date = '{id[[i]][1]}', end_date = '{id[[i]][2]}'"),
-      params[i] == "plot_log" ~ glue("log_discharge = {id[i]}")
+        glue("start_date = '{values[[i]][1]}', end_date = '{values[[i]][2]}'"),
+      params[i] == "plot_log" ~ glue("log_discharge = {values[i]}")
     )
   }
 
-
-  args <- glue_collapse(c(data, p, extra), sep = ', ')
+  args <- glue_collapse(c(data, na.omit(p), extra), sep = ', ')
 
   glue("{fun}({args}){end}")
 }

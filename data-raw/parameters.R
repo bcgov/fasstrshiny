@@ -8,12 +8,16 @@ parameters <- tribble(
   "add_dates",            "",                    "Choose dates to highlight on the plot",   FALSE,
   "add_mad",              "",                    "Add the calculated Mean Annual Discharge percentiles to the plot", FALSE,
 
-  "discharge",            "values / use_yield",  "Discharge to use in calculations",   FALSE,
+  "discharge",            "values",              "Discharge to use in calculations",   FALSE,
+  "discharge",            "use_yield",           "Discharge to use in calculations",   FALSE,
   "roll_days",            "roll_days",           "Number of days over which to roll the mean", TRUE,
   "roll_align",           "roll_align",          "Alignment of the rolling day window", TRUE,
   "water_year",           "water_year_start",    "Month defining start of the water year", TRUE,
-  "years_range",          "start_year, end_year", "Years to include in calculations", TRUE,
+  "years_range",          "start_year",          "Years to include in calculations", TRUE,
+  "years_range",          "end_year",            "Years to include in calculations", TRUE,
   "years_exclude",        "exclude_years",       "Years to exclude from calculations", TRUE,
+  "daterange",            "start_date",          "Range of dates to include", TRUE,
+  "daterange",            "end_date",          "Range of dates to include", TRUE,
   "add_year",             "add_year",            "Add data from a given year to the plot", TRUE,
   "months",               "months",              "Months to include in calculations", TRUE,
   "percentiles",          "percentiles",         "Percentiles to add to calculations", TRUE,
@@ -39,12 +43,16 @@ parameters <- tribble(
   "fit_quantiles", "fit_quantiles", "Quantiles to be estimated from the fitted distribution", TRUE,
   "plot_curve", "plot_curve", "Whether to add the computed curve to the probability plot", TRUE
 ) %>%
+  group_by(id) %>%
   mutate(tooltip = if_else(add_arg,
-                           paste0(tooltip, "<br>(<code>", fasstr_arg, "</code>)"),
+                           paste0(tooltip, "<br>(<code>",
+                                  glue_collapse(fasstr_arg, sep = ", "),
+                                  "</code>)"),
                            tooltip))
 
-tips <- as.list(parameters$tooltip)
-names(tips) <- parameters$id
+tips <- as.list(parameters$tooltip) %>%
+  unique() %>%
+  setNames(unique(parameters$id))
 
 usethis::use_data(parameters, tips, internal = TRUE, overwrite = TRUE)
 
