@@ -822,8 +822,11 @@ server <- function(input, output, session) {
     g <- eval(parse(text = g))[[1]]
     g <- g +
       geom_point_interactive(
-        aes(tooltip = paste0("% Time: ", Percentile, "\n",
-                             "Month: ", Month),
+        aes(tooltip = glue(
+          "Month: {Month}\n",
+          "{Percentile}% time\n",
+          "Discharge cutoff: {round(Value, 3)}",
+          .trim = FALSE),
             data_id = Percentile),
         show.legend = FALSE, alpha = 0.01, size = 3)
 
