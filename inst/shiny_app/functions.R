@@ -316,7 +316,9 @@ build_ui <- function(id, input = NULL, define_options = FALSE, include) {
 #'
 #' You can specify inputs to ignore with `params_ignore`. This can be useful
 #' when you need to combine inputs, for example, `percentiles` are combined
-#' in daily hydrograph tables (e.g., `calc_daily_stats()`).
+#' in daily hydrograph tables (e.g., `calc_daily_stats()`). It is also
+#' useful to ignore `discharge` where it's not sensible to have (i.e.
+#' `plot_daily_cumulative_stats()`).
 #'
 #' Note that the `remove_defaults` function is used to compare parameter values
 #' to their default values. Default values are removed to simplify the code

@@ -496,7 +496,7 @@ server <- function(input, output, session) {
 
     data_flow <- data_raw()
     g <- create_fun(fun = "plot_missing_dates", data = "data_flow",
-      id = "available", input)
+      id = "available", input, params_ignore = "discharge")
     code$available_miss <- g
 
     g <- parse(text = g) %>%
@@ -719,8 +719,8 @@ server <- function(input, output, session) {
     g <- switch(input$cum_type,
                 "Monthly" = "plot_monthly_cumulative_stats",
                 "Daily"   = "plot_daily_cumulative_stats") %>%
-      create_fun("data_flow",
-                 id = "cum", input, extra = e)
+      create_fun("data_flow", id = "cum", input, extra = e,
+                 params_ignore = "discharge")
 
     code$cum_plot <- g
 
@@ -758,8 +758,8 @@ server <- function(input, output, session) {
     t <- switch(input$cum_type,
                 "Monthly" = "calc_monthly_cumulative_stats",
                 "Daily"   = "calc_daily_cumulative_stats") %>%
-      create_fun("data_flow",
-                 id = "cum", input,
+      create_fun("data_flow", id = "cum", input,
+                 params_ignore = "discharge",
                  extra = glue("use_yield = {input$cum_discharge}"))
 
     code$cum_table <- t
