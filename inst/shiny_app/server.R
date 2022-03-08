@@ -954,7 +954,7 @@ server <- function(input, output, session) {
     data_flow <- data_raw()
 
     g <- create_fun(fun = "plot_annual_means", data = "data_flow",
-                    id = "am", input)
+                    id = "am", input, params_ignore = "discharge")
 
     code$am_plot <- g
 
@@ -962,10 +962,18 @@ server <- function(input, output, session) {
 
     # Replace layers with interactive
     g$layers[[1]] <- geom_bar_interactive(
-      aes(tooltip = paste0("Year: ", Year, "\nMAD: ", round(Mean, 4)),
-          data_id = Year), colour = "cornflowerblue",
+      aes(tooltip = glue("Year: {Year}\n",
+                         "MAD Diff: {round(MAD_diff, 4)}", .trim = FALSE),
+          data_id = Year, colour = "Annual MAD difference"),
       fill = "cornflowerblue", stat = "identity")
 
+    g <- g + geom_hline(aes(yintercept = 0, colour = "Long-term MAD"), size = 1) +
+      scale_colour_manual(values = c("Long-term MAD" = "black",
+                                     "Annual MAD difference" = "cornflowerblue")) +
+      guides(colour = guide_legend(override.aes = list(
+        fill = c("black", "cornflowerblue")))) +
+      theme(legend.position = c(0.8, 0.8), legend.title = element_blank(),
+              legend.key = element_rect(colour = NA))
     girafe(ggobj = g, width_svg = 14, height_svg = 4,
            options = list(opts_selection(type = "none")))
   })
