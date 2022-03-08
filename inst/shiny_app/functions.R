@@ -250,7 +250,7 @@ select_add_mad <- function(id) {
 show <- function(id, name) {
   h4(materialSwitch(inputId = id,
                     label = name,
-                    status = "success"))
+                    status = "primary"))
 }
 
 select_plot_options <- function(...) {
@@ -448,8 +448,7 @@ remove_defaults <- function(fun, params, input) {
 
   # Get defaults (omitting symbols)
   defaults <- as.list(formals(get(fun))) %>%
-    .[!map_lgl(., ~typeof(.) == "symbol")] %>%
-    .[!names(.) == "log_ticks"] %>%  # Don't worry about log_ticks
+    .[!map_lgl(., ~typeof(.) %in% c("language", "symbol"))] %>%
     map(., eval) %>% # Eval into what they are, effectively
     tibble::enframe(name = "fasstr_arg", value = "default")
 

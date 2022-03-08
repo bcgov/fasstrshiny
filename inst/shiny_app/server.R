@@ -113,11 +113,6 @@ server <- function(input, output, session) {
   }) %>%
     bindEvent(input$data_hydat_table_rows_selected)
 
-  # Hide/Show based on toggle
-  observe(toggle("data_stn", condition = input$data_show_stn))
-  observe(toggle("data_dates", condition = input$data_show_dates))
-  observe(toggle("data_types", condition = input$data_show_types))
-
 
   # Add plot options as Gear in corner
   output$ui_data_plot_options <- renderUI({
@@ -290,6 +285,18 @@ server <- function(input, output, session) {
                       selected = names(vf_freqs()$Freq_Fitting)[1])
   })
 
+
+  ## General ---------------------
+  # Hide/Show based on toggle
+  observe(toggle("data_stn", condition = input$data_show_stn))
+  observe(toggle("data_dates", condition = input$data_show_dates))
+  observe(toggle("data_types", condition = input$data_show_types))
+  observe(toggle("at_methods", condition = input$at_show_methods))
+  observe(toggle("at_options", condition = input$at_show_options))
+  observe(toggle("ui_at_allowed", condition = input$at_show_allowed))
+  observe(toggle("vf_data", condition = input$vf_show_data))
+  observe(toggle("vf_plotting", condition = input$vf_show_plotting))
+  observe(toggle("vf_fitting", condition = input$vf_show_fitting))
 
   # Data - Loading ---------------
 

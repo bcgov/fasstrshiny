@@ -35,6 +35,7 @@ parameters <- tribble(
   "use_max", "use_max", "Use low or high flow values in analysis", TRUE,
   "use_log", "use_log", "Log10 transform data prior to analysis", TRUE,
   "fit_distr", "fit_distr", "Distribution used to fit annual data", TRUE,
+  "fit_distr_method", "fit_distr_method", "Method used to fit the distribution.<br>Generally use MOM for PIII and MLE for Weibull", TRUE,
   "fit_quantiles", "fit_quantiles", "Quantiles to be estimated from the fitted distribution", TRUE,
   "plot_curve", "plot_curve", "Whether to add the computed curve to the probability plot", TRUE
 ) %>%

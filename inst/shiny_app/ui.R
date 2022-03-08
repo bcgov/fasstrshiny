@@ -331,7 +331,8 @@ ui_cumulative <- fluidRow(
       radioButtons("cum_discharge",
                    label = "Discharge type",
                    choices = list("Volumetric Discharge (m3)" = FALSE,
-                                  "Runoff Yield (mm)" = TRUE)),
+                                  "Runoff Yield (mm)" = TRUE),
+                   selected = TRUE),
       bsTooltip("cum_discharge", tips$discharge, placement = "left")
     ),
     tabBox(
@@ -541,77 +542,80 @@ ui_analysis_annual <- fluidRow(
         # Other options
         uiOutput("ui_at_exclude"),
 
-        fluidRow(
-          column(width = 6,
-                 awesomeRadio("at_zyp",
-                              label = "Trend method",
-                              choices = list("Zhang" = "zhang",
-                                             "Yue-Pilon" = "yuepilon"),
-                              selected = "zhang")),
-          column(width = 6,
-                 numericInput("at_alpha", label = "Trend alpha",
-                              value = 0.05, min = 0, max = 0.3, step = 0.05))
+        show("at_show_methods", "Methods"),
+        fluidRow(id = "at_methods",
+                 column(width = 6,
+                        awesomeRadio("at_zyp",
+                                     label = "Prewhitening method",
+                                     choices = list("Zhang" = "zhang",
+                                                    "Yue-Pilon" = "yuepilon"),
+                                     selected = "zhang")),
+                 column(width = 6,
+                        numericInput("at_alpha", label = "Trend alpha",
+                                     value = 0.05, min = 0, max = 0.3, step = 0.05)),
+                 bsTooltip("at_zyp", tips$zyp, placement = "left"),
+                 bsTooltip("at_alpha", tips$alpha, placement = "left")),
+        show("at_show_options", "Data Options"),
+        div(id = "at_options",
+            fluidRow(
+              column(6, selectizeInput("at_annual_percentiles",
+                                       label = "Annual perc.",
+                                       choices = c(1:99),
+                                       selected = c(10,90),
+                                       multiple = TRUE)),
+              column(6, selectizeInput("at_monthly_percentiles",
+                                       label = "Monthly perc.",
+                                       choices = c(1:99),
+                                       selected = c(10,20),
+                                       multiple = TRUE)),
+              bsTooltip("at_annual_percentiles", tips$percentiles,
+                        placement = "left"),
+              bsTooltip("at_monthly_percentiles", tips$percentiles,
+                        placement = "left")),
+
+            strong("Low Flows"),
+            select_rolling("at_low", set = FALSE, multiple = TRUE),
+
+            selectizeInput("at_percent",
+                           label = "Percents of total annual flows",
+                           choices = c(1:99),
+                           selected = c(25, 33, 50, 75),
+                           multiple = TRUE),
+            bsTooltip("at_percent", tips$percent, placement = "left"),
+
+            sliderInput("at_normal", label = "Days Outside Normal - Range",
+                        value = c(25, 75), min = 1, max = 99, step = 1),
+            bsTooltip("at_normal", tips$normal, placement = "left")
         ),
-        bsTooltip("at_zyp", tips$zyp, placement = "left"),
-        bsTooltip("at_alpha", tips$alpha, placement = "left"),
-
-        fluidRow(
-          column(6, selectizeInput("at_annual_percentiles",
-                                   label = "Annual perc.",
-                                   choices = c(1:99),
-                                   selected = c(10,90),
-                                   multiple = TRUE)),
-          column(6, selectizeInput("at_monthly_percentiles",
-                                   label = "Monthly perc.",
-                                   choices = c(1:99),
-                                   selected = c(10,20),
-                                   multiple = TRUE))
-        ),
-        bsTooltip("at_annual_percentiles", tips$percentiles,
-                  placement = "left"),
-        bsTooltip("at_monthly_percentiles", tips$percentiles,
-                  placement = "left"),
-
-        strong("Low Flows"),
-        select_rolling("at_low", set = FALSE, multiple = TRUE),
-
-        selectizeInput("at_percent",
-                       label = "Percents of total annual flows",
-                       choices = c(1:99),
-                       selected = c(25, 33, 50, 75),
-                       multiple = TRUE),
-        bsTooltip("at_percent", tips$percent, placement = "left"),
-
-        sliderInput("at_normal", label = "Days Outside Normal - Range",
-                    value = c(25, 75), min = 1, max = 99, step = 1),
-        bsTooltip("at_normal", tips$normal, placement = "left"),
-
+        show("at_show_allowed", "Missing Dates"),
         uiOutput("ui_at_allowed")
     ),
 
     tabBox(
-      width = 9, height = min_height,
+      width = 9, height = 900,
 
       ### Plot/Table ---------------------
       tabPanel(
-        title = "Explore statistics",
+        title = "Exploring Trends",
         withSpinner(DTOutput("at_table_fit")),
         p(style = "margin-bottom:30px"), # A bit of space
-        fluidRow(
-          column(4, gt_output("at_table_years_sub")),
-          column(8,
-                 conditionalPanel(
-                   "output.at_plot",
-                   helpText("Click on a point to add year to ",
-                            "'Years to exclude'. Remember to re-Compute ",
-                            "Trends.")),
-                 girafeOutput("at_plot", height = "450px")))
-      ),
+
+        conditionalPanel(
+          "output.at_plot",
+          helpText("Click on a point or 'lasso' a bunch to add year to ",
+                   "'Years to exclude'. Remember to re-Compute ",
+                   "Trends.")),
+        girafeOutput("at_plot", height = "450px")),
 
       ### Table ---------------------
       tabPanel(
-        title = "Table - Yearly stats",
+        title = "Table - Annual Values",
         withSpinner(DTOutput("at_table_years"))
+      ),
+
+      ### Info ---------------------
+      tabPanel(
+        title = "Analysis Info"
       ),
 
       ### R Code ---------------------
@@ -638,67 +642,74 @@ ui_analysis_volume_freq <- fluidRow(
 
         # Other
         uiOutput("ui_vf_exclude"),
-        select_rolling("vf", set = FALSE, multiple = TRUE),
 
-        fluidRow(
-          column(
-            width = 6,
-            awesomeRadio("vf_use_max",
-                         label = "Flow type",
-                         choices = list("Low" = FALSE,
-                                        "High" = TRUE),
-                         selected = FALSE)),
-          column(
-            width = 6,
+        show("vf_show_data", "Data"),
+        div(id = "vf_data",
+            select_rolling("vf", set = FALSE, multiple = TRUE),
+
+            fluidRow(
+              column(
+                width = 6,
+                awesomeRadio("vf_use_max",
+                             label = "Flow type",
+                             choices = list("Low" = FALSE,
+                                            "High" = TRUE),
+                             selected = FALSE, inline = TRUE)),
+              column(
+                width = 6,
+                prettySwitch("vf_use_log",
+                             label = tags$span(strong("Log trans"),
+                                               id = "vf_use_log_tip"),
+                             value = FALSE, status = "success", slim = TRUE))),
+            bsTooltip("vf_use_max", tips$use_max, placement = "left"),
+            bsTooltip("vf_use_log_tip", tips$use_log, placement = "left")
+        ),
+
+        show("vf_show_plotting", "Plotting"),
+        div(id = "vf_plotting",
+            fluidRow(
+              column(6,
+                     awesomeRadio("vf_prob_plot",
+                                  label = "Plotting positions",
+                                  choices = list("Weibull" = "weibull",
+                                                 "Median" = "median",
+                                                 "Hazen" = "hazen"))),
+              column(6, textInput(
+                "vf_prob_scale",
+                label = "Probabilies to plot",
+                value = "0.9999, 0.999, 0.99, 0.9, .5, .2, .1, .02, .01, .001, .0001"))
+            ),
+            prettySwitch("vf_plot_curve",
+                         label = tags$span(strong("Plot curve"),
+                                           id = "vf_plot_curve_tip"),
+                         value = TRUE, status = "success", slim = TRUE),
+            bsTooltip("vf_plot_curve_tip", tips$plot_curve, placement = "left"),
+            bsTooltip("vf_prob_plot", tips$prob_plot, placement = "left"),
+            bsTooltip("vf_prob_scale", tips$prob_scale, placement = "left")
+        ),
+
+        show("vf_show_fitting", "Fitting"),
+        div(id = "vf_fitting",
+            selectizeInput(
+              "vf_fit_quantiles",
+              label = "Quantiles to estimate",
+              choices = seq(0.01, 0.999, 0.0025),
+              selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
+                           0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
+              multiple = TRUE),
             awesomeRadio("vf_fit_distr",
                          label = "Distribution",
                          choices = list("PIII" = "PIII",
-                                        "Weibull" = "weibull")))
-        ),
-        bsTooltip("vf_use_max", tips$use_max, placement = "left"),
-        bsTooltip("vf_fit_distr", tips$fit_distr, placement = "left"),
+                                        "Weibull" = "weibull")),
+            awesomeRadio("vf_fit_distr_method",
+                         label = "Distribution method",
+                         choices = list("Method of Moments (MOM)" = "MOM",
+                                        "Maximum Likelihood Estimation (MLE)" = "MLE")),
 
-        selectizeInput(
-          "vf_fit_quantiles",
-          label = "Quantiles to estimate",
-          choices = seq(0.01, 0.999, 0.0025),
-          selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
-                       0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
-          multiple = TRUE),
-        bsTooltip("vf_fit_quantiles", tips$fit_quantiles, placement = "left"),
-
-        fluidRow(
-          column(
-            width = 6,
-            materialSwitch("vf_plot_curve",
-                           label = tags$span("Plot curve",
-                                             id = "vf_plot_curve_tip"),
-                           value = TRUE,
-                           status = "success")),
-          column(
-            width = 6,
-            materialSwitch("vf_use_log",
-                           label = tags$span("Log trans",
-                                             id = "vf_use_log_tip"),
-                           value = FALSE, status = "success"))
-        ),
-        bsTooltip("vf_plot_curve_tip", tips$plot_curve, placement = "left"),
-        bsTooltip("vf_use_log_tip", tips$use_log, placement = "left"),
-
-        fluidRow(
-          column(6,
-                 awesomeRadio("vf_prob_plot",
-                              label = "Plotting positions",
-                              choices = list("Weibull" = "weibull",
-                                             "Median" = "median",
-                                             "Hazen" = "hazen"))),
-          column(6, textInput(
-            "vf_prob_scale",
-            label = "Probabilies to plot",
-            value = "0.9999, 0.999, 0.99, 0.9, .5, .2, .1, .02, .01, .001, .0001"))
-        ),
-        bsTooltip("vf_prob_plot", tips$prob_plot, placement = "left"),
-        bsTooltip("vf_prob_scale", tips$prob_scale, placement = "left")
+            bsTooltip("vf_fit_quantiles", tips$fit_quantiles, placement = "left"),
+            bsTooltip("vf_fit_distr", tips$fit_distr, placement = "left"),
+            bsTooltip("vf_fit_distr_method", tips$fit_distr_method, placement = "left")
+        )
     ),
 
     tabBox(
@@ -733,6 +744,11 @@ ui_analysis_volume_freq <- fluidRow(
         uiOutput("ui_vf_day"),
         verbatimTextOutput("vf_fit_stats"),
         withSpinner(plotOutput("vf_fit_plot", height = "550px"))
+      ),
+
+      ### Info ---------------------
+      tabPanel(
+        title = "Analysis Info"
       ),
 
       ### R Code ---------------------
