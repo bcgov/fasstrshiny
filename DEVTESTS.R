@@ -9,10 +9,14 @@ d <- fill_missing_dates(station_number = "08HB048") %>%
   add_daily_volume() %>%
   add_daily_yield()
 
+plot_monthly_stats2(d)
+
 plot_flow_data(d)[[1]] %>%
   plotly::ggplotly() %>%
   config(modeBarButtonsToRemove = c("pan", "autoscale", "zoomIn2d", "zoomOut2d",
                                     "hoverCompareCartesian", "hoverClosestCartesian"))
+
+
 
 
 screen_data <- screen_flow_data(

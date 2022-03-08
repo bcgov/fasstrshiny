@@ -118,6 +118,12 @@ Spinners are created with the `shinycssloaders` package. The global options
 are set in `global.R`. Every output that requires a progress spinner needs to be 
 wrapped with `withSpinner()` in `ui.R`.
 
+## Troubleshooting
+- Input/output doesn't render, no message, no error
+  - Check to make sure id isn't duplicated
+- Changes to functions.R/global.R don't show in the app
+  - Make sure you completely restart the app (don't just refresh)
+
 
 ## Future considerations
 
