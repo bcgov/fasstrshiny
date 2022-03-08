@@ -54,7 +54,7 @@ tips <- as.list(parameters$tooltip) %>%
   unique() %>%
   setNames(unique(parameters$id))
 
-usethis::use_data(parameters, tips, internal = TRUE, overwrite = TRUE)
+usethis::use_data(parameters, tips, internal = FALSE, overwrite = TRUE)
 
 # Many parameters in compute_annual_trends are already covered here,
 # e.g., annual_percentiles, monthly_percentiles get the "percentiles" tooltip, etc.
