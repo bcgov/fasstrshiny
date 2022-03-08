@@ -384,6 +384,10 @@ create_fun <- function(fun, data = NULL, id, input, params = NULL,
       params[i] == "discharge" ~ glue("values = '{id[i]}'"),
       params[i] == "percentiles" ~
         glue("percentiles = c({glue_collapse(id[[i]], sep = ', ')})"),
+      params[i] == "inner_percentiles" ~
+        glue("inner_percentiles = c({glue_collapse(id[[i]], sep = ', ')})"),
+      params[i] == "outer_percentiles" ~
+        glue("outer_percentiles = c({glue_collapse(id[[i]], sep = ', ')})"),
       params[i] == "custom_months" ~
         glue("custom_months = c({glue_collapse(id[[i]], sep = ', ')})"),
       params[i] == "custom_months_label" ~ glue("custom_months_label = '{id[i]}'"),

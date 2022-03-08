@@ -576,35 +576,26 @@ server <- function(input, output, session) {
                 "Long-term Monthly" = "plot_longterm_monthly_stats",
                 "Long-term Daily" = "plot_longterm_daily_stats") %>%
       create_fun("data_flow", id = "hydro", input,
-                 params = c("plot_log", "complete", "missing"),
+                 params = c("plot_log", "complete", "missing",
+                            "inner_percentiles", "outer_percentiles"),
                  extra = e)
 
     code$hydro_plot <- g
     g <- eval(parse(text = g))[[1]]
 
     # Add interactivity
-    if(input$hydro_type == "Long-term") {
-      stats <- names(g$data) # Get stats from plot data
-      stats <- stats[!stats %in% c("LT_Mean", "LT_Med")] # Omit these
+    stats <- names(g$data) # Get stats from plot data
+    stats <- stats[!stats %in%  c("DayofYear", "AnalysisDate",
+                                  "LT_Mean", "LT_Med")] # Omit these
 
-      # For tooltips labels...
-      names(stats)[stats == "Year_mean"] <- input$hydro_add_year
+    # For tooltips labels...
+    names(stats)[stats %in% c("Year_mean", "RollingValue")] <- input$hydro_add_year
+    names(stats)[stats == "Date"] <- "Day"
 
-      # Add interactive vline
-      g <- g + fasstrshiny:::create_vline_interactive(
-        data = g$data, stats = stats, size = 20)
-
-    } else if(input$hydro_type == "Daily") {
-      stats <- names(g$data) # Get stats from plot data
-      stats <- stats[!stats %in% c("DayofYear", "AnalysisDate")] # Omit these
-
-      # For tooltips labels...
-      names(stats)[stats == "Date"] <- "Day"
-      names(stats)[stats == "RollingValue"] <- input$hydro_add_year
-
-      # Add Interactive vline
-      g <- g + fasstrshiny:::create_vline_interactive(data = g$data, stats)
-    }
+    # Add interactive vline
+    g <- g + fasstrshiny:::create_vline_interactive(
+      data = g$data, stats = stats, size = if_else(input$hydro_type == "Daily",
+                                                   1, 20))
 
     # Add dates
     if(input$hydro_type == "Daily" & !is.null(input$hydro_add_dates)){
@@ -639,7 +630,7 @@ server <- function(input, output, session) {
               yintercept = value), alpha = 0.01,
           size = 3) +
         geom_text(data = mad, aes(y = value, label = type),
-                  x = c(Inf, rep(-Inf, nrow(mad) - 1)), colour = NA,
+                  x = c(Inf, rep(-Inf, nrow(mad) - 1)), colour = "black",
                   hjust = c(1.1, rep(-0.1, nrow(mad) -1)), vjust = -0.5)
     }
 
@@ -671,30 +662,31 @@ server <- function(input, output, session) {
   })
 
   ## Table -----------------------
-  output$hydro_table <- DT::renderDT({
+  output$hydro_table <- renderDT({
     check_data(input)
     req(input$hydro_type)
 
     data_flow <- data_raw()
 
-    p <- "percentiles"
+    perc <- c(input$hydro_inner_percentiles,
+              input$hydro_outer_percentiles,
+              input$hydro_percentiles) %>%
+      unique() %>%
+      as.numeric() %>%
+      sort()
 
-    p <- switch(input$hydro_type,
-                "Long-term" = c("complete", "missing", "custom_months",
-                                "custom_months_label"),
-                "Annual" = "allowed",
-                "Monthly" = "allowed",
-                "Daily" = "complete", "missing")
-
-    p <- c(p, "percentiles")
+    p <- c("complete", "missing")
+    if(input$hydro_type != "Daily") {
+      p <- c(p, "custom_months", "custom_months_label")
+    }
 
     t <- switch(input$hydro_type,
-                "Long-term" = "calc_longterm_daily_stats",
-                "Annual" = "calc_annual_stats",
-                "Monthly" = "calc_monthly_stats",
+                "Long-term Daily" = "calc_longterm_daily_stats",
+                "Long-term Monthly" = "calc_longterm_monthly_stats",
                 "Daily" = "calc_daily_stats") %>%
-      create_fun("data_flow", id = "hydro", input,
-                 params = p)
+      create_fun(
+        "data_flow", id = "hydro", input, params = p,
+        extra = glue("percentiles = c({glue_collapse(perc, sep = ', ')})"))
 
     code$hydro_table <- t
 
