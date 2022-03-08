@@ -421,8 +421,7 @@ remove_defaults <- function(fun, params, input) {
 
   # Get defaults (omitting symbols)
   defaults <- as.list(formals(get(fun))) %>%
-    .[!map_lgl(., ~typeof(.) %in% c("language", "symbol"))] %>%
-    map(., eval) %>% # Eval into what they are, effectively
+    map(filter_type) %>% # Remove symbols, code refering to other args and eval
     tibble::enframe(name = "fasstr_arg", value = "default")
 
   input_values <- map(names(params), ~input[[.]]) %>%
@@ -439,6 +438,14 @@ remove_defaults <- function(fun, params, input) {
 
    # Return default params
    params %in% id
+}
+
+filter_type <- function(x) {
+  if(typeof(x) != "symbol") {
+    x <- try(eval(x), silent = TRUE)
+    if("try-error" %in% class(x)) x <- NULL
+  } else x <- NULL
+  x
 }
 
 
