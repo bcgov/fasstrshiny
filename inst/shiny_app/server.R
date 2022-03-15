@@ -127,6 +127,7 @@ server <- function(input, output, session) {
     select_plot_options(
       select_plot_log(id,
                       value = formals(plot_longterm_daily_stats)$log_discharge),
+      select_plot_extremes(id),
       select_add_year(id, input),
       select_add_dates(id),
       select_add_mad(id))

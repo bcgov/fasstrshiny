@@ -23,6 +23,7 @@ parameters <- tribble(
   "months",               "months",              "Months to include in calculations", TRUE,
   "percentiles",          "percentiles",         "Percentiles to add to calculations", TRUE,
   "plot_log",             "log_discharge",       "Plot data on log scale",            TRUE,
+  "plot_extremes",        "include_extremes",    "Plot extreme values as min-max ribbon",            TRUE,
   "custom_months",        "custom_months",       "Months to combine and summarize as an additional row in the table", TRUE,
   "custom_months_label",  "custom_months_label", "What to label this range of months in the table", TRUE,
   "missing",              "ignore_missing",      "Whether dates with missing values should be included in calculations", TRUE,
@@ -65,8 +66,6 @@ usethis::use_data(parameters, tips, internal = FALSE, overwrite = TRUE)
 
 
 # TO ADD ----- Functions to add from fasstr: ------------------
-# - calc_longterm_monthly_stats
-# - plot_longterm_monthly_stats
 # - compute_frequency_quantile ??? only gives single value
 # - compute_frequency_analysis (not necessary?)
 # - calc_longterm_percentile - Deliberately not included (redundant with other tables)
@@ -75,16 +74,6 @@ usethis::use_data(parameters, tips, internal = FALSE, overwrite = TRUE)
 
 # calc_longterm_daily_stats
 # - include_longterm (always included)
-
-# plot_daily_stats
-# - include_extremes
-# - inner_percentiles
-# - outer_percentiles
-
-# plot_longterm_daily_stats
-# - include_extremes
-# - inner_percentiles
-# - outer_percentiles
 
 # plot_flow_duration
 # - include_longterm

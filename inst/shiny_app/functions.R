@@ -172,6 +172,18 @@ select_plot_log <- function(id, value = TRUE) {
               placement = "left"))
 }
 
+select_plot_extremes <- function(id, value = TRUE) {
+
+  tagList(
+    prettySwitch(glue("{id}_plot_extremes"),
+                 label = tags$span("Plot extreme values",
+                                   id = glue("{id}_plot_extremes_tip")),
+                 value = value,
+                 status = "success", slim = TRUE),
+    bsTooltip(glue("{id}_plot_extremes_tip"), tips$plot_extremes,
+              placement = "left"))
+}
+
 select_daterange <- function(id, data) {
 
   if(is.null(data)) stop("Require 'data' to create daterange UI",
@@ -398,6 +410,14 @@ create_fun <- function(fun, data = NULL, id, input,
     params <- params[params != "missing"]
   }
 
+  # Put it all together
+  p <- combine_parameters(params)
+  args <- glue_collapse(c(data, na.omit(p), extra), sep = ', ')
+
+  glue("{fun}({args}){end}")
+}
+
+combine_parameters <- function(params) {
   # Create standard parameters
   #
   # - REMEMBER! When collapsing multiple elements with glue_collapse, use [[i]]
@@ -419,6 +439,7 @@ create_fun <- function(fun, data = NULL, id, input,
       params[i] == "missing" ~ glue("ignore_missing = {values[i]}"),
       params[i] == "allowed" ~ glue("allowed_missing = {values[i]}"),
       params[i] == "complete" ~ glue("complete_years = {values[i]}"),
+      params[i] == "plot_extremes" ~ glue("include_extremes = {values[i]}"),
 
       # Data
       params[i] == "water_year" ~
@@ -438,11 +459,9 @@ create_fun <- function(fun, data = NULL, id, input,
       params[i] == "plot_log" ~ glue("log_discharge = {values[i]}")
     )
   }
-
-  args <- glue_collapse(c(data, na.omit(p), extra), sep = ', ')
-
-  glue("{fun}({args}){end}")
+  p
 }
+
 
 
 remove_defaults <- function(fun, params, input) {
