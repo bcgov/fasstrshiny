@@ -886,12 +886,12 @@ server <- function(input, output, session) {
 
     data_flow <- data_raw()
 
-    g <- switch(input$hydro_type,
+    g <- switch(input$as_type,
                 "Monthly" = "plot_monthly_stats2",
                 "Annual" = "plot_annual_stats2") %>%
       create_fun("data_flow", id = "as", input)
 
-    code$hydro_plot <- g
+    code$as_plot <- g
 
     g <- eval(parse(text = g))[[1]]
 
@@ -900,10 +900,11 @@ server <- function(input, output, session) {
     date_cols <- "Year"
     if(input$as_type == "Monthly") date_cols <- c(date_cols, "Month")
     stats <- names(g$data) # Get stats from plot data
-    stats <- stats[!stats %in% date_cols] # Omit these
+    #stats <- stats[!stats %in% date_cols] # Omit these
 
     # Add vline
-    g <- g + fasstrshiny:::create_vline_interactive(data = g$data, stats)
+    g <- g + fasstrshiny:::create_vline_interactive(
+      data = g$data, stats, size = if_else(input$as_type == "Annual", 10, 2))
 
     girafe(ggobj = g, width_svg = 12, height = 6,
            options = list(

@@ -399,14 +399,58 @@ ui_cumulative <- fluidRow(
 )
 
 
-# Annual Statistics -----------------------------------------------------
+# Annual -----------------------------------------------------
+
+## Annual Statistics ------------------------------------------------
+ui_as_stats <- fluidRow(
+  column(
+    width = 12, h2("Annual Statistics"),
+    box(
+      width = 3,
+      helpText("Placeholder descriptive text to describe this section, ",
+               "what it does and how to use it"),
+      div(align = "left",
+          awesomeRadio("as_type",
+                       label = "Summary type",
+                       choices = list("Monthly",
+                                      "Annual"),
+                       selected = "Monthly",
+                       status = "primary")),
+      bsTooltip("as_type", "Type of statistic to calculate", placement = "left")
+    ),
+    tabBox(
+      width = 9,
+
+      ## Plot ---------------------
+      tabPanel(
+        title = "Plot",
+        uiOutput("ui_as_plot_options", align = "right"),
+        girafeOutput("as_plot", height = "450px")
+      ),
+
+      ## Table ---------------------
+      tabPanel(
+        title = "Table",
+        select_table_options("as", include = "percentiles"),
+        DTOutput("as_table")
+      ),
+
+      ## R Code ---------------------
+      tabPanel(
+        title = "R Code",
+        verbatimTextOutput("as_code")
+      )
+    )
+  )
+)
+
 
 ## Annual Means -----------------------
 ui_as_means <- fluidRow(
   column(
     width = 12, h2("Annual Means"),
     tabBox(
-      width = 12, height = min_height,
+      width = 12,
       #helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
       ### Plot ---------------------
       tabPanel(
@@ -920,7 +964,8 @@ tagList(
                  icon = icon("clock")),
         menuItem("Annual Statistics", tabName = "annual",
                  icon = icon("calendar"),
-                 menuSubItem("Annual Means", tabName = "as_means"),
+                 menuSubItem("Statistics", tabName = "as_stats"),
+                 menuSubItem("Means", tabName = "as_means"),
                  menuSubItem("Flow timing", tabName = "as_flow_timing"),
                  menuSubItem("Low Flows", tabName = "as_low_flows"),
                  menuSubItem("Peak Flows", tabName = "as_peak_flows"),
@@ -945,6 +990,7 @@ tagList(
         tabItem("hydro", ui_hydro),
         tabItem("cumulative", ui_cumulative),
         tabItem("flows", ui_flows),
+        tabItem("as_stats", ui_as_stats),
         tabItem("as_means", ui_as_means),
         tabItem("as_flow_timing", ui_as_flow_timing),
         tabItem("as_low_flows", ui_as_low_flows),
