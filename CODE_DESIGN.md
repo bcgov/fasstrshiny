@@ -54,45 +54,72 @@ code used in the app, all main fasstr functions are assembled as a text object
 and then evaluated. The text version can be used in the R Code panels, and the
 evaluated version used to create the shiny app outputs.
 
-For example, create_fun() takes the name of the fasstr function, the name of the
-dataset and the various fasstr function arguments which correspond to
-fasstrshiny inputs to create a *text* version of a fastr function with
-arguments:
+For example, `create_fun()` takes the name of the fasstr function, the name of the
+dataset, an id, and the shiny input object. It then matches inputs with that id
+against parameters in the fasstr function (omitting those that are defaults), 
+and creates a *text* version of the fasstr function with arguments.
 
-Example from Summary Statistics Table:
+Example from hydrograph figure:
 
 ```
 flow_data <- data_raw()
-t <- switch(input$sum_type,
-                "Long-term" = "calc_longterm_daily_stats",
-                "Annual" = "calc_annual_stats",
-                "Monthly" = "calc_monthly_stats",
-                "Daily" = "calc_daily_stats") %>%
-      create_fun("flow_data", id = "sum", input,
-                 params = c("discharge", "percentiles",
-                            "roll_days", "roll_align",
-                            "data_water_year",
-                            "data_years_range", "data_years_exclude",
-                            "months",
-                            if_else(input$sum_type %in% c("Long-term", "Daily"),
-                                    "missing", "allowed")))
+g <- switch(input$hydro_type,
+            "Daily" = "plot_daily_stats",
+            "Long-term Monthly" = "plot_longterm_monthly_stats",
+            "Long-term Daily" = "plot_longterm_daily_stats") %>%
+    create_fun("data_flow", id = "hydro", input,
+               extra = if_else(input$hydro_add_year != "",
+                               glue("add_year = {input$hydro_add_year}"),
+                               ""))
 ```
 
 Example *text* output:
 
 ```
-calc_longterm_daily_stats(flow_data,
+plot_daily_stats(data_flow,
   values = "Value",
-  percentiles = c(10, 90),
-  roll_days = 1,
-  roll_align = "right",
-  months = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
-  ignore_missing = FALSE
+  start_year = 1972,
+  end_year = 2019,
+  ignore_missing = TRUE,
+  add_year = 2013
 )
 ```
 
 This can be saved for sharing with the user through the R Code panel, and can 
 then be parsed and evaluated with `eval(parse(text = t))`.
+
+**Adding new arguments**
+
+New arguments can be added in one of two ways. If an argument is used in a
+standard way in more than one function, it's name/id can be added to the
+`parameters` data frame created in `data-raw/parameters.R` and then how to use
+it in a function can be added to the workflow in the `combine_parameters()`
+function. As long as the input is labelled `id_param` where id is the id of the
+shiny group, and param is the id of the parameter in this shiny app, it will be
+automatically used by `create_fun()`, unless added to the `params_ignore` list.
+
+Alternatively if an argument is only used once or used in a non-standard way, it
+can be added with the `extra` argument as in the example above. Note that if the
+argument exists in `parameters` and in the `combine_parameters()` workflow, but
+you would like to use it in a non-standard way with the `extra` argument, you'll
+also need to add it to `params_ignore` so as not to have two arguments.
+
+For example, in the Hydrographs table, we use percentiles from several inputs
+(previously combined into `perc` in this example), so override the default usage
+of the percentiles argument.
+
+```
+t <- switch(input$hydro_type,
+            "Long-term Daily" = "calc_longterm_daily_stats",
+            "Long-term Monthly" = "calc_longterm_monthly_stats",
+            "Daily" = "calc_daily_stats") %>%
+  create_fun(
+    "data_flow", id = "hydro", input,
+    # Because input$hydro_percentiles exists, but we don't want to use it
+    params_ignore = "percentiles",
+    extra = glue("percentiles = c({glue_collapse(perc, sep = ', ')})"))
+```
+
 
 ## Datatables
 

@@ -9,6 +9,19 @@ d <- fill_missing_dates(station_number = "08HB048") %>%
   add_daily_volume() %>%
   add_daily_yield()
 
+
+plot_monthly_stats2(d)
+plot_monthly_stats(d)
+
+plot_annual_stats(d)
+
+plot_data_screening(d, start_year = 1900, end_year = 2000)
+plot_data_screening(d, start_year = 1900, end_year = 2000, plot_availability = FALSE)
+
+
+## Problems with warnings on calculations:
+calc_monthly_stats(d, allowed_missing = 100)
+
 plot_monthly_stats2(d)
 
 plot_flow_data(d)[[1]] %>%
