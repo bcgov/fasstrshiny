@@ -482,22 +482,27 @@ server <- function(input, output, session) {
       data = g$data, stats = stats, size = 5)
 
 
-    girafe(ggobj = g, width_svg = 13, height_svg = 6)
+    girafe(ggobj = g, width_svg = 13, height_svg = 7,
+           options = list(
+             opts_toolbar(position = "topleft"),
+             opts_selection(type = "none"),
+             opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
   })
 
 
   ## Missing Data Plot ---------------------------
   output$available_plot2 <- renderGirafe({
     check_data(input)
+    req(input$available_type)
 
     data_flow <- data_raw()
+
     g <- create_fun(fun = "plot_missing_dates", data = "data_flow",
-      id = "available", input, params_ignore = "discharge")
+      id = "available", input, params_ignore = "discharge",
+      extra = glue("plot_type = '{input$available_type}'"))
     code$available_miss <- g
 
-    g <- parse(text = g) %>%
-      eval() %>%
-      .[[1]]
+    g <- eval(parse(text = g))[[1]]
 
     # Replace layers with interactive
     g$layers[[1]] <- geom_tile_interactive(
@@ -509,7 +514,10 @@ server <- function(input, output, session) {
                          .trim = FALSE),
           data_id = glue("{Year}-{Month}")))
 
-    girafe(ggobj = g, width_svg = 14, height_svg = 6,
+    g <- g + guides(fill = guide_coloursteps(even.steps = FALSE,
+                                             show.limits = TRUE))
+
+    girafe(ggobj = g, width_svg = 14, height_svg = 7,
            options = list(opts_selection(type = "none")))
   })
 
