@@ -572,16 +572,14 @@ server <- function(input, output, session) {
 
     data_flow <- data_raw()
 
-    if(input$hydro_add_year != "") {
-      e <- glue("add_year = {input$hydro_add_year}")
-    } else e <- NULL
-
     g <- switch(input$hydro_type,
                 "Daily" = "plot_daily_stats",
                 "Long-term Monthly" = "plot_longterm_monthly_stats",
                 "Long-term Daily" = "plot_longterm_daily_stats") %>%
       create_fun("data_flow", id = "hydro", input,
-                 extra = e)
+                 extra = if_else(input$hydro_add_year != "",
+                                 glue("add_year = {input$hydro_add_year}"),
+                                 ""))
 
     code$hydro_plot <- g
     g <- eval(parse(text = g))[[1]]
