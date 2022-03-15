@@ -1252,9 +1252,10 @@ server <- function(input, output, session) {
       glue("zyp_alpha = {input$at_alpha}")) %>%
       glue_collapse(sep = ", ")
 
+
     r <- create_fun(
       fun = "compute_annual_trends", data = "data_flow", id = "at", input,
-      extra = p)
+      extra = p, params_ignore = "years_exclude")
 
     code$at_data <- r
 
@@ -1399,7 +1400,7 @@ server <- function(input, output, session) {
       glue_collapse(sep = ", ")
 
     r <- create_fun(fun = "compute_annual_frequencies", data = "data_flow",
-                    id = "vf", input, extra = p)
+                    id = "vf", input, extra = p, params_ignore = "years_exclude")
 
     code$vf_data <- r
 
