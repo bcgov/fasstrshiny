@@ -121,5 +121,4 @@ bc_hydrozones <- hydrozones(ask = FALSE) %>%
 
 # Settings --------------------------
 
-min_height <- "250px" # Min. height for boxes (will expand to content)
-
+plot_height <- "500px"

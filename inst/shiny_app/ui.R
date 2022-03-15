@@ -124,7 +124,7 @@ ui_data_load <- fluidRow(
       tabPanel(
         title = "Plot", value = "data_tabs_plot",
         uiOutput("ui_data_plot_options", align = "right"),
-        withSpinner(plotlyOutput('data_plot'))
+        withSpinner(plotlyOutput('data_plot', height = plot_height))
       ),
 
       ### Table --------
@@ -193,7 +193,8 @@ ui_data_available <- fluidRow(
                            "Months to include/exclude from the plot",
                            placement = "left"),
           ),
-          column(width = 11, girafeOutput("available_plot2", height = "450px"))
+          column(width = 11, girafeOutput("available_plot2",
+                                          height = plot_height))
         )
       ),
 
@@ -281,7 +282,7 @@ ui_hydro <- fluidRow(
       tabPanel(
         title = "Plot",
         uiOutput("ui_hydro_plot_options", align = "right"),
-        girafeOutput("hydro_plot", height = "450px")
+        girafeOutput("hydro_plot", height = plot_height)
       ),
 
       ## Table ---------------------
@@ -340,7 +341,7 @@ ui_flows <- fluidRow(
       tabPanel(
         title = "Plot - Flow duration",
         uiOutput("ui_flows_plot_options", align = "right"),
-        withSpinner(girafeOutput("flows_plot", height = "400px"))
+        withSpinner(girafeOutput("flows_plot", height = plot_height))
         #p(style = "margin-bottom: 20px"),
         #h4("Percentile Rank of Flow"),
         #textOutput("flows_perc")
@@ -393,7 +394,7 @@ ui_cumulative <- fluidRow(
       tabPanel(
         title = "Plot",
         uiOutput("ui_cum_plot_options", align = "right"),
-        girafeOutput("cum_plot", height = "400px")
+        girafeOutput("cum_plot", height = plot_height)
       ),
 
       ## Table ---------------------
@@ -439,7 +440,7 @@ ui_as_stats <- fluidRow(
       tabPanel(
         title = "Plot",
         uiOutput("ui_as_plot_options", align = "right"),
-        girafeOutput("as_plot", height = "450px")
+        girafeOutput("as_plot", height = plot_height)
       ),
 
       ## Table ---------------------
@@ -469,7 +470,7 @@ ui_as_means <- fluidRow(
       ### Plot ---------------------
       tabPanel(
         title = "Plot",
-        girafeOutput("am_plot", height = "400px")
+        girafeOutput("am_plot", height = plot_height)
       ),
 
       ### R Code ---------------------
@@ -539,7 +540,7 @@ ui_as_low_flows <- fluidRow(
       ### Plot ---------------------
       tabPanel(
         title = "Plot",
-        girafeOutput("lf_plot", height = "450px")
+        girafeOutput("lf_plot", height = plot_height)
       ),
 
       ### Table ---------------------
@@ -601,7 +602,7 @@ ui_as_outside_normal <- fluidRow(
       ### Plot ---------------------
       tabPanel(
         title = "Plot",
-        girafeOutput("on_plot", height = "500px")
+        girafeOutput("on_plot", height = plot_height)
       ),
 
       ### Table ---------------------

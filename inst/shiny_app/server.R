@@ -1012,7 +1012,7 @@ server <- function(input, output, session) {
                              "Day of Year: ", Value),
             data_id = Year), size = 3)
 
-    girafe(ggobj = g, width_svg = 14, height_svg = 6,
+    girafe(ggobj = g, width_svg = 14, height_svg = 8,
            options = list(
              opts_toolbar(position = "topleft"),
              opts_selection(type = "none")))
@@ -1083,7 +1083,7 @@ server <- function(input, output, session) {
     # Combine plots
     g <- wrap_plots(g)
 
-    girafe(ggobj = g, width_svg = 12, height_svg = 6,
+    girafe(ggobj = g, width_svg = 12, height_svg = 8,
            options = list(
              opts_toolbar(position = "topleft"),
              opts_selection(type = "none")))
@@ -1171,7 +1171,7 @@ server <- function(input, output, session) {
                            "No. Days: ", round(Value, 4)),
           data_id = Year), size = 3)
 
-    girafe(ggobj = g, width_svg = 12, height_svg = 6,
+    girafe(ggobj = g, width_svg = 12, height_svg = 8,
            options = list(
              opts_toolbar(position = "topleft"),
              opts_selection(type = "none"),
