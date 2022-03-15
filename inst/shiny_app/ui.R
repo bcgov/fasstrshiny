@@ -18,7 +18,7 @@ ui_home <- fluidRow(
     width = 12, h2("Welcome to fasstrshiny"),
 
     tabBox(
-      width = 12, height = min_height,
+      width = 12,
 
       # Disclaimer
       tabPanel(
@@ -106,7 +106,7 @@ ui_data_load <- fluidRow(
     ),
 
     tabBox(
-      id = "data_tabs", width = 9, height = min_height,
+      id = "data_tabs", width = 9,
 
       ### HYDAT Map --------
       tabPanel(
@@ -148,7 +148,7 @@ ui_data_available <- fluidRow(
   column(
     width = 12, h2("Data Availability"),
     tabBox(
-      width = 12, height = min_height,
+      width = 12,
 
       #helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
       ### Summary Plot -----------------
@@ -206,7 +206,7 @@ ui_overview <- fluidRow(
     box(width = 3,
         helpText("Placeholder descriptive text to describe this section, what it does and how to use it")),
     tabBox(
-      width = 9, height = min_height,
+      width = 9,
 
       ### Plot ---------------------
       tabPanel(
@@ -261,7 +261,7 @@ ui_hydro <- fluidRow(
 
     # Outputs
     tabBox(
-      width = 9, height = min_height,
+      width = 9,
 
       ## Plot ---------------------
       tabPanel(
@@ -320,7 +320,7 @@ ui_flows <- fluidRow(
                class = "centreButton", ),
     ),
     tabBox(
-      width = 9, height = min_height,
+      width = 9,
 
       ## Plot ---------------------
       tabPanel(
@@ -373,7 +373,7 @@ ui_cumulative <- fluidRow(
       bsTooltip("cum_discharge", tips$discharge, placement = "left")
     ),
     tabBox(
-      width = 9, height = min_height,
+      width = 9,
 
       ## Plot ---------------------
       tabPanel(
@@ -486,7 +486,7 @@ ui_as_flow_timing <- fluidRow(
       ),
 
       tabBox(
-        width = 12, height = min_height,
+        width = 12,
 
         ### Plot ---------------------
         tabPanel(
@@ -520,7 +520,7 @@ ui_as_low_flows <- fluidRow(
       select_rolling("lf", set = FALSE, multiple = TRUE)
     ),
     tabBox(
-      width = 9, height = min_height,
+      width = 9,
 
       ### Plot ---------------------
       tabPanel(
@@ -553,7 +553,7 @@ ui_as_peak_flows <- fluidRow(
       select_rolling("pf", set = FALSE)
     ),
     tabBox(
-      width = 9, height = min_height,
+      width = 9,
 
       ### Table ---------------------
       tabPanel(
@@ -582,7 +582,7 @@ ui_as_outside_normal <- fluidRow(
       bsTooltip("on_normal", tips$normal, placement = "left")
     ),
     tabBox(
-      width = 9, height = min_height,
+      width = 9,
 
       ### Plot ---------------------
       tabPanel(
@@ -795,7 +795,7 @@ ui_analysis_volume_freq <- fluidRow(
     ),
 
     tabBox(
-      width = 9, height = min_height,
+      width = 9,
 
       ### Plot ---------------------
       tabPanel(
@@ -906,7 +906,7 @@ ui_analysis_hydat_peak <- fluidRow(
     ),
 
     tabBox(
-      width = 9, height = min_height,
+      width = 9,
 
       ### Plot ---------------------
       tabPanel(
