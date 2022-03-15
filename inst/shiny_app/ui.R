@@ -489,8 +489,9 @@ ui_as_flow_timing <- fluidRow(
   column(
     width = 12, h2("Flow Timing"),
     box(
-      width = 12,
-      helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
+      width = 3,
+      helpText("Placeholder descriptive text to describe this section, ",
+               "what it does and how to use it"),
       div(style = "max-width: 300px;",
           selectizeInput("ft_percent",
                       label = "Percents of total annual flows",
@@ -498,28 +499,26 @@ ui_as_flow_timing <- fluidRow(
                       selected = c(25, 33, 50, 75),
                       multiple = TRUE),
           bsTooltip("ft_percent", tips$percent, placement = "left")
+      )),
+    tabBox(
+      width = 9,
+
+      ### Plot ---------------------
+      tabPanel(
+        title = "Plot",
+        girafeOutput("ft_plot", height = plot_height)
       ),
 
-      tabBox(
-        width = 12,
+      ### Table ---------------------
+      tabPanel(
+        title = "Table",
+        DTOutput("ft_table")
+      ),
 
-        ### Plot ---------------------
-        tabPanel(
-          title = "Plot",
-          girafeOutput("ft_plot", height = "400px")
-        ),
-
-        ### Table ---------------------
-        tabPanel(
-          title = "Table",
-          DTOutput("ft_table")
-        ),
-
-        ### R Code ---------------------
-        tabPanel(
-          title = "R Code",
-          verbatimTextOutput("ft_code")
-        )
+      ### R Code ---------------------
+      tabPanel(
+        title = "R Code",
+        verbatimTextOutput("ft_code")
       )
     )
   )
