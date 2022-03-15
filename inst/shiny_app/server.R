@@ -443,50 +443,46 @@ server <- function(input, output, session) {
   ## Data --------------
   available_raw <- reactive({
     data_flow <- data_raw()
-    d <- glue("
-      data_available <- screen_flow_data(
-        data = data_flow,
-        start_year = {input$data_years_range[1]},
-        end_year = {input$data_years_range[2]},
-        water_year_start = {as.numeric(input$data_water_year)})
-        ")
 
-    code$available_data <- d
+    d <- create_fun("screen_flow_data", data = "data_flow",
+                    id = "available", input)
+
+    code$available_data <- glue("data_available <- {d}")
     eval(parse(text = d))
   })
 
   ## Summary plot ------------------
   output$available_plot1 <- renderGirafe({
     check_data(input)
-    req(input$data_water_year)
+    req(input$available_availability, !is.null(input$available_stats))
 
-    xlab <- if_else(input$data_water_year != 1, "Water Year", "Year")
-    title <- paste0("Annual Daily ", input$available_summary, " - ", meta$station_name)
-    data_available <- available_raw()
+    data_flow <- data_raw()
 
-    g <- glue(
-      "ggplot(data = data_available,
-              aes(x = Year, y = {input$available_summary})) +
-        theme_bw() +
-        theme(axis.title = element_text(size = 15),
-              plot.title = element_text(size = 15, hjust = 0.5),
-              axis.text = element_text(size = 13)) +
-        geom_line(colour = 'dodgerblue4') +
-        geom_point(colour = 'firebrick3', size = 2) +
-        labs(x = '{xlab}', y = 'Discharge (cms)', title = '{title}')")
+    e <- c(glue("include_stats = ",
+                "c(\"{glue_collapse(input$available_stats, sep = '\", \"')}\")"),
+           glue("plot_availability = {input$available_availability}")) %>%
+      glue_collapse(sep = ", ")
+
+
+    g <- create_fun("plot_data_screening", data = "data_flow",
+                    id = "available", input, extra = e)
 
     code$available_plot <- g
 
-    g <- parse(text = g) %>%
-      eval() +
-      geom_point_interactive(aes(
-        tooltip = paste0("Year: ", Year, "\n",
-                         input$available_summary, ": ",
-                         round(.data[[input$available_summary]], 4)),
-        data_id = Year),
-        colour = 'firebrick3', size = 3)
+    g <- eval(parse(text = g))[[1]]
 
-    girafe(ggobj = g, width_svg = 13, height_svg = 4.5)
+    #Add interactivity
+    stats <- names(g$data) # Get stats from plot data
+
+    # For tooltips labels...
+    names(stats)[stats == "n_missing_Q"] <- "Data Completeness"
+
+    # Add interactive vline
+    g <- g + fasstrshiny:::create_vline_interactive(
+      data = g$data, stats = stats, size = 5)
+
+
+    girafe(ggobj = g, width_svg = 13, height_svg = 6)
   })
 
 

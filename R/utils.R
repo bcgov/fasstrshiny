@@ -71,10 +71,15 @@ create_vline_interactive <- function(data, stats, date_fmt = "%b %d",
   }
 
   # All stats except the first are assumed to be numeric
-  stats <- glue::glue("'{names(stats)}: ', round(.data[['{stats}']], digits = {digits})")
+  stats_fct <- stats[!sapply(data[, stats], is.numeric)]
+  stats_num <- stats[!stats %in% stats_fct]
+
+  stats_tt <- c(
+    glue::glue("'{names(stats_fct)}: ', .data[['{stats_fct}']]"),
+    glue::glue("'{names(stats_num)}: ', round(.data[['{stats_num}']], digits = {digits})"))
 
   # Combine
-  tips <- glue::glue_collapse(c(date_tt, stats), sep = ", '\n', ")
+  tips <- glue::glue_collapse(c(date_tt, stats_tt), sep = ", '\n', ")
   tips <- paste0("paste0(", tips, ")")
 
   # First stats is assumed to be X value and data_id

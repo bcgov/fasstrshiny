@@ -150,14 +150,28 @@ ui_data_available <- fluidRow(
     tabBox(
       width = 12,
 
-      #helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
       ### Summary Plot -----------------
       tabPanel(
         title = "Data Summary Plot",
-        selectizeInput("available_summary", "Statistic to explore",
-                    c("Mean","Maximum","Minimum","StandardDeviation")),
-        girafeOutput("available_plot1", height = "425px")
-      ),
+        fluidRow(
+          column(width = 3,
+                 helpText("Placeholder descriptive text to describe this section, ",
+                          "what it does and how to use it"),
+                 prettySwitch("available_availability",
+                              label = tags$span("Plot availability",
+                                                id = "available_availability_tip"),
+                              value = TRUE,
+                              status = "success", slim = TRUE, inline = TRUE),
+                 bsTooltip("available_availability_tip", tips$availability,
+                           placement = "left"),
+                 selectizeInput(
+                   "available_stats",
+                   label = "Statistics to include",
+                   choices = eval(formals(plot_data_screening)$include_stat),
+                   selected = eval(formals(plot_data_screening)$include_stat),
+                   multiple = TRUE, width = "100%")),
+          column(width = 9,
+                 girafeOutput("available_plot1", height = "600px")))),
 
       ### Availability Plot -----------------
       tabPanel(
