@@ -113,13 +113,13 @@ select_complete <- function(id, input = NULL, set = TRUE) {
   value <- set_input("complete", input, set, FALSE)
 
   tagList(
-    prettySwitch(glue("{id}_complete"),
-                 label = tags$span("Complete years only",
-                                   id = glue("{id}_complete_tip")),
-                 value = value,
-                 status = "success", slim = TRUE),
+    div(id = glue("{id}_complete_tip"),
+        prettySwitch(glue("{id}_complete"),
+                     label = "Complete years only",
+                     value = value,
+                     status = "success", slim = TRUE)),
     bsTooltip(glue("{id}_complete_tip"), tips$complete,
-              placement = "left"))
+                placement = "left"))
 }
 
 select_missing <- function(id, input = NULL, set = TRUE, value = NULL) {
@@ -127,11 +127,11 @@ select_missing <- function(id, input = NULL, set = TRUE, value = NULL) {
                      if_else(is.null(value), TRUE, value))
 
   tagList(
-    prettySwitch(glue("{id}_missing"),
-                 value = value, status = "danger",
-                 label = tags$span("Ignore missing values",
-                                   id = glue("{id}_missing_tip")),
-                 slim = TRUE),
+    div(id = glue("{id}_missing_tip"),
+        prettySwitch(glue("{id}_missing"),
+                     value = value, status = "danger",
+                     label = "Ignore missing values",
+                     slim = TRUE)),
     bsTooltip(glue("{id}_missing_tip"), tips$missing,
               placement = "left"))
 }
@@ -163,11 +163,11 @@ select_plot_stats <- function(id, stats) {
 select_plot_log <- function(id, value = TRUE) {
 
   tagList(
-    prettySwitch(glue("{id}_plot_log"),
-                 label = tags$span("Use log scale",
-                                   id = glue("{id}_plot_log_tip")),
-                 value = value,
-                 status = "success", slim = TRUE),
+    div(id = glue("{id}_plot_log_tip"),
+        prettySwitch(glue("{id}_plot_log"),
+                     label = "Use log scale",
+                     value = value,
+                     status = "success", slim = TRUE)),
     bsTooltip(glue("{id}_plot_log_tip"), tips$plot_log,
               placement = "left"))
 }
@@ -175,11 +175,11 @@ select_plot_log <- function(id, value = TRUE) {
 select_plot_extremes <- function(id, value = TRUE) {
 
   tagList(
-    prettySwitch(glue("{id}_plot_extremes"),
-                 label = tags$span("Plot extreme values",
-                                   id = glue("{id}_plot_extremes_tip")),
-                 value = value,
-                 status = "success", slim = TRUE),
+    div(id = glue("{id}_plot_extremes_tip"),
+        prettySwitch(glue("{id}_plot_extremes"),
+                     label = "Plot extreme values",
+                     value = value,
+                     status = "success", slim = TRUE)),
     bsTooltip(glue("{id}_plot_extremes_tip"), tips$plot_extremes,
               placement = "left"))
 }
@@ -232,11 +232,11 @@ select_add_dates <- function(id) {
 
 select_add_mad <- function(id) {
   tagList(
-    prettySwitch(glue("{id}_add_mad"),
-                 label = tags$span("Add MAD values",
-                                   id = glue("{id}_add_mad_tip")),
-                 value = FALSE,
-                 status = "success", slim = TRUE),
+    div(id = glue("{id}_add_mad_tip"),
+        prettySwitch(glue("{id}_add_mad"),
+                     label = "Add MAD values",
+                     value = FALSE,
+                     status = "success", slim = TRUE)),
     bsTooltip(glue("{id}_add_mad_tip"), tips$add_mad,
               placement = "left"))
 }

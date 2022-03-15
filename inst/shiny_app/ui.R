@@ -43,7 +43,7 @@ ui_home <- fluidRow(
       tabPanel(
         title = "Getting Setup", width = 12,
         p("Blah, blah, blah")
-      ),
+      )
     )
   )
 )
@@ -158,11 +158,11 @@ ui_data_available <- fluidRow(
             width = 3,
             helpText("Placeholder descriptive text to describe this section, ",
                      "what it does and how to use it"),
-            prettySwitch("available_availability",
-                         label = tags$span("Plot availability",
-                                           id = "available_availability_tip"),
-                         value = TRUE,
-                         status = "success", slim = TRUE, inline = TRUE),
+            div(id = "available_availability_tip",
+                prettySwitch("available_availability",
+                             label = "Plot availability",
+                             value = TRUE,
+                             status = "success", slim = TRUE, inline = TRUE)),
             bsTooltip("available_availability_tip", tips$availability,
                       placement = "left"),
             selectizeInput(
@@ -755,15 +755,15 @@ ui_analysis_volume_freq <- fluidRow(
                                             "High" = TRUE),
                              selected = FALSE, inline = TRUE)),
               column(
-                width = 6,
-                prettySwitch("vf_use_log",
-                             label = tags$span(strong("Log trans"),
-                                               id = "vf_use_log_tip"),
-                             value = FALSE, status = "success", slim = TRUE))),
-            bsTooltip("vf_use_max", tips$use_max, placement = "left"),
-            bsTooltip("vf_use_log_tip", tips$use_log, placement = "left")
+                width = 6, id = "vf_use_log_tip",
+                prettySwitch(
+                  "vf_use_log",
+                  label = tags$span(strong("Log trans")),
+                  value = FALSE, status = "success", slim = TRUE)),
+              bsTooltip("vf_use_max", tips$use_max, placement = "left"),
+              bsTooltip("vf_use_log_tip", tips$use_log, placement = "left")
+            )
         ),
-
         show("vf_show_plotting", "Plotting"),
         div(id = "vf_plotting",
             fluidRow(
@@ -778,10 +778,10 @@ ui_analysis_volume_freq <- fluidRow(
                 label = "Probabilies to plot",
                 value = "0.9999, 0.999, 0.99, 0.9, .5, .2, .1, .02, .01, .001, .0001"))
             ),
-            prettySwitch("vf_plot_curve",
-                         label = tags$span(strong("Plot curve"),
-                                           id = "vf_plot_curve_tip"),
-                         value = TRUE, status = "success", slim = TRUE),
+            div(id = "vf_plot_curve_tip",
+                prettySwitch("vf_plot_curve",
+                             label = tags$span(strong("Plot curve")),
+                             value = TRUE, status = "success", slim = TRUE)),
             bsTooltip("vf_plot_curve_tip", tips$plot_curve, placement = "left"),
             bsTooltip("vf_prob_plot", tips$prob_plot, placement = "left"),
             bsTooltip("vf_prob_scale", tips$prob_scale, placement = "left")
@@ -896,16 +896,17 @@ ui_analysis_hydat_peak <- fluidRow(
         bsTooltip("hp_fit_quantiles", tips$fit_quantiles, placement = "left"),
 
         fluidRow(
-          column(width = 6,
-                 prettySwitch("hp_plot_curve", label = "Plot curve", value = TRUE,
+          column(width = 6, id = "hp_plot_curve_tip",
+                 prettySwitch("hp_plot_curve",
+                              label = "Plot curve", value = TRUE,
                               status = "success", slim = TRUE)),
-          column(width = 6,
+          column(width = 6, id = "hp_use_log_tip",
                  prettySwitch("hp_use_log",
                               label = "Log trans", slim = TRUE,
                               value = FALSE, status = "success"))
         ),
-        bsTooltip("hp_plot_curve", tips$plot_curve, placement = "left"),
-        bsTooltip("hp_use_log", tips$use_log, placement = "left"),
+        bsTooltip("hp_plot_curve_tip", tips$plot_curve, placement = "left"),
+        bsTooltip("hp_use_log_tip", tips$use_log, placement = "left"),
 
         fluidRow(
           column(6, awesomeRadio("hp_prob_plot",
