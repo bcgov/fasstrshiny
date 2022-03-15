@@ -411,13 +411,13 @@ create_fun <- function(fun, data = NULL, id, input,
   }
 
   # Put it all together
-  p <- combine_parameters(params)
+  p <- combine_parameters(params, values)
   args <- glue_collapse(c(data, na.omit(p), extra), sep = ', ')
 
   glue("{fun}({args}){end}")
 }
 
-combine_parameters <- function(params) {
+combine_parameters <- function(params, values) {
   # Create standard parameters
   #
   # - REMEMBER! When collapsing multiple elements with glue_collapse, use [[i]]
