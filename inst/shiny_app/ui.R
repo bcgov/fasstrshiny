@@ -485,6 +485,45 @@ ui_as_means <- fluidRow(
   )
 )
 
+## Annual Totals -------------------------------
+
+ui_as_totals <- fluidRow(
+  column(
+    width = 12, h2("Annual Totals"),
+    box(width = 3,
+        helpText("Placeholder descriptive text to describe this section, ",
+                 "what it does and how to use it"),
+        div(id = "ann_tot_seasons_tip",
+            prettySwitch(
+              "ann_tot_seasons",
+              label = "Include seasons",
+              value = formals("plot_annual_cumulative_stats")$include_seasons,
+              status = "success", slim = TRUE)),
+        bsTooltip("ann_tot_seasons_tip", tips$seasons, placement = "left")),
+
+    tabBox(
+      width = 9,
+
+      ### Plot ---------------------
+      tabPanel(
+        title = "Plot",
+        girafeOutput("ann_tot_plot", height = plot_height)
+      ),
+
+      ### Table ---------------------
+      tabPanel(
+        title = "Table",
+        DTOutput("ann_tot_table")
+      ),
+
+      ### R Code ---------------------
+      tabPanel(
+        title = "R Code",
+        verbatimTextOutput("ann_tot_code")
+      )
+    )
+  )
+)
 
 
 ## Flow timing ------------------------------
@@ -984,6 +1023,7 @@ tagList(
                  icon = icon("calendar"),
                  menuSubItem("Statistics", tabName = "as_stats"),
                  menuSubItem("Means", tabName = "as_means"),
+                 menuSubItem("Totals", tabName = "as_totals"),
                  menuSubItem("Flow timing", tabName = "as_flow_timing"),
                  menuSubItem("Low Flows", tabName = "as_low_flows"),
                  menuSubItem("Peak Flows", tabName = "as_peak_flows"),
@@ -1010,6 +1050,7 @@ tagList(
         tabItem("flows", ui_flows),
         tabItem("as_stats", ui_as_stats),
         tabItem("as_means", ui_as_means),
+        tabItem("as_totals", ui_as_totals),
         tabItem("as_flow_timing", ui_as_flow_timing),
         tabItem("as_low_flows", ui_as_low_flows),
         tabItem("as_peak_flows", ui_as_peak_flows),

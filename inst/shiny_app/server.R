@@ -988,7 +988,74 @@ server <- function(input, output, session) {
     fasstrshiny:::code_format(code, id = "am")
   })
 
+  # Annual Totals ----------------------------------
 
+  ## Plot --------------------
+  output$ann_tot_plot <- renderGirafe({
+    check_data(input)
+    req(!is.null(input$ann_tot_seasons))
+
+    data_flow <- data_raw()
+
+    g <- create_fun(fun = "plot_annual_cumulative_stats", data = "data_flow",
+                    id = "ann_tot", input,
+                    extra = glue("use_yield = {input$ann_tot_discharge}, ",
+                                 "include_seasons = {input$ann_tot_seasons}"))
+
+    code$ann_tot_plot <- g
+
+    # Add interactivity
+    g <- eval(parse(text = g))
+
+
+    # Add individual geoms to each plot (annual has more than one)
+    for(i in seq_along(g)) {
+      g[[i]] <- g[[i]] + geom_point_interactive(
+        aes(tooltip = paste0("Year: ", Year, "\n",
+                             Statistic, ": ", round(Value, 4)),
+            data_id = Year), size = 3)
+    }
+
+    g <- g %>%
+      wrap_plots(nrow = 2, byrow = FALSE, design = "AC
+                                                    BC")
+
+    girafe(ggobj = g, width_svg = 14, height_svg = 6,
+           options = list(
+             opts_toolbar(position = "topleft"),
+             opts_selection(type = "none"),
+             opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
+  })
+
+
+  ## Table -----------------------
+  output$ann_tot_table <- DT::renderDT({
+    check_data(input)
+
+    data_flow <- data_raw()
+
+    t <- create_fun("calc_annual_cumulative_stats", data = "data_flow",
+                    id = "", input,
+                    extra = glue("use_yield = {input$ann_tot_discharge}",
+                                 "include_seasons = {input$ann_tot_seasons}"))
+
+    code$ann_tot_table <- t
+
+    parse(text = t) %>%
+      eval() %>%
+      mutate(across(where(is.numeric), ~round(., 4))) %>%
+      datatable(rownames = FALSE,
+                filter = 'top',
+                extensions = c("Scroller"),
+                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                               deferRender = TRUE, dom = 'Brtip'))
+  })
+
+
+  ## R Code -----------------
+  output$ann_tot_code <- renderText({
+    fasstrshiny:::code_format(code, id = "")
+  })
 
 
 
