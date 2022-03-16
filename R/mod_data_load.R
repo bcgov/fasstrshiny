@@ -16,6 +16,9 @@
 
 
 ui_data_load <- function(id, plot_height) {
+
+  ns <- NS(id)
+
   fluidRow(
     column(
       width = 12, h2("Loading Data"),
@@ -23,48 +26,47 @@ ui_data_load <- function(id, plot_height) {
         width = 3,
         helpText("Placeholder descriptive text to describe this section, ",
                  "what it does and how to use it"),
-        radioGroupButtons(inputId = NS(id, "source"),
+        radioGroupButtons(inputId = ns("source"),
                           label = "Source", choices = c("HYDAT", "CSV"),
                           justified = TRUE,
                           selected = "HYDAT"),
 
         conditionalPanel(
           "input.source == 'HYDAT'", ns = NS(id),
-          textInput(NS(id, "station_num"), label = "Station Number",
+          textInput(ns("station_num"), label = "Station Number",
                     value = "08HB048",
                     placeholder = "type station number or select from map")),
 
         conditionalPanel(
           "input.source != 'HYDAT'", ns = NS(id),
-          fileInput(NS(id, "file"), label = "Select File",
+          fileInput(ns("file"), label = "Select File",
                     accept=c("text/csv",
                              "text/comma-separated-values,text/plain",
                              ".csv"))),
-        bsButton(NS(id, "load"), "Load Data", style = "primary"),
+        bsButton(ns("load"), "Load Data", style = "primary"),
         hr(),
 
         # show_ui("show_stn", "Station Information"),
-        # fluidRow(id = NS(id, "stn"),
+        # fluidRow(id = ns("stn"),
         #          column(
         #            width = 6,
-        #            textInput(NS(id, "station_name"),
+        #            textInput(ns("station_name"),
         #                      label = "Name",
         #                      placeholder = "ex. Mission Creek")),
         #          column(
         #            width = 6,
-        #            numericInput(NS(id, "basin_area"),
+        #            numericInput(ns("basin_area"),
         #                         label = html("Basin area (km<sup>2</sup>)"), value = 0,
         #                         min = 0, step = 0.1))),
+        show_ui(ns("show_dates"), "Dates"),
+        div(id = ns("dates"),
+            uiOutput(ns("ui_water_year")),
+            uiOutput(ns("ui_years_range")),
+            uiOutput(ns("ui_years_exclude")),
+            uiOutput(ns("ui_months"))),
 
-        show_ui(NS(id, "show_dates"), "Dates"),
-        div(id = NS(id, "dates"),
-            uiOutput(NS(id, "ui_water_year")),
-            uiOutput(NS(id, "ui_years_range")),
-            uiOutput(NS(id, "ui_years_exclude")),
-            uiOutput(NS(id, "ui_months"))),
-
-        show_ui(NS(id, "show_types"), "Data types"),
-        div(id = NS(id, "types"),
+        show_ui(ns("show_types"), "Data types"),
+        div(id = ns("types"),
             select_rolling(id),
             select_discharge(id),
             select_complete(id),
@@ -78,32 +80,32 @@ ui_data_load <- function(id, plot_height) {
         ### HYDAT Map --------
         tabPanel(
           title = "HYDAT Map", width = 12,
-          leaflet::leafletOutput(NS(id, "hydat_map"), width = "100%", height = "500px")
+          leaflet::leafletOutput(ns("hydat_map"), width = "100%", height = "500px")
         ),
 
         ### HYDAT Table --------
         tabPanel(
           title = "HYDAT Table", width = 12,
-          DT::DTOutput(NS(id, "hydat_table"))
+          DT::DTOutput(ns("hydat_table"))
         ),
 
         ### Plot --------
         tabPanel(
           title = "Plot", value = "tabs_plot",
-          uiOutput(NS(id, "ui_plot_options"), align = "right"),
-          withSpinner(plotly::plotlyOutput(NS(id, "plot"), height = plot_height))
+          uiOutput(ns("ui_plot_options"), align = "right"),
+          withSpinner(plotly::plotlyOutput(ns("plot"), height = plot_height))
         ),
 
         ### Table --------
         tabPanel(
           title = "Table",
-          DT::DTOutput(NS(id, "table"))
+          DT::DTOutput(ns("table"))
         ),
 
         ### R Code -----------------
         tabPanel(
           title = "R Code",
-          verbatimTextOutput(NS(id, "code"))
+          verbatimTextOutput(ns("code"))
         )
       )
     )
@@ -132,7 +134,7 @@ server_data_load <- function(id, stations, bc_hydrozones) {
           label = "Water year start",
           choices = setNames(1:12, month.abb),
           selected = 1, size = "sm", width = "100%"),
-        bsTooltip("water_year",
+        bsTooltip(NS("water_year", id),
                   title = tips$water_year, placement = "left"))
     })
 
@@ -220,6 +222,13 @@ server_data_load <- function(id, stations, bc_hydrozones) {
         select_daterange(id, data_raw()))
     })
 
+
+    # Hide/Show based on toggle
+    observe(toggle("stn", condition = input$show_stn))
+    observe(toggle("dates", condition = input$show_dates))
+    observe(toggle("types", condition = input$show_types))
+
+
     ## HYDAT Map -------------------------
     output$hydat_map <- leaflet::renderLeaflet({
       leaflet::leaflet() %>%
@@ -256,8 +265,7 @@ server_data_load <- function(id, stations, bc_hydrozones) {
 
     ## Raw data ------------------
     data_raw <- reactive({
-      req(input$station_num, input$water_year,
-          input$load > 0)
+      req(input$station_num, input$water_year, input$load > 0)
 
       if (input$source == "HYDAT") {
         m <- dplyr::filter(stations, .data$station_number == input$station_num)
@@ -280,9 +288,10 @@ server_data_load <- function(id, stations, bc_hydrozones) {
         meta$station_name <- input$station_name
         meta$basin_area <- as.numeric(input$basin_area)
 
-        d <- glue::glue("data_flow <- read.csv({inFile$datapath}) %>%",
-                  "  fill_missing_dates() %>%",
-                  "  add_date_variables(water_year_start = {as.numeric(input$water_year)})")
+        d <- glue::glue(
+          "data_flow <- read.csv({inFile$datapath}) %>%",
+          "  fill_missing_dates() %>%",
+          "  add_date_variables(water_year_start = {as.numeric(input$water_year)})")
 
       }
 

@@ -14,6 +14,9 @@
 
 # Data Availability ---------------------
 ui_data_available <- function(id, plot_height) {
+
+  ns <- NS(id)
+
   fluidRow(
     column(
       width = 12, h2("Data Availability"),
@@ -28,21 +31,21 @@ ui_data_available <- function(id, plot_height) {
               width = 3,
               helpText("Placeholder descriptive text to describe this section, ",
                        "what it does and how to use it"),
-              div(id = NS(id, "availability_tip"),
-                  prettySwitch(NS(id, "availability"),
+              div(id = ns("availability_tip"),
+                  prettySwitch(ns("availability"),
                                label = "Plot availability",
                                value = TRUE,
                                status = "success", slim = TRUE, inline = TRUE)),
-              bsTooltip(NS(id, "availability_tip"), tips$availability,
+              bsTooltip(ns("availability_tip"), tips$availability,
                         placement = "left"),
               selectizeInput(
-                NS(id, "stats"),
+                ns("stats"),
                 label = "Statistics to include",
                 choices = eval(formals(plot_data_screening)$include_stat),
                 selected = eval(formals(plot_data_screening)$include_stat),
                 multiple = TRUE, width = "100%")),
             column(width = 9,
-                   ggiraph::girafeOutput(NS(id, "plot1"),
+                   ggiraph::girafeOutput(ns("plot1"),
                                          height = plot_height)))),
 
         ### Availability Plot -----------------
@@ -50,10 +53,10 @@ ui_data_available <- function(id, plot_height) {
           title = "Data Availability Plot",
           fluidRow(
             column(width = 1,
-                   awesomeRadio(NS(id, "type"), label = "Plot type",
+                   awesomeRadio(ns("type"), label = "Plot type",
                                 choices = c("Tile" = "tile", "Bar" = "bar")),
                    checkboxGroupButtons(
-                     NS(id, "months_inc"),
+                     ns("months_inc"),
                      label = "Months",
                      choices = list("Jan" = 1, "Feb" = 2,
                                     "Mar" = 3, "Apr" = 4,
@@ -63,11 +66,11 @@ ui_data_available <- function(id, plot_height) {
                                     "Nov" = 11, "Dec" = 12),
                      selected = c(1:12),
                      direction = "vertical"),
-                   bsTooltip(NS(id, "months_inc"),
+                   bsTooltip(ns("months_inc"),
                              "Months to include/exclude from the plot",
                              placement = "left"),
             ),
-            column(width = 11, ggiraph::girafeOutput(NS(id, "plot2"),
+            column(width = 11, ggiraph::girafeOutput(ns("plot2"),
                                                      height = plot_height))
           )
         ),
@@ -75,7 +78,7 @@ ui_data_available <- function(id, plot_height) {
         ### Table -----------------
         tabPanel(
           title = "Table",
-          DT::dataTableOutput(NS(id, "table"))
+          DT::dataTableOutput(ns("table"))
         ),
 
         ### R Code -----------------
@@ -92,6 +95,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
 
     ## Data --------------
     available_raw <- reactive({
+
       data_flow <- data_raw()
 
       d <- create_fun("screen_flow_data", data_name = "data_flow", input,
@@ -103,6 +107,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
 
     ## Summary plot ------------------
     output$plot1 <- ggiraph::renderGirafe({
+
       check_data(data_loaded())
       req(input$availability, !is.null(input$stats))
 
@@ -142,6 +147,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
 
     ## Missing Data Plot ---------------------------
     output$plot2 <- ggiraph::renderGirafe({
+
       check_data(data_loaded())
       req(input$type, input$months_inc)
 
