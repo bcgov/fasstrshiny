@@ -70,30 +70,32 @@ select_discharge <- function(id, input = NULL, set = TRUE) {
               placement = "left"))
 }
 
-select_rolling <- function(id, input = NULL, set = TRUE, multiple = FALSE) {
+select_rolling <- function(id, input = NULL, name = "roll",
+                           set = TRUE, multiple = FALSE) {
   if(multiple) d <- c(1, 3, 7, 30) else d <- 1
-  value <- set_input("roll_days", input, set, d)
-  selected <- set_input("roll_align", input, set, "right")
+  value <- set_input(glue::glue("{name}_days"), input, set, d)
+  selected <- set_input(glue::glue("{name}_align"), input, set, "right")
 
   tagList(
-    fluidRow(id = NS(id, "rolling"),
+    fluidRow(id = NS(id, glue::glue("{name}ing")),
              column(6,
-                    selectizeInput(NS(id, "roll_days"),
+                    selectizeInput(NS(id, glue::glue("{name}_days")),
                                    label = "Rolling days",
                                    choices = 1:180,
                                    selected = value,
                                    multiple = multiple)),
              column(6,
-                    selectizeInput(NS(id, "roll_align"),
+                    selectizeInput(NS(id, glue::glue("{name}_align")),
                                    label = "Rolling align",
                                    selected = selected,
                                    choices = list("Right" = "right",
                                                   "Left" = "left",
                                                   "Center" = "center")))
     ),
-    bsTooltip(id = NS(id, "rolling"),
-              title = glue::glue("Days: {tips$roll_days}<br>Align: {tips$roll_align}"),
-              placement = "left"))
+    bsTooltip(
+      id = NS(id, glue::glue("{name}ing")),
+      title = glue::glue("Days: {tips$roll_days}<br>Align: {tips$roll_align}"),
+      placement = "left"))
 }
 
 
@@ -478,7 +480,7 @@ combine_parameters <- function(params, values) {
         glue::glue("start_year = {values[[i]][1]}, end_year = {values[[i]][2]}"),
       params[i] == "years_exclude" ~
         glue::glue("exclude_years = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
-      params[i] == "roll_days" ~ glue::glue("roll_days = {values[i]}"),
+      params[i] == "roll_days" ~ glue::glue("roll_days = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
       params[i] == "roll_align" ~ glue::glue("roll_align = '{values[i]}'"),
       params[i] == "months" ~
         glue::glue("months = c({glue::glue_collapse(values[[i]], sep = ', ')})"),

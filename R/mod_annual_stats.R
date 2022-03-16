@@ -14,7 +14,9 @@
 
 
 # Annual Statistics ------------------------------------------------
-ui_annual_stats <- function(id) {
+ui_annual_stats <- function(id, plot_height) {
+
+  ns <- NS(id)
 
   fluidRow(
     column(
@@ -24,13 +26,13 @@ ui_annual_stats <- function(id) {
         helpText("Placeholder descriptive text to describe this section, ",
                  "what it does and how to use it"),
         div(align = "left",
-            awesomeRadio("as_type",
+            awesomeRadio(ns("type"),
                          label = "Summary type",
                          choices = list("Monthly",
                                         "Annual"),
                          selected = "Monthly",
                          status = "primary")),
-        bsTooltip("as_type", "Type of statistic to calculate", placement = "left")
+        bsTooltip(ns("type"), "Type of statistic to calculate", placement = "left")
       ),
       tabBox(
         width = 9,
@@ -38,23 +40,93 @@ ui_annual_stats <- function(id) {
         ## Plot ---------------------
         tabPanel(
           title = "Plot",
-          uiOutput("ui_as_plot_options", align = "right"),
-          girafeOutput("as_plot", height = plot_height)
+          uiOutput(ns("ui_plot_options"), align = "right"),
+          ggiraph::girafeOutput(ns("plot"), height = plot_height)
         ),
 
         ## Table ---------------------
         tabPanel(
           title = "Table",
-          select_table_options("as", include = "percentiles"),
-          DTOutput("as_table")
+          select_table_options(id, include = "percentiles"),
+          DT::DTOutput(ns("table"))
         ),
 
-        ## R Code ---------------------
-        tabPanel(
-          title = "R Code",
-          verbatimTextOutput("as_code")
-        )
+
+        # R Code ---------------------
+        ui_rcode(id)
       )
     )
   )
+}
+
+server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
+
+  moduleServer(id, function(input, output, session) {
+
+    # UI Plot options ------------------
+    output$ui_plot_options <- renderUI({
+      select_plot_options(
+        select_plot_log(id, value = formals(plot_monthly_stats2)$log_discharge))
+    })
+
+    # Plot -----------------------------
+    output$plot <- ggiraph::renderGirafe({
+      check_data(data_loaded())
+      req(!is.null(input$plot_log), input$type)
+
+      data_flow <- data_raw()
+
+      g <- switch(input$type,
+                  "Monthly" = "plot_monthly_stats2",
+                  "Annual" = "plot_annual_stats2") %>%
+        create_fun("data_flow", input, input_data = data_settings)
+
+      code$plot <- g
+
+      g <- eval(parse(text = g))[[1]]
+
+
+      # Add interactivity
+      date_cols <- "Year"
+      if(input$type == "Monthly") date_cols <- c(date_cols, "Month")
+      stats <- names(g$data) # Get stats from plot data
+      #stats <- stats[!stats %in% date_cols] # Omit these
+
+      # Add vline
+      g <- g + create_vline_interactive(
+        data = g$data, stats, size = if_else(input$type == "Annual", 10, 2))
+
+      ggiraph::girafe(
+        ggobj = g, width_svg = 12, height = 6,
+        options = list(
+          ggiraph::opts_toolbar(position = "topleft"),
+          ggiraph::opts_selection(type = "none"),
+          ggiraph::opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
+    })
+
+    # Table -----------------------
+    output$table <- DT::renderDT({
+      check_data(data_loaded())
+      req(input$type, input$percentiles)
+
+      data_flow <- data_raw()
+
+      t <- switch(input$type,
+                  "Monthly" = "calc_monthly_stats",
+                  "Annual" = "calc_annual_stats") %>%
+        create_fun("data_flow", input, input_data = data_settings)
+
+      code$table <- t
+
+      parse(text = t) %>%
+        eval() %>%
+        prep_DT()
+    })
+
+
+    # R Code -----------------
+    code <- reactiveValues()
+    output$code <- renderText(code_format(code))
+
+  })
 }

@@ -53,7 +53,6 @@ fasstr_shiny <- function() {
   bc_hydrozones <- bcmaps::hydrozones(ask = FALSE) %>%
     sf::st_transform(crs = 4326)
 
-
   # UI --------------------------------
   ui <- tagList(
     dashboardPage(
@@ -72,21 +71,20 @@ fasstr_shiny <- function() {
         tabItems(
           tabItem("home", ui_home()),
           tabItem("data_load", ui_data_load("data", plot_height)),
-          tabItem("data_available", ui_data_available("available", plot_height)),
-          tabItem("overview", ui_overview("overview", plot_height)),
-          tabItem("hydro", ui_hydro("hydro", plot_height)),
-          tabItem("cumulative", ui_cumulative("cum", plot_height = plot_height))#,
-         # tabItem("flows", ui_flows("flows", plot_height = plot_height)),
-        ##  tabItem("as_stats", ui_annual_stats("annual_stats", plot_height = plot_height)),
-        ##  tabItem("as_means", ui_annual_means("annual_means", plot_height = plot_height)),
-          #tabItem("as_totals", ui_annual_totals("annual_totals", plot_height = plot_height)),
-          # tabItem("as_flow_timing", ui_flow_timing("flow_timing", plot_height = plot_height)),
-          # tabItem("as_low_flows", ui_low_flows("low_flows", plot_height = plot_height)),
-          # tabItem("as_peak_flows", ui_peak_flows("peak_flows", plot_height = plot_height)),
-          # tabItem("as_outside_normal", ui_outside_normal("outside_normal", plot_height = plot_height)),
-          # tabItem("analysis_annual", ui_annual_trends("annual_trends", plot_height = plot_height)),
-          # tabItem("analysis_volume_freq", ui_volume_freq("volume_freq", plot_height = plot_height)),
-          # tabItem("analysis_hydat_peak", ui_hydat_peak("hydat_peak", plot_height = plot_height))
+          tabItem("data_available", ui_data_available("data_available", plot_height)),
+          tabItem("hydro", ui_hydro("hydro", plot_height = plot_height)),
+          tabItem("cumulative", ui_cumulative("cumulative", plot_height = plot_height)),
+          tabItem("flows", ui_flows("flows", plot_height = plot_height)),
+          tabItem("annual_stats", ui_annual_stats("annual_stats", plot_height = plot_height)),
+          tabItem("annual_means", ui_annual_means("annual_means", plot_height = plot_height)),
+          tabItem("annual_totals", ui_annual_totals("annual_totals", plot_height = plot_height)),
+          tabItem("flow_timing", ui_flow_timing("flow_timing", plot_height = plot_height)),
+          tabItem("low_flows", ui_low_flows("low_flows", plot_height = plot_height)),
+          tabItem("peak_flows", ui_peak_flows("peak_flows", plot_height = plot_height)),
+          tabItem("outside_normal", ui_outside_normal("outside_normal", plot_height = plot_height)),
+          tabItem("annual_trends", ui_annual_trends("annual_trends", plot_height = plot_height)),
+          tabItem("volume_freq", ui_volume_freq("volume_freq", plot_height = plot_height))
+          # tabItem("hydat_peak", ui_hydat_peak("hydat_peak", plot_height = plot_height))
         )
       )
     ),
@@ -117,9 +115,11 @@ fasstr_shiny <- function() {
     data_loaded <- data_outputs$data_loaded
 
     # Other modules
-    server_data_available(id = "available", data_settings, data_raw, data_loaded)
-    server_hydro(id = "hydro", data_settings, data_raw, data_loaded)
-    server_cumulative(id = "cum", data_settings, data_raw, data_loaded)
+    for(m in c("data_available", "hydro", "cumulative", "flows", "annual_stats",
+               "annual_means", "annual_totals", "flow_timing", "low_flows",
+               "peak_flows", "outside_normal", "annual_trends", "volume_freq")) {
+      get(glue::glue("server_{m}"))(id = m, data_settings, data_raw, data_loaded)
+    }
   }
 
  shinyApp(ui = ui, server = server)
@@ -141,18 +141,18 @@ sidebar_order <- function() {
              icon = icon("clock")),
     menuItem("Annual Statistics", tabName = "annual",
              icon = icon("calendar"),
-             menuSubItem("Statistics", tabName = "as_stats"),
-             menuSubItem("Means", tabName = "as_means"),
-             menuSubItem("Totals", tabName = "as_totals"),
-             menuSubItem("Flow timing", tabName = "as_flow_timing"),
-             menuSubItem("Low Flows", tabName = "as_low_flows"),
-             menuSubItem("Peak Flows", tabName = "as_peak_flows"),
-             menuSubItem("Days outside normal", tabName = "as_outside_normal")),
+             menuSubItem("Statistics", tabName = "annual_stats"),
+             menuSubItem("Means", tabName = "annual_means"),
+             menuSubItem("Totals", tabName = "annual_totals"),
+             menuSubItem("Flow timing", tabName = "flow_timing"),
+             menuSubItem("Low Flows", tabName = "low_flows"),
+             menuSubItem("Peak Flows", tabName = "peak_flows"),
+             menuSubItem("Days outside normal", tabName = "outside_normal")),
     menuItem("Analyses", tabName = "analyses",
              icon = icon("chart-line"),
-             menuSubItem("Annual Trends", tabName = "analysis_annual"),
-             menuSubItem("Volume Frequency", tabName = "analysis_volume_freq"),
-             menuSubItem("HYDAT Peak", tabName = "analysis_hydat_peak"))
+             menuSubItem("Annual Trends", tabName = "annual_trends"),
+             menuSubItem("Volume Frequency", tabName = "volume_freq"),
+             menuSubItem("HYDAT Peak", tabName = "hydat_peak"))
   )
 }
 

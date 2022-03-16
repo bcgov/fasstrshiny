@@ -13,7 +13,9 @@
 # the License.
 
 # Peak flows ------------------------
-ui_peak_flows <- function(id) {
+ui_peak_flows <- function(id, plot_height) {
+
+  ns <- NS(id)
 
   fluidRow(
     column(
@@ -21,7 +23,7 @@ ui_peak_flows <- function(id) {
       box(
         width = 3,
         helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
-        select_rolling("pf", set = FALSE)
+        select_rolling(id, set = FALSE)
       ),
       tabBox(
         width = 9,
@@ -29,16 +31,41 @@ ui_peak_flows <- function(id) {
         ### Table ---------------------
         tabPanel(
           title = "Table",
-          DTOutput("pf_table")
+          DT::DTOutput(ns("table"))
         ),
 
-        ### R Code ---------------------
-        tabPanel(
-          title = "R Code",
-          verbatimTextOutput("pf_code")
-        )
+
+        # R Code ---------------------
+        ui_rcode(id)
       )
     )
   )
+}
 
+server_peak_flows <- function(id, data_settings, data_raw, data_loaded) {
+
+  moduleServer(id, function(input, output, session) {
+
+    # Table -----------------------
+    output$table <- DT::renderDT({
+      check_data(data_loaded())
+
+      data_flow <- data_raw()
+
+      t <- create_fun(fun = "calc_annual_peaks", data = "data_flow",
+                      input, input_data = data_settings)
+
+      code$table <- t
+
+      parse(text = t) %>%
+        eval() %>%
+        prep_DT()
+    })
+
+
+    # R Code -----------------
+    code <- reactiveValues()
+    output$code <- renderText(code_format(code))
+
+  })
 }

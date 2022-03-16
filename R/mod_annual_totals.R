@@ -14,7 +14,9 @@
 
 # Annual Totals -------------------------------
 
-ui_annual_totals <- function(id) {
+ui_annual_totals <- function(id, plot_height) {
+
+  ns <- NS(id)
 
   fluidRow(
     column(
@@ -22,13 +24,19 @@ ui_annual_totals <- function(id) {
       box(width = 3,
           helpText("Placeholder descriptive text to describe this section, ",
                    "what it does and how to use it"),
-          div(id = "ann_tot_seasons_tip",
+          div(id = ns("seasons_tip"),
               prettySwitch(
-                "ann_tot_seasons",
+                ns("seasons"),
                 label = "Include seasons",
                 value = formals("plot_annual_cumulative_stats")$include_seasons,
                 status = "success", slim = TRUE)),
-          bsTooltip("ann_tot_seasons_tip", tips$seasons, placement = "left")),
+          bsTooltip(ns("seasons_tip"), tips$seasons, placement = "left"),
+          awesomeRadio(ns("discharge"),
+                       label = "Discharge type",
+                       choices = list("Volumetric Discharge (m3)" = FALSE,
+                                      "Runoff Yield (mm)" = TRUE),
+                       selected = TRUE),
+          bsTooltip(ns("discharge"), tips$discharge, placement = "left")),
 
       tabBox(
         width = 9,
@@ -36,21 +44,91 @@ ui_annual_totals <- function(id) {
         ### Plot ---------------------
         tabPanel(
           title = "Plot",
-          girafeOutput("ann_tot_plot", height = plot_height)
+          ggiraph::girafeOutput(ns("plot"), height = plot_height)
         ),
 
         ### Table ---------------------
         tabPanel(
           title = "Table",
-          DTOutput("ann_tot_table")
+          DT::DTOutput(ns("table"))
         ),
 
-        ### R Code ---------------------
-        tabPanel(
-          title = "R Code",
-          verbatimTextOutput("ann_tot_code")
-        )
+
+        # R Code ---------------------
+        ui_rcode(id)
       )
     )
   )
+}
+
+server_annual_totals <- function(id, data_settings, data_raw, data_loaded) {
+
+  moduleServer(id, function(input, output, session) {
+
+    # Plot --------------------
+    output$plot <- ggiraph::renderGirafe({
+      check_data(data_loaded())
+      req(!is.null(input$seasons), input$discharge)
+
+      data_flow <- data_raw()
+
+      g <- create_fun(fun = "plot_annual_cumulative_stats", data = "data_flow",
+                      input, input_data = data_settings,
+                      params_ignore = "discharge",
+                      extra = glue::glue("use_yield = {input$discharge}, ",
+                                         "include_seasons = {input$seasons}"))
+
+      code$plot <- g
+
+      # Add interactivity
+      g <- eval(parse(text = g))
+
+
+      # Add individual geoms to each plot (annual has more than one)
+      for(i in seq_along(g)) {
+        g[[i]] <- g[[i]] + ggiraph::geom_point_interactive(
+          ggplot2::aes(tooltip = paste0("Year: ", Year, "\n",
+                                        Statistic, ": ", round(Value, 4)),
+                       data_id = Year), size = 3)
+      }
+
+      g <- g %>%
+        patchwork::wrap_plots(nrow = 2, byrow = FALSE, design = "AC
+                                                                 BC")
+
+      ggiraph::girafe(
+        ggobj = g, width_svg = 14, height_svg = 6,
+        options = list(
+          ggiraph::opts_toolbar(position = "topleft"),
+          ggiraph::opts_selection(type = "none"),
+          ggiraph::opts_hover(
+            css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
+    })
+
+
+    # Table -----------------------
+    output$table <- DT::renderDT({
+      check_data(data_loaded())
+
+      data_flow <- data_raw()
+
+      t <- create_fun("calc_annual_cumulative_stats", data = "data_flow",
+                      input, input_data = data_settings,
+                      params_ignore = "discharge",
+                      extra = glue::glue("use_yield = {input$discharge}, ",
+                                         "include_seasons = {input$seasons}"))
+
+      code$table <- t
+
+      parse(text = t) %>%
+        eval() %>%
+        prep_DT()
+    })
+
+
+    # R Code -----------------
+    code <- reactiveValues()
+    output$code <- renderText(code_format(code))
+
+  })
 }
