@@ -18,8 +18,8 @@
 # Determine the default value, if input exists and set is TRUE, returns
 # global options preset, otherwise default
 set_input <- function(type, input, set, value) {
-  if(set & !is.null(input[[glue("data_{type}")]])) {
-    value <- input[[glue("data_{type}")]]
+  if(set & !is.null(input[[glue::glue("data-{type}")]])) {
+    value <- input[[glue::glue("data-{type}")]]
   }
   value
 }
@@ -31,10 +31,10 @@ set_input <- function(type, input, set, value) {
 ## Functions for inputs ------------
 
 select_custom_months <- function(id) {
-  fluidRow(id = glue("{id}_custom_months_all"),
+  fluidRow(id = NS(id, "custom_months_all"),
            h4("Combine and summarize months"),
            column(width = 6,
-                  selectizeInput(glue("{id}_custom_months"),
+                  selectizeInput(NS(id, "custom_months"),
                                  label = "Months to combine",
                                  choices = list("Jan" = 1,  "Feb" = 2,
                                                 "Mar" = 3,  "Apr" = 4,
@@ -45,13 +45,13 @@ select_custom_months <- function(id) {
                                  selected = NULL,
                                  multiple = TRUE)),
            column(width = 6,
-                  textInput(glue("{id}_custom_months_label"),
+                  textInput(NS(id, "custom_months_label"),
                             label = "Label for group",
                             placeholder = "ex. Jun-Aug",
                             value = "")),
-           bsTooltip(id = glue("{id}_custom_months_all"),
-                     title = glue("Months: {tips$custom_months}<br>",
-                                  "Label: {tips$custom_months_label}"),
+           bsTooltip(id = NS(id, "custom_months_all"),
+                     title = glue::glue("Months: {tips$custom_months}<br>",
+                                        "Label: {tips$custom_months_label}"),
                      placement = "left")
   )
 }
@@ -60,13 +60,13 @@ select_discharge <- function(id, input = NULL, set = TRUE) {
   selected <- set_input("discharge", input, set, NULL)
 
   tagList(
-    awesomeRadio(glue("{id}_discharge"),
+    awesomeRadio(NS(id, "discharge"),
                  label = "Discharge type",
                  choices = list("Discharge (cms)" = "Value",
                                 "Volumetric Discharge (m3)" = "Volume_m3",
                                 "Runoff Yield (mm)" = "Yield_mm"),
                  selected = selected),
-    bsTooltip(glue("{id}_discharge"), tips$discharge,
+    bsTooltip(NS(id, "discharge"), tips$discharge,
               placement = "left"))
 }
 
@@ -76,86 +76,86 @@ select_rolling <- function(id, input = NULL, set = TRUE, multiple = FALSE) {
   selected <- set_input("roll_align", input, set, "right")
 
   tagList(
-    fluidRow(id = glue("{id}_rolling"),
+    fluidRow(id = NS(id, "rolling"),
              column(6,
-                    selectizeInput(glue("{id}_roll_days"),
+                    selectizeInput(NS(id, "roll_days"),
                                    label = "Rolling days",
                                    choices = 1:180,
                                    selected = value,
                                    multiple = multiple)),
              column(6,
-                    selectizeInput(glue("{id}_roll_align"),
+                    selectizeInput(NS(id, "roll_align"),
                                    label = "Rolling align",
                                    selected = selected,
                                    choices = list("Right" = "right",
                                                   "Left" = "left",
                                                   "Center" = "center")))
     ),
-    bsTooltip(id = glue("{id}_rolling"),
-              title = glue("Days: {tips$roll_days}<br>Align: {tips$roll_align}"),
+    bsTooltip(id = NS(id, "rolling"),
+              title = glue::glue("Days: {tips$roll_days}<br>Align: {tips$roll_align}"),
               placement = "left"))
 }
 
 
-select_percentiles <- function(id, selected = c(10, 90),
+select_percentiles <- function(id, name = "percentiles", selected = c(10, 90),
                                label = "Percentiles to calculate") {
+
   tagList(
-    selectizeInput(glue("{id}_percentiles"),
+    selectizeInput(NS(id, name),
                    label = label,
                    choices = c(1:99),
                    selected = selected,
                    multiple = TRUE),
-    bsTooltip(glue("{id}_percentiles"), tips$percentiles,
-              placement = "left"))
+    bsTooltip(NS(id, name), tips[[name]], placement = "left"))
 }
 
 select_complete <- function(id, input = NULL, set = TRUE) {
   value <- set_input("complete", input, set, FALSE)
 
   tagList(
-    div(id = glue("{id}_complete_tip"),
-        prettySwitch(glue("{id}_complete"),
+    div(id = NS(id, "complete_tip"),
+        prettySwitch(NS(id, "complete"),
                      label = "Complete years only",
                      value = value,
                      status = "success", slim = TRUE)),
-    bsTooltip(glue("{id}_complete_tip"), tips$complete,
-                placement = "left"))
+    bsTooltip(NS(id, "complete_tip"), tips$complete,
+              placement = "left"))
 }
 
 select_missing <- function(id, input = NULL, set = TRUE, value = NULL) {
   value <- set_input("missing", input, set,
-                     if_else(is.null(value), TRUE, value))
+                     dplyr::if_else(is.null(value), TRUE, value))
 
   tagList(
-    div(id = glue("{id}_missing_tip"),
-        prettySwitch(glue("{id}_missing"),
+    div(id = NS(id, "missing_tip"),
+        prettySwitch(NS(id, "missing"),
                      value = value, status = "danger",
                      label = "Ignore missing values",
                      slim = TRUE)),
-    bsTooltip(glue("{id}_missing_tip"), tips$missing,
+    bsTooltip(NS(id, "missing_tip"), tips$missing,
               placement = "left"))
 }
 
 select_allowed <- function(id, input = NULL, set = TRUE, value = NULL) {
   value <- set_input("allowed", input, set,
-                     if_else(is.null(value), 100, value))
+                     dplyr::if_else(is.null(value), 100, value))
 
   tagList(
-    sliderInput(glue("{id}_allowed"),
+    sliderInput(NS(id, "allowed"),
                 label = "Allowed missing (%)",
                 value = value, step = 5, min = 0, max = 100),
-    bsTooltip(glue("{id}_allowed"), tips$allowed,
+    bsTooltip(NS(id, "allowed"), tips$allowed,
               placement = "left"))
 }
 
 select_plot_stats <- function(id, stats) {
   if(!is.null(stats)) {
     tagList(
-      radioGroupButtons(glue("{id}_stats"),
+      radioGroupButtons(NS(id, "stats"),
                         label = "Statistics",
                         choices = stats,
                         selected = stats),
-      bsTooltip(glue("{id}_stats"), tips$stats,
+      bsTooltip(NS(id, "stats"), tips$stats,
                 placement = "left"))
   }
 }
@@ -163,24 +163,24 @@ select_plot_stats <- function(id, stats) {
 select_plot_log <- function(id, value = TRUE) {
 
   tagList(
-    div(id = glue("{id}_plot_log_tip"),
-        prettySwitch(glue("{id}_plot_log"),
+    div(id = NS(id, "plot_log_tip"),
+        prettySwitch(NS(id, "plot_log"),
                      label = "Use log scale",
                      value = value,
                      status = "success", slim = TRUE)),
-    bsTooltip(glue("{id}_plot_log_tip"), tips$plot_log,
+    bsTooltip(NS(id, "plot_log_tip"), tips$plot_log,
               placement = "left"))
 }
 
 select_plot_extremes <- function(id, value = TRUE) {
 
   tagList(
-    div(id = glue("{id}_plot_extremes_tip"),
-        prettySwitch(glue("{id}_plot_extremes"),
+    div(id = NS(id, "plot_extremes_tip"),
+        prettySwitch(NS(id, "plot_extremes"),
                      label = "Plot extreme values",
                      value = value,
                      status = "success", slim = TRUE)),
-    bsTooltip(glue("{id}_plot_extremes_tip"), tips$plot_extremes,
+    bsTooltip(NS(id, "plot_extremes_tip"), tips$plot_extremes,
               placement = "left"))
 }
 
@@ -188,25 +188,23 @@ select_daterange <- function(id, data) {
 
   if(is.null(data)) stop("Require 'data' to create daterange UI",
                          call. = FALSE)
-
-  dateRangeInput(glue("{id}_daterange"),
+  dateRangeInput(NS(id, "daterange"),
                  label = "Start/End dates of data to plot",
                  format = "yyyy-mm-dd", startview = "month",
                  start = min(data$Date), end = max(data$Date))
   # Tooltip didn't work? (even with tags$span trick)
 }
 
-select_add_year <- function(id, input) {
-  req(input$data_years_range)
+select_add_year <- function(id, years_range) {
   tagList(
-    selectizeInput(glue("{id}_add_year"),
+    selectizeInput(NS(id, "add_year"),
                    label = "Year to add",
                    choices = c("Choose a year" = "",
-                               seq(from = input$data_years_range[1],
-                                   to = input$data_years_range[2], by = 1)),
+                               seq(from = years_range[1],
+                                   to = years_range[2], by = 1)),
                    selected = NULL,
                    multiple = FALSE),
-    bsTooltip(glue("{id}_add_year"), tips$add_year,
+    bsTooltip(NS(id, "add_year"), tips$add_year,
               placement = "left")
   )
 }
@@ -220,11 +218,11 @@ select_add_dates <- function(id) {
 
   tagList(
     selectizeInput(
-      glue("{id}_add_dates"),
+      NS(id, "add_dates"),
       label = "Date to show",
       choices = c("Choose date(s)" = "", d),
       selected = NULL, multiple = TRUE),
-    bsTooltip(glue("{id}_add_dates"), tips$add_dates,
+    bsTooltip(NS(id, "add_dates"), tips$add_dates,
               placement = "left")
   )
 }
@@ -232,16 +230,16 @@ select_add_dates <- function(id) {
 
 select_add_mad <- function(id) {
   tagList(
-    div(id = glue("{id}_add_mad_tip"),
-        prettySwitch(glue("{id}_add_mad"),
+    div(id = NS(id, "add_mad_tip"),
+        prettySwitch(NS(id, "add_mad"),
                      label = "Add MAD values",
                      value = FALSE,
                      status = "success", slim = TRUE)),
-    bsTooltip(glue("{id}_add_mad_tip"), tips$add_mad,
+    bsTooltip(NS(id, "add_mad_tip"), tips$add_mad,
               placement = "left"))
 }
 
-show <- function(id, name) {
+show_ui <- function(id, name) {
   h4(materialSwitch(inputId = id,
                     label = name,
                     status = "primary"))
@@ -283,9 +281,32 @@ select_table_options <- function(id,
 
 ## Generic Functions -----------------------------------
 
-check_data <- function(input){
-  validate(need(input$data_load,
-                "You'll need to first load some data under Data > Loading"))
+ui_rcode <- function(id) {
+  tabPanel(title = "R Code", verbatimTextOutput(NS(id, "code")))
+}
+
+prep_DT <- function(data, digits = 4) {
+  data %>%
+    dplyr::mutate(dplyr::across(where(is.numeric), ~round(., digits))) %>%
+    DT::datatable(rownames = FALSE,
+                  filter = 'top',
+                  extensions = c("Scroller"),
+                  options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                                 deferRender = TRUE, dom = 'Brtip'))
+}
+
+
+stop_ui_suspend <- function(output) {
+  names(outputOptions(output)) %>%
+    stringr::str_subset("ui_") %>%
+    stringr::str_extract("ui_(.)+$") %>%
+    purrr::map(~outputOptions(output, ., suspendWhenHidden = FALSE))
+}
+
+
+
+check_data <- function(x){
+  validate(need(x,"You'll need to first load some data under Data > Loading"))
 }
 
 # For multiple, sequential validates
@@ -361,46 +382,52 @@ build_ui <- function(id, input = NULL, define_options = FALSE, include) {
 #'                 params_extra = c("mad" = "percent_MAD = c(input$sumsi_mad)"))
 #' }
 
-create_fun <- function(fun, data = NULL, id, input,
-                       params_ignore = NULL, extra = NULL, end = "") {
+create_fun <- function(fun, data_name = NULL, input, input_data = NULL,
+                       params_ignore = NULL, extra = "", end = "") {
 
-  # Inputs from Data tab
-  params_data <- c("discharge", "water_year", "years_range", "years_exclude",
-                   "roll_days", "roll_align", "months",
-                   "missing", "complete", "allowed") %>%
-    setNames(rep("data", length(.)))
+  # Use isolate() when references all of input, but leave specific
+  # input references with input$ and input[[]] open to update if that input
+  # changes
 
-  # Inputs from this section (id)
-  params_id <- str_subset(names(input), glue("^{id}_")) %>%
-    str_remove(glue("^{id}_")) %>%
-    setNames(rep(id, length(.)))
+  params_data <- names(input_data)    # Inputs from Data tab
+  params_mod <- isolate(names(input)) # Inputs from this module
 
   # Inputs expected by the function (getting the app input equivalents)
-  params_fun <- names(formals(get(fun)))
-  params_fun <- filter(parameters, fasstr_arg %in% params_fun) %>%
-    pull(id) %>%
+  params_fun <- names(formals(fun))
+  params_fun <- dplyr::filter(parameters, fasstr_arg %in% params_fun) %>%
+    dplyr::pull(id) %>%
     unique()
 
-  # Combine inputs but
-  # - only data not in id
+  # Filter params
+  # - only data settings not overridden in module settings
   # - only ones expected by the function
-  params <- c(params_data[!params_data %in% params_id], params_id)
-  params <- params[params %in% params_fun]
+  params_data <- params_data[!params_data %in% params_mod &
+                               params_data %in% params_fun]
+  params_mod <- params_mod[params_mod %in% params_fun]
 
   # Omit any to be ignored
-  if(!is.null(params_ignore)) params <- params[!params %in% params_ignore]
+  if(!is.null(params_ignore)) {
+    params_data <- params_data[!params_data %in% params_ignore]
+    params_mod <- params_mod[!params_mod %in% params_ignore]
+  }
 
   # Retrieve inputs for these parameters
-  names(params) <- glue("{names(params)}_{params}")
-  values <- map(names(params), ~input[[.]])
+  # (data + mod, but only data where not in mod)
+
+  values_data <- purrr::map(params_data, ~input_data[[.]])
+  values_mod <- purrr::map(params_mod, ~input[[.]])
+
+  # Join
+  values <- append(values_data, values_mod)
+  params <- c(params_data, params_mod)
 
   # Remove NULL/empty
-  nulls <- map_lgl(values, ~is.null(.) || (is.character(.) && . == ""))
+  nulls <- purrr::map_lgl(values, ~is.null(.) || (is.character(.) && . == ""))
   values <- values[!nulls]
   params <- params[!nulls]
 
   # Find and remove defaults
-  defaults <- remove_defaults(fun, params, input)
+  defaults <- remove_defaults(fun, input_values = setNames(values, params))
   params <- params[!defaults]
   values <- values[!defaults]
 
@@ -412,10 +439,13 @@ create_fun <- function(fun, data = NULL, id, input,
 
   # Put it all together
   p <- combine_parameters(params, values)
-  args <- glue_collapse(c(data, na.omit(p), extra), sep = ', ')
+  if(extra == "") extra <- NULL
+  args <- glue::glue_collapse(c(data_name, na.omit(p), extra), sep = ', ')
 
-  glue("{fun}({args}){end}")
+  glue::glue("{fun}({args}){end}")
 }
+
+
 
 combine_parameters <- function(params, values) {
   # Create standard parameters
@@ -423,40 +453,40 @@ combine_parameters <- function(params, values) {
   # - REMEMBER! When collapsing multiple elements with glue_collapse, use [[i]]
   p <- vector()
   for(i in seq_along(params)) {
-    p[i] <- case_when(
+    p[i] <- dplyr::case_when(
 
       # Specific
-      params[i] == "discharge" ~ glue("values = '{values[i]}'"),
+      params[i] == "discharge" ~ glue::glue("values = '{values[i]}'"),
       params[i] == "percentiles" ~
-        glue("percentiles = c({glue_collapse(values[[i]], sep = ', ')})"),
+        glue::glue("percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
       params[i] == "inner_percentiles" ~
-        glue("inner_percentiles = c({glue_collapse(values[[i]], sep = ', ')})"),
+        glue::glue("inner_percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
       params[i] == "outer_percentiles" ~
-        glue("outer_percentiles = c({glue_collapse(values[[i]], sep = ', ')})"),
+        glue::glue("outer_percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
       params[i] == "custom_months" ~
-        glue("custom_months = c({glue_collapse(values[[i]], sep = ', ')})"),
-      params[i] == "custom_months_label" ~ glue("custom_months_label = '{values[i]}'"),
-      params[i] == "missing" ~ glue("ignore_missing = {values[i]}"),
-      params[i] == "allowed" ~ glue("allowed_missing = {values[i]}"),
-      params[i] == "complete" ~ glue("complete_years = {values[i]}"),
-      params[i] == "plot_extremes" ~ glue("include_extremes = {values[i]}"),
+        glue::glue("custom_months = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
+      params[i] == "custom_months_label" ~ glue::glue("custom_months_label = '{values[i]}'"),
+      params[i] == "missing" ~ glue::glue("ignore_missing = {values[i]}"),
+      params[i] == "allowed" ~ glue::glue("allowed_missing = {values[i]}"),
+      params[i] == "complete" ~ glue::glue("complete_years = {values[i]}"),
+      params[i] == "plot_extremes" ~ glue::glue("include_extremes = {values[i]}"),
 
       # Data
       params[i] == "water_year" ~
-        glue("water_year_start = {values[i]}"),
+        glue::glue("water_year_start = {values[i]}"),
       params[i] == "years_range" ~
-        glue("start_year = {values[[i]][1]}, end_year = {values[[i]][2]}"),
+        glue::glue("start_year = {values[[i]][1]}, end_year = {values[[i]][2]}"),
       params[i] == "years_exclude" ~
-        glue("exclude_years = c({glue_collapse(values[[i]], sep = ', ')})"),
-      params[i] == "roll_days" ~ glue("roll_days = {values[i]}"),
-      params[i] == "roll_align" ~ glue("roll_align = '{values[i]}'"),
+        glue::glue("exclude_years = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
+      params[i] == "roll_days" ~ glue::glue("roll_days = {values[i]}"),
+      params[i] == "roll_align" ~ glue::glue("roll_align = '{values[i]}'"),
       params[i] == "months" ~
-        glue("months = c({glue_collapse(values[[i]], sep = ', ')})"),
+        glue::glue("months = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
 
       # Plot
       params[i] == "daterange" ~
-        glue("start_date = '{values[[i]][1]}', end_date = '{values[[i]][2]}'"),
-      params[i] == "plot_log" ~ glue("log_discharge = {values[i]}")
+        glue::glue("start_date = '{values[[i]][1]}', end_date = '{values[[i]][2]}'"),
+      params[i] == "plot_log" ~ glue::glue("log_discharge = {values[i]}")
     )
   }
   p
@@ -464,27 +494,26 @@ combine_parameters <- function(params, values) {
 
 
 
-remove_defaults <- function(fun, params, input) {
+remove_defaults <- function(fun, input_values) {
 
   # Get defaults (omitting symbols)
   defaults <- as.list(formals(get(fun))) %>%
-    map(filter_type) %>% # Remove symbols, code refering to other args and eval
+    # Remove symbols, code referring to other args and eval
+    purrr::map(filter_type) %>%
     tibble::enframe(name = "fasstr_arg", value = "default")
 
-  input_values <- map(names(params), ~input[[.]]) %>%
-    setNames(params) %>%
-    tibble::enframe(name = "id", value = "input")
+  input_values <- tibble::enframe(input_values, name = "id", value = "input")
 
-   id <- parameters %>%
-     left_join(defaults, by = "fasstr_arg") %>%
-     left_join(input_values, by = "id") %>%
-     select(id, default, input) %>%
-     mutate(same = map2_lgl(default, input, params_equal)) %>%
-     filter(same) %>%
-     pull(id)
+  id <- parameters %>%
+    dplyr::left_join(defaults, by = "fasstr_arg") %>%
+    dplyr::left_join(input_values, by = "id") %>%
+    dplyr::select(id, default, input) %>%
+    dplyr::mutate(same = purrr::map2_lgl(default, input, params_equal)) %>%
+    dplyr::filter(same) %>%
+    dplyr::pull(id)
 
-   # Return default params
-   params %in% id
+  # Return default params
+  input_values$id %in% id
 }
 
 filter_type <- function(x) {

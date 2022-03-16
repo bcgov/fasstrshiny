@@ -16,15 +16,16 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Depends: 
-    R (>= 2.10)
-LazyData: true
-Imports: 
-    shinydashboard (>= 0.7.2),
+    R (>= 2.10),
+    fasstr (>= 0.4.2),
     shiny (>= 1.7.1),
+    shinydashboard (>= 0.7.2),
     shinyBS (>= 0.61),
     shinyWidgets (>= 0.6.2),
     shinyjs (>= 2.0.0),
-    shinycssloaders (>= 1.0.0),
+    shinycssloaders (>= 1.0.0)
+LazyData: true
+Imports: 
     glue (>= 1.6.1),
     dplyr (>= 1.0.7),
     tidyr (>= 1.1.4),
@@ -37,4 +38,9 @@ Imports:
     patchwork (>= 1.1.1),
     tidyhydat (>= 0.5.4),
     bcmaps (>= 1.0.2),
-    fasstr (>= 0.4.1)
+    fasstr (>= 0.4.1),
+    ggiraph (>= 0.8.2),
+    styler (>= 1.6.2)
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

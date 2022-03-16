@@ -22,6 +22,8 @@ parameters <- tribble(
   "add_year",             "add_year",            "Add data from a given year to the plot", TRUE,
   "months",               "months",              "Months to include in calculations", TRUE,
   "percentiles",          "percentiles",         "Percentiles to add to calculations", TRUE,
+  "inner_percentiles",    "inner_percentiles",   "Limits of inner percentile ribbon", TRUE,
+  "outer_percentiles",    "outer_percentiles",   "LImits of outer percentile ribbon", TRUE,
   "plot_log",             "log_discharge",       "Plot data on log scale",            TRUE,
   "plot_extremes",        "include_extremes",    "Plot extreme values as min-max ribbon",            TRUE,
   "custom_months",        "custom_months",       "Months to combine and summarize as an additional row in the table", TRUE,
@@ -30,7 +32,7 @@ parameters <- tribble(
   "allowed",              "allowed_missing",     "Percentage of data that can be missing", TRUE,
   "complete",             "complete_years",      "Whether to include only years with complete data in calculations", TRUE,
   "seasons",              "include_seasons",     "Whether or not to include seasonal calculations", TRUE,
-  "mad",                  "percent_MAD",         "Mean annual discharge percentiles to add to the MAD table", TRUE,        #Unique
+  "mad",                  "percent_MAD",         "Percent of mean annual discharge to add to plot", TRUE,        #Unique
   "flow",                 "flow_value",          "Flow value from which to determine percentile rank", TRUE,               #Unique
   "percent",              "percent_total",       "Percentiles of total annual flows for which to dermine dates", TRUE,     #Unique
   "normal",               "normal_percentiles",  "Range of percentiles in which data are considered normal", TRUE,       #Limited
@@ -56,7 +58,7 @@ tips <- as.list(parameters$tooltip) %>%
   unique() %>%
   setNames(unique(parameters$id))
 
-usethis::use_data(parameters, tips, internal = FALSE, overwrite = TRUE)
+usethis::use_data(parameters, tips, internal = TRUE, overwrite = TRUE)
 
 # Many parameters in compute_annual_trends are already covered here,
 # e.g., annual_percentiles, monthly_percentiles get the "percentiles" tooltip, etc.

@@ -14,126 +14,6 @@
 
 server <- function(input, output, session) {
 
-  # Global reactives ----------------------------------
-  code <- reactiveValues()                # Holds code
-
-  meta <- reactiveValues(station_id = "",
-                         station_name = "",
-                         basin_area = NA_real_)
-
-  # UI elements ---------------------------------------
-
-  ## Data ----------------------
-  output$ui_data_water_year <- renderUI({
-    tagList(
-      radioGroupButtons(
-        "data_water_year",
-        label = "Water year start",
-        choices = setNames(1:12, month.abb),
-        selected = 1, size = "sm", width = "100%"),
-      bsTooltip("data_water_year",
-                title = tips$water_year, placement = "left"))
-  })
-
-  output$ui_data_years_range <- renderUI({
-
-    yr_orig <- c(min(data_raw()$WaterYear), max(data_raw()$WaterYear))
-    yr <- input$data_years_range
-    if(is.null(yr)) {
-      yr <- yr_orig
-    } else {
-      if(yr[1] < yr_orig[1]) yr[1] <- yr_orig[1]
-      if(yr[2] > yr_orig[2]) yr[2] <- yr_orig[2]
-    }
-
-    tagList(
-      sliderInput("data_years_range",
-                  label = "Start and end years",
-                  min = min(data_raw()$WaterYear),
-                  max = max(data_raw()$WaterYear),
-                  value = yr,
-                  dragRange = TRUE, sep = ""),
-      bsTooltip("data_years_range", title = tips$years_range,
-                placement = "left"))
-  })
-
-  output$ui_data_years_exclude <- renderUI({
-    req(input$data_years_range)
-
-    # If updating, use old values where within range
-    isolate({
-      if(!is.null(input$data_years_exclude)) {
-        s <- as.numeric(input$data_years_exclude)
-        s <- s[s >= input$data_years_range[1] & s <= input$data_years_range[2]]
-      } else s <- NULL
-    })
-
-    tagList(
-      selectizeInput("data_years_exclude",
-                     label = "Years to exclude",
-                     choices = seq(from = input$data_years_range[1],
-                                   to = input$data_years_range[2], by = 1),
-                     selected = s,
-                     multiple = TRUE),
-      bsTooltip("data_years_exclude", title = tips$years_exclude,
-                placement = "left"))
-  })
-
-  output$ui_data_months <- renderUI({
-    req(input$data_water_year)
-
-    # Arrange months by water year
-    m <- setNames(1:12, month.abb)
-    m <- c(m[m >= as.numeric(input$data_water_year)],
-           m[m < as.numeric(input$data_water_year)])
-
-    tagList(
-      selectizeInput("data_months",
-                     label = "Months to Include",
-                     choices = m,
-                     selected = 1:12,
-                     multiple = TRUE),
-      bsTooltip("data_months", tips$months, placement = "left"))
-  })
-
-  # Update station from Map button
-  observe({
-    updateTextInput(session, "data_station_num",
-                    value = input$data_hydat_map_marker_click$id)
-  }) %>%
-    bindEvent(input$data_hydat_map_marker_click)
-
-  # Update station from Table button
-  observe({
-    updateTextInput(
-      session, "data_station_num",
-      value = stations$station_number[input$data_hydat_table_rows_selected])
-  }) %>%
-    bindEvent(input$data_hydat_table_rows_selected)
-
-
-  # Add plot options as Gear in corner
-  output$ui_data_plot_options <- renderUI({
-    select_plot_options(
-      select_plot_log("data", value = formals(plot_flow_data)$log_discharge), # Default
-      select_daterange("data", data_raw()))
-  })
-
-  ##  Hydro graphs -------------------------------------------------------------
-
-  # Plot options
-  output$ui_hydro_plot_options <- renderUI({
-    id <- "hydro"
-    select_plot_options(
-      select_plot_log(id,
-                      value = formals(plot_longterm_daily_stats)$log_discharge),
-      select_plot_extremes(id),
-      select_add_year(id, input),
-      select_add_dates(id),
-      select_add_mad(id))
-    # Add inner/outer percentiles?
-  })
-
   ## Flows ----------------------------------------------------------
 
   # Plot options
@@ -143,16 +23,6 @@ server <- function(input, output, session) {
                       value = formals(plot_flow_duration)$log_discharge))
   })
 
-
-  ## Cumulative ----------------------------------------------------------
-
-  output$ui_cum_plot_options <- renderUI({
-    id <- "cum"
-    select_plot_options(
-      select_plot_log(
-        id, value = formals(plot_daily_cumulative_stats)$log_discharge),
-      select_add_year(id, input))
-  })
 
   ## Annual Statistics --------------------------------------------
   # Plot options
@@ -250,567 +120,27 @@ server <- function(input, output, session) {
   observe(toggleState("hydro_add_dates", condition = input$hydro_type == "Daily"))
   observe(toggleState("hydro_custom_months_all", condition = input$hydro_type != "Daily"))
 
-  # Data - Loading ---------------
 
-  ## HYDAT Map -------------------------
-  output$data_hydat_map <- renderLeaflet({
-    leaflet() %>%
-      addProviderTiles(providers$Stamen.TonerLite,
-                       options = providerTileOptions(noWrap = TRUE)) %>%
-      addPolygons(
-        data = bc_hydrozones,
-        stroke = 0.5, opacity = 1, weight = 1,
-        fillOpacity = 0.15, fillColor = "black", color = "black",
-        label = ~str_to_title(HYDROLOGICZONE_NAME)) %>%
-      addCircleMarkers(
-        data = stations, lng = ~longitude, lat = ~latitude,
-        layerId = ~ station_number,
-        radius = 3, fillOpacity = 1, stroke = FALSE, color = "#31688E",
-        label = ~ station_number,
-        popup = ~glue("<strong>Station Name:</strong> ",
-                      "{stringr::str_to_title(station_name)}<br>",
-                      "<strong>Station Number:</strong> {station_number}"))
-  })
 
-  ## HYDAT Table ------------------------
-  output$data_hydat_table <- renderDT({
-    stations %>%
-      select("station_number", "station_name", "province",
-             "hyd_status", "real_time", "regulated", "parameters") %>%
-      datatable(selection = "single", rownames = FALSE, filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE,
-                               scrollY = 450, deferRender = TRUE,
-                               scroller = TRUE,
-                               dom = 'Brtip'))
-  })
 
-  ## Raw data ------------------
-  data_raw <- reactive({
-    req(input$data_station_num, input$data_water_year,
-        input$data_load > 0)
 
-    if (input$data_source == "HYDAT") {
-      m <- filter(stations, .data$station_number == input$data_station_num)
-      meta$station_id <- input$data_station_num
-      meta$station_name <- m$station_name
-      meta$basin_area <- as.numeric(m$drainage_area_gross)
 
-      d <- glue(
-        "data_flow <- fill_missing_dates(",
-        "        station_number = '{input$data_station_num}') %>%",
-        "  add_date_variables(water_year_start = {as.numeric(input$data_water_year)}) %>%",
-        "  add_daily_volume() %>%",
-        "  add_daily_yield()")
 
-    } else {
-      inFile <- input$data_file
-      if (is.null(inFile)) return(NULL)
 
-      meta$station_id <- basename(input$data_file)
-      meta$station_name <- input$data_station_name
-      meta$basin_area <- as.numeric(input$data_basin_area)
 
-      d <- glue("data_flow <- read.csv({inFile$datapath}) %>%",
-                "  fill_missing_dates() %>%",
-                "  add_date_variables(water_year_start = {as.numeric(input$data_water_year)})")
 
-    }
 
-    # Save unevaluated code for code tab
-    code$data_raw <- d
 
-    eval(parse(text = d)) # Evaluate and create data_flow
-  }) %>%
-    bindEvent(input$data_load, input$data_water_year,
-              ignoreInit = TRUE)
 
-  ## Plot ----------------
-  output$data_plot <- renderPlotly({
-    check_data(input)
-    req(input$data_daterange,
-        input$data_years_range,
-        input$data_water_year)
 
-    data_flow <- data_raw()
 
-    g <- create_fun(fun = "plot_flow_data", data = "data_flow",
-                    id = "data", input)
 
-    code$data_plot <- g
-
-    parse(text = g) %>%
-      eval() %>%
-      .[[1]] %>%
-      ggplotly() %>%
-      config(modeBarButtonsToRemove =
-               c("pan", "autoscale", "zoomIn2d", "zoomOut2d",
-                 "hoverCompareCartesian", "hoverClosestCartesian"))
-  })
-
-  ## Table ----------------
-  output$data_table <- renderDT({
-    req(input$data_years_range)
-
-    check_data(input)
-    data_raw() %>%
-      rename("StationNumber" = "STATION_NUMBER") %>%
-      select(-"Month") %>%
-      filter(WaterYear >= input$data_years_range[1],
-             WaterYear <= input$data_years_range[2],
-             !WaterYear %in% input$data_years_exclude,
-             MonthName %in% month.abb[as.numeric(input$data_months)]) %>%
-      mutate(Value = round(Value, 4)) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Bfrtip'))
-  })
-
-  ## R Code ----------------
-  output$data_code <- renderText({
-    fasstrshiny:::code_format(code, id = "data")
-  })
-
-
-  ## Sidebar: Data Info ------------------------
-  output$data_info <- render_gt({
-
-    d <- tibble(name = "", value = "", .rows = 0)
-    t <- "Current Data: None"
-    s <- NULL
-
-    if(!is.null(input$data_water_year) & !is.null(input$data_years_range) &
-       !is.null(input$data_months)) {
-
-      if(is.null(input$data_years_exclude)) {
-        ye <- ""
-      } else ye <- glue_collapse(input$data_years_exclude, sep = ", ")
-
-      t <- glue("Current Data: {meta$station_id}")
-      s <- meta$station_name
-
-      m <- input$data_months
-      if(all(1:12 %in% m)) m <- "all" else m <- glue_collapse(m, sep = ", ")
-
-      n <- data_raw() %>%
-        filter(WaterYear >= input$data_years_range[1],
-               WaterYear <= input$data_years_range[2],
-               !WaterYear %in% input$data_years_exclude) %>%
-        pull(WaterYear) %>%
-        unique() %>%
-        length()
-
-
-      d <- list(`Water Year` = month.abb[as.numeric(input$data_water_year)],
-                `Year Range` = glue_collapse(input$data_years_range, sep = "-"),
-                `Years Excl.` = ye,
-                `Total Years` = as.character(n),
-                `Months` = m) %>%
-        tibble::enframe() %>%
-        unnest(value)
-    }
-
-    gt(d) %>%
-      cols_align("left") %>%
-      cols_width(name ~ px(65)) %>%
-      tab_header(title = t, subtitle = s) %>%
-      tab_options(column_labels.hidden = TRUE,
-                  heading.subtitle.font.size = 14,
-                  heading.align = "left",
-                  #table.border.top.width = 0,
-                  table.border.bottom.width = 0,
-                  heading.border.bottom.width = 0,
-                  table.font.size = 12,
-                  data_row.padding = 1,
-                  table.background.color = "#FFFFFF00",  # Transparent
-                  table.font.color = "#b8c7ce",
-                  table.align = "center",
-                  table.width = "90%") %>%
-      tab_style(
-        style = cell_borders(
-          sides = c("top", "bottom"),
-          weight = 0),
-        locations = cells_body(
-          columns = everything(),
-          rows = everything()
-        ))
-  })
-
-
-
-  # Data - Availability ---------------
-  ## Data --------------
-  available_raw <- reactive({
-    data_flow <- data_raw()
-
-    d <- create_fun("screen_flow_data", data = "data_flow",
-                    id = "available", input)
-
-    code$available_data <- glue("data_available <- {d}")
-    eval(parse(text = d))
-  })
-
-  ## Summary plot ------------------
-  output$available_plot1 <- renderGirafe({
-    check_data(input)
-    req(input$available_availability, !is.null(input$available_stats))
-
-    data_flow <- data_raw()
-
-    e <- c(glue("include_stats = ",
-                "c(\"{glue_collapse(input$available_stats, sep = '\", \"')}\")"),
-           glue("plot_availability = {input$available_availability}")) %>%
-      glue_collapse(sep = ", ")
-
-
-    g <- create_fun("plot_data_screening", data = "data_flow",
-                    id = "available", input, extra = e)
-
-    code$available_plot <- g
-
-    g <- eval(parse(text = g))[[1]]
-
-    #Add interactivity
-    stats <- names(g$data) # Get stats from plot data
-
-    # For tooltips labels...
-    names(stats)[stats == "n_missing_Q"] <- "Data Completeness"
-
-    # Add interactive vline
-    g <- g + fasstrshiny:::create_vline_interactive(
-      data = g$data, stats = stats, size = 5)
-
-
-    girafe(ggobj = g, width_svg = 13, height_svg = 7,
-           options = list(
-             opts_toolbar(position = "topleft"),
-             opts_selection(type = "none"),
-             opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
-  })
-
-
-  ## Missing Data Plot ---------------------------
-  output$available_plot2 <- renderGirafe({
-    check_data(input)
-    req(input$available_type)
-
-    data_flow <- data_raw()
-
-    g <- create_fun(fun = "plot_missing_dates", data = "data_flow",
-      id = "available", input, params_ignore = "discharge",
-      extra = glue("plot_type = '{input$available_type}'"))
-    code$available_miss <- g
-
-    g <- eval(parse(text = g))[[1]]
-
-    # Replace layers with interactive
-    g$layers[[1]] <- geom_tile_interactive(
-      colour = "grey",
-      aes(fill = Percent_Missing,
-          tooltip = glue("Year: {Year}\n",
-                         "Month: {Month}\n",
-                         "Missing Days: {Missing} ({Percent_Missing}%)",
-                         .trim = FALSE),
-          data_id = glue("{Year}-{Month}")))
-
-    g <- g + guides(fill = guide_coloursteps(even.steps = FALSE,
-                                             show.limits = TRUE))
-
-    girafe(ggobj = g, width_svg = 14, height_svg = 7,
-           options = list(opts_selection(type = "none")))
-  })
-
-  ## Summary table ------------------
-  output$available_table <- DT::renderDT({
-    check_data(input)
-    available_raw() %>%
-      select(-dplyr::contains("STATION_NUMBER")) %>%
-      rename("Total days" = "n_days",
-             "Total flow days" = "n_Q",
-             "Total missing days" = "n_missing_Q",
-             "Standard deviation" = "StandardDeviation") %>%
-      rename_with(.cols = ends_with("_missing_Q"),
-                  ~ str_replace(., "_missing_Q", " missing days")) %>%
-      mutate_if(is.numeric, ~round(., 4)) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE,
-                               scrollY = 450, deferRender = TRUE,
-                               scroller = TRUE,
-                               dom = 'Brtip'))
-  })
-
-  ## R Code -----------------
-  output$available_code <- renderText({
-    fasstrshiny:::code_format(code, id = "available")
-  })
-
-
-  # Overview ------------------------------------------------------
-
-
-
-
-
-
-
-
-  # Hydrographs ---------------------------------------
-
-  ## Plot --------------------
-  output$hydro_plot <- renderGirafe({
-    check_data(input)
-    validate(
-      need(length(input$hydro_inner_percentiles) == 2 &
-           length(input$hydro_outer_percentiles) == 2,
-           glue("Inner and outer percentiles must each have two values, ",
-                "corresponding to the limits of the plot ribbons")))
-    req(input$hydro_type, !is.null(input$hydro_add_year))
-
-    data_flow <- data_raw()
-
-    g <- switch(input$hydro_type,
-                "Daily" = "plot_daily_stats",
-                "Long-term Monthly" = "plot_longterm_monthly_stats",
-                "Long-term Daily" = "plot_longterm_daily_stats") %>%
-      create_fun("data_flow", id = "hydro", input,
-                 extra = if_else(input$hydro_add_year != "",
-                                 glue("add_year = {input$hydro_add_year}"),
-                                 ""))
-
-    code$hydro_plot <- g
-    g <- eval(parse(text = g))[[1]]
-
-    # Add interactivity
-    stats <- names(g$data) # Get stats from plot data
-    stats <- stats[!stats %in%  c("DayofYear", "AnalysisDate",
-                                  "LT_Mean", "LT_Med")] # Omit these
-
-    # For tooltips labels...
-    names(stats)[stats %in% c("Year_mean", "RollingValue")] <- input$hydro_add_year
-    names(stats)[stats == "Date"] <- "Day"
-
-    # Add interactive vline
-    g <- g + fasstrshiny:::create_vline_interactive(
-      data = g$data, stats = stats, size = if_else(input$hydro_type == "Daily",
-                                                   1, 20))
-
-    # Add dates
-    if(input$hydro_type == "Daily" & !is.null(input$hydro_add_dates)){
-      dts <- data.frame(
-        Date = fasstrshiny:::get_date(
-          input$hydro_add_dates,
-          water_year = as.numeric(input$data_water_year))) %>%
-        mutate(labs = format(Date, '%b-%d'),
-               hjust = if_else(as.numeric(input$data_water_year) ==
-                                 as.numeric(format(Date, "%m")),
-                               -0.05, 1.05))
-
-      g <- g +
-        geom_vline_interactive(xintercept = dts$Date, colour = 'grey20',
-                               tooltip = dts$labs) +
-        geom_text(data = dts, aes(x = Date, label = labs, hjust = hjust),
-                  y = Inf, vjust = 2)
-    }
-
-    # Add mad
-    if(isTRUE(input$hydro_add_mad)) {
-      mad <- hydro_mad() %>%
-        pivot_longer(-STATION_NUMBER, names_to = "type")
-      g <- g +
-        geom_hline(data = mad,
-                   aes(yintercept = value),
-                   size = c(2, rep(1, nrow(mad) - 1))) +
-        geom_hline_interactive(
-          data = mad,
-          aes(tooltip = paste0(str_replace(type, "%", "% "),
-                               ": ", round(value, 4)),
-              yintercept = value), alpha = 0.01,
-          size = 3) +
-        geom_text(data = mad, aes(y = value, label = type),
-                  x = c(Inf, rep(-Inf, nrow(mad) - 1)), colour = "black",
-                  hjust = c(1.1, rep(-0.1, nrow(mad) -1)), vjust = -0.5)
-    }
-
-    girafe(ggobj = g, width_svg = 12, height = 6,
-           options = list(
-             opts_toolbar(position = "topleft"),
-             opts_selection(type = "none"),
-             opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
-  })
-
-
-
-  ## MAD -----------------------
-  hydro_mad <- reactive({
-    req(input$hydro_mad)
-
-    data_flow <- data_raw()
-
-    t <- create_fun(
-      fun = "calc_longterm_mean",
-      data = "data_flow", id = "hydro", input,
-      extra = glue("percent_MAD = c({glue_collapse(input$hydro_mad, sep = ',')})"))
-
-    code$hydro_mad <- t
-
-    parse(text = t) %>%
-      eval()
-  })
-
-  ## Table -----------------------
-  output$hydro_table <- renderDT({
-    check_data(input)
-    req(input$hydro_type)
-
-    data_flow <- data_raw()
-
-    perc <- c(input$hydro_inner_percentiles,
-              input$hydro_outer_percentiles,
-              input$hydro_percentiles) %>%
-      unique() %>%
-      as.numeric() %>%
-      sort()
-
-    t <- switch(input$hydro_type,
-                "Long-term Daily" = "calc_longterm_daily_stats",
-                "Long-term Monthly" = "calc_longterm_monthly_stats",
-                "Daily" = "calc_daily_stats") %>%
-      create_fun(
-        "data_flow", id = "hydro", input,
-        # Because input$hydro_percentiles exists, but we don't want to use it
-        params_ignore = "percentiles",
-        extra = glue("percentiles = c({glue_collapse(perc, sep = ', ')})"))
-
-    code$hydro_table <- t
-
-    parse(text = t) %>%
-      eval() %>%
-      mutate(across(where(is.numeric), ~round(., 4))) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 500, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Brtip'))
-  })
-
-
-  ## R Code -----------------
-  output$hydro_code <- renderText({
-    fasstrshiny:::code_format(code, id = "hydro")
-  })
-
-
-  # Cumulative Hydrographs --------------------------------------------------
-
-  ## Plot --------------------
-  output$cum_plot <- renderGirafe({
-    check_data(input)
-    req(input$cum_type)
-
-    data_flow <- data_raw()
-
-    e <- glue("use_yield = {input$cum_discharge}")
-    if(input$cum_add_year != "") {
-      e <- glue("{e}, add_year = {input$cum_add_year}")
-    }
-
-
-    g <- switch(input$cum_type,
-                "Monthly" = "plot_monthly_cumulative_stats",
-                "Daily"   = "plot_daily_cumulative_stats") %>%
-      create_fun("data_flow", id = "cum", input, extra = e,
-                 params_ignore = "discharge")
-
-    code$cum_plot <- g
-
-    # Add interactivity
-    g <- eval(parse(text = g))[[1]]
-
-    stats <- names(g$data) # Get stats from plot data
-    stats <- stats[!stats %in% c("WaterYear", "AnalysisDate", "DayofYear")] # Omit these
-
-    # For tooltips labels...
-    names(stats)[stats == "Monthly_Total"] <- input$cum_add_year
-    names(stats)[stats == "Cumul_Flow"] <- input$cum_add_year
-
-    # Add interactive vline
-    g <- g + fasstrshiny:::create_vline_interactive(
-      data = g$data, stats = stats,
-      size = if_else(input$cum_type == "Monthly", 20, 1))
-
-
-    girafe(ggobj = g, width_svg = 14, height_svg = 6,
-           options = list(
-             opts_toolbar(position = "topleft"),
-             opts_selection(type = "none"),
-             opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
-  })
-
-
-  ## Table -----------------------
-  output$cum_table <- DT::renderDT({
-    check_data(input)
-    req(input$cum_discharge)
-
-    data_flow <- data_raw()
-
-    t <- switch(input$cum_type,
-                "Monthly" = "calc_monthly_cumulative_stats",
-                "Daily"   = "calc_daily_cumulative_stats") %>%
-      create_fun("data_flow", id = "cum", input,
-                 params_ignore = "discharge",
-                 extra = glue("use_yield = {input$cum_discharge}"))
-
-    code$cum_table <- t
-
-    parse(text = t) %>%
-      eval() %>%
-      mutate(across(where(is.numeric), ~round(., 4))) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Brtip'))
-  })
-
-
-  ## R Code -----------------
-  output$cum_code <- renderText({
-    fasstrshiny:::code_format(code, id = "cum")
-  })
-
-
-
-  # Flows ---------------------------------------
-
-  ## Flow Percentile -----------------------
-  # output$flows_perc <- renderText({
-  #   req(input$flows_flow)
-  #
-  #   data_flow <- data_raw()
-  #
-  #   # Flow
-  #   t <- create_fun(fun = "calc_flow_percentile",
-  #                   data = "data_flow", id = "flows", input,
-  #                   params = "complete",
-  #                   extra = glue("flow_value = {input$flows_flow}"))
-  #
-  #   code$flows_flow <- t
-  #
-  #   parse(text = t) %>%
-  #     eval() %>%
-  #     pull(Percentile) %>%
-  #     round(4)
-  # })
+  # Flows --------------------------------------
 
   ## Plot --------------------
 
-  output$flows_plot <- renderGirafe({
-    check_data(input)
+  output$flows_plot <- ggiraph::renderGirafe({
+    check_data(data_loaded())
 
     data_flow <- data_raw()
 
@@ -818,39 +148,40 @@ server <- function(input, output, session) {
     # - include_longterm
 
     g <- create_fun(fun = "plot_flow_duration", data = "data_flow",
-                    id = "flows", input)
+                    input, input_data = data_settings)
 
     code$flows_plot <- g
 
     g <- eval(parse(text = g))[[1]]
     g <- g +
-      geom_point_interactive(
-        aes(tooltip = glue(
+      ggiraph::geom_point_interactive(
+        ggplot2::aes(tooltip = glue::glue(
           "Month: {Month}\n",
           "{Percentile}% time\n",
           "Discharge cutoff: {round(Value, 3)}",
           .trim = FALSE),
-            data_id = Percentile),
+          data_id = Percentile),
         show.legend = FALSE, alpha = 0.01, size = 3)
 
-    girafe(ggobj = g, width_svg = 12, height = 6,
-           options = list(
-             opts_toolbar(position = "topleft"),
-             opts_selection(type = "none"),
-             opts_hover(css = "fill:orange; stroke:gray;fill-opacity:1;")))
+    ggiraph::girafe(
+      ggobj = g, width_svg = 12, height = 6,
+      options = list(
+        ggiraph::opts_toolbar(position = "topleft"),
+        ggiraph::opts_selection(type = "none"),
+        ggiraph::opts_hover(css = "fill:orange; stroke:gray;fill-opacity:1;")))
   }) %>%
     bindEvent(input$flows_compute, ignoreNULL = FALSE)
 
 
   ## Table -----------------------
   output$flows_table <- DT::renderDT({
-    check_data(input)
+    check_data(data_loaded())
 
     data_flow <- data_raw()
 
     t <- create_fun(
       fun = "calc_longterm_daily_stats",
-      data = "data_flow", id = "flows", input,
+      data = "data_flow", input, input_data = data_settings,
       extra = "percentiles = 1:99",
       end = "%>% select(-Mean, -Median, -Minimum, -Maximum)")
 
@@ -858,15 +189,10 @@ server <- function(input, output, session) {
 
     parse(text = t) %>%
       eval() %>%
-      pivot_longer(cols = -c(STATION_NUMBER, Month),
-                   names_to = "percentiles", values_to = "value") %>%
-      pivot_wider(names_from = Month, values_from = value) %>%
-      mutate(across(where(is.numeric), ~round(., 4))) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 500, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Brtip'))
+      tidyr::pivot_longer(cols = -c(STATION_NUMBER, Month),
+                          names_to = "percentiles", values_to = "value") %>%
+      tidyr::pivot_wider(names_from = Month, values_from = value) %>%
+      prep_DT()
   }) %>%
     bindEvent(input$flows_compute, ignoreNULL = FALSE)
 
@@ -876,7 +202,7 @@ server <- function(input, output, session) {
 
   ## R Code -----------------
   output$flows_code <- renderText({
-    fasstrshiny:::code_format(code, id = "flows")
+    code_format(code, id = "flows")
   })
 
 
@@ -884,15 +210,15 @@ server <- function(input, output, session) {
   # Annual Statistics -----------------
 
   ## Plot -----------------------------
-  output$as_plot <- renderGirafe({
-    check_data(input)
+  output$as_plot <- ggiraph::renderGirafe({
+    check_data(data_loaded())
 
     data_flow <- data_raw()
 
     g <- switch(input$as_type,
                 "Monthly" = "plot_monthly_stats2",
                 "Annual" = "plot_annual_stats2") %>%
-      create_fun("data_flow", id = "as", input)
+      ("data_flow", input, input_data = data_settings)
 
     code$as_plot <- g
 
@@ -906,19 +232,20 @@ server <- function(input, output, session) {
     #stats <- stats[!stats %in% date_cols] # Omit these
 
     # Add vline
-    g <- g + fasstrshiny:::create_vline_interactive(
+    g <- g + create_vline_interactive(
       data = g$data, stats, size = if_else(input$as_type == "Annual", 10, 2))
 
-    girafe(ggobj = g, width_svg = 12, height = 6,
-           options = list(
-             opts_toolbar(position = "topleft"),
-             opts_selection(type = "none"),
-             opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
+    ggiraph::girafe(
+      ggobj = g, width_svg = 12, height = 6,
+      options = list(
+        ggiraph::opts_toolbar(position = "topleft"),
+        ggiraph::opts_selection(type = "none"),
+        ggiraph::opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
   })
 
   ## Table -----------------------
   output$as_table <- DT::renderDT({
-    check_data(input)
+    check_data(data_loaded())
     req(input$as_type)
 
     data_flow <- data_raw()
@@ -926,24 +253,19 @@ server <- function(input, output, session) {
     t <- switch(input$as_type,
                 "Monthly" = "calc_monthly_stats",
                 "Annual" = "calc_annual_stats") %>%
-      create_fun("data_flow", id = "as", input)
+      create_fun("data_flow", input, input_data = data_settings)
 
     code$as_table <- t
 
     parse(text = t) %>%
       eval() %>%
-      mutate(across(where(is.numeric), ~round(., 4))) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 500, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Brtip'))
+      prep_DT()
   })
 
 
   ## R Code -----------------
   output$as_code <- renderText({
-    fasstrshiny:::code_format(code, id = "as")
+    code_format(code, id = "as")
   })
 
 
@@ -952,54 +274,60 @@ server <- function(input, output, session) {
 
 
   ## Plot --------------------
-  output$am_plot <- renderGirafe({
-    check_data(input)
+  output$am_plot <- ggiraph::renderGirafe({
+    check_data(data_loaded())
 
     data_flow <- data_raw()
 
     g <- create_fun(fun = "plot_annual_means", data = "data_flow",
-                    id = "am", input, params_ignore = "discharge")
+                    input, input_data = data_settings,
+                    params_ignore = "discharge")
 
     code$am_plot <- g
 
     g <- eval(parse(text = g))[[1]]
 
     # Replace layers with interactive
-    g$layers[[1]] <- geom_bar_interactive(
-      aes(tooltip = glue("Year: {Year}\n",
-                         "MAD Diff: {round(MAD_diff, 4)}", .trim = FALSE),
-          data_id = Year, colour = "Annual MAD difference"),
+    g$layers[[1]] <- ggiraph::geom_bar_interactive(
+      ggplot2::aes(tooltip = glue::glue("Year: {Year}\n",
+                                        "MAD Diff: {round(MAD_diff, 4)}",
+                                        .trim = FALSE),
+                   data_id = Year, colour = "Annual MAD difference"),
       fill = "cornflowerblue", stat = "identity")
 
-    g <- g + geom_hline(aes(yintercept = 0, colour = "Long-term MAD"), size = 1) +
-      scale_colour_manual(values = c("Long-term MAD" = "black",
-                                     "Annual MAD difference" = "cornflowerblue")) +
-      guides(colour = guide_legend(override.aes = list(
+    g <- g + ggplot2::geom_hline(ggplot2::aes(yintercept = 0,
+                                              colour = "Long-term MAD"),
+                                 size = 1) +
+      ggplot2::scale_colour_manual(
+        values = c("Long-term MAD" = "black",
+                   "Annual MAD difference" = "cornflowerblue")) +
+      ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(
         fill = c("black", "cornflowerblue")))) +
-      theme(legend.position = c(0.8, 0.8), legend.title = element_blank(),
-              legend.key = element_rect(colour = NA))
-    girafe(ggobj = g, width_svg = 14, height_svg = 4,
-           options = list(opts_selection(type = "none")))
+      ggplot2::theme(legend.position = c(0.8, 0.8),
+                     legend.title = element_blank(),
+                     legend.key = element_rect(colour = NA))
+    ggiraph::girafe(ggobj = g, width_svg = 14, height_svg = 4,
+                    options = list(ggiraph::opts_selection(type = "none")))
   })
 
 
   ## R Code -----------------
   output$am_code <- renderText({
-    fasstrshiny:::code_format(code, id = "am")
+    code_format(code, id = "am")
   })
 
   # Annual Totals ----------------------------------
 
   ## Plot --------------------
-  output$ann_tot_plot <- renderGirafe({
-    check_data(input)
+  output$ann_tot_plot <- ggiraph::renderGirafe({
+    check_data(data_loaded())
     req(!is.null(input$ann_tot_seasons))
 
     data_flow <- data_raw()
 
     g <- create_fun(fun = "plot_annual_cumulative_stats", data = "data_flow",
-                    id = "ann_tot", input,
-                    extra = glue("use_yield = {input$ann_tot_discharge}, ",
+                    input, input_data = data_settings,
+                    extra = glue::glueglue("use_yield = {input$ann_tot_discharge}, ",
                                  "include_seasons = {input$ann_tot_seasons}"))
 
     code$ann_tot_plot <- g
@@ -1010,51 +338,48 @@ server <- function(input, output, session) {
 
     # Add individual geoms to each plot (annual has more than one)
     for(i in seq_along(g)) {
-      g[[i]] <- g[[i]] + geom_point_interactive(
-        aes(tooltip = paste0("Year: ", Year, "\n",
-                             Statistic, ": ", round(Value, 4)),
-            data_id = Year), size = 3)
+      g[[i]] <- g[[i]] + ggiraph::geom_point_interactive(
+        ggplot2::aes(tooltip = paste0("Year: ", Year, "\n",
+                                      Statistic, ": ", round(Value, 4)),
+                     data_id = Year), size = 3)
     }
 
     g <- g %>%
       wrap_plots(nrow = 2, byrow = FALSE, design = "AC
                                                     BC")
 
-    girafe(ggobj = g, width_svg = 14, height_svg = 6,
-           options = list(
-             opts_toolbar(position = "topleft"),
-             opts_selection(type = "none"),
-             opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
+    ggiraph::girafe(
+      ggobj = g, width_svg = 14, height_svg = 6,
+      options = list(
+        ggiraph::opts_toolbar(position = "topleft"),
+        ggiraph::opts_selection(type = "none"),
+        ggiraph::opts_hover(
+          css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
   })
 
 
   ## Table -----------------------
   output$ann_tot_table <- DT::renderDT({
-    check_data(input)
+    check_data(data_loaded())
 
     data_flow <- data_raw()
 
     t <- create_fun("calc_annual_cumulative_stats", data = "data_flow",
-                    id = "", input,
-                    extra = glue("use_yield = {input$ann_tot_discharge}",
+                    input, input_data = data_settings,
+                    extra = glue::glueglue("use_yield = {input$ann_tot_discharge}",
                                  "include_seasons = {input$ann_tot_seasons}"))
 
     code$ann_tot_table <- t
 
     parse(text = t) %>%
       eval() %>%
-      mutate(across(where(is.numeric), ~round(., 4))) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Brtip'))
+      prep_DT()
   })
 
 
   ## R Code -----------------
   output$ann_tot_code <- renderText({
-    fasstrshiny:::code_format(code, id = "")
+    code_format(code, id = "")
   })
 
 
@@ -1062,17 +387,17 @@ server <- function(input, output, session) {
 
   # Flow timing ---------------------------------------
   ## Plot --------------------
-  output$ft_plot <- renderGirafe({
-    check_data(input)
+  output$ft_plot <- ggiraph::renderGirafe({
+    check_data(data_loaded())
     req(input$ft_percent)
 
     data_flow <- data_raw()
 
     g <- create_fun(
       fun = "plot_annual_flow_timing", data = "data_flow",
-      id = "ft", input,
-      extra = glue("percent_total = ",
-                   "c({glue_collapse(input$ft_percent, sep = ',')})"))
+      input, input_data = data_settings,
+      extra = glue::glueglue("percent_total = ",
+                   "c({glue::glueglue_collapse(input$ft_percent, sep = ',')})"))
 
     code$ft_plot <- g
 
@@ -1080,60 +405,55 @@ server <- function(input, output, session) {
     g <- eval(parse(text = g))[[1]]
 
     g <- g +
-      geom_point_interactive(
-        aes(tooltip = paste0("Year: ", Year, "\n",
-                             Statistic, "\n",
-                             "Day of Year: ", Value),
-            data_id = Year), size = 3)
+      ggiraph::geom_point_interactive(
+        ggplot2::aes(tooltip = paste0("Year: ", Year, "\n",
+                                      Statistic, "\n",
+                                      "Day of Year: ", Value),
+                     data_id = Year), size = 3)
 
-    girafe(ggobj = g, width_svg = 14, height_svg = 8,
-           options = list(
-             opts_toolbar(position = "topleft"),
-             opts_selection(type = "none")))
+    ggiraph::girafe(ggobj = g, width_svg = 14, height_svg = 8,
+                    options = list(
+                      ggiraph::opts_toolbar(position = "topleft"),
+                      ggiraph::opts_selection(type = "none")))
   })
 
 
   ## Table -----------------------
   output$ft_table <- DT::renderDT({
-    check_data(input)
+    check_data(data_loaded())
     req(input$ft_percent)
 
     data_flow <- data_raw()
 
     t <- create_fun(
       fun = "calc_annual_flow_timing", data = "data_flow",
-      id = "ft", input,
-      extra = glue("percent_total = ",
-                   "c({glue_collapse(input$ft_percent, sep = ',')})"))
+      input, input_data = data_settings,
+      extra = glue::glue("percent_total = ",
+                   "c({glue::glue_collapse(input$ft_percent, sep = ',')})"))
 
     code$ft_table <- t
 
     parse(text = t) %>%
       eval() %>%
-      mutate(across(where(is.numeric), ~round(., 4))) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Brtip'))
+      prep_DT()
   })
 
 
   ## R Code -----------------
   output$ft_code <- renderText({
-    fasstrshiny:::code_format(code, id = "ft")
+    code_format(code, id = "ft")
   })
 
 
   # Low Flows ---------------------------------------
   ## Plot --------------------
-  output$lf_plot <- renderGirafe({
-    check_data(input)
+  output$lf_plot <- ggiraph::renderGirafe({
+    check_data(data_loaded())
 
     data_flow <- data_raw()
 
     g <- create_fun(fun = "plot_annual_lowflows", data = "data_flow",
-                    id = "lf", input)
+                    input, input_data = data_settings)
 
     code$lf_plot <- g
 
@@ -1141,115 +461,106 @@ server <- function(input, output, session) {
     g <- eval(parse(text = g))
 
     g[["Annual_Low_Flows"]] <- g[["Annual_Low_Flows"]] +
-      geom_point_interactive(
-        aes(tooltip = paste0("Year: ", Year, "\n",
-                             Statistic, "\n",
-                             "Discharge: ", round(Value, 4)),
-            data_id = Year), size = 3)
+      ggiraph::geom_point_interactive(
+        ggplot2::aes(tooltip = paste0("Year: ", Year, "\n",
+                                      Statistic, "\n",
+                                      "Discharge: ", round(Value, 4)),
+                     data_id = Year), size = 3)
 
     g[["Annual_Low_Flows_Dates"]] <- g[["Annual_Low_Flows_Dates"]] +
-      geom_point_interactive(
-        aes(tooltip = paste0("Year: ", Year, "\n",
-                             Statistic, "\n",
-                             "Day of Year: ", round(Value, 4)),
-            data_id = Year), size = 3)
+      ggiraph::geom_point_interactive(
+        ggplot2::aes(tooltip = paste0("Year: ", Year, "\n",
+                                      Statistic, "\n",
+                                      "Day of Year: ", round(Value, 4)),
+                     data_id = Year), size = 3)
 
     # Combine plots
     g <- wrap_plots(g)
 
-    girafe(ggobj = g, width_svg = 12, height_svg = 8,
-           options = list(
-             opts_toolbar(position = "topleft"),
-             opts_selection(type = "none")))
+    ggiraph::girafe(ggobj = g, width_svg = 12, height_svg = 8,
+                    options = list(
+                      ggiraph::opts_toolbar(position = "topleft"),
+                      ggiraph::opts_selection(type = "none")))
   })
 
 
   ## Table -----------------------
   output$lf_table <- DT::renderDT({
-    check_data(input)
+    check_data(data_loaded())
 
     data_flow <- data_raw()
 
     t <- create_fun(fun = "calc_annual_lowflows", data = "data_flow",
-                    id = "lf", input)
+                    input, input_data = data_settings)
 
     code$lf_table <- t
 
     parse(text = t) %>%
       eval() %>%
-      mutate(across(where(is.numeric), ~round(., 4))) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Brtip'))
+      prep_DT()
   })
 
 
   ## R Code -----------------
   output$lf_code <- renderText({
-    fasstrshiny:::code_format(code, id = "lf")
+    code_format(code, id = "lf")
   })
 
   # Peak Flows ---------------------------------------
 
   ## Table -----------------------
   output$pf_table <- DT::renderDT({
-    check_data(input)
+    check_data(data_loaded())
 
     data_flow <- data_raw()
 
     t <- create_fun(fun = "calc_annual_peaks", data = "data_flow",
-                    id = "pf", input)
+                    input, input_data = data_settings)
 
     code$pf_table <- t
 
     parse(text = t) %>%
       eval() %>%
-      mutate(across(where(is.numeric), ~round(., 4))) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Brtip'))
+      prep_DT()
   })
 
 
   ## R Code -----------------
   output$pf_code <- renderText({
-    fasstrshiny:::code_format(code, id = "pf")
+    code_format(code, id = "pf")
   })
 
   # Days outside normal ---------------------------------------
   ## Plot --------------------
-  output$on_plot <- renderGirafe({
-    check_data(input)
+  output$on_plot <- ggiraph::renderGirafe({
+    check_data(data_loaded())
     req(input$on_normal)
 
     data_flow <- data_raw()
 
     g <- create_fun(
       fun = "plot_annual_outside_normal", data = "data_flow",
-      id = "on", input,
-      extra = glue("normal_percentiles = ",
-                   "c({glue_collapse(input$on_normal, sep = ',')})"))
+      input, input_data = data_settings,
+      extra = glue::glue("normal_percentiles = ",
+                   "c({glue::glue_collapse(input$on_normal, sep = ',')})"))
 
     code$on_plot <- g
 
     # Add interactivity
     g <- eval(parse(text = g))[[1]]
 
-    g <- g + geom_point_interactive(
-      aes(tooltip = paste0("Year: ", Year, "\n",
-                           Statistic, "\n",
-                           "No. Days: ", round(Value, 4)),
-          data_id = Year), size = 3)
+    g <- g + ggiraph::geom_point_interactive(
+      ggplot2::aes(tooltip = paste0("Year: ", Year, "\n",
+                                    Statistic, "\n",
+                                    "No. Days: ", round(Value, 4)),
+                   data_id = Year), size = 3)
 
-    girafe(ggobj = g, width_svg = 12, height_svg = 8,
-           options = list(
-             opts_toolbar(position = "topleft"),
-             opts_selection(type = "none"),
-             opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
+    ggiraph::girafe(
+      ggobj = g, width_svg = 12, height_svg = 8,
+      options = list(
+        ggiraph::opts_toolbar(position = "topleft"),
+        ggiraph::opts_selection(type = "none"),
+        ggiraph::opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
   })
 
 
@@ -1261,26 +572,21 @@ server <- function(input, output, session) {
 
     t <- create_fun(
       fun = "calc_annual_outside_normal", data = "data_flow",
-      id = "on", input,
-      extra = glue("normal_percentiles = ",
-                   "c({glue_collapse(input$on_normal, sep = ',')})"))
+      input, input_data = data_settings,
+      extra = glue::glue("normal_percentiles = ",
+                   "c({glue::glue_collapse(input$on_normal, sep = ',')})"))
 
     code$on_table <- t
 
     parse(text = t) %>%
       eval() %>%
-      mutate(across(where(is.numeric), ~round(., 4))) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Brtip'))
+      prep_DT()
   })
 
 
   ## R Code -----------------
   output$on_code <- renderText({
-    fasstrshiny:::code_format(code, id = "on")
+    code_format(code, id = "on")
   })
 
 
@@ -1308,25 +614,25 @@ server <- function(input, output, session) {
 
     # Define parameters
     p <- c(
-      glue("exclude_years = c({glue_collapse(input$at_years_exclude, sep = ', ')})"),
-      glue("zyp_method = '{input$at_zyp}'"),
-      glue("annual_percentiles = c({glue_collapse(input$at_annual_percentiles, sep = ', ')})"),
-      glue("monthly_percentiles = c({glue_collapse(input$at_monthly_percentiles, sep = ', ')})"),
-      glue("stats_days = {input$data_roll_days}"),
-      glue("stats_align = '{input$data_roll_align}'"),
-      glue("lowflow_days = c({glue_collapse(input$at_low_roll_days, sep = ', ')})"),
-      glue("lowflow_align = '{input$at_low_roll_align}'"),
-      glue("timing_percent = c({glue_collapse(input$at_percent, sep = ', ')})"),
-      glue("normal_percentiles = c({glue_collapse(input$at_normal, sep = ', ')})"),
-      glue("allowed_missing_annual = {input$at_allowed_annual}"),
-      glue("allowed_missing_monthly = {input$at_allowed_monthly}"),
-      glue("zyp_alpha = {input$at_alpha}")) %>%
-      glue_collapse(sep = ", ")
+      glue::glue("exclude_years = c({glue::glue_collapse(input$at_years_exclude, sep = ', ')})"),
+      glue::glue("zyp_method = '{input$at_zyp}'"),
+      glue::glue("annual_percentiles = c({glue::glue_collapse(input$at_annual_percentiles, sep = ', ')})"),
+      glue::glue("monthly_percentiles = c({glue::glue_collapse(input$at_monthly_percentiles, sep = ', ')})"),
+      glue::glue("stats_days = {input$data_roll_days}"),
+      glue::glue("stats_align = '{input$data_roll_align}'"),
+      glue::glue("lowflow_days = c({glue::glue_collapse(input$at_low_roll_days, sep = ', ')})"),
+      glue::glue("lowflow_align = '{input$at_low_roll_align}'"),
+      glue::glue("timing_percent = c({glue::glue_collapse(input$at_percent, sep = ', ')})"),
+      glue::glue("normal_percentiles = c({glue::glue_collapse(input$at_normal, sep = ', ')})"),
+      glue::glue("allowed_missing_annual = {input$at_allowed_annual}"),
+      glue::glue("allowed_missing_monthly = {input$at_allowed_monthly}"),
+      glue::glue("zyp_alpha = {input$at_alpha}")) %>%
+      glue::glue_collapse(sep = ", ")
 
 
     r <- create_fun(
-      fun = "compute_annual_trends", data = "data_flow", id = "at", input,
-      extra = p, params_ignore = "years_exclude")
+      fun = "compute_annual_trends", data = "data_flow", input,
+      input_data = data_settings, extra = p, params_ignore = "years_exclude")
 
     code$at_data <- r
 
@@ -1350,13 +656,7 @@ server <- function(input, output, session) {
     })
 
     at_trends()[["Annual_Trends_Results"]] %>%
-      mutate(across(where(is.numeric), ~round(., 4))) %>%
-      datatable(
-        rownames = FALSE,
-        extensions = c("Scroller"),
-        options = list(scrollX = TRUE, scrollY = 250, scroller = TRUE,
-                       deferRender = TRUE, dom = 'Brtip'),
-        selection = list(target = "row", mode = "single", selected = s))
+      prep_DT()
   })
 
   ## Stat - to plot ---------------------
@@ -1369,17 +669,17 @@ server <- function(input, output, session) {
   })
 
   ## Plot --------------------
-  output$at_plot <- renderGirafe({
+  output$at_plot <- ggiraph::renderGirafe({
 
     g <- at_trends()[[at_stat()]] +
-      geom_point_interactive(aes(
+      ggiraph::geom_point_interactive(aes(
         tooltip = paste0("Year: ", Year, "\n",
                          at_stat(), ": ", round(Value, 4)),
         data_id = Year), size = 4)
 
-    girafe(ggobj = g, width_svg = 7, height_svg = 5,
-           options = list(opts_selection(type = "multiple"),
-                          opts_toolbar(position = "topleft")))
+    ggiraph::girafe(ggobj = g, width_svg = 7, height_svg = 5,
+                    options = list(ggiraph::opts_selection(type = "multiple"),
+                                   ggiraph::opts_toolbar(position = "topleft")))
   })
 
   # Add/Remove selected points if changing the numericInput
@@ -1421,19 +721,14 @@ server <- function(input, output, session) {
 
     req(at_trends())
 
-    at_trends()[[1]] %>%
-      mutate(across(where(is.numeric), ~round(., 4))) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Brtip'))
+    prep_DT(at_trends()[[1]])
+
   })
 
 
   ## R Code -----------------
   output$at_code <- renderText({
-    fasstrshiny:::code_format(code, id = "at")
+    code_format(code, id = "at")
   })
 
 
@@ -1450,28 +745,29 @@ server <- function(input, output, session) {
   ## Frequencies -----------------------
   vf_freqs <- reactive({
 
-    validate(need(all(!is.na(fasstrshiny:::text_to_num(input$vf_prob_scale))),
+    validate(need(all(!is.na(text_to_num(input$vf_prob_scale))),
                   "Probabilies to plot must be a comma separated list of numbers"))
 
     data_flow <- data_raw()
 
     # Define parameters
     p <- c(
-      glue("exclude_years = c({glue_collapse(input$vf_years_exclude, sep = ', ')})"),
-      glue("use_max = {input$vf_use_max}"),
-      glue("use_log = {input$vf_log}"),
-      glue("roll_days = c({glue_collapse(input$vf_roll_days, sep = ', ')})"),
-      glue("roll_align = '{input$vf_roll_align}'"),
-      glue("prob_plot_position = '{input$vf_prob_plot}'"),
-      glue("prob_scale_points = c({input$vf_prob_scale})"),
-      glue("fit_distr = '{input$vf_fit_distr}'"),
-      glue("fit_distr_method = '{input$vf_fit_distr_method}'"),
-      glue("fit_quantiles = c({glue_collapse(input$vf_fit_quantiles, sep = ', ')})"),
-      glue("plot_curve = {input$vf_plot_curve}")) %>%
-      glue_collapse(sep = ", ")
+      glue::glue("exclude_years = c({glue::glue_collapse(input$vf_years_exclude, sep = ', ')})"),
+      glue::glue("use_max = {input$vf_use_max}"),
+      glue::glue("use_log = {input$vf_log}"),
+      glue::glue("roll_days = c({glue::glue_collapse(input$vf_roll_days, sep = ', ')})"),
+      glue::glue("roll_align = '{input$vf_roll_align}'"),
+      glue::glue("prob_plot_position = '{input$vf_prob_plot}'"),
+      glue::glue("prob_scale_points = c({input$vf_prob_scale})"),
+      glue::glue("fit_distr = '{input$vf_fit_distr}'"),
+      glue::glue("fit_distr_method = '{input$vf_fit_distr_method}'"),
+      glue::glue("fit_quantiles = c({glue::glue_collapse(input$vf_fit_quantiles, sep = ', ')})"),
+      glue::glue("plot_curve = {input$vf_plot_curve}")) %>%
+      glue::glue_collapse(sep = ", ")
 
     r <- create_fun(fun = "compute_annual_frequencies", data = "data_flow",
-                    id = "vf", input, extra = p, params_ignore = "years_exclude")
+                    input, input_data = data_settings,
+                    extra = p, params_ignore = "years_exclude")
 
     code$vf_data <- r
 
@@ -1480,7 +776,7 @@ server <- function(input, output, session) {
     bindEvent(input$vf_compute)
 
   ## Plot --------------------
-  output$vf_plot <- renderGirafe({
+  output$vf_plot <- ggiraph::renderGirafe({
 
     validate(
       need(input$data_load,
@@ -1489,16 +785,16 @@ server <- function(input, output, session) {
              "Choose your settings and click 'Compute Analysis'"))
 
     g <- vf_freqs()[["Freq_Plot"]] +
-      geom_point_interactive(aes(
+      ggiraph::geom_point_interactive(ggplot2::aes(
         tooltip = paste0("Year: ", Year, "\n",
                          "Discharge", ": ", round(Value, 4), "\n",
                          "Probability", ": ", round(prob, 4)),
         data_id = Year), size = 3) +
-      scale_colour_viridis_d(end = 0.8)
+      ggplot2::scale_colour_viridis_d(end = 0.8)
 
-    girafe(ggobj = g, width_svg = 8, height_svg = 5,
-           options = list(opts_selection(type = "multiple"),
-                          opts_toolbar(position = "topleft")))
+    ggiraph::girafe(ggobj = g, width_svg = 8, height_svg = 5,
+                    options = list(ggiraph::opts_selection(type = "multiple"),
+                                   ggiraph::opts_toolbar(position = "topleft")))
   })
 
   # Remove selected points if changing the numericInput
@@ -1527,13 +823,7 @@ server <- function(input, output, session) {
         need(input$vf_compute,
              "Choose your settings and click 'Compute Analysis'"))
 
-    vf_freqs()[["Freq_Plot_Data"]] %>%
-      mutate(across(where(is.numeric), ~round(., 4))) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Brtip'))
+    prep_DT(vf_freqs()[["Freq_Plot_Data"]])
   })
 
   ## Table - Fitted Quantiles -----------------------
@@ -1544,13 +834,7 @@ server <- function(input, output, session) {
         need(input$vf_compute,
              "Choose your settings and click 'Compute Analysis'"))
 
-    vf_freqs()[["Freq_Fitted_Quantiles"]] %>%
-      mutate(across(where(is.numeric), ~round(., 4))) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Brtip'))
+    prep_DT(vf_freqs()[["Freq_Fitted_Quantiles"]])
   })
 
   ## Fit checks --------------------
@@ -1568,14 +852,14 @@ server <- function(input, output, session) {
 
     req(input$vf_day)
     vf_freqs()[["Freq_Fitting"]][[input$vf_day]] %>%
-      fasstrshiny:::gg_fitdistr(title = input$vf_day)
+      gg_fitdistr(title = input$vf_day)
   })
 
 
 
   ## R Code -----------------
   output$vf_code <- renderText({
-    fasstrshiny:::code_format(code, id = "vf")
+    code_format(code, id = "vf")
   })
 
 
@@ -1591,25 +875,25 @@ server <- function(input, output, session) {
       paste0("This analysis is only available for HYDAT data with a ",
              "valid STATION_NUMBER")))
 
-    validate(need(all(!is.na(fasstrshiny:::text_to_num(input$hp_prob_scale))),
+    validate(need(all(!is.na(text_to_num(input$hp_prob_scale))),
                   "Probabilies to plot must be a comma separated list of numbers"))
 
     data_flow <- data_raw()
 
     # Define parameters
     p <- c(
-      glue("station_number = '{unique(data_flow$STATION_NUMBER)}'"),
-      glue("use_max = {input$hp_use_max}"),
-      glue("use_log = {input$hp_log}"),
-      glue("prob_plot_position = '{input$hp_prob_plot}'"),
-      glue("prob_scale_points = c({input$hp_prob_scale})"),
-      glue("fit_distr = '{input$hp_fit_distr}'"),
-      glue("fit_quantiles = c({glue_collapse(input$hp_fit_quantiles, sep = ', ')})"),
-      glue("plot_curve = {input$vf_plot_curve}")) %>%
-      glue_collapse(sep = ", ")
+      glue::glue("station_number = '{unique(data_flow$STATION_NUMBER)}'"),
+      glue::glue("use_max = {input$hp_use_max}"),
+      glue::glue("use_log = {input$hp_log}"),
+      glue::glue("prob_plot_position = '{input$hp_prob_plot}'"),
+      glue::glue("prob_scale_points = c({input$hp_prob_scale})"),
+      glue::glue("fit_distr = '{input$hp_fit_distr}'"),
+      glue::glue("fit_quantiles = c({glue::glue_collapse(input$hp_fit_quantiles, sep = ', ')})"),
+      glue::glue("plot_curve = {input$vf_plot_curve}")) %>%
+      glue::glue_collapse(sep = ", ")
 
-    r <- create_fun(fun = "compute_hydat_peak_frequencies", id = "hp",
-                    input = input, extra = p)
+    r <- create_fun(fun = "compute_hydat_peak_frequencies", input = input,
+                    input_data = data_settings, extra = p)
 
     code$hp_data <- r
 
@@ -1618,7 +902,7 @@ server <- function(input, output, session) {
     bindEvent(input$hp_compute)
 
   ## Plot --------------------
-  output$hp_plot <- renderGirafe({
+  output$hp_plot <- ggiraph::renderGirafe({
 
     validate(
       need(input$data_load,
@@ -1628,16 +912,16 @@ server <- function(input, output, session) {
 
     # Add interactivity
     g <- hp_freqs()[["Freq_Plot"]] +
-      geom_point_interactive(aes(
+      ggiraph::geom_point_interactive(ggplot2::aes(
         tooltip = paste0("Year: ", Year, "\n",
                          "Probabily: ", round(prob, 4), "\n",
                          "Discharge: ", round(Value, 4), "\n",
                          "Return Period: ", round(Return_P)),
         data_id = Year), size = 4)
 
-    girafe(ggobj = g,
-           options = list(opts_selection(type = "none"),
-                          opts_toolbar(position = "topleft")))
+    ggiraph::girafe(ggobj = g,
+                    options = list(ggiraph::opts_selection(type = "none"),
+                                   ggiraph::opts_toolbar(position = "topleft")))
   })
 
 
@@ -1649,13 +933,7 @@ server <- function(input, output, session) {
         need(input$hp_compute,
              "Choose your settings and click 'Compute Analysis'"))
 
-    hp_freqs()[["Freq_Fitted_Quantiles"]] %>%
-      mutate(across(where(is.numeric), ~round(., 4))) %>%
-      datatable(rownames = FALSE,
-                filter = 'top',
-                extensions = c("Scroller"),
-                options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
-                               deferRender = TRUE, dom = 'Brtip'))
+    prep_DT(hp_freqs()[["Freq_Fitted_Quantiles"]])
   })
 
   ## Fit checks --------------------
@@ -1670,22 +948,16 @@ server <- function(input, output, session) {
         need(input$hp_compute,
              "Choose your settings and click 'Compute Analysis'"))
     hp_freqs()[["Freq_Fitting"]][[11]] %>%
-      fasstrshiny:::gg_fitdistr(title = "")
+      gg_fitdistr(title = "")
   })
 
 
 
   ## R Code -----------------
   output$hp_code <- renderText({
-    fasstrshiny:::code_format(code, id = "hp")
+    code_format(code, id = "hp")
   })
 
-
-  # Outputs to NOT suspend when hidden -------------
-
-  # Ensure that ui elements are not suspended when hidden
-  map(str_subset(names(outputOptions(output)), "^ui_"),
-      ~outputOptions(output, ., suspendWhenHidden = FALSE))
 }
 
 

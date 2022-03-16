@@ -1,8 +1,8 @@
 
 ## Other Functions ---------
 
-code_format <- function(code, id) {
-  stringr::str_subset(names(code), glue::glue("{id}_")) %>%
+code_format <- function(code) {
+  names(code) %>%
     sort() %>%
     purrr::map(~code[[.]]) %>%
     as.character() %>%
@@ -24,8 +24,8 @@ code_break_lines <- function(code) {
   glue::glue_collapse(s, "\n") %>%
     styler::style_text() %>%
     as.character() %>%
-    glue_collapse("\n") %>%
-    str_remove_all("^\n*")
+    glue::glue_collapse("\n") %>%
+    stringr::str_remove_all("^\n*")
 }
 
 
@@ -83,10 +83,11 @@ create_vline_interactive <- function(data, stats, date_fmt = "%b %d",
   tips <- paste0("paste0(", tips, ")")
 
   # First stats is assumed to be X value and data_id
-  geom_vline_interactive(aes(xintercept = .data[[date]],
-                             tooltip = eval(parse(text = tips)),
-                             data_id = .data[[date]]),
-                         alpha = alpha, size = size)
+  ggiraph::geom_vline_interactive(
+    ggplot2::aes(xintercept = .data[[date]],
+                 tooltip = eval(parse(text = tips)),
+                 data_id = .data[[date]]),
+    alpha = alpha, size = size)
 }
 
 
