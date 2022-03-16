@@ -76,7 +76,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
     # Plot --------------------
     output$plot <- ggiraph::renderGirafe({
       check_data(data_loaded())
-      req(input$type, !is.null(input$add_year))
+      req(input$type, !is.null(input$add_year), input$discharge)
 
       data_flow <- data_raw()
 
