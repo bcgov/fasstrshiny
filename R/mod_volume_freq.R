@@ -308,7 +308,7 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
 
 
     # Ensure that ui elements are not suspended when hidden
-    stop_ui_suspend(output)
+    stop_ui_suspend(id, output)
 
     # R Code -----------------
     code <- reactiveValues()

@@ -42,7 +42,7 @@ ui_flows <- function(id, plot_height) {
 
         # Update button
         bsButton(ns("compute"), "Update", style = "primary",
-                 class = "centreButton", ),
+                 class = "centreButton"),
       ),
       tabBox(
         width = 9,
@@ -57,7 +57,6 @@ ui_flows <- function(id, plot_height) {
         ## Table ---------------------
         tabPanel(
           title = "Table - Percentiles",
-          select_table_options(ns("flows"), include = "custom_months"),
           withSpinner(DT::DTOutput(ns("table")))
         ),
 
@@ -126,7 +125,7 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
         fun = "calc_longterm_daily_stats",
         data = "data_flow", input, input_data = data_settings,
         extra = "percentiles = 1:99",
-        end = "%>% select(-Mean, -Median, -Minimum, -Maximum)")
+        end = "%>% dplyr::select(-Mean, -Median, -Minimum, -Maximum)")
 
       code$table <- t
 

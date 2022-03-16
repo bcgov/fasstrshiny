@@ -67,7 +67,7 @@ fasstr_shiny <- function() {
       ## Body -----------------
       dashboardBody(
         useShinyjs(),
-        tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "bcgov.css")),
+        includeCSS(system.file("shiny_app", "www", "bcgov.css", package = "fasstrshiny")),
         tabItems(
           tabItem("home", ui_home()),
           tabItem("data_load", ui_data_load("data", plot_height)),
@@ -83,8 +83,8 @@ fasstr_shiny <- function() {
           tabItem("peak_flows", ui_peak_flows("peak_flows", plot_height = plot_height)),
           tabItem("outside_normal", ui_outside_normal("outside_normal", plot_height = plot_height)),
           tabItem("annual_trends", ui_annual_trends("annual_trends", plot_height = plot_height)),
-          tabItem("volume_freq", ui_volume_freq("volume_freq", plot_height = plot_height))
-          # tabItem("hydat_peak", ui_hydat_peak("hydat_peak", plot_height = plot_height))
+          tabItem("volume_freq", ui_volume_freq("volume_freq", plot_height = plot_height)),
+          tabItem("hydat_peak", ui_hydat_peak("hydat_peak", plot_height = plot_height))
         )
       )
     ),
@@ -115,9 +115,10 @@ fasstr_shiny <- function() {
     data_loaded <- data_outputs$data_loaded
 
     # Other modules
-    for(m in c("data_available", "hydro", "cumulative", "flows", "annual_stats",
-               "annual_means", "annual_totals", "flow_timing", "low_flows",
-               "peak_flows", "outside_normal", "annual_trends", "volume_freq")) {
+    for(m in c("data_available", "hydro", "cumulative", "flows",
+               "annual_stats", "annual_means", "annual_totals", "flow_timing",
+               "low_flows", "peak_flows", "outside_normal",
+               "annual_trends", "volume_freq", "hydat_peak")) {
       get(glue::glue("server_{m}"))(id = m, data_settings, data_raw, data_loaded)
     }
   }
@@ -193,7 +194,7 @@ test_mod <- function(mod, hydat_stn) {
       ## Body -----------------
       dashboardBody(
         useShinyjs(),
-        tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "bcgov.css")),
+        includeCSS(system.file("shiny_app", "www", "bcgov.css", package = "fasstrshiny")),
         get(paste0("ui_", mod))(mod, plot_height)
       )
     )

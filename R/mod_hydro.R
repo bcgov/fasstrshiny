@@ -100,6 +100,9 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
         select_add_mad(id))
     })
 
+    # Enable/Disable based on toggle
+    observe(toggleState("add_dates", condition = input$type == "Daily"))
+    observe(toggleState("custom_months_all", condition = input$type != "Daily"))
 
 
     ## Plot --------------------

@@ -298,9 +298,9 @@ prep_DT <- function(data, digits = 4) {
 }
 
 
-stop_ui_suspend <- function(output) {
+stop_ui_suspend <- function(id, output) {
   names(outputOptions(output)) %>%
-    stringr::str_subset("ui_") %>%
+    stringr::str_subset(glue::glue("{id}-ui_")) %>%
     stringr::str_extract("ui_(.)+$") %>%
     purrr::map(~outputOptions(output, ., suspendWhenHidden = FALSE))
 }

@@ -107,7 +107,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
       # Add interactive vline
       g <- g + create_vline_interactive(
         data = g$data, stats = stats,
-        size = if_else(input$type == "Monthly", 20, 1))
+        size = dplyr::if_else(input$type == "Monthly", 20, 1))
 
 
       ggiraph::girafe(

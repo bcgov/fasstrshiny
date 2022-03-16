@@ -418,7 +418,7 @@ server_data_load <- function(id, stations, bc_hydrozones) {
     })
 
     # Ensure that ui elements are not suspended when hidden
-    stop_ui_suspend(output)
+    stop_ui_suspend(id, output)
 
 
     # Outputs ------------------------
