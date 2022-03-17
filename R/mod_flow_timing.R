@@ -82,8 +82,7 @@ server_flow_timing <- function(id, data_settings, data_raw, data_loaded) {
           ggplot2::aes(tooltip = glue::glue(
             "Year: {Year}\n",
             "{Statistic}\n",
-            "Date: {lubridate::as_date(",
-            "Value, origin = paste0(Year, '-01-01')) - 1}"),
+            "Date: {yday_to_date(Value, Year)}"),
             data_id = Year), size = 3)
 
       ggiraph::girafe(ggobj = g, width_svg = 13, height_svg = 7,
