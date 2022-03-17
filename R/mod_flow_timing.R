@@ -79,12 +79,14 @@ server_flow_timing <- function(id, data_settings, data_raw, data_loaded) {
 
       g <- g +
         ggiraph::geom_point_interactive(
-          ggplot2::aes(tooltip = paste0("Year: ", Year, "\n",
-                                        Statistic, "\n",
-                                        "Day of Year: ", Value),
-                       data_id = Year), size = 3)
+          ggplot2::aes(tooltip = glue::glue(
+            "Year: {Year}\n",
+            "{Statistic}\n",
+            "Date: {lubridate::as_date(",
+            "Value, origin = paste0(Year, '-01-01')) - 1}"),
+            data_id = Year), size = 3)
 
-      ggiraph::girafe(ggobj = g, width_svg = 14, height_svg = 8,
+      ggiraph::girafe(ggobj = g, width_svg = 13, height_svg = 7,
                       options = list(
                         ggiraph::opts_toolbar(position = "topleft"),
                         ggiraph::opts_selection(type = "none")))
