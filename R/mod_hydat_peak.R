@@ -115,17 +115,49 @@ server_hydat_peak <- function(id, data_settings, data_raw, data_loaded) {
 
   moduleServer(id, function(input, output, session) {
 
+    # Change button status -----------------------
+
+    # Current settings
+    settings_current <- reactive({
+      s <- get_inputs(input, which = c(
+        "use_max", "fit_distr", "fit_quantiles",
+        "plot_curve", "use_log",
+        "prob_plot", "prob_scale"))
+      s$data_raw <- data_raw()
+      s$data_settings <- data_settings
+      s
+    })
+
+    # Settings at last Compute
+    settings_last <- reactive(settings_current()) %>% bindEvent(input$compute)
+
+    observe({
+      settings_current()
+      # Change buttons and record status if changes
+      if(input$compute > 0) {
+        update_on_change(session, id,
+                         current = settings_current(), last = settings_last(),
+                         labels = paste0("Compute Analysis<br><small>",
+                                         c("Settings/Data have changed",
+                                           "No changes since last computation"),
+                                         "</small>"))
+      }
+    })
+
     # Frequencies -----------------------
     freqs <- reactive({
 
-      validate(need(
+      need(
         isTruthy(data_raw()$STATION_NUMBER) &
           length(unique(data_raw()$STATION_NUMBER)) == 1,
         paste0("This analysis is only available for HYDAT data with a ",
-               "valid STATION_NUMBER")))
+               "valid STATION_NUMBER")) %>%
+        validate()
 
-      validate(need(all(!is.na(text_to_num(input$prob_scale))),
-                    "Probabilies to plot must be a comma separated list of numbers"))
+
+      need(all(!is.na(text_to_num(input$prob_scale))),
+           "Probabilies to plot must be a comma separated list of numbers") %>%
+        validate()
 
       data_flow <- data_raw()
 

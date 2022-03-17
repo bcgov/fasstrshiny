@@ -89,12 +89,7 @@ ui_annual_trends <- function(id, plot_height) {
           title = "Exploring Trends",
           withSpinner(DT::DTOutput(ns("table_fit"))),
           p(style = "margin-bottom:30px"), # A bit of space
-
-          conditionalPanel(
-            "output.plot", ns = NS(id),
-            helpText("Click on a point or 'lasso' a bunch to add year to ",
-                     "'Years to exclude'. Remember to re-Compute ",
-                     "Trends.")),
+          ui_plot_selection(id),
           ggiraph::girafeOutput(ns("plot"), height = "450px")),
 
         ### Table ---------------------
@@ -120,7 +115,7 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
 
   moduleServer(id, function(input, output, session) {
 
-
+    # UI -------------------------
     # Excluded years, takes defaults from data_settings$years_exclude,
     # but allowed to modify here
     output$ui_exclude <- renderUI({
@@ -141,7 +136,7 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
       updateNumericInput(inputId = "years_exclude",
                          value = c(excluded(), input$plot_selected))
     }) %>%
-      bindEvent(input$plot_selected)
+      bindEvent(input$plot_selected, ignoreNULL = FALSE)
 
     output$ui_allowed <- renderUI({
       tagList(
@@ -161,15 +156,46 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
     observe(toggle("options", condition = input$show_options))
     observe(toggle("allowed", condition = input$show_allowed))
 
+    # Change button status -----------------------
 
-    ## Excluded ----------------------------
+    # Current settings
+    settings_current <- reactive({
+      s <- get_inputs(input, which = c(
+        "years_exclude",
+        "zyp", "alpha", "annual_percentiles", "monthly_percentiles",
+        "low_roll_days", "low_roll_align", "percent", "normal",
+        "allowed_annual", "allowed_monthly"))
+      s$data_raw <- data_raw()
+      s$data_settings <- data_settings
+      s
+    })
+
+    # Settings at last Compute
+    settings_last <- reactive(settings_current()) %>% bindEvent(input$compute)
+
+    observe({
+      settings_current()
+      # Change buttons and record status if changes
+      if(input$compute > 0) {
+        update_on_change(session, id,
+                         current = settings_current(), last = settings_last(),
+                         labels = paste0("Compute Analysis<br><small>",
+                                         c("Settings/Data have changed",
+                                           "No changes since last computation"),
+                                         "</small>"))
+      }
+    })
+
+
+
+    # Excluded ----------------------------
     # What years were excluded when the trends were last calculated?
     excluded <- reactive({
       input$years_exclude
     }) %>%
       bindEvent(input$compute)
 
-    ## Trends -----------------------
+    # Trends -----------------------
     trends <- reactive({
       req(input$zyp)
 
@@ -206,7 +232,7 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
     }) %>%
       bindEvent(input$compute)
 
-    ## Table - Fit -----------------------
+    # Table - Fit -----------------------
     output$table_fit <- DT::renderDT({
       validate(
         need(data_loaded(),
@@ -230,16 +256,17 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
           selection = list(target = "row", mode = "single", selected = s))
     })
 
-    ## Stat - to plot ---------------------
+    # Stat - to plot ---------------------
     stat <- reactive({
       req(input$table_fit_rows_selected)
       trends()[["Annual_Trends_Results"]] %>%
-        slice(input$table_fit_rows_selected) %>%
-        pull(Statistic) %>%
+        dplyr::slice(input$table_fit_rows_selected) %>%
+        dplyr::pull(Statistic) %>%
         as.character()
     })
 
-    ## Plot --------------------
+
+    # Plot --------------------
     output$plot <- ggiraph::renderGirafe({
 
       s <- stat()
@@ -269,7 +296,7 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
 
 
 
-    ## Table - years sub -----------------------
+    # Table - years sub -----------------------
     output$table_years_sub <- gt::render_gt({
 
       trends()[[1]] %>%
@@ -282,7 +309,7 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
         fmt_number(-Year, decimals = 4)
     }, height = px(400))
 
-    ## Table - years -----------------------
+    # Table - years -----------------------
     output$table_years <- DT::renderDT({
 
       validate(

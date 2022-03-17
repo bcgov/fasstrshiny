@@ -173,3 +173,7 @@ prep_hydat <- function() {
                                   "drainage_area_gross"), stringr::str_to_sentence))
 }
 
+lasso_svg <- function() {
+  shiny::HTML("
+<svg xmlns='http://www.w3.org/2000/svg' width='10pt' height='10pt' viewBox='0 0 230 230' stroke = '#069'><g><ellipse ry='65.5' rx='86.5' cy='94' cx='115.5' stroke-width='20' fill='transparent'></ellipse><ellipse ry='11.500001' rx='10.5' cy='153' cx='91.5' stroke-width='20' fill='transparent'></ellipse><line y2='210.5' x2='105' y1='164.5' x1='96' stroke-width='20'></line></g></svg>")
+}

@@ -3,6 +3,39 @@ ui_rcode <- function(id) {
   tabPanel(title = "R Code", verbatimTextOutput(NS(id, "code")))
 }
 
+ui_plot_selection <- function(id) {
+  conditionalPanel(
+    "output.plot", ns = NS(id),
+    helpText("Click on a point or 'lasso'", lasso_svg(),
+             " a bunch to add year to ",
+             "'Years to exclude'. Remember to re-",
+             strong("Compute Trends"), "."))
+
+}
+
+update_on_change <- function(session, id, btn = "compute",
+                             current, last,
+                             labels, styles = c("danger", "secondary")) {
+  isolate({
+    if(!is.logical(all.equal(current, last))) {
+      updateButton(
+        session, NS(id, btn), style = styles[1],
+        label = labels[1])
+    } else {
+      updateButton(
+        session, NS(id, btn), style = styles[2],
+        label = labels[2])
+    }
+  })
+}
+
+
+
+get_inputs <- function(input, which) {
+  purrr::map(which, ~input[[.]]) %>%
+    setNames(which)
+}
+
 test_mod <- function(mod, hydat_stn) {
 
 

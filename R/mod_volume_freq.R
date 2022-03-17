@@ -109,11 +109,7 @@ ui_volume_freq <- function(id, plot_height) {
         # Plot ---------------------
         tabPanel(
           title = "Plot",
-          conditionalPanel(
-            "output.plot", ns = NS(id),
-            helpText("Click on a point to add that year to ",
-                     "'Years to exclude'. Remember to re-Compute ",
-                     "Analysis.")),
+          ui_plot_selection(id),
           withSpinner(ggiraph::girafeOutput(ns("plot")))
         ),
 
@@ -170,8 +166,8 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
     observe({
       updateNumericInput(inputId = "years_exclude",
                          value = c(excluded(), input$plot_selected))
-    }) %>%
-      bindEvent(input$plot_selected)
+    })  %>%
+      bindEvent(input$plot_selected, ignoreNULL = FALSE)
 
     output$ui_day <- renderUI({
       radioGroupButtons(NS(id, "day"),
@@ -182,6 +178,36 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
     observe(toggle("data", condition = input$show_data))
     observe(toggle("plotting", condition = input$show_plotting))
     observe(toggle("fitting", condition = input$show_fitting))
+
+    # Change button status -----------------------
+
+    # Current settings
+    settings_current <- reactive({
+      s <- get_inputs(input, which = c(
+        "years_exclude",
+        "roll_days", "roll_align", "use_max", "use_log",
+        "prob_plot", "prob_scale", "plot_curve",
+        "fit_quantiles", "fit_distr", "fit_distr_method"))
+      s$data_raw <- data_raw()
+      s$data_settings <- data_settings
+      s
+    })
+
+    # Settings at last Compute
+    settings_last <- reactive(settings_current()) %>% bindEvent(input$compute)
+
+    observe({
+      settings_current()
+      # Change buttons and record status if changes
+      if(input$compute > 0) {
+        update_on_change(session, id,
+                         current = settings_current(), last = settings_last(),
+                         labels = paste0("Compute Analysis<br><small>",
+                                         c("Settings/Data have changed",
+                                           "No changes since last computation"),
+                                         "</small>"))
+      }
+    })
 
 
 
