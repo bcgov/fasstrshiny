@@ -48,27 +48,6 @@ check_data <- function(x){
 }
 
 
-build_ui <- function(id, input = NULL, define_options = FALSE, include) {
-
-  # Set up all options in the settings
-  # - Don't set defaults
-  if(define_options == TRUE) {
-    set <- FALSE
-    ui <- include %>%
-      purrr::map(~get(paste0("select_", .))(id, input, set)) %>%
-      purrr::map(tagList)
-  } else {
-    # Set up options for a specific tab
-    # - Set defaults from the Settings tab
-    set <- TRUE
-    ui <- include %>%
-      purrr::map(~get(paste0("select_", .))(id, input, set)) %>%
-      purrr::map(tagList)
-  }
-  ui
-}
-
-
 #' Combine elements for functions
 #'
 #' This function looks for common inputs into fasstr functions. It uses general
