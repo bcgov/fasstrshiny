@@ -24,19 +24,18 @@ ui_annual_totals <- function(id, plot_height) {
       box(width = 3,
           helpText("Placeholder descriptive text to describe this section, ",
                    "what it does and how to use it"),
-          div(id = ns("seasons_tip"),
-              prettySwitch(
-                ns("seasons"),
-                label = "Include seasons",
-                value = formals("plot_annual_cumulative_stats")$include_seasons,
-                status = "success", slim = TRUE)),
-          bsTooltip(ns("seasons_tip"), tips$seasons, placement = "left"),
           awesomeRadio(ns("discharge"),
                        label = "Discharge type",
                        choices = list("Volumetric Discharge (m3)" = FALSE,
                                       "Runoff Yield (mm)" = TRUE),
                        selected = TRUE),
-          bsTooltip(ns("discharge"), tips$discharge, placement = "left")),
+          bsTooltip(ns("discharge"), tips$discharge, placement = "left"),
+          uiOutput(ns("ui_display")),
+          bsTooltip(ns("ui_display"),
+                    paste0("Choose plot type to display.<br>",
+                           "Seasonal plots are only available if all months ",
+                           "are included<br>(see Data tab)"),
+                    placement = "left")),
 
       tabBox(
         width = 9,
@@ -65,39 +64,59 @@ server_annual_totals <- function(id, data_settings, data_raw, data_loaded) {
 
   moduleServer(id, function(input, output, session) {
 
-    # Plot --------------------
-    output$plot <- ggiraph::renderGirafe({
+    # UI plot display
+    output$ui_display <- renderUI({
+      req(plots())
+
+      plot_names <- names(plots()) %>%
+        setNames(., stringr::str_replace_all(., "_", " "))
+
+      selectizeInput(NS(id, "display"), "Display plot",
+                     choices = plot_names)
+    })
+
+
+    # Plots -------------------
+    plots <- reactive({
       check_data(data_loaded())
-      req(!is.null(input$seasons), input$discharge)
+      req(input$discharge)
 
       data_flow <- data_raw()
-
       g <- create_fun(fun = "plot_annual_cumulative_stats", data = "data_flow",
                       input, input_data = data_settings,
                       params_ignore = "discharge",
                       extra = glue::glue("use_yield = {input$discharge}, ",
-                                         "include_seasons = {input$seasons}"))
+                                         "include_seasons = TRUE"))
 
       code$plot <- g
-
-      # Add interactivity
       g <- eval(parse(text = g))
 
-
-      # Add individual geoms to each plot (annual has more than one)
+      # Add interactivity
       for(i in seq_along(g)) {
         g[[i]] <- g[[i]] + ggiraph::geom_point_interactive(
-          ggplot2::aes(tooltip = paste0("Year: ", Year, "\n",
-                                        Statistic, ": ", round(Value, 4)),
-                       data_id = Year), size = 3)
+          ggplot2::aes(tooltip = glue::glue(
+            "Year: {Year}\n",
+            "{stringr::str_remove(Statistic, '_$')}: {round(Value, 4)}",
+            .trim = FALSE),
+            data_id = Year), size = 3)
       }
 
-      g <- g %>%
-        patchwork::wrap_plots(nrow = 2, byrow = FALSE, design = "AC
-                                                                 BC")
+      g
+    })
+
+    # Plot output --------------------
+    output$plot <- ggiraph::renderGirafe({
+      req(input$display)
+
+      g <- plots()[[input$display]]
+
+      h <- switch(stringr::str_extract(input$display, "^[^_]+"),
+                  "Two" = 8,
+                  "Four" = 10,
+                  "Total" = 5)
 
       ggiraph::girafe(
-        ggobj = g, width_svg = 14, height_svg = 6,
+        ggobj = g, width_svg = 10, height_svg = h,
         options = list(
           ggiraph::opts_toolbar(position = "topleft"),
           ggiraph::opts_selection(type = "none"),
@@ -116,7 +135,7 @@ server_annual_totals <- function(id, data_settings, data_raw, data_loaded) {
                       input, input_data = data_settings,
                       params_ignore = "discharge",
                       extra = glue::glue("use_yield = {input$discharge}, ",
-                                         "include_seasons = {input$seasons}"))
+                                         "include_seasons = TRUE"))
 
       code$table <- t
 
