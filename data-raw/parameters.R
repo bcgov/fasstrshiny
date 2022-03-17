@@ -1,8 +1,6 @@
 ## code to prepare `parameters` dataset goes here
-library(dplyr)
-library(glue)
 
-parameters <- tribble(
+parameters <- dplyr::tribble(
   ~id,                    ~fasstr_arg,           ~tooltip,                             ~add_arg,
   "stats",                "",                    "Choose statistic to display",       FALSE,
   "add_dates",            "",                    "Choose dates to highlight on the plot",   FALSE,
@@ -47,12 +45,12 @@ parameters <- tribble(
   "fit_quantiles", "fit_quantiles", "Quantiles to be estimated from the fitted distribution", TRUE,
   "plot_curve", "plot_curve", "Whether to add the computed curve to the probability plot", TRUE
 ) %>%
-  group_by(id) %>%
-  mutate(tooltip = if_else(add_arg,
-                           paste0(tooltip, "<br>(<code>",
-                                  glue_collapse(fasstr_arg, sep = ", "),
-                                  "</code>)"),
-                           tooltip))
+  dplyr::group_by(id) %>%
+  dplyr::mutate(tooltip = dplyr::if_else(add_arg,
+                                         paste0(tooltip, "<br>(<code>",
+                                                glue::glue_collapse(fasstr_arg, sep = ", "),
+                                                "</code>)"),
+                                         tooltip))
 
 tips <- as.list(parameters$tooltip) %>%
   unique() %>%

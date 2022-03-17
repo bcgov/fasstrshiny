@@ -94,7 +94,7 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
 
       # Add vline
       g <- g + create_vline_interactive(
-        data = g$data, stats, size = if_else(input$type == "Annual", 10, 2))
+        data = g$data, stats, size = dplyr::if_else(input$type == "Annual", 10, 2))
 
       ggiraph::girafe(
         ggobj = g, width_svg = 12, height = 6,
