@@ -23,7 +23,7 @@ ui_data_available <- function(id, plot_height) {
       tabBox(
         width = 12,
 
-        ### Summary Plot -----------------
+        # Summary Plot -----------------
         tabPanel(
           title = "Data Summary Plot",
           fluidRow(
@@ -45,15 +45,56 @@ ui_data_available <- function(id, plot_height) {
                 selected = eval(formals(plot_data_screening)$include_stat),
                 multiple = TRUE, width = "100%")),
             column(width = 9,
-                   ggiraph::girafeOutput(ns("plot1"),
+                   ggiraph::girafeOutput(ns("plot_summary"),
                                          height = plot_height)))),
 
-        ### Availability Plot -----------------
+        # Symbols Plot ----------------------
+        tabPanel(
+          title = "Symbols Plots",
+          fluidRow(
+            column(
+              width = 3,
+              fluidRow(
+                column(
+                  width = 6, id = ns("symbols_type_tip"),
+                  awesomeRadio(ns("symbols_type"), label = "Plot type",
+                               choices = c("Days", "Flow")),
+                  bsTooltip(ns("symbols_type_tip"),
+                            paste0("Plot type to show: Flow by year or ",
+                                   "Number/proportion of each symbol by year"),
+                            placement = "left")),
+                column(
+                  width = 6, id = ns("symbols_percent_tip"),
+                  awesomeRadio(ns("symbols_percent"),
+                               label = "Plot days",
+                               choices = c("Number of days" = FALSE,
+                                           "Percent of days" = TRUE),
+                               selected = formals(plot_annual_symbols)$plot_percent),
+                  bsTooltip(ns("symbols_percent_tip"),
+                            "Plot days as proportion rather than number",
+                            placement = "left"))
+              ),
+              strong("HYDAT data symbols are: "), br(),
+              strong("'E'"), "Estimate", br(),
+              strong("'A'"), "Partial Day", br(),
+              strong("'C'"), "Ice Conditions", br(),
+              strong("'D'"), "Dry", br(),
+              strong("'R'"), "Revised"
+            ),
+            column(
+              width = 9,
+              uiOutput(ns("ui_plot_symbols_options"), align = "right"),
+              withSpinner(ggiraph::girafeOutput(ns("plot_symbols"),
+                                                height = plot_height))
+            ))),
+
+
+        # Availability Plot -----------------
         tabPanel(
           title = "Data Availability Plot",
           fluidRow(
             column(width = 1,
-                   awesomeRadio(ns("type"), label = "Plot type",
+                   awesomeRadio(ns("available_type"), label = "Plot type",
                                 choices = c("Tile" = "tile", "Bar" = "bar")),
                    checkboxGroupButtons(
                      ns("months_inc"),
@@ -70,18 +111,18 @@ ui_data_available <- function(id, plot_height) {
                              "Months to include/exclude from the plot",
                              placement = "left"),
             ),
-            column(width = 11, ggiraph::girafeOutput(ns("plot2"),
+            column(width = 11, ggiraph::girafeOutput(ns("plot_available"),
                                                      height = plot_height))
           )
         ),
 
-        ### Table -----------------
+        # Table -----------------
         tabPanel(
           title = "Table",
           DT::dataTableOutput(ns("table"))
         ),
 
-        ### R Code -----------------
+        # R Code -----------------
         ui_rcode(id)
       )
     )
@@ -93,7 +134,18 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
 
   moduleServer(id, function(input, output, session) {
 
-    ## Data --------------
+    # UI -------------
+    # Add plot options as Gear in corner
+    output$ui_plot_symbols_options <- renderUI({
+      select_plot_options(
+        select_plot_log(
+          id, value = formals(plot_flow_data_symbols)$log_discharge), # Default
+        )
+    })
+
+    observe(toggleState("symbols_percent", condition = input$symbols_type == "Days"))
+
+    # Data --------------
     available_raw <- reactive({
 
       data_flow <- data_raw()
@@ -105,8 +157,8 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
       eval(parse(text = d))
     })
 
-    ## Summary plot ------------------
-    output$plot1 <- ggiraph::renderGirafe({
+    # Summary plot ------------------
+    output$plot_summary <- ggiraph::renderGirafe({
 
       check_data(data_loaded())
       req(input$availability, !is.null(input$stats))
@@ -121,11 +173,11 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
       g <- create_fun("plot_data_screening", data_name = "data_flow",
                       input, input_data = data_settings, extra = e)
 
-      code$plot <- g
+      code$plot_summary <- g
 
       g <- eval(parse(text = g))[[1]]
 
-      #Add interactivity
+      # Add interactivity
       stats <- names(g$data) # Get stats from plot data
 
       # For tooltips labels...
@@ -144,12 +196,65 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
             css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
     })
 
-
-    ## Missing Data Plot ---------------------------
-    output$plot2 <- ggiraph::renderGirafe({
+    # Symbols Plot -----------------------------
+    output$plot_symbols <- ggiraph::renderGirafe({
 
       check_data(data_loaded())
-      req(input$type, input$months_inc)
+      req(!is.null(input$plot_log), input$symbols_type,
+          !is.null(input$symbols_percent))
+
+      data_flow <- data_raw()
+
+      g <- switch(input$symbols_type,
+                  "Flow" = "plot_flow_data_symbols",
+                  "Days" = "plot_annual_symbols") %>%
+        create_fun(data_name = "data_flow", input, input_data = data_settings,
+                   params_ignore = "discharge",
+                   extra = dplyr::if_else(
+                     input$symbols_type == "Days",
+                     glue::glue("plot_percent = {input$symbols_percent}"),
+                     ""))
+
+      code$plot_symbols <- g
+
+      g <- eval(parse(text = g))[[1]]
+
+      # Add interactivity
+      if(input$symbols_type == "Flow") {
+        stats <- c("Date", "Value", "Symbol")
+        names(stats)[stats == "Value"] <- "Discharge"
+        g <- g + create_vline_interactive(data = g$data, stats = stats)
+
+      } else{
+        d <- g$data %>%
+          dplyr::mutate(tooltip = glue::glue(
+            "{Symbol}: {Count} ({round(Percent, 1)}%)")) %>%
+          dplyr::group_by(Year) %>%
+          dplyr::summarize(Count = sum(Count),
+                           tooltip = glue::glue("Year: {Year}\n",
+                                                glue::glue_collapse(tooltip, "\n")))
+
+        g <- g +
+          ggiraph::geom_bar_interactive(
+            data = d, fill = "grey", alpha = 0.005,
+            stat = "identity", inherit.aes = FALSE,
+            ggplot2::aes(x = Year, y = Inf, tooltip = tooltip, data_id = Year))
+      }
+
+      ggiraph::girafe(
+        ggobj = g, width_svg = 13, height_svg = 7,
+        options = list(
+          ggiraph::opts_toolbar(position = "topleft"),
+          ggiraph::opts_selection(type = "none"),
+          ggiraph::opts_hover(
+            css = "fill:orange; stroke:gray; fill-opacity:1;")))
+    })
+
+    # Available Data Plot ---------------------------
+    output$plot_available <- ggiraph::renderGirafe({
+
+      check_data(data_loaded())
+      req(input$available_type, input$months_inc)
 
       data_flow <- data_raw()
 
@@ -159,8 +264,9 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
         params_ignore = c("discharge", "months"),
         extra = glue::glue(
           "months = c({glue::glue_collapse(input$months_inc, sep = ', ')}), ",
-          "plot_type = '{input$type}'"))
-      code$miss <- g
+          "plot_type = '{input$available_type}'"))
+
+      code$plot_available <- g
 
       g <- eval(parse(text = g))[[1]]
 
@@ -181,10 +287,12 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
           show.limits = TRUE))
 
       ggiraph::girafe(ggobj = g, width_svg = 14, height_svg = 7,
-                      options = list(ggiraph::opts_selection(type = "none")))
+                      options = list(
+                        ggiraph::opts_toolbar(position = "topleft"),
+                        ggiraph::opts_selection(type = "none")))
     })
 
-    ## Summary table ------------------
+    # Summary table ------------------
     output$table <- DT::renderDT({
       check_data(data_loaded())
 
@@ -200,7 +308,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
         prep_DT()
     })
 
-    ## R Code -----------------
+    # R Code -----------------
     code <- reactiveValues()
     output$code <- renderText(code_format(code))
   })
