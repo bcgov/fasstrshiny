@@ -241,6 +241,20 @@ select_add_mad <- function(id) {
               placement = "left"))
 }
 
+select_plot_display <- function(id, plots) {
+  plot_names <- names(plots) %>%
+    setNames(., stringr::str_replace_all(., "_", " "))
+
+  tagList(
+    selectizeInput(NS(id, "display"), "Display plot",
+                   choices = plot_names),
+    bsTooltip(NS(id, "display"),
+              paste0("Choose plot type to display.<br>",
+                     "Seasonal plots are only available if all months ",
+                     "are included<br>(see Data tab)"),
+              placement = "left"))
+}
+
 select_plot_options <- function(...) {
   div(
     align = "right",

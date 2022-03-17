@@ -30,12 +30,7 @@ ui_annual_totals <- function(id, plot_height) {
                                       "Runoff Yield (mm)" = TRUE),
                        selected = TRUE),
           bsTooltip(ns("discharge"), tips$discharge, placement = "left"),
-          uiOutput(ns("ui_display")),
-          bsTooltip(ns("ui_display"),
-                    paste0("Choose plot type to display.<br>",
-                           "Seasonal plots are only available if all months ",
-                           "are included<br>(see Data tab)"),
-                    placement = "left")),
+          uiOutput(ns("ui_display"))),
 
       tabBox(
         width = 9,
@@ -67,12 +62,7 @@ server_annual_totals <- function(id, data_settings, data_raw, data_loaded) {
     # UI plot display
     output$ui_display <- renderUI({
       req(plots())
-
-      plot_names <- names(plots()) %>%
-        setNames(., stringr::str_replace_all(., "_", " "))
-
-      selectizeInput(NS(id, "display"), "Display plot",
-                     choices = plot_names)
+      select_plot_display(id, plots())
     })
 
 
