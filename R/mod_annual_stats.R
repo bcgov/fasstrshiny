@@ -32,7 +32,21 @@ ui_annual_stats <- function(id, plot_height) {
                                         "Annual"),
                          selected = "Monthly",
                          status = "primary")),
-        bsTooltip(ns("type"), "Type of statistic to calculate", placement = "left")
+        bsTooltip(ns("type"), "Type of statistic to calculate", placement = "left"),
+        checkboxGroupButtons(
+          ns("months_plot"),
+          label = "Months to plot",
+          choices = list("Jan" = 1, "Feb" = 2,
+                         "Mar" = 3, "Apr" = 4,
+                         "May" = 5, "Jun" = 6,
+                         "Jul" = 7, "Aug" = 8,
+                         "Sep" = 9, "Oct" = 10,
+                         "Nov" = 11, "Dec" = 12),
+          selected = c(1:12)),
+        bsTooltip(ns("months_plot"),
+                  paste0("Months to include/exclude from Monthly calculations<br>",
+                         "(Annual uses default months from the Data tab)"),
+                  placement = "left"),
       ),
       tabBox(
         width = 9,
@@ -69,6 +83,8 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
         select_plot_log(id, value = formals(plot_monthly_stats2)$log_discharge))
     })
 
+    observe(toggleState("months_plot", condition = input$type == "Monthly"))
+
     # Plot -----------------------------
     output$plot <- ggiraph::renderGirafe({
       check_data(data_loaded())
@@ -76,10 +92,21 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
 
       data_flow <- data_raw()
 
+      if(input$type == "Monthly") {
+        pi <- "months"
+        e <- glue::glue(
+          "months = c({glue::glue_collapse(input$months_plot, sep = ', ')})")
+      } else {
+        pi <- NULL
+        e <- ""
+      }
+
       g <- switch(input$type,
                   "Monthly" = "plot_monthly_stats2",
                   "Annual" = "plot_annual_stats2") %>%
-        create_fun("data_flow", input, input_data = data_settings)
+        create_fun(data = "data_flow", input,
+                   input_data = data_settings,
+                   params_ignore = pi, extra = e)
 
       code$plot <- g
 
@@ -111,10 +138,20 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
 
       data_flow <- data_raw()
 
+      if(input$type == "Monthly") {
+        pi <- "months"
+        e <- glue::glue(
+          "months = c({glue::glue_collapse(input$months_plot, sep = ', ')})")
+      } else {
+        pi <- NULL
+        e <- ""
+      }
+
       t <- switch(input$type,
                   "Monthly" = "calc_monthly_stats",
                   "Annual" = "calc_annual_stats") %>%
-        create_fun("data_flow", input, input_data = data_settings)
+        create_fun("data_flow", input, input_data = data_settings,
+                   params_ignore = pi, extra = e)
 
       code$table <- t
 
