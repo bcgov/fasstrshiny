@@ -40,7 +40,7 @@ ui_volume_freq <- function(id, plot_height) {
 
               fluidRow(
                 column(
-                  width = 6,
+                  width = 6, id = ns("use_max_tip"),
                   awesomeRadio(ns("use_max"),
                                label = "Flow type",
                                choices = list("Low" = FALSE,
@@ -52,7 +52,7 @@ ui_volume_freq <- function(id, plot_height) {
                     ns("use_log"),
                     label = tags$span(strong("Log trans")),
                     value = FALSE, status = "success", slim = TRUE)),
-                bsTooltip(ns("use_max"), tips$use_max, placement = "left"),
+                bsTooltip(ns("use_max_tip"), tips$use_max, placement = "left"),
                 bsTooltip(ns("use_log_tip"), tips$use_log, placement = "left")
               ),
               select_allowed(id)
@@ -60,24 +60,27 @@ ui_volume_freq <- function(id, plot_height) {
           show_ui(ns("show_plotting"), "Plotting"),
           div(id = ns("plotting"),
               fluidRow(
-                column(6,
+                column(6, id = ns("prob_plot_tip"),
                        awesomeRadio(ns("prob_plot"),
                                     label = "Plotting positions",
                                     choices = list("Weibull" = "weibull",
                                                    "Median" = "median",
                                                    "Hazen" = "hazen"))),
-                column(6, textInput(
-                  ns("prob_scale"),
-                  label = "Probabilies to plot",
-                  value = "0.9999, 0.999, 0.99, 0.9, .5, .2, .1, .02, .01, .001, .0001"))
+                column(
+                  6, id = ns("prob_scale_tip"),
+                  textInput(
+                    ns("prob_scale"),
+                    label = "Probabilies to plot",
+                    value = paste0("0.9999, 0.999, 0.99, 0.9, 0.5, 0.2, ",
+                                   "0.1, 0.02, 0.01, 0.001, .0001")))
               ),
               div(id = ns("plot_curve_tip"),
                   prettySwitch(ns("plot_curve"),
                                label = tags$span(strong("Plot curve")),
                                value = TRUE, status = "success", slim = TRUE)),
               bsTooltip(ns("plot_curve_tip"), tips$plot_curve, placement = "left"),
-              bsTooltip(ns("prob_plot"), tips$prob_plot, placement = "left"),
-              bsTooltip(ns("prob_scale"), tips$prob_scale, placement = "left")
+              bsTooltip(ns("prob_plot_tip"), tips$prob_plot, placement = "left"),
+              bsTooltip(ns("prob_scale_tip"), tips$prob_scale, placement = "left")
           ),
 
           show_ui(ns("show_fitting"), "Fitting"),

@@ -29,20 +29,20 @@ ui_hydat_peak <- function(id, plot_height) {
           hr(class = "narrowHr"),
 
           fluidRow(
-            column(width = 6,
+            column(width = 6, id = ns("use_max_tip"),
                    awesomeRadio(ns("use_max"),
                                 label = "Flow type",
                                 choices = list("Low" = FALSE,
                                                "High" = TRUE),
                                 selected = FALSE)),
-            column(width = 6,
+            column(width = 6, id = ns("fit_distr_tip"),
                    awesomeRadio(ns("fit_distr"),
                                 label = "Distribution",
                                 choices = list("PIII" = "PIII",
                                                "Weibull" = "weibull")))
           ),
-          bsTooltip(ns("use_max"), tips$use_max, placement = "left"),
-          bsTooltip(ns("fit_distr"), tips$fit_distr, placement = "left"),
+          bsTooltip(ns("use_max_tip"), tips$use_max, placement = "left"),
+          bsTooltip(ns("fit_distr_tip"), tips$fit_distr, placement = "left"),
 
           selectizeInput(
             ns("fit_quantiles"),
@@ -67,18 +67,21 @@ ui_hydat_peak <- function(id, plot_height) {
           bsTooltip(ns("use_log_tip"), tips$use_log, placement = "left"),
 
           fluidRow(
-            column(6, awesomeRadio(ns("prob_plot"),
-                                   label = "Plotting positions",
-                                   choices = list("Weibull" = "weibull",
-                                                  "Median" = "median",
-                                                  "Hazen" = "hazen"))),
-            column(6, textInput(
-              ns("prob_scale"),
-              label = "Probabilies to plot",
-              value = "0.9999, 0.999, 0.99, 0.9, .5, .2, .1, .02, .01, .001, .0001"))
+            column(6, id = ns("prob_plot_tip"),
+                   awesomeRadio(ns("prob_plot"),
+                                label = "Plotting positions",
+                                choices = list("Weibull" = "weibull",
+                                               "Median" = "median",
+                                               "Hazen" = "hazen"))),
+            column(6, id = ns("prob_scale_tip"),
+                   textInput(
+                     ns("prob_scale"),
+                     label = "Probabilies to plot",
+                     value = paste0("0.9999, 0.999, 0.99, 0.9, 0.5, 0.2, 0.1, ",
+                                    "0.02, 0.01, 0.001, .0001")))
           ),
-          bsTooltip(ns("prob_plot"), tips$prob_plot, placement = "left"),
-          bsTooltip(ns("prob_scale"), tips$prob_scale, placement = "left"),
+          bsTooltip(ns("prob_plot_tip"), tips$prob_plot, placement = "left"),
+          bsTooltip(ns("prob_scale_tip"), tips$prob_scale, placement = "left"),
       ),
 
       tabBox(
