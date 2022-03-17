@@ -10,6 +10,7 @@ parameters <- dplyr::tribble(
   "discharge",            "use_yield",           "Discharge to use in calculations",   FALSE,
   "roll_days",            "roll_days",           "Number of days over which to roll the mean", TRUE,
   "roll_align",           "roll_align",          "Alignment of the rolling day window", TRUE,
+  "longterm",             "include_longterm",    "Include long-term data in calculations", TRUE,
   "water_year",           "water_year_start",    "Month defining start of the water year", TRUE,
   "years_range",          "start_year",          "Years to include in calculations", TRUE,
   "years_range",          "end_year",            "Years to include in calculations", TRUE,

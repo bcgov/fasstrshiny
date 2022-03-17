@@ -169,6 +169,7 @@ combine_parameters <- function(params, values) {
 
       # Specific
       params[i] == "discharge" ~ glue::glue("values = '{values[i]}'"),
+      params[i] == "longterm" ~ glue::glue("include_longterm = {values[i]}"),
       params[i] == "percentiles" ~
         glue::glue("percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
       params[i] == "inner_percentiles" ~

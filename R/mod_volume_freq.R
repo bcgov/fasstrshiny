@@ -54,7 +54,8 @@ ui_volume_freq <- function(id, plot_height) {
                     value = FALSE, status = "success", slim = TRUE)),
                 bsTooltip(ns("use_max"), tips$use_max, placement = "left"),
                 bsTooltip(ns("use_log_tip"), tips$use_log, placement = "left")
-              )
+              ),
+              select_allowed(id)
           ),
           show_ui(ns("show_plotting"), "Plotting"),
           div(id = ns("plotting"),
@@ -185,7 +186,7 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
     settings_current <- reactive({
       s <- get_inputs(input, which = c(
         "years_exclude",
-        "roll_days", "roll_align", "use_max", "use_log",
+        "roll_days", "roll_align", "use_max", "use_log", "allowed",
         "prob_plot", "prob_scale", "plot_curve",
         "fit_quantiles", "fit_distr", "fit_distr_method"))
       s$data_raw <- data_raw()

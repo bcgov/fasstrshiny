@@ -26,6 +26,12 @@ ui_flows <- function(id, plot_height) {
         width = 3,
         helpText("Placeholder descriptive text to describe this section, ",
                  "what it does and how to use it"),
+        div(id = ns("longterm_tip"),
+            prettySwitch(ns("longterm"),
+                         label = "Include Long-term",
+                         value = TRUE,
+                         status = "success", slim = TRUE)),
+        bsTooltip(ns("longterm_tip"), tips$longterm, placement = "left"),
         checkboxGroupButtons(
           ns("months"),
           label = "Months to plot",
@@ -85,9 +91,6 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
       check_data(data_loaded())
 
       data_flow <- data_raw()
-
-      # missing arguments
-      # - include_longterm
 
       g <- create_fun(fun = "plot_flow_duration", data = "data_flow",
                       input, input_data = data_settings)
