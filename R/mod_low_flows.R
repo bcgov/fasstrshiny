@@ -23,8 +23,10 @@ ui_low_flows <- function(id, plot_height) {
       width = 12, h2("Low Flows"),
       box(
         width = 3,
-        helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
-        select_rolling(id, set = FALSE, multiple = TRUE)
+        helpText("Placeholder descriptive text to describe this section, ",
+                 "what it does and how to use it"),
+        select_rolling(id, set = FALSE, multiple = TRUE),
+        uiOutput(ns("ui_display"))
       ),
       tabBox(
         width = 9,
@@ -53,8 +55,14 @@ server_low_flows <- function(id, data_settings, data_raw, data_loaded) {
 
   moduleServer(id, function(input, output, session) {
 
+    # UI plot display
+    output$ui_display <- renderUI({
+      req(plots())
+      select_plot_display(id, plots())
+    })
+
     # Plot --------------------
-    output$plot <- ggiraph::renderGirafe({
+    plots <- reactive({
       check_data(data_loaded())
 
       data_flow <- data_raw()
@@ -67,24 +75,52 @@ server_low_flows <- function(id, data_settings, data_raw, data_loaded) {
       # Add interactivity
       g <- eval(parse(text = g))
 
+      d1 <- dplyr::left_join(g[[1]]$data, g[[2]]$data,
+                             by = c("Year", "Statistic"),
+                             suffix = c("", "_doy")) %>%
+        dplyr::mutate(Date = yday_as_date(Value_doy, Year))
+
+      g[["Annual_Low_Flows"]]$data <- d1
       g[["Annual_Low_Flows"]] <- g[["Annual_Low_Flows"]] +
         ggiraph::geom_point_interactive(
-          ggplot2::aes(tooltip = paste0("Year: ", Year, "\n",
-                                        Statistic, "\n",
-                                        "Discharge: ", round(Value, 4)),
-                       data_id = Year), size = 3)
+          ggplot2::aes(tooltip = glue::glue(
+            "Year: {Year}\n",
+            "{Statistic}\n",
+            "Date: {Date}\n",
+            "Discharge: {round(Value, 4)}"),
+            data_id = Year), size = 3)
 
+      d2 <- dplyr::left_join(g[[2]]$data, g[[1]]$data,
+                             by = c("Year", "Statistic"),
+                             suffix = c("", "_discharge")) %>%
+        dplyr::mutate(Date = yday_as_date(Value_doy, Year))
+
+      g[["Annual_Low_Flows_Dates"]]$data <- d2
       g[["Annual_Low_Flows_Dates"]] <- g[["Annual_Low_Flows_Dates"]] +
         ggiraph::geom_point_interactive(
-          ggplot2::aes(tooltip = paste0("Year: ", Year, "\n",
-                                        Statistic, "\n",
-                                        "Day of Year: ", round(Value, 4)),
-                       data_id = Year), size = 3)
+          ggplot2::aes(tooltip = glue::glue(
+            "Year: {Year}\n",
+            "{Statistic}\n",
+            "Date: {Date}\n",
+            "Discharge: {round(Value_discharge, 4)}"),
+            data_id = Year), size = 3)
+      g
+    })
 
-      # Combine plots
-      g <- patchwork::wrap_plots(g)
+    output$plot <- ggiraph::renderGirafe({
+      req(input$display, input$roll_days)
 
-      ggiraph::girafe(ggobj = g, width_svg = 12, height_svg = 8,
+      g <- plots()[[input$display]]
+
+      r <- length(input$roll_days)
+      dims <- dplyr::case_when(r == 1 ~ c(7, 5),
+                               r == 2 ~ c(8, 7),
+                               r == 3 ~ c(9, 8),
+                               r == 4 ~ c(10, 8),
+                               r == 5 ~ c(10, 12),
+                               TRUE ~ c(10, 14))
+
+      ggiraph::girafe(ggobj = g, width_svg = dims[1], height_svg = dims[2],
                       options = list(
                         ggiraph::opts_toolbar(position = "topleft"),
                         ggiraph::opts_selection(type = "none")))

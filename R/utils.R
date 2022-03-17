@@ -108,6 +108,10 @@ get_date <- function(n, water_year) {
   d
 }
 
+yday_as_date <- function(yday, year) {
+ as.Date(yday, origin = paste0(year, "-01-01")) - 1
+}
+
 find_hydat <- function() {
   h <- "Hydat.sqlite3"
   locs <- c("local" = file.path(tidyhydat::hy_dir(), h),
