@@ -280,9 +280,11 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
           data_id = Year), size = 3) +
         ggplot2::scale_colour_viridis_d(end = 0.8)
 
-      ggiraph::girafe(ggobj = g, width_svg = 8, height_svg = 5,
-                      options = list(ggiraph::opts_selection(type = "multiple"),
-                                     ggiraph::opts_toolbar(position = "topleft")))
+      ggiraph::girafe(
+        ggobj = g, width_svg = 8, height_svg = 5,
+        options = list(
+          ggiraph::opts_selection(css = opts$css_selected, type = "multiple"),
+          ggiraph::opts_toolbar(position = "topleft")))
     })
 
     # Remove selected points if changing the numericInput
