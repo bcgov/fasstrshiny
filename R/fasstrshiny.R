@@ -54,57 +54,77 @@ fasstr_shiny <- function() {
     sf::st_transform(crs = 4326)
 
   # UI --------------------------------
-  ui <- tagList(
-    dashboardPage(
-      dashboardHeader(title = "fasstr Shiny"),
+  ui <- function(request) {
+    tagList(
+      dashboardPage(
+        dashboardHeader(title = "fasstr Shiny"),
 
-      ## Sidebar ----------
-      dashboardSidebar(
-        tags$script(src = "tips.js"),
-        sidebar_order(),
-        div(style = "margin-top: 10px", gt::gt_output("data-info"))
-      ),
-      ## Body -----------------
-      dashboardBody(
-        useShinyjs(),
-        includeCSS(system.file("shiny_app", "www", "bcgov.css", package = "fasstrshiny")),
-        tabItems(
-          tabItem("home", ui_home()),
-          tabItem("data_load", ui_data_load("data", plot_height)),
-          tabItem("data_available", ui_data_available("data_available", plot_height)),
-          tabItem("hydro", ui_hydro("hydro", plot_height = plot_height)),
-          tabItem("cumulative", ui_cumulative("cumulative", plot_height = plot_height)),
-          tabItem("flows", ui_flows("flows", plot_height = plot_height)),
-          tabItem("annual_stats", ui_annual_stats("annual_stats", plot_height = plot_height)),
-          tabItem("annual_means", ui_annual_means("annual_means", plot_height = plot_height)),
-          tabItem("annual_totals", ui_annual_totals("annual_totals", plot_height = plot_height)),
-          tabItem("flow_timing", ui_flow_timing("flow_timing", plot_height = plot_height)),
-          tabItem("low_flows", ui_low_flows("low_flows", plot_height = plot_height)),
-          tabItem("peak_flows", ui_peak_flows("peak_flows", plot_height = plot_height)),
-          tabItem("outside_normal", ui_outside_normal("outside_normal", plot_height = plot_height)),
-          tabItem("annual_trends", ui_annual_trends("annual_trends", plot_height = plot_height)),
-          tabItem("volume_freq", ui_volume_freq("volume_freq", plot_height = plot_height)),
-          tabItem("hydat_peak", ui_hydat_peak("hydat_peak", plot_height = plot_height))
+        ## Sidebar ----------
+        dashboardSidebar(
+          tags$script(src = "tips.js"),
+          sidebar_order(),
+          div(style = "margin-top: 10px", gt::gt_output("data-info")),
+          bookmarkButton()
+        ),
+        ## Body -----------------
+        dashboardBody(
+          useShinyjs(),
+          includeCSS(system.file("shiny_app", "www", "bcgov.css",
+                                 package = "fasstrshiny")),
+          tabItems(
+            tabItem("home", ui_home()),
+            tabItem("data_load", ui_data_load("data", plot_height)),
+            tabItem("data_available",
+                    ui_data_available("data_available", plot_height)),
+            tabItem("hydro", ui_hydro("hydro", plot_height = plot_height)),
+            tabItem("cumulative",
+                    ui_cumulative("cumulative", plot_height = plot_height)),
+            tabItem("flows", ui_flows("flows", plot_height = plot_height)),
+            tabItem("annual_stats",
+                    ui_annual_stats("annual_stats", plot_height = plot_height)),
+            tabItem("annual_means",
+                    ui_annual_means("annual_means", plot_height = plot_height)),
+            tabItem("annual_totals",
+                    ui_annual_totals("annual_totals", plot_height = plot_height)),
+            tabItem("flow_timing",
+                    ui_flow_timing("flow_timing", plot_height = plot_height)),
+            tabItem("low_flows",
+                    ui_low_flows("low_flows", plot_height = plot_height)),
+            tabItem("peak_flows",
+                    ui_peak_flows("peak_flows", plot_height = plot_height)),
+            tabItem("outside_normal",
+                    ui_outside_normal("outside_normal", plot_height = plot_height)),
+            tabItem("annual_trends",
+                    ui_annual_trends("annual_trends", plot_height = plot_height)),
+            tabItem("volume_freq",
+                    ui_volume_freq("volume_freq", plot_height = plot_height)),
+            tabItem("hydat_peak",
+                    ui_hydat_peak("hydat_peak", plot_height = plot_height))
+          )
         )
-      )
-    ),
+      ),
 
-    ## Footer --------------------
-    tags$footer(
-      div(
-        a(href="https://www2.gov.bc.ca/gov/content/home", "Home"),
-        " | ",
-        a(href="https://www2.gov.bc.ca/gov/content/home/disclaimer", "Disclaimer"),
-        " | ",
-        a(href="https://www2.gov.bc.ca/gov/content/home/privacy", "Privacy"),
-        " | ",
-        a(href="https://www2.gov.bc.ca/gov/content/home/accessibility", "Accessibility"),
-        " | ",
-        a(href="https://www2.gov.bc.ca/gov/content/home/copyright", "Copyright"),
-        " | ",
-        a(href="https://www2.gov.bc.ca/StaticWebResources/static/gov3/html/contact-us.html", "Contact"), class = "bcgov-footer")
+      ## Footer --------------------
+      tags$footer(
+        div(
+          a(href="https://www2.gov.bc.ca/gov/content/home", "Home"),
+          " | ",
+          a(href="https://www2.gov.bc.ca/gov/content/home/disclaimer",
+            "Disclaimer"),
+          " | ",
+          a(href="https://www2.gov.bc.ca/gov/content/home/privacy", "Privacy"),
+          " | ",
+          a(href="https://www2.gov.bc.ca/gov/content/home/accessibility",
+            "Accessibility"),
+          " | ",
+          a(href="https://www2.gov.bc.ca/gov/content/home/copyright",
+            "Copyright"),
+          " | ",
+          a(href="https://www2.gov.bc.ca/StaticWebResources/static/gov3/html/contact-us.html",
+            "Contact"), class = "bcgov-footer")
+      )
     )
-  )
+  }
 
   server <- function(input, output, session) {
     # Load data and get settings
@@ -123,7 +143,7 @@ fasstr_shiny <- function() {
     }
   }
 
- shinyApp(ui = ui, server = server)
+ shinyApp(ui = ui, server = server, enableBookmarking = "url")
 }
 
 
