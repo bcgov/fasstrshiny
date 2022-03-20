@@ -43,7 +43,7 @@ ui_data_load <- function(id) {
                     accept=c("text/csv",
                              "text/comma-separated-values,text/plain",
                              ".csv"))),
-        bsButton(ns("load"), "Load Data", style = "primary"),
+        shinyBS::bsButton(ns("load"), "Load Data", style = "primary"),
         hr(),
 
         # show_ui("show_stn", "Station Information"),

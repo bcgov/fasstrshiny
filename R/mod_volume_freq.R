@@ -25,7 +25,7 @@ ui_volume_freq <- function(id) {
       box(width = 3,
 
           # Buttons
-          bsButton(ns("compute"), "Compute Analysis", style = "primary",
+          shinyBS::bsButton(ns("compute"), "Compute Analysis", style = "primary",
                    class = "centreButton"),
           helpText("Placeholder descriptive text to describe this section, ",
                    "what it does and how to use it"),

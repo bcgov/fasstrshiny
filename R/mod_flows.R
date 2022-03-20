@@ -47,8 +47,8 @@ ui_flows <- function(id) {
         select_custom_months(id),
 
         # Update button
-        bsButton(ns("compute"), "Update", style = "primary",
-                 class = "centreButton"),
+        shinyBS::bsButton(ns("compute"), "Update", style = "primary",
+                          class = "centreButton"),
       ),
       tabBox(
         width = 9,

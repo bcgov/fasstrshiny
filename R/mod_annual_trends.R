@@ -23,7 +23,7 @@ ui_annual_trends <- function(id) {
       box(width = 3,
 
           # Compute button
-          bsButton(ns("compute"), "Compute Trends", style = "primary",
+          shinyBS::bsButton(ns("compute"), "Compute Trends", style = "primary",
                    class = "centreButton"),
           helpText("Placeholder descriptive text to describe this section, ",
                    "what it does and how to use it"),
