@@ -51,7 +51,8 @@ ui_hydat_peak <- function(id) {
             selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
                          0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
             multiple = TRUE),
-          bsTooltip(ns("fit_quantiles"), tips$fit_quantiles, placement = "left"),
+          shinyBS::bsTooltip(ns("fit_quantiles"), tips$fit_quantiles,
+                             placement = "left"),
 
           fluidRow(
             column(width = 6, id = ns("plot_curve_tip"),
