@@ -40,12 +40,9 @@ Imports:
     tibble (>= 3.1.6),
     tidyhydat (>= 0.5.4),
     tidyr (>= 1.1.4),
-    patchwork (>= 1.1.1),
-    fasstrshiny
+    patchwork (>= 1.1.1)
 Suggests: 
     bcmaps (>= 1.0.2),
     sf,
     testthat (>= 3.0.0)
-Remotes:
-    bcgov/fasstrshiny@steffi-dev
 Config/testthat/edition: 3
