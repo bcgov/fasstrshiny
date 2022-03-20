@@ -135,29 +135,18 @@ server_data_load <- function(id, stations, bc_hydrozones) {
           label = "Water year start",
           choices = setNames(1:12, month.abb),
           selected = 1, size = "sm", width = "100%"),
-        bsTooltip(NS("water_year", id),
+        shinyBS::bsTooltip(NS("water_year", id),
                   title = tips$water_year, placement = "left"))
     })
 
     output$ui_years_range <- renderUI({
-
-      yr_orig <- c(min(data_raw()$WaterYear), max(data_raw()$WaterYear))
-      yr <- input$years_range
-      if(is.null(yr)) {
-        yr <- yr_orig
-      } else {
-        if(yr[1] < yr_orig[1]) yr[1] <- yr_orig[1]
-        if(yr[2] > yr_orig[2]) yr[2] <- yr_orig[2]
-      }
-
       tagList(
         sliderInput(NS(id, "years_range"),
                     label = "Start and end years",
                     min = min(data_raw()$WaterYear),
                     max = max(data_raw()$WaterYear),
-                    value = yr,
                     dragRange = TRUE, sep = ""),
-        bsTooltip(NS(id, "years_range"), title = tips$years_range,
+        shinyBS::bsTooltip(NS(id, "years_range"), title = tips$years_range,
                   placement = "left"))
     })
 
