@@ -145,6 +145,8 @@ server_data_load <- function(id, stations, bc_hydrozones) {
                     label = "Start and end years",
                     min = min(data_raw()$WaterYear),
                     max = max(data_raw()$WaterYear),
+                    value = c(min(data_raw()$WaterYear),
+                              max(data_raw()$WaterYear)),
                     dragRange = TRUE, sep = ""),
         shinyBS::bsTooltip(NS(id, "years_range"), title = tips$years_range,
                   placement = "left"))
