@@ -15,7 +15,7 @@
 
 
 # Volume Frequency - High/Low ------------------
-ui_volume_freq <- function(id, plot_height) {
+ui_volume_freq <- function(id) {
 
   ns <- NS(id)
 
@@ -52,8 +52,10 @@ ui_volume_freq <- function(id, plot_height) {
                     ns("use_log"),
                     label = tags$span(strong("Log trans")),
                     value = FALSE, status = "success", slim = TRUE)),
-                bsTooltip(ns("use_max_tip"), tips$use_max, placement = "left"),
-                bsTooltip(ns("use_log_tip"), tips$use_log, placement = "left")
+                shinyBS::bsTooltip(ns("use_max_tip"), tips$use_max,
+                                   placement = "left"),
+                shinyBS::bsTooltip(ns("use_log_tip"), tips$use_log,
+                                   placement = "left")
               ),
               select_allowed(id)
           ),
@@ -78,9 +80,12 @@ ui_volume_freq <- function(id, plot_height) {
                   prettySwitch(ns("plot_curve"),
                                label = tags$span(strong("Plot curve")),
                                value = TRUE, status = "success", slim = TRUE)),
-              bsTooltip(ns("plot_curve_tip"), tips$plot_curve, placement = "left"),
-              bsTooltip(ns("prob_plot_tip"), tips$prob_plot, placement = "left"),
-              bsTooltip(ns("prob_scale_tip"), tips$prob_scale, placement = "left")
+              shinyBS::bsTooltip(ns("plot_curve_tip"), tips$plot_curve,
+                                 placement = "left"),
+              shinyBS::bsTooltip(ns("prob_plot_tip"), tips$prob_plot,
+                                 placement = "left"),
+              shinyBS::bsTooltip(ns("prob_scale_tip"), tips$prob_scale,
+                                 placement = "left")
           ),
 
           show_ui(ns("show_fitting"), "Fitting"),
@@ -96,14 +101,18 @@ ui_volume_freq <- function(id, plot_height) {
                            label = "Distribution",
                            choices = list("PIII" = "PIII",
                                           "Weibull" = "weibull")),
-              awesomeRadio(ns("fit_distr_method"),
-                           label = "Distribution method",
-                           choices = list("Method of Moments (MOM)" = "MOM",
-                                          "Maximum Likelihood Estimation (MLE)" = "MLE")),
+              awesomeRadio(
+                ns("fit_distr_method"),
+                label = "Distribution method",
+                choices = list("Method of Moments (MOM)" = "MOM",
+                               "Maximum Likelihood Estimation (MLE)" = "MLE")),
 
-              bsTooltip(ns("fit_quantiles"), tips$fit_quantiles, placement = "left"),
-              bsTooltip(ns("fit_distr"), tips$fit_distr, placement = "left"),
-              bsTooltip(ns("fit_distr_method"), tips$fit_distr_method, placement = "left")
+              shinyBS::bsTooltip(ns("fit_quantiles"), tips$fit_quantiles,
+                                 placement = "left"),
+              shinyBS::bsTooltip(ns("fit_distr"), tips$fit_distr,
+                                 placement = "left"),
+              shinyBS::bsTooltip(ns("fit_distr_method"), tips$fit_distr_method,
+                                 placement = "left")
           )
       ),
 
@@ -114,19 +123,19 @@ ui_volume_freq <- function(id, plot_height) {
         tabPanel(
           title = "Plot",
           ui_plot_selection(id),
-          withSpinner(ggiraph::girafeOutput(ns("plot")))
+          shinycssloaders::withSpinner(ggiraph::girafeOutput(ns("plot")))
         ),
 
         # Table - Plot Data ---------------------
         tabPanel(
           title = "Table - Plot Data",
-          withSpinner(DT::DTOutput(ns("table_plot")))
+          shinycssloaders::withSpinner(DT::DTOutput(ns("table_plot")))
         ),
 
         # Table - Fitted Quantiles ---------------------
         tabPanel(
           title = "Table - Fitted Quantiles",
-          withSpinner(DT::DTOutput(ns("table_fit")))
+          shinycssloaders::withSpinner(DT::DTOutput(ns("table_fit")))
         ),
 
         # Fit Plot ---------------------
@@ -134,7 +143,8 @@ ui_volume_freq <- function(id, plot_height) {
           title = "Fit Checks",
           uiOutput(ns("ui_day")),
           verbatimTextOutput(ns("fit_stats")),
-          withSpinner(plotOutput(ns("fit_plot"), height = "550px"))
+          shinycssloaders::withSpinner(
+            plotOutput(ns("fit_plot"), height = "550px"))
         ),
 
         # Info ---------------------
@@ -179,9 +189,9 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
                         selected = names(freqs()$Freq_Fitting)[1])
     })
 
-    observe(toggle("data", condition = input$show_data))
-    observe(toggle("plotting", condition = input$show_plotting))
-    observe(toggle("fitting", condition = input$show_fitting))
+    observe(shinyjs::toggle("data", condition = input$show_data))
+    observe(shinyjs::toggle("plotting", condition = input$show_plotting))
+    observe(shinyjs::toggle("fitting", condition = input$show_fitting))
 
     # Change button status -----------------------
 
@@ -243,7 +253,7 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
         glue::glue("plot_curve = {input$plot_curve}")) %>%
         glue::glue_collapse(sep = ", ")
 
-      r <- create_fun(fun = "compute_annual_frequencies", data = "data_flow",
+      r <- create_fun(fun = "compute_annual_frequencies", data_name = "data_flow",
                       input, input_data = data_settings,
                       extra = p, params_ignore = "years_exclude")
 

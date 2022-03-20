@@ -6,9 +6,6 @@
 \usage{
 fasstr_shiny()
 }
-\value{
-
-}
 \description{
 Launch fasstr shiny app
 }

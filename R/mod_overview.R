@@ -13,7 +13,7 @@
 # the License.
 
 # Overview ---------------------------------------------------------------
-ui_overview <- function(id, plot_height) {
+ui_overview <- function(id) {
 
   fluidRow(
     column(

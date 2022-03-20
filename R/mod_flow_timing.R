@@ -13,7 +13,7 @@
 # the License.
 
 # Flow timing ------------------------------
-ui_flow_timing <- function(id, plot_height) {
+ui_flow_timing <- function(id) {
 
   ns <- NS(id)
 
@@ -30,7 +30,7 @@ ui_flow_timing <- function(id, plot_height) {
                            choices = c(1:99),
                            selected = c(25, 33, 50, 75),
                            multiple = TRUE),
-            bsTooltip(ns("percent"), tips$percent, placement = "left")
+            shinyBS::bsTooltip(ns("percent"), tips$percent, placement = "left")
         )),
       tabBox(
         width = 9,
@@ -38,7 +38,7 @@ ui_flow_timing <- function(id, plot_height) {
         ### Plot ---------------------
         tabPanel(
           title = "Plot",
-          ggiraph::girafeOutput(ns("plot"), height = plot_height)
+          ggiraph::girafeOutput(ns("plot"), height = opts$plot_height)
         ),
 
         ### Table ---------------------
@@ -67,7 +67,7 @@ server_flow_timing <- function(id, data_settings, data_raw, data_loaded) {
       data_flow <- data_raw()
 
       g <- create_fun(
-        fun = "plot_annual_flow_timing", data = "data_flow",
+        fun = "plot_annual_flow_timing", data_name = "data_flow",
         input, input_data = data_settings,
         extra = glue::glue("percent_total = ",
                            "c({glue::glue_collapse(input$percent, sep = ',')})"))
@@ -100,7 +100,7 @@ server_flow_timing <- function(id, data_settings, data_raw, data_loaded) {
       data_flow <- data_raw()
 
       t <- create_fun(
-        fun = "calc_annual_flow_timing", data = "data_flow",
+        fun = "calc_annual_flow_timing", data_name = "data_flow",
         input, input_data = data_settings,
         extra = glue::glue("percent_total = ",
                            "c({glue::glue_collapse(input$percent, sep = ',')})"))

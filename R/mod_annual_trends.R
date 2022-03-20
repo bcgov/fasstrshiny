@@ -13,7 +13,7 @@
 # the License.
 
 # Annual Trends -----------------------
-ui_annual_trends <- function(id, plot_height) {
+ui_annual_trends <- function(id) {
 
   ns <- NS(id)
 
@@ -43,25 +43,25 @@ ui_annual_trends <- function(id, plot_height) {
                    column(width = 6, id = ns("alpha_tip"),
                           numericInput(ns("alpha"), label = "Trend alpha",
                                        value = 0.05, min = 0, max = 0.3, step = 0.05)),
-                   bsTooltip(ns("zyp_tip"), tips$zyp, placement = "left"),
-                   bsTooltip(ns("alpha_tip"), tips$alpha, placement = "left")),
+                   shinyBS::bsTooltip(ns("zyp_tip"), tips$zyp, placement = "left"),
+                   shinyBS::bsTooltip(ns("alpha_tip"), tips$alpha, placement = "left")),
           show_ui(ns("show_options"), "Data Options"),
           div(id = ns("options"),
               fluidRow(id = ns("percentiles_tip"),
-                column(6,
-                       selectizeInput(ns("annual_percentiles"),
-                                      label = "Annual perc.",
-                                      choices = c(1:99),
-                                      selected = c(10,90),
-                                      multiple = TRUE)),
-                column(6,
-                       selectizeInput(ns("monthly_percentiles"),
-                                      label = "Monthly perc.",
-                                      choices = c(1:99),
-                                      selected = c(10,20),
-                                      multiple = TRUE)),
-                bsTooltip(ns("percentiles_tip"), tips$percentiles,
-                          placement = "left")),
+                       column(6,
+                              selectizeInput(ns("annual_percentiles"),
+                                             label = "Annual perc.",
+                                             choices = c(1:99),
+                                             selected = c(10,90),
+                                             multiple = TRUE)),
+                       column(6,
+                              selectizeInput(ns("monthly_percentiles"),
+                                             label = "Monthly perc.",
+                                             choices = c(1:99),
+                                             selected = c(10,20),
+                                             multiple = TRUE)),
+                       shinyBS::bsTooltip(ns("percentiles_tip"), tips$percentiles,
+                                          placement = "left")),
 
               strong("Low Flows"),
               select_rolling(id, name = "low_roll", set = FALSE, multiple = TRUE),
@@ -71,11 +71,11 @@ ui_annual_trends <- function(id, plot_height) {
                              choices = c(1:99),
                              selected = c(25, 33, 50, 75),
                              multiple = TRUE),
-              bsTooltip(ns("percent"), tips$percent, placement = "left"),
+              shinyBS::bsTooltip(ns("percent"), tips$percent, placement = "left"),
 
               sliderInput(ns("normal"), label = "Days Outside Normal - Range",
                           value = c(25, 75), min = 1, max = 99, step = 1),
-              bsTooltip(ns("normal"), tips$normal, placement = "left")
+              shinyBS::bsTooltip(ns("normal"), tips$normal, placement = "left")
           ),
           show_ui(ns("show_allowed"), "Missing Dates"),
           div(id = ns("allowed"), uiOutput(ns("ui_allowed")))
@@ -87,7 +87,7 @@ ui_annual_trends <- function(id, plot_height) {
         ### Plot/Table ---------------------
         tabPanel(
           title = "Exploring Trends",
-          withSpinner(DT::DTOutput(ns("table_fit"))),
+          shinycssloaders::withSpinner(DT::DTOutput(ns("table_fit"))),
           p(style = "margin-bottom:30px"), # A bit of space
           ui_plot_selection(id),
           ggiraph::girafeOutput(ns("plot"), height = "450px")),
@@ -95,7 +95,7 @@ ui_annual_trends <- function(id, plot_height) {
         ### Table ---------------------
         tabPanel(
           title = "Table - Annual Values",
-          withSpinner(DT::DTOutput(ns("table_years")))
+          shinycssloaders::withSpinner(DT::DTOutput(ns("table_years")))
         ),
 
         ### Info ---------------------
@@ -127,8 +127,8 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
                                      to = data_settings$years_range[2], by = 1),
                        selected = data_settings$years_exclude,
                        multiple = TRUE),
-        bsTooltip(id = "years_exclude", title = tips$years_exclude,
-                  placement = "left"))
+        shinyBS::bsTooltip(id = "years_exclude", title = tips$years_exclude,
+                           placement = "left"))
     })
 
     # Update years_exclude as points selected/unselected
@@ -146,15 +146,15 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
         sliderInput(NS(id, "allowed_monthly"),
                     label = "Monthly - Allowed missing (%)",
                     value = data_settings$allowed, step = 5, min = 0, max = 100),
-        bsTooltip(NS(id, "allowed_annual"), tips$allowed, placement = "left"),
-        bsTooltip(NS(id, "allowed_monthly"), tips$allowed, placement = "left")
+        shinyBS::bsTooltip(NS(id, "allowed_annual"), tips$allowed, placement = "left"),
+        shinyBS::bsTooltip(NS(id, "allowed_monthly"), tips$allowed, placement = "left")
       )
     })
 
     # General toggles
-    observe(toggle("methods", condition = input$show_methods))
-    observe(toggle("options", condition = input$show_options))
-    observe(toggle("allowed", condition = input$show_allowed))
+    observe(shinyjs::toggle("methods", condition = input$show_methods))
+    observe(shinyjs::toggle("options", condition = input$show_options))
+    observe(shinyjs::toggle("allowed", condition = input$show_allowed))
 
     # Change button status -----------------------
 
@@ -223,7 +223,7 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
 
 
       r <- create_fun(
-        fun = "compute_annual_trends", data = "data_flow", input,
+        fun = "compute_annual_trends", data_name = "data_flow", input,
         input_data = data_settings, extra = p, params_ignore = "years_exclude")
 
       code$data <- r

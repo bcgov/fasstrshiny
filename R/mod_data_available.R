@@ -13,7 +13,7 @@
 # the License.
 
 # Data Availability ---------------------
-ui_data_available <- function(id, plot_height) {
+ui_data_available <- function(id) {
 
   ns <- NS(id)
 
@@ -36,8 +36,8 @@ ui_data_available <- function(id, plot_height) {
                                label = "Plot availability",
                                value = TRUE,
                                status = "success", slim = TRUE, inline = TRUE)),
-              bsTooltip(ns("availability_tip"), tips$availability,
-                        placement = "left"),
+              shinyBS::bsTooltip(ns("availability_tip"), tips$availability,
+                                 placement = "left"),
               selectizeInput(
                 ns("stats"),
                 label = "Statistics to include",
@@ -46,7 +46,7 @@ ui_data_available <- function(id, plot_height) {
                 multiple = TRUE, width = "100%")),
             column(width = 9,
                    ggiraph::girafeOutput(ns("plot_summary"),
-                                         height = plot_height)))),
+                                         height = opts$plot_height)))),
 
         # Symbols Plot ----------------------
         tabPanel(
@@ -59,10 +59,10 @@ ui_data_available <- function(id, plot_height) {
                   width = 6, id = ns("symbols_type_tip"),
                   awesomeRadio(ns("symbols_type"), label = "Plot type",
                                choices = c("Days", "Flow")),
-                  bsTooltip(ns("symbols_type_tip"),
-                            paste0("Plot type to show: Flow by year or ",
-                                   "Number/proportion of each symbol by year"),
-                            placement = "left")),
+                  shinyBS::bsTooltip(ns("symbols_type_tip"),
+                                     paste0("Plot type to show: Flow by year or ",
+                                            "Number/proportion of each symbol by year"),
+                                     placement = "left")),
                 column(
                   width = 6, id = ns("symbols_percent_tip"),
                   awesomeRadio(ns("symbols_percent"),
@@ -70,9 +70,9 @@ ui_data_available <- function(id, plot_height) {
                                choices = c("Number of days" = FALSE,
                                            "Percent of days" = TRUE),
                                selected = formals(plot_annual_symbols)$plot_percent),
-                  bsTooltip(ns("symbols_percent_tip"),
-                            "Plot days as proportion rather than number",
-                            placement = "left"))
+                  shinyBS::bsTooltip(ns("symbols_percent_tip"),
+                                     "Plot days as proportion rather than number",
+                                     placement = "left"))
               ),
               strong("HYDAT data symbols are: "), br(),
               strong("'E'"), "Estimate", br(),
@@ -84,8 +84,9 @@ ui_data_available <- function(id, plot_height) {
             column(
               width = 9,
               uiOutput(ns("ui_plot_symbols_options"), align = "right"),
-              withSpinner(ggiraph::girafeOutput(ns("plot_symbols"),
-                                                height = plot_height))
+              shinycssloaders::withSpinner(
+                ggiraph::girafeOutput(ns("plot_symbols"),
+                                      height = opts$plot_height))
             ))),
 
 
@@ -107,12 +108,12 @@ ui_data_available <- function(id, plot_height) {
                                     "Nov" = 11, "Dec" = 12),
                      selected = c(1:12),
                      direction = "vertical"),
-                   bsTooltip(ns("months_inc"),
-                             "Months to include/exclude from the plot",
-                             placement = "left"),
+                   shinyBS::bsTooltip(ns("months_inc"),
+                                      "Months to include/exclude from the plot",
+                                      placement = "left"),
             ),
             column(width = 11, ggiraph::girafeOutput(ns("plot_available"),
-                                                     height = plot_height))
+                                                     height = opts$plot_height))
           )
         ),
 
@@ -140,10 +141,11 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
       select_plot_options(
         select_plot_log(
           id, value = formals(plot_flow_data_symbols)$log_discharge), # Default
-        )
+      )
     })
 
-    observe(toggleState("symbols_percent", condition = input$symbols_type == "Days"))
+    observe(shinyjs::toggleState("symbols_percent",
+                                 condition = input$symbols_type == "Days"))
 
     # Data --------------
     available_raw <- reactive({
@@ -166,7 +168,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
       data_flow <- data_raw()
 
       e <- c(glue::glue("include_stats = ",
-                  "c(\"{glue::glue_collapse(input$stats, sep = '\", \"')}\")"),
+                        "c(\"{glue::glue_collapse(input$stats, sep = '\", \"')}\")"),
              glue::glue("plot_availability = {input$availability}")) %>%
         glue::glue_collapse(sep = ", ")
 

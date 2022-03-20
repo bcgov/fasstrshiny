@@ -1,7 +1,13 @@
 ^fasstrshiny\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
-^DEVTESTS.R$
-^CODE_DESIGN.md$
+^DEVTESTS\.R$
+^CODE_DESIGN\.md$
+^CODE_OF_CONDUCT\.md$
 ^data-raw$
-^inst\shiny_app\Hydat.sqlite3$
+^misc$
+^RELEASE\.R$
+^inst$
+^COMPLIANCE\.yaml$
+^CONTRIBUTING\.md$
+^README\.Rmd$

@@ -13,7 +13,7 @@
 # the License.
 
 # Annual Means -----------------------
-ui_annual_means <- function(id, plot_height) {
+ui_annual_means <- function(id) {
   ns <- NS(id)
 
   fluidRow(
@@ -26,7 +26,7 @@ ui_annual_means <- function(id, plot_height) {
           title = "Plot",
           helpText("Placeholder descriptive text to describe this section, ",
                    "what it does and how to use it"),
-          ggiraph::girafeOutput(ns("plot"), height = plot_height)
+          ggiraph::girafeOutput(ns("plot"), height = opts$plot_height)
         ),
 
 
@@ -47,7 +47,7 @@ server_annual_means <- function(id, data_settings, data_raw, data_loaded) {
 
       data_flow <- data_raw()
 
-      g <- create_fun(fun = "plot_annual_means", data = "data_flow",
+      g <- create_fun(fun = "plot_annual_means", data_name = "data_flow",
                       input, input_data = data_settings,
                       params_ignore = "discharge")
 

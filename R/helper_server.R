@@ -82,17 +82,7 @@ check_data <- function(x){
 #' @return String defining the function. Can be evaluated with `eval(parse(x))`.
 #' @noRd
 #'
-#' @examples
 #'
-#' \dontrun{
-#' t <- create_fun(fun = "calc_longterm_daily_stats",
-#'                 data = "flow_data", id = "hyrdo", input)
-#'
-#'
-#' t <- create_fun(fun = "calc_longterm_mean",
-#'                 data = "flow_data", id = "sumsi", input,
-#'                 params_extra = c("mad" = "percent_MAD = c(input$sumsi_mad)"))
-#' }
 
 create_fun <- function(fun, data_name = NULL, input, input_data = NULL,
                        params_ignore = NULL, extra = "", end = "") {

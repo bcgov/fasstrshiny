@@ -1,2 +1,2 @@
-pkgload::load_all()
+library(fasstrshiny)
 fasstr_shiny()

@@ -13,7 +13,7 @@
 # the License.
 
 # Peak flows ------------------------
-ui_peak_flows <- function(id, plot_height) {
+ui_peak_flows <- function(id) {
 
   ns <- NS(id)
 
@@ -52,7 +52,7 @@ server_peak_flows <- function(id, data_settings, data_raw, data_loaded) {
 
       data_flow <- data_raw()
 
-      t <- create_fun(fun = "calc_annual_peaks", data = "data_flow",
+      t <- create_fun(fun = "calc_annual_peaks", data_name = "data_flow",
                       input, input_data = data_settings)
 
       code$table <- t

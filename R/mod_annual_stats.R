@@ -14,7 +14,7 @@
 
 
 # Annual Statistics ------------------------------------------------
-ui_annual_stats <- function(id, plot_height) {
+ui_annual_stats <- function(id) {
 
   ns <- NS(id)
 
@@ -32,7 +32,7 @@ ui_annual_stats <- function(id, plot_height) {
                                         "Annual"),
                          selected = "Monthly",
                          status = "primary")),
-        bsTooltip(ns("type"), "Type of statistic to calculate", placement = "left"),
+        shinyBS::bsTooltip(ns("type"), "Type of statistic to calculate", placement = "left"),
         checkboxGroupButtons(
           ns("months_plot"),
           label = "Months to plot",
@@ -43,7 +43,7 @@ ui_annual_stats <- function(id, plot_height) {
                          "Sep" = 9, "Oct" = 10,
                          "Nov" = 11, "Dec" = 12),
           selected = c(1:12)),
-        bsTooltip(ns("months_plot"),
+        shinyBS::bsTooltip(ns("months_plot"),
                   paste0("Months to include/exclude from Monthly calculations<br>",
                          "(Annual uses default months from the Data tab)"),
                   placement = "left"),
@@ -55,7 +55,7 @@ ui_annual_stats <- function(id, plot_height) {
         tabPanel(
           title = "Plot",
           uiOutput(ns("ui_plot_options"), align = "right"),
-          ggiraph::girafeOutput(ns("plot"), height = plot_height)
+          ggiraph::girafeOutput(ns("plot"), height = opts$plot_height)
         ),
 
         ## Table ---------------------
@@ -83,7 +83,8 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
         select_plot_log(id, value = formals(plot_monthly_stats2)$log_discharge))
     })
 
-    observe(toggleState("months_plot", condition = input$type == "Monthly"))
+    observe(shinyjs::toggleState("months_plot",
+                                 condition = input$type == "Monthly"))
 
     # Plot -----------------------------
     output$plot <- ggiraph::renderGirafe({
@@ -104,7 +105,7 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
       g <- switch(input$type,
                   "Monthly" = "plot_monthly_stats2",
                   "Annual" = "plot_annual_stats2") %>%
-        create_fun(data = "data_flow", input,
+        create_fun(data_name = "data_flow", input,
                    input_data = data_settings,
                    params_ignore = pi, extra = e)
 
@@ -150,7 +151,7 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
       t <- switch(input$type,
                   "Monthly" = "calc_monthly_stats",
                   "Annual" = "calc_annual_stats") %>%
-        create_fun("data_flow", input, input_data = data_settings,
+        create_fun(data_name = "data_flow", input, input_data = data_settings,
                    params_ignore = pi, extra = e)
 
       code$table <- t

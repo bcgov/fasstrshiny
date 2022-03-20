@@ -18,11 +18,11 @@ update_on_change <- function(session, id, btn = "compute",
                              labels, styles = c("danger", "secondary")) {
   isolate({
     if(!is.logical(all.equal(current, last))) {
-      updateButton(
+      shinyBS::updateButton(
         session, NS(id, btn), style = styles[1],
         label = labels[1])
     } else {
-      updateButton(
+      shinyBS::updateButton(
         session, NS(id, btn), style = styles[2],
         label = labels[2])
     }
@@ -36,7 +36,7 @@ get_inputs <- function(input, which) {
     setNames(which)
 }
 
-test_mod <- function(mod, hydat_stn) {
+test_mod <- function(mod, hydat_stn = "08HB048") {
 
 
   server <- function(input, output, session) {
@@ -64,7 +64,6 @@ test_mod <- function(mod, hydat_stn) {
     get(paste0("server_", mod))(id = mod, data_settings, data_raw, data_loaded)
   }
 
-  plot_height <- "500px"
   ui <- tagList(
     dashboardPage(
       dashboardHeader(title = "Test"),
@@ -74,7 +73,7 @@ test_mod <- function(mod, hydat_stn) {
       dashboardBody(
         useShinyjs(),
         includeCSS(system.file("shiny_app", "www", "bcgov.css", package = "fasstrshiny")),
-        get(paste0("ui_", mod))(mod, plot_height)
+        get(paste0("ui_", mod))(mod)
       )
     )
   )

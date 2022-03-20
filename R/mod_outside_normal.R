@@ -14,7 +14,7 @@
 
 
 # Days outside normal ------------------------
-ui_outside_normal <- function(id, plot_height) {
+ui_outside_normal <- function(id) {
 
   ns <- NS(id)
 
@@ -26,7 +26,7 @@ ui_outside_normal <- function(id, plot_height) {
         helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
         sliderInput(ns("normal"), label = "Normal range ",
                     value = c(25, 75), min = 1, max = 99, step = 1),
-        bsTooltip(ns("normal"), tips$normal, placement = "left")
+        shinyBS::bsTooltip(ns("normal"), tips$normal, placement = "left")
       ),
       tabBox(
         width = 9,
@@ -34,7 +34,7 @@ ui_outside_normal <- function(id, plot_height) {
         ### Plot ---------------------
         tabPanel(
           title = "Plot",
-          ggiraph::girafeOutput(ns("plot"), height = plot_height)
+          ggiraph::girafeOutput(ns("plot"), height = opts$plot_height)
         ),
 
         ### Table ---------------------
@@ -63,7 +63,7 @@ server_outside_normal <- function(id, data_settings, data_raw, data_loaded) {
       data_flow <- data_raw()
 
       g <- create_fun(
-        fun = "plot_annual_outside_normal", data = "data_flow",
+        fun = "plot_annual_outside_normal", data_name = "data_flow",
         input, input_data = data_settings,
         extra = glue::glue("normal_percentiles = ",
                            "c({glue::glue_collapse(input$normal, sep = ',')})"))
@@ -95,7 +95,7 @@ server_outside_normal <- function(id, data_settings, data_raw, data_loaded) {
       data_flow <- data_raw()
 
       t <- create_fun(
-        fun = "calc_annual_outside_normal", data = "data_flow",
+        fun = "calc_annual_outside_normal", data_name = "data_flow",
         input, input_data = data_settings,
         extra = glue::glue("normal_percentiles = ",
                            "c({glue::glue_collapse(input$normal, sep = ',')})"))

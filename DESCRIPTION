@@ -11,7 +11,7 @@ Description: This app uses bcgov’s
     [tidyhydat](https://cran.r-project.org/package=tidyhydat) packages to
     provide an interactive user-interface for creating, viewing and customizing 
     statistics, tables, and plots for streamflow analysis.
-License: Apache License (>= 2)
+License: Apache License (== 2.0) | file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
@@ -20,27 +20,29 @@ Depends:
     fasstr (>= 0.5.0),
     shiny (>= 1.7.1),
     shinydashboard (>= 0.7.2),
-    shinyBS (>= 0.61),
-    shinyWidgets (>= 0.6.2),
-    shinyjs (>= 2.0.0),
-    shinycssloaders (>= 1.0.0)
-LazyData: true
+    shinyWidgets (>= 0.6.2)
 Imports: 
-    glue (>= 1.6.1),
     dplyr (>= 1.0.7),
-    tidyr (>= 1.1.4),
-    purrr (>= 0.3.4),
-    stringr (>= 1.4.0),
-    leaflet (>= 2.0.4.1),
     DT (>= 0.20),
-    gt (>= 0.3.1),
-    plotly (>= 4.10.0),
-    patchwork (>= 1.1.1),
-    tidyhydat (>= 0.5.4),
-    bcmaps (>= 1.0.2),
-    fasstr (>= 0.4.1),
+    fitdistrplus (>= 1.1.8),
+    glue (>= 1.6.1),
     ggiraph (>= 0.8.2),
-    styler (>= 1.6.2)
+    ggplot2 (>= 3.3.5),
+    gt (>= 0.3.1),
+    leaflet (>= 2.0.4.1),
+    plotly (>= 4.10.0),
+    purrr (>= 0.3.4),
+    shinyBS (>= 0.61),
+    shinycssloaders (>= 1.0.0),
+    shinyjs (>= 2.0.0),
+    stringr (>= 1.4.0),
+    styler (>= 1.6.2),
+    tibble (>= 3.1.6),
+    tidyhydat (>= 0.5.4),
+    tidyr (>= 1.1.4),
+    patchwork (>= 1.1.1)
 Suggests: 
+    bcmaps (>= 1.0.2),
+    sf,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

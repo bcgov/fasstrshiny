@@ -14,7 +14,7 @@
 
 # Hydrographs and Long-term -------------------------------------------------
 
-ui_hydro <- function(id, plot_height) {
+ui_hydro <- function(id) {
 
   ns <- NS(id)
 
@@ -36,8 +36,8 @@ ui_hydro <- function(id, plot_height) {
                                         "Long-term Monthly"),
                          selected = "Daily",
                          status = "primary")),
-        bsTooltip(ns("type"), "Type of statistic to calculate",
-                  placement = "left"),
+        shinyBS::bsTooltip(ns("type"), "Type of statistic to calculate",
+                           placement = "left"),
 
         # MAD Percents
         selectizeInput(ns("mad"),
@@ -45,7 +45,7 @@ ui_hydro <- function(id, plot_height) {
                        choices = c(1:99),
                        selected = c(5, 10, 20),
                        multiple = TRUE),
-        bsTooltip(ns("mad"), tips$mad, placement = "left"),
+        shinyBS::bsTooltip(ns("mad"), tips$mad, placement = "left"),
 
         # Percentiles
         select_percentiles(
@@ -67,7 +67,7 @@ ui_hydro <- function(id, plot_height) {
         tabPanel(
           title = "Plot",
           uiOutput(ns("ui_plot_options"), align = "right"),
-          ggiraph::girafeOutput(ns("plot"), height = plot_height)
+          ggiraph::girafeOutput(ns("plot"), height = opts$plot_height)
         ),
 
         ## Table ---------------------
@@ -101,8 +101,9 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
     })
 
     # Enable/Disable based on toggle
-    observe(toggleState("add_dates", condition = input$type == "Daily"))
-    observe(toggleState("custom_months_all", condition = input$type != "Daily"))
+    observe(shinyjs::toggleState("add_dates", condition = input$type == "Daily"))
+    observe(shinyjs::toggleState("custom_months_all",
+                                 condition = input$type != "Daily"))
 
 
     ## Plot --------------------
@@ -121,7 +122,7 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
                   "Daily" = "plot_daily_stats",
                   "Long-term Monthly" = "plot_longterm_monthly_stats",
                   "Long-term Daily" = "plot_longterm_daily_stats") %>%
-        create_fun("data_flow", input, input_data = data_settings,
+        create_fun(data_name = "data_flow", input, input_data = data_settings,
                    extra = dplyr::if_else(
                      input$add_year != "",
                      glue::glue("add_year = {input$add_year}"),
@@ -175,8 +176,8 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
           ggiraph::geom_hline_interactive(
             data = mad,
             ggplot2::aes(tooltip = paste0(stringr::str_replace(type, "%", "% "),
-                                 ": ", round(value, 4)),
-                yintercept = value), alpha = 0.01,
+                                          ": ", round(value, 4)),
+                         yintercept = value), alpha = 0.01,
             size = 3) +
           ggplot2::geom_text(
             data = mad,
@@ -204,7 +205,7 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
 
       t <- create_fun(
         fun = "calc_longterm_mean",
-        data = "data_flow", input, input_data = data_settings,
+        data_name = "data_flow", input, input_data = data_settings,
         extra = glue::glue(
           "percent_MAD = c({glue::glue_collapse(input$mad, sep = ',')})"))
 
@@ -233,7 +234,7 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
                   "Long-term Monthly" = "calc_longterm_monthly_stats",
                   "Daily" = "calc_daily_stats") %>%
         create_fun(
-          "data_flow", input, input_data = data_settings,
+          data_name = "data_flow", input, input_data = data_settings,
           params_ignore = "percentiles",
           extra = glue::glue(
             "percentiles = c({glue::glue_collapse(perc, sep = ', ')})"))

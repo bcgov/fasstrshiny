@@ -13,7 +13,7 @@
 # the License.
 
 # HYDAT Peaks ------------------
-ui_hydat_peak <- function(id, plot_height) {
+ui_hydat_peak <- function(id) {
 
   ns <- NS(id)
 
@@ -41,8 +41,8 @@ ui_hydat_peak <- function(id, plot_height) {
                                 choices = list("PIII" = "PIII",
                                                "Weibull" = "weibull")))
           ),
-          bsTooltip(ns("use_max_tip"), tips$use_max, placement = "left"),
-          bsTooltip(ns("fit_distr_tip"), tips$fit_distr, placement = "left"),
+          shinyBS::bsTooltip(ns("use_max_tip"), tips$use_max, placement = "left"),
+          shinyBS::bsTooltip(ns("fit_distr_tip"), tips$fit_distr, placement = "left"),
 
           selectizeInput(
             ns("fit_quantiles"),
@@ -63,8 +63,8 @@ ui_hydat_peak <- function(id, plot_height) {
                                 label = "Log trans", slim = TRUE,
                                 value = FALSE, status = "success"))
           ),
-          bsTooltip(ns("plot_curve_tip"), tips$plot_curve, placement = "left"),
-          bsTooltip(ns("use_log_tip"), tips$use_log, placement = "left"),
+          shinyBS::bsTooltip(ns("plot_curve_tip"), tips$plot_curve, placement = "left"),
+          shinyBS::bsTooltip(ns("use_log_tip"), tips$use_log, placement = "left"),
 
           fluidRow(
             column(6, id = ns("prob_plot_tip"),
@@ -80,8 +80,8 @@ ui_hydat_peak <- function(id, plot_height) {
                      value = paste0("0.9999, 0.999, 0.99, 0.9, 0.5, 0.2, 0.1, ",
                                     "0.02, 0.01, 0.001, .0001")))
           ),
-          bsTooltip(ns("prob_plot_tip"), tips$prob_plot, placement = "left"),
-          bsTooltip(ns("prob_scale_tip"), tips$prob_scale, placement = "left"),
+          shinyBS::bsTooltip(ns("prob_plot_tip"), tips$prob_plot, placement = "left"),
+          shinyBS::bsTooltip(ns("prob_scale_tip"), tips$prob_scale, placement = "left"),
       ),
 
       tabBox(
@@ -90,20 +90,21 @@ ui_hydat_peak <- function(id, plot_height) {
         ### Plot ---------------------
         tabPanel(
           title = "Plot",
-          withSpinner(ggiraph::girafeOutput(ns("plot")))
+          shinycssloaders::withSpinner(ggiraph::girafeOutput(ns("plot")))
         ),
 
         ### Table ---------------------
         tabPanel(
           title = "Table",
-          withSpinner(DT::DTOutput(ns("table")))
+          shinycssloaders::withSpinner(DT::DTOutput(ns("table")))
         ),
 
         ### Plot ---------------------
         tabPanel(
           title = "Fit Checks",
           verbatimTextOutput(ns("fit_stats")),
-          withSpinner(plotOutput(ns("fit_plot"), height = "550px"))
+          shinycssloaders::withSpinner(
+            plotOutput(ns("fit_plot"), height = "550px"))
         ),
 
 

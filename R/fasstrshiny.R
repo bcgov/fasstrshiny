@@ -17,14 +17,17 @@
 #'
 #' @export
 #'
+#' @import fasstr
+#' @import shiny
+#' @import shinydashboard
+#' @import shinyWidgets
+
 fasstr_shiny <- function() {
 
   # Setup -------------------------------------
   options(
     spinner.color = "#003366", spinner.type = 5, spinner.size = 0.5, # Spinners
     scipen=999)                                              # No sci notations
-
-  plot_height <- "500px"
 
   # On shinyapps ----------------------------------
   on_shinyapps <- !identical(serverInfo(), list(shinyServer = FALSE))
@@ -34,8 +37,8 @@ fasstr_shiny <- function() {
 
     # Don't move HYDAT but create a symlink so we can use it as if it was where
     # tidyhydat wanted it to be
-    h <- fasstrshiny:::find_hydat()   # Where Hydat is
-    th <- hy_dir()      # Where tidyhydat wants it to be
+    h <- find_hydat()   # Where Hydat is
+    th <- tidyhydat::hy_dir()      # Where tidyhydat wants it to be
 
     cat(file = stderr(), "Where hydat is: ", h, "\n")
     cat(file = stderr(), "Where should be: ", th, "\n")
@@ -50,8 +53,6 @@ fasstr_shiny <- function() {
 
   # Prep -------------------------------------------
   stations <- prep_hydat()
-  bc_hydrozones <- bcmaps::hydrozones(ask = FALSE) %>%
-    sf::st_transform(crs = 4326)
 
   # UI --------------------------------
   ui <- function(request) {
@@ -68,38 +69,26 @@ fasstr_shiny <- function() {
         ),
         ## Body -----------------
         dashboardBody(
-          useShinyjs(),
+          shinyjs::useShinyjs(),
           includeCSS(system.file("shiny_app", "www", "bcgov.css",
                                  package = "fasstrshiny")),
           tabItems(
             tabItem("home", ui_home()),
-            tabItem("data_load", ui_data_load("data", plot_height)),
-            tabItem("data_available",
-                    ui_data_available("data_available", plot_height)),
-            tabItem("hydro", ui_hydro("hydro", plot_height = plot_height)),
-            tabItem("cumulative",
-                    ui_cumulative("cumulative", plot_height = plot_height)),
-            tabItem("flows", ui_flows("flows", plot_height = plot_height)),
-            tabItem("annual_stats",
-                    ui_annual_stats("annual_stats", plot_height = plot_height)),
-            tabItem("annual_means",
-                    ui_annual_means("annual_means", plot_height = plot_height)),
-            tabItem("annual_totals",
-                    ui_annual_totals("annual_totals", plot_height = plot_height)),
-            tabItem("flow_timing",
-                    ui_flow_timing("flow_timing", plot_height = plot_height)),
-            tabItem("low_flows",
-                    ui_low_flows("low_flows", plot_height = plot_height)),
-            tabItem("peak_flows",
-                    ui_peak_flows("peak_flows", plot_height = plot_height)),
-            tabItem("outside_normal",
-                    ui_outside_normal("outside_normal", plot_height = plot_height)),
-            tabItem("annual_trends",
-                    ui_annual_trends("annual_trends", plot_height = plot_height)),
-            tabItem("volume_freq",
-                    ui_volume_freq("volume_freq", plot_height = plot_height)),
-            tabItem("hydat_peak",
-                    ui_hydat_peak("hydat_peak", plot_height = plot_height))
+            tabItem("data_load", ui_data_load("data")),
+            tabItem("data_available", ui_data_available("data_available")),
+            tabItem("hydro", ui_hydro("hydro")),
+            tabItem("cumulative", ui_cumulative("cumulative")),
+            tabItem("flows", ui_flows("flows")),
+            tabItem("annual_stats", ui_annual_stats("annual_stats")),
+            tabItem("annual_means", ui_annual_means("annual_means")),
+            tabItem("annual_totals", ui_annual_totals("annual_totals")),
+            tabItem("flow_timing", ui_flow_timing("flow_timing")),
+            tabItem("low_flows", ui_low_flows("low_flows")),
+            tabItem("peak_flows", ui_peak_flows("peak_flows")),
+            tabItem("outside_normal", ui_outside_normal("outside_normal")),
+            tabItem("annual_trends", ui_annual_trends("annual_trends")),
+            tabItem("volume_freq", ui_volume_freq("volume_freq")),
+            tabItem("hydat_peak", ui_hydat_peak("hydat_peak"))
           )
         )
       ),

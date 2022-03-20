@@ -15,7 +15,7 @@
 # Data Loading ------------------
 
 
-ui_data_load <- function(id, plot_height) {
+ui_data_load <- function(id) {
 
   ns <- NS(id)
 
@@ -93,7 +93,8 @@ ui_data_load <- function(id, plot_height) {
         tabPanel(
           title = "Plot", value = "tabs_plot",
           uiOutput(ns("ui_plot_options"), align = "right"),
-          withSpinner(plotly::plotlyOutput(ns("plot"), height = plot_height))
+          shinycssloaders::withSpinner(
+            plotly::plotlyOutput(ns("plot"), height = opts$plot_height))
         ),
 
         ### Table --------
@@ -178,7 +179,7 @@ server_data_load <- function(id, stations, bc_hydrozones) {
                                      to = input$years_range[2], by = 1),
                        selected = s,
                        multiple = TRUE),
-        bsTooltip(NS(id, "years_exclude"), title = tips$years_exclude,
+        shinyBS::bsTooltip(NS(id, "years_exclude"), title = tips$years_exclude,
                   placement = "left"))
     })
 
@@ -196,7 +197,7 @@ server_data_load <- function(id, stations, bc_hydrozones) {
                        choices = m,
                        selected = 1:12,
                        multiple = TRUE),
-        bsTooltip(NS(id, "months"), tips$months, placement = "left"))
+        shinyBS::bsTooltip(NS(id, "months"), tips$months, placement = "left"))
     })
 
     # Update station from Map button
@@ -224,9 +225,9 @@ server_data_load <- function(id, stations, bc_hydrozones) {
 
 
     # Hide/Show based on toggle
-    observe(toggle("stn", condition = input$show_stn))
-    observe(toggle("dates", condition = input$show_dates))
-    observe(toggle("types", condition = input$show_types))
+    observe(shinyjs::toggle("stn", condition = input$show_stn))
+    observe(shinyjs::toggle("dates", condition = input$show_dates))
+    observe(shinyjs::toggle("types", condition = input$show_types))
 
 
     ## HYDAT Map -------------------------

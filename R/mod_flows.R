@@ -13,7 +13,7 @@
 # the License.
 
 
-ui_flows <- function(id, plot_height) {
+ui_flows <- function(id) {
 
   ns <- NS(id)
 
@@ -31,7 +31,7 @@ ui_flows <- function(id, plot_height) {
                          label = "Include Long-term",
                          value = TRUE,
                          status = "success", slim = TRUE)),
-        bsTooltip(ns("longterm_tip"), tips$longterm, placement = "left"),
+        shinyBS::bsTooltip(ns("longterm_tip"), tips$longterm, placement = "left"),
         checkboxGroupButtons(
           ns("months"),
           label = "Months to plot",
@@ -42,8 +42,8 @@ ui_flows <- function(id, plot_height) {
                          "Sep" = 9, "Oct" = 10,
                          "Nov" = 11, "Dec" = 12),
           selected = c(1:12)),
-        bsTooltip(ns("months"), "Months to include/exclude from the plot",
-                  placement = "left"),
+        shinyBS::bsTooltip(ns("months"), "Months to include/exclude from the plot",
+                           placement = "left"),
         select_custom_months(id),
 
         # Update button
@@ -57,13 +57,14 @@ ui_flows <- function(id, plot_height) {
         tabPanel(
           title = "Plot - Flow duration",
           uiOutput(ns("ui_plot_options"), align = "right"),
-          withSpinner(ggiraph::girafeOutput(ns("plot"), height = plot_height))
+          shinycssloaders::withSpinner(
+            ggiraph::girafeOutput(ns("plot"), height = opts$plot_height))
         ),
 
         ## Table ---------------------
         tabPanel(
           title = "Table - Percentiles",
-          withSpinner(DT::DTOutput(ns("table")))
+          shinycssloaders::withSpinner(DT::DTOutput(ns("table")))
         ),
 
         # R Code ---------------------
@@ -92,7 +93,7 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
 
       data_flow <- data_raw()
 
-      g <- create_fun(fun = "plot_flow_duration", data = "data_flow",
+      g <- create_fun(fun = "plot_flow_duration", data_name = "data_flow",
                       input, input_data = data_settings)
 
       code$plot <- g
@@ -126,7 +127,7 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
 
       t <- create_fun(
         fun = "calc_longterm_daily_stats",
-        data = "data_flow", input, input_data = data_settings,
+        data_name = "data_flow", input, input_data = data_settings,
         extra = "percentiles = 1:99",
         end = "%>% dplyr::select(-Mean, -Median, -Minimum, -Maximum)")
 

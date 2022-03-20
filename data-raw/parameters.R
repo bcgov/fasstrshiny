@@ -57,7 +57,16 @@ tips <- as.list(parameters$tooltip) %>%
   unique() %>%
   setNames(unique(parameters$id))
 
-usethis::use_data(parameters, tips, internal = TRUE, overwrite = TRUE)
+
+opts <- list(
+  plot_height = "500px",
+  css_selected = "fill:red;stroke:gray;r:5pt")
+
+bc_hydrozones <- bcmaps::hydrozones(ask = FALSE) %>%
+  sf::st_transform(crs = 4326)
+
+usethis::use_data(parameters, tips, opts, bc_hydrozones,
+                  internal = TRUE, overwrite = TRUE)
 
 # Many parameters in compute_annual_trends are already covered here,
 # e.g., annual_percentiles, monthly_percentiles get the "percentiles" tooltip, etc.

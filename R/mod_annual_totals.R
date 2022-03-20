@@ -14,7 +14,7 @@
 
 # Annual Totals -------------------------------
 
-ui_annual_totals <- function(id, plot_height) {
+ui_annual_totals <- function(id) {
 
   ns <- NS(id)
 
@@ -29,7 +29,8 @@ ui_annual_totals <- function(id, plot_height) {
                        choices = list("Volumetric Discharge (m3)" = FALSE,
                                       "Runoff Yield (mm)" = TRUE),
                        selected = TRUE),
-          bsTooltip(ns("discharge"), tips$discharge, placement = "left"),
+          shinyBS::bsTooltip(ns("discharge"), tips$discharge,
+                             placement = "left"),
           uiOutput(ns("ui_display"))),
 
       tabBox(
@@ -38,7 +39,7 @@ ui_annual_totals <- function(id, plot_height) {
         ### Plot ---------------------
         tabPanel(
           title = "Plot",
-          ggiraph::girafeOutput(ns("plot"), height = plot_height)
+          ggiraph::girafeOutput(ns("plot"), height = opts$plot_height)
         ),
 
         ### Table ---------------------
@@ -72,7 +73,8 @@ server_annual_totals <- function(id, data_settings, data_raw, data_loaded) {
       req(input$discharge)
 
       data_flow <- data_raw()
-      g <- create_fun(fun = "plot_annual_cumulative_stats", data = "data_flow",
+      g <- create_fun(fun = "plot_annual_cumulative_stats",
+                      data_name = "data_flow",
                       input, input_data = data_settings,
                       params_ignore = "discharge",
                       extra = glue::glue("use_yield = {input$discharge}, ",
@@ -121,7 +123,8 @@ server_annual_totals <- function(id, data_settings, data_raw, data_loaded) {
 
       data_flow <- data_raw()
 
-      t <- create_fun("calc_annual_cumulative_stats", data = "data_flow",
+      t <- create_fun("calc_annual_cumulative_stats",
+                      data_name = "data_flow",
                       input, input_data = data_settings,
                       params_ignore = "discharge",
                       extra = glue::glue("use_yield = {input$discharge}, ",

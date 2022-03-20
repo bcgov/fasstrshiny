@@ -49,10 +49,10 @@ select_custom_months <- function(id) {
                             label = "Label for group",
                             placeholder = "ex. Jun-Aug",
                             value = "")),
-           bsTooltip(id = NS(id, "custom_months_all"),
-                     title = glue::glue("Months: {tips$custom_months}<br>",
-                                        "Label: {tips$custom_months_label}"),
-                     placement = "left")
+           shinyBS::bsTooltip(id = NS(id, "custom_months_all"),
+                              title = glue::glue("Months: {tips$custom_months}<br>",
+                                                 "Label: {tips$custom_months_label}"),
+                              placement = "left")
   )
 }
 
@@ -66,8 +66,8 @@ select_discharge <- function(id, input = NULL, set = TRUE) {
                                 "Volumetric Discharge (m3)" = "Volume_m3",
                                 "Runoff Yield (mm)" = "Yield_mm"),
                  selected = selected),
-    bsTooltip(NS(id, "discharge"), tips$discharge,
-              placement = "left"))
+    shinyBS::bsTooltip(NS(id, "discharge"), tips$discharge,
+                       placement = "left"))
 }
 
 select_rolling <- function(id, input = NULL, name = "roll",
@@ -92,7 +92,7 @@ select_rolling <- function(id, input = NULL, name = "roll",
                                                   "Left" = "left",
                                                   "Center" = "center")))
     ),
-    bsTooltip(
+    shinyBS::bsTooltip(
       id = NS(id, glue::glue("{name}ing")),
       title = glue::glue("Days: {tips$roll_days}<br>Align: {tips$roll_align}"),
       placement = "left"))
@@ -108,7 +108,7 @@ select_percentiles <- function(id, name = "percentiles", selected = c(10, 90),
                    choices = c(1:99),
                    selected = selected,
                    multiple = TRUE),
-    bsTooltip(NS(id, name), tips[[name]], placement = "left"))
+    shinyBS::bsTooltip(NS(id, name), tips[[name]], placement = "left"))
 }
 
 select_complete <- function(id, input = NULL, set = TRUE) {
@@ -120,8 +120,8 @@ select_complete <- function(id, input = NULL, set = TRUE) {
                      label = "Complete years only",
                      value = value,
                      status = "success", slim = TRUE)),
-    bsTooltip(NS(id, "complete_tip"), tips$complete,
-              placement = "left"))
+    shinyBS::bsTooltip(NS(id, "complete_tip"), tips$complete,
+                       placement = "left"))
 }
 
 select_missing <- function(id, input = NULL, set = TRUE, value = NULL) {
@@ -134,8 +134,8 @@ select_missing <- function(id, input = NULL, set = TRUE, value = NULL) {
                      value = value, status = "danger",
                      label = "Ignore missing values",
                      slim = TRUE)),
-    bsTooltip(NS(id, "missing_tip"), tips$missing,
-              placement = "left"))
+    shinyBS::bsTooltip(NS(id, "missing_tip"), tips$missing,
+                       placement = "left"))
 }
 
 select_allowed <- function(id, input = NULL, set = TRUE, value = NULL) {
@@ -146,8 +146,8 @@ select_allowed <- function(id, input = NULL, set = TRUE, value = NULL) {
     sliderInput(NS(id, "allowed"),
                 label = "Allowed missing (%)",
                 value = value, step = 5, min = 0, max = 100),
-    bsTooltip(NS(id, "allowed"), tips$allowed,
-              placement = "left"))
+    shinyBS::bsTooltip(NS(id, "allowed"), tips$allowed,
+                       placement = "left"))
 }
 
 select_plot_stats <- function(id, stats) {
@@ -157,8 +157,8 @@ select_plot_stats <- function(id, stats) {
                         label = "Statistics",
                         choices = stats,
                         selected = stats),
-      bsTooltip(NS(id, "stats"), tips$stats,
-                placement = "left"))
+      shinyBS::bsTooltip(NS(id, "stats"), tips$stats,
+                         placement = "left"))
   }
 }
 
@@ -170,8 +170,8 @@ select_plot_log <- function(id, value = TRUE) {
                      label = "Use log scale",
                      value = value,
                      status = "success", slim = TRUE)),
-    bsTooltip(NS(id, "plot_log_tip"), tips$plot_log,
-              placement = "left"))
+    shinyBS::bsTooltip(NS(id, "plot_log_tip"), tips$plot_log,
+                       placement = "left"))
 }
 
 select_plot_extremes <- function(id, value = TRUE) {
@@ -182,8 +182,8 @@ select_plot_extremes <- function(id, value = TRUE) {
                      label = "Plot extreme values",
                      value = value,
                      status = "success", slim = TRUE)),
-    bsTooltip(NS(id, "plot_extremes_tip"), tips$plot_extremes,
-              placement = "left"))
+    shinyBS::bsTooltip(NS(id, "plot_extremes_tip"), tips$plot_extremes,
+                       placement = "left"))
 }
 
 select_daterange <- function(id, data) {
@@ -206,26 +206,22 @@ select_add_year <- function(id, years_range) {
                                    to = years_range[2], by = 1)),
                    selected = NULL,
                    multiple = FALSE),
-    bsTooltip(NS(id, "add_year"), tips$add_year,
-              placement = "left")
+    shinyBS::bsTooltip(NS(id, "add_year"), tips$add_year,
+                       placement = "left")
   )
 }
 
 select_add_dates <- function(id) {
   d <- setNames(1:365, format(as.Date(1:365, origin = "1899-12-31"),
                               "%b-%d"))
-
-  # Start disabled, enable if correct type selected
-  # Updated depending on water year in UI section of server.R
-
   tagList(
     selectizeInput(
       NS(id, "add_dates"),
       label = "Date to show",
       choices = c("Choose date(s)" = "", d),
       selected = NULL, multiple = TRUE),
-    bsTooltip(NS(id, "add_dates"), tips$add_dates,
-              placement = "left")
+    shinyBS::bsTooltip(NS(id, "add_dates"), tips$add_dates,
+                       placement = "left")
   )
 }
 
@@ -237,8 +233,8 @@ select_add_mad <- function(id) {
                      label = "Add MAD values",
                      value = FALSE,
                      status = "success", slim = TRUE)),
-    bsTooltip(NS(id, "add_mad_tip"), tips$add_mad,
-              placement = "left"))
+    shinyBS::bsTooltip(NS(id, "add_mad_tip"), tips$add_mad,
+                       placement = "left"))
 }
 
 select_plot_display <- function(id, plots) {
@@ -248,11 +244,11 @@ select_plot_display <- function(id, plots) {
   tagList(
     selectizeInput(NS(id, "display"), "Display plot",
                    choices = plot_names),
-    bsTooltip(NS(id, "display"),
-              paste0("Choose plot type to display.<br>",
-                     "Seasonal plots are only available if all months ",
-                     "are included<br>(see Data tab)"),
-              placement = "left"))
+    shinyBS::bsTooltip(NS(id, "display"),
+                       paste0("Choose plot type to display.<br>",
+                              "Seasonal plots are only available if all months ",
+                              "are included<br>(see Data tab)"),
+                       placement = "left"))
 }
 
 select_plot_options <- function(...) {
