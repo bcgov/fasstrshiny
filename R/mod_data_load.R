@@ -331,12 +331,7 @@ server_data_load <- function(id, stations, bc_hydrozones) {
                       WaterYear <= input$years_range[2],
                       !WaterYear %in% input$years_exclude,
                       MonthName %in% month.abb[as.numeric(input$months)]) %>%
-        dplyr::mutate(Value = round(Value, 4)) %>%
-        DT::datatable(rownames = FALSE,
-                      filter = 'top',
-                      extensions = c("Scroller"),
-                      options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
-                                     deferRender = TRUE, dom = 'Bfrtip'))
+        prep_DT()
     })
 
     ## R Code ----------------
