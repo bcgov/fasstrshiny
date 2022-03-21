@@ -71,7 +71,7 @@ test_mod <- function(mod, hydat_stn = "08HB048") {
       dashboardSidebar(),
       ## Body -----------------
       dashboardBody(
-        useShinyjs(),
+        shinyjs::useShinyjs(),
         includeCSS(system.file("shiny_app", "www", "bcgov.css", package = "fasstrshiny")),
         get(paste0("ui_", mod))(mod)
       )
