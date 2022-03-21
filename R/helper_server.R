@@ -48,6 +48,24 @@ check_data <- function(x){
 }
 
 
+#' Evaluate and check for errors
+#'
+#' Takes text function expression, parses and evaluates it then checks for
+#' errors. Any errors are passed through to the Shiny app.
+
+eval_check <- function(t) {
+  t <- try(eval(parse(text = t), envir = parent.frame(n = 1)), silent = TRUE)
+  if("try-error" %in% class(t)) {
+    validate(need(FALSE, attr(t, "condition")$message),
+             errorClass = "red") # becomes shiny-output-error-red
+  }
+  t
+}
+
+
+
+
+
 #' Combine elements for functions
 #'
 #' This function looks for common inputs into fasstr functions. It uses general

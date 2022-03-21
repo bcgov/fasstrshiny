@@ -258,8 +258,7 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
                       extra = p, params_ignore = "years_exclude")
 
       code$data <- r
-
-      eval(parse(text = r))
+      eval_check(r)
     }) %>%
       bindEvent(input$compute)
 

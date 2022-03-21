@@ -182,8 +182,7 @@ server_hydat_peak <- function(id, data_settings, data_raw, data_loaded) {
                       input_data = data_settings, extra = p)
 
       code$data <- r
-
-      eval(parse(text = r))
+      eval_check(r)
     }) %>%
       bindEvent(input$compute)
 

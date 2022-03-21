@@ -12,6 +12,10 @@
   transform: translate(-50%, 0);
 }
 
+.shiny-output-error-red {
+  color: red;
+  font-weight: bold;
+}
 
 /* BC Gov themeing */
 
