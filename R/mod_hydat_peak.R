@@ -28,61 +28,14 @@ ui_hydat_peak <- function(id) {
                    "what it does and how to use it"),
           hr(class = "narrowHr"),
 
-          fluidRow(
-            column(width = 6, id = ns("use_max_tip"),
-                   awesomeRadio(ns("use_max"),
-                                label = "Flow type",
-                                choices = list("Low" = FALSE,
-                                               "High" = TRUE),
-                                selected = FALSE)),
-            column(width = 6, id = ns("fit_distr_tip"),
-                   awesomeRadio(ns("fit_distr"),
-                                label = "Distribution",
-                                choices = list("PIII" = "PIII",
-                                               "Weibull" = "weibull")))
-          ),
-          bsTooltip(ns("use_max_tip"), tips$use_max, placement = "left"),
-          bsTooltip(ns("fit_distr_tip"), tips$fit_distr, placement = "left"),
+          show_ui(ns("show_data"), "Data"),
+          div(id = ns("data"), select_analysis_data(id)),
 
-          selectizeInput(
-            ns("fit_quantiles"),
-            label = "Quantiles to estimate",
-            choices = seq(0.01, 0.999, 0.0025),
-            selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
-                         0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
-            multiple = TRUE),
-          bsTooltip(ns("fit_quantiles"), tips$fit_quantiles,
-                             placement = "left"),
+          show_ui(ns("show_plotting"), "Plotting"),
+          select_analysis_plots(id),
 
-          fluidRow(
-            column(width = 6, id = ns("plot_curve_tip"),
-                   prettySwitch(ns("plot_curve"),
-                                label = "Plot curve", value = TRUE,
-                                status = "success", slim = TRUE)),
-            column(width = 6, id = ns("use_log_tip"),
-                   prettySwitch(ns("use_log"),
-                                label = "Log trans", slim = TRUE,
-                                value = FALSE, status = "success"))
-          ),
-          bsTooltip(ns("plot_curve_tip"), tips$plot_curve, placement = "left"),
-          bsTooltip(ns("use_log_tip"), tips$use_log, placement = "left"),
-
-          fluidRow(
-            column(6, id = ns("prob_plot_tip"),
-                   awesomeRadio(ns("prob_plot"),
-                                label = "Plotting positions",
-                                choices = list("Weibull" = "weibull",
-                                               "Median" = "median",
-                                               "Hazen" = "hazen"))),
-            column(6, id = ns("prob_scale_tip"),
-                   textInput(
-                     ns("prob_scale"),
-                     label = "Probabilies to plot",
-                     value = paste0("0.9999, 0.999, 0.99, 0.9, 0.5, 0.2, 0.1, ",
-                                    "0.02, 0.01, 0.001, .0001")))
-          ),
-          bsTooltip(ns("prob_plot_tip"), tips$prob_plot, placement = "left"),
-          bsTooltip(ns("prob_scale_tip"), tips$prob_scale, placement = "left"),
+          show_ui(ns("show_fitting"), "Fitting"),
+          select_fitting(id)
       ),
 
       tabBox(
@@ -120,6 +73,11 @@ server_hydat_peak <- function(id, data_settings, data_raw, data_loaded) {
 
   moduleServer(id, function(input, output, session) {
 
+    # UI -----------------------
+    observe(shinyjs::toggle("data", condition = input$show_data))
+    observe(shinyjs::toggle("plotting", condition = input$show_plotting))
+    observe(shinyjs::toggle("fitting", condition = input$show_fitting))
+
     # Change button status -----------------------
 
     # Current settings
@@ -152,13 +110,13 @@ server_hydat_peak <- function(id, data_settings, data_raw, data_loaded) {
     # Frequencies -----------------------
     freqs <- reactive({
 
+      # Inputs
       need(
         isTruthy(data_raw()$STATION_NUMBER) &
           length(unique(data_raw()$STATION_NUMBER)) == 1,
         paste0("This analysis is only available for HYDAT data with a ",
                "valid STATION_NUMBER")) %>%
         validate()
-
 
       need(all(!is.na(text_to_num(input$prob_scale))),
            "Probabilies to plot must be a comma separated list of numbers") %>%
@@ -175,6 +133,7 @@ server_hydat_peak <- function(id, data_settings, data_raw, data_loaded) {
         glue::glue("prob_scale_points = c({input$prob_scale})"),
         glue::glue("fit_distr = '{input$fit_distr}'"),
         glue::glue("fit_quantiles = c({glue::glue_collapse(input$fit_quantiles, sep = ', ')})"),
+        glue::glue("fit_distr_method = '{input$fit_distr_method}'"),
         glue::glue("plot_curve = {input$plot_curve}")) %>%
         glue::glue_collapse(sep = ", ")
 

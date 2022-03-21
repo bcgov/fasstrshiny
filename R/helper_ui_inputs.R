@@ -251,6 +251,92 @@ select_plot_display <- function(id, plots) {
               placement = "left"))
 }
 
+select_fitting <- function(id) {
+  tagList(
+    div(id = NS(id, "fitting"),
+
+        selectizeInput(
+          NS(id, "fit_quantiles"),
+          label = "Quantiles to estimate",
+          choices = seq(0.01, 0.999, 0.0025),
+          selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
+                       0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
+          multiple = TRUE),
+
+        awesomeRadio(NS(id, "fit_distr"),
+                     label = "Distribution",
+                     choices = list("PIII" = "PIII",
+                                    "Weibull" = "weibull")),
+        awesomeRadio(
+          NS(id, "fit_distr_method"),
+          label = "Distribution method",
+          choices = list("Method of Moments (MOM)" = "MOM",
+                         "Maximum Likelihood Estimation (MLE)" = "MLE"))),
+
+    bsTooltip(NS(id, "fit_quantiles"), tips$fit_quantiles,
+              placement = "left"),
+    bsTooltip(NS(id, "fit_distr"), tips$fit_distr,
+              placement = "left"),
+    bsTooltip(NS(id, "fit_distr_method"), tips$fit_distr_method,
+              placement = "left")
+  )
+}
+
+select_analysis_plots <- function(id) {
+
+  div(id = NS(id, "plotting"),
+      fluidRow(
+        column(6, id = NS(id, "prob_plot_tip"),
+               awesomeRadio(NS(id, "prob_plot"),
+                            label = "Plotting positions",
+                            choices = list("Weibull" = "weibull",
+                                           "Median" = "median",
+                                           "Hazen" = "hazen"))),
+        column(
+          6, id = NS(id, "prob_scale_tip"),
+          textInput(
+            NS(id, "prob_scale"),
+            label = "Probabilies to plot",
+            value = paste0("0.9999, 0.999, 0.99, 0.9, 0.5, 0.2, ",
+                           "0.1, 0.02, 0.01, 0.001, .0001")))
+      ),
+      div(id = NS(id, "plot_curve_tip"),
+          prettySwitch(NS(id, "plot_curve"),
+                       label = tags$span(strong("Plot curve")),
+                       value = TRUE, status = "success", slim = TRUE)),
+      bsTooltip(NS(id, "plot_curve_tip"), tips$plot_curve,
+                placement = "left"),
+      bsTooltip(NS(id, "prob_plot_tip"), tips$prob_plot,
+                placement = "left"),
+      bsTooltip(NS(id, "prob_scale_tip"), tips$prob_scale,
+                placement = "left")
+  )
+}
+
+select_analysis_data <- function(id) {
+  fluidRow(
+    column(
+      width = 6, id = NS(id, "use_max_tip"),
+      awesomeRadio(NS(id, "use_max"),
+                   label = "Flow type",
+                   choices = list("Low" = FALSE,
+                                  "High" = TRUE),
+                   selected = FALSE, inline = TRUE)),
+    column(
+      width = 6, id = NS(id, "use_log_tip"), style = "padding-top: 25px",
+      prettySwitch(
+        NS(id, "use_log"),
+        label = tags$span(strong("Log trans")),
+        value = FALSE, status = "success", slim = TRUE)),
+    bsTooltip(NS(id, "use_max_tip"), tips$use_max,
+              placement = "left"),
+    bsTooltip(NS(id, "use_log_tip"), tips$use_log,
+              placement = "left")
+  )
+}
+
+
+
 select_plot_options <- function(...) {
   div(
     align = "right",

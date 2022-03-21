@@ -37,83 +37,14 @@ ui_volume_freq <- function(id) {
           show_ui(ns("show_data"), "Data"),
           div(id = ns("data"),
               select_rolling(id, set = FALSE, multiple = TRUE),
-
-              fluidRow(
-                column(
-                  width = 6, id = ns("use_max_tip"),
-                  awesomeRadio(ns("use_max"),
-                               label = "Flow type",
-                               choices = list("Low" = FALSE,
-                                              "High" = TRUE),
-                               selected = FALSE, inline = TRUE)),
-                column(
-                  width = 6, id = ns("use_log_tip"),
-                  prettySwitch(
-                    ns("use_log"),
-                    label = tags$span(strong("Log trans")),
-                    value = FALSE, status = "success", slim = TRUE)),
-                bsTooltip(ns("use_max_tip"), tips$use_max,
-                                   placement = "left"),
-                bsTooltip(ns("use_log_tip"), tips$use_log,
-                                   placement = "left")
-              ),
+              select_analysis_data(id),
               select_allowed(id)
           ),
           show_ui(ns("show_plotting"), "Plotting"),
-          div(id = ns("plotting"),
-              fluidRow(
-                column(6, id = ns("prob_plot_tip"),
-                       awesomeRadio(ns("prob_plot"),
-                                    label = "Plotting positions",
-                                    choices = list("Weibull" = "weibull",
-                                                   "Median" = "median",
-                                                   "Hazen" = "hazen"))),
-                column(
-                  6, id = ns("prob_scale_tip"),
-                  textInput(
-                    ns("prob_scale"),
-                    label = "Probabilies to plot",
-                    value = paste0("0.9999, 0.999, 0.99, 0.9, 0.5, 0.2, ",
-                                   "0.1, 0.02, 0.01, 0.001, .0001")))
-              ),
-              div(id = ns("plot_curve_tip"),
-                  prettySwitch(ns("plot_curve"),
-                               label = tags$span(strong("Plot curve")),
-                               value = TRUE, status = "success", slim = TRUE)),
-              bsTooltip(ns("plot_curve_tip"), tips$plot_curve,
-                                 placement = "left"),
-              bsTooltip(ns("prob_plot_tip"), tips$prob_plot,
-                                 placement = "left"),
-              bsTooltip(ns("prob_scale_tip"), tips$prob_scale,
-                                 placement = "left")
-          ),
+          select_analysis_plots(id),
 
           show_ui(ns("show_fitting"), "Fitting"),
-          div(id = ns("fitting"),
-              selectizeInput(
-                ns("fit_quantiles"),
-                label = "Quantiles to estimate",
-                choices = seq(0.01, 0.999, 0.0025),
-                selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
-                             0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
-                multiple = TRUE),
-              awesomeRadio(ns("fit_distr"),
-                           label = "Distribution",
-                           choices = list("PIII" = "PIII",
-                                          "Weibull" = "weibull")),
-              awesomeRadio(
-                ns("fit_distr_method"),
-                label = "Distribution method",
-                choices = list("Method of Moments (MOM)" = "MOM",
-                               "Maximum Likelihood Estimation (MLE)" = "MLE")),
-
-              bsTooltip(ns("fit_quantiles"), tips$fit_quantiles,
-                                 placement = "left"),
-              bsTooltip(ns("fit_distr"), tips$fit_distr,
-                                 placement = "left"),
-              bsTooltip(ns("fit_distr_method"), tips$fit_distr_method,
-                                 placement = "left")
-          )
+          select_fitting(id)
       ),
 
       tabBox(
