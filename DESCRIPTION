@@ -19,6 +19,7 @@ Depends:
     R (>= 2.10),
     fasstr (>= 0.5.0),
     shiny (>= 1.7.1),
+    shinyBS (>= 0.61),
     shinydashboard (>= 0.7.2),
     shinyWidgets (>= 0.6.2)
 Imports: 
@@ -32,7 +33,6 @@ Imports:
     leaflet (>= 2.0.4.1),
     plotly (>= 4.10.0),
     purrr (>= 0.3.4),
-    shinyBS (>= 0.61),
     shinycssloaders (>= 1.0.0),
     shinyjs (>= 2.0.0),
     stringr (>= 1.4.0),

@@ -26,7 +26,7 @@ ui_outside_normal <- function(id) {
         helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
         sliderInput(ns("normal"), label = "Normal range ",
                     value = c(25, 75), min = 1, max = 99, step = 1),
-        shinyBS::bsTooltip(ns("normal"), tips$normal, placement = "left")
+        bsTooltip(ns("normal"), tips$normal, placement = "left")
       ),
       tabBox(
         width = 9,

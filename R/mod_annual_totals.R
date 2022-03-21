@@ -29,7 +29,7 @@ ui_annual_totals <- function(id) {
                        choices = list("Volumetric Discharge (m3)" = FALSE,
                                       "Runoff Yield (mm)" = TRUE),
                        selected = TRUE),
-          shinyBS::bsTooltip(ns("discharge"), tips$discharge,
+          bsTooltip(ns("discharge"), tips$discharge,
                              placement = "left"),
           uiOutput(ns("ui_display"))),
 

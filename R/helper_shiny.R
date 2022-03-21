@@ -18,11 +18,11 @@ update_on_change <- function(session, id, btn = "compute",
                              labels, styles = c("danger", "secondary")) {
   isolate({
     if(!is.logical(all.equal(current, last))) {
-      shinyBS::updateButton(
+      updateButton(
         session, NS(id, btn), style = styles[1],
         label = labels[1])
     } else {
-      shinyBS::updateButton(
+      updateButton(
         session, NS(id, btn), style = styles[2],
         label = labels[2])
     }

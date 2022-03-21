@@ -12,7 +12,6 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-# Annual Trends -----------------------
 ui_annual_trends <- function(id) {
 
   ns <- NS(id)
@@ -23,7 +22,7 @@ ui_annual_trends <- function(id) {
       box(width = 3,
 
           # Compute button
-          shinyBS::bsButton(ns("compute"), "Compute Trends", style = "primary",
+          bsButton(ns("compute"), "Compute Trends", style = "primary",
                    class = "centreButton"),
           helpText("Placeholder descriptive text to describe this section, ",
                    "what it does and how to use it"),
@@ -43,8 +42,8 @@ ui_annual_trends <- function(id) {
                    column(width = 6, id = ns("alpha_tip"),
                           numericInput(ns("alpha"), label = "Trend alpha",
                                        value = 0.05, min = 0, max = 0.3, step = 0.05)),
-                   shinyBS::bsTooltip(ns("zyp_tip"), tips$zyp, placement = "left"),
-                   shinyBS::bsTooltip(ns("alpha_tip"), tips$alpha, placement = "left")),
+                   bsTooltip(ns("zyp_tip"), tips$zyp, placement = "left"),
+                   bsTooltip(ns("alpha_tip"), tips$alpha, placement = "left")),
           show_ui(ns("show_options"), "Data Options"),
           div(id = ns("options"),
               fluidRow(id = ns("percentiles_tip"),
@@ -60,7 +59,7 @@ ui_annual_trends <- function(id) {
                                              choices = c(1:99),
                                              selected = c(10,20),
                                              multiple = TRUE)),
-                       shinyBS::bsTooltip(ns("percentiles_tip"), tips$percentiles,
+                       bsTooltip(ns("percentiles_tip"), tips$percentiles,
                                           placement = "left")),
 
               strong("Low Flows"),
@@ -71,11 +70,11 @@ ui_annual_trends <- function(id) {
                              choices = c(1:99),
                              selected = c(25, 33, 50, 75),
                              multiple = TRUE),
-              shinyBS::bsTooltip(ns("percent"), tips$percent, placement = "left"),
+              bsTooltip(ns("percent"), tips$percent, placement = "left"),
 
               sliderInput(ns("normal"), label = "Days Outside Normal - Range",
                           value = c(25, 75), min = 1, max = 99, step = 1),
-              shinyBS::bsTooltip(ns("normal"), tips$normal, placement = "left")
+              bsTooltip(ns("normal"), tips$normal, placement = "left")
           ),
           show_ui(ns("show_allowed"), "Missing Dates"),
           div(id = ns("allowed"), uiOutput(ns("ui_allowed")))
@@ -127,7 +126,7 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
                                      to = data_settings$years_range[2], by = 1),
                        selected = data_settings$years_exclude,
                        multiple = TRUE),
-        shinyBS::bsTooltip(id = "years_exclude", title = tips$years_exclude,
+        bsTooltip(id = "years_exclude", title = tips$years_exclude,
                            placement = "left"))
     })
 
@@ -146,8 +145,8 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
         sliderInput(NS(id, "allowed_monthly"),
                     label = "Monthly - Allowed missing (%)",
                     value = data_settings$allowed, step = 5, min = 0, max = 100),
-        shinyBS::bsTooltip(NS(id, "allowed_annual"), tips$allowed, placement = "left"),
-        shinyBS::bsTooltip(NS(id, "allowed_monthly"), tips$allowed, placement = "left")
+        bsTooltip(NS(id, "allowed_annual"), tips$allowed, placement = "left"),
+        bsTooltip(NS(id, "allowed_monthly"), tips$allowed, placement = "left")
       )
     })
 

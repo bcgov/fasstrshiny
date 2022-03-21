@@ -31,7 +31,7 @@ ui_flows <- function(id) {
                          label = "Include Long-term",
                          value = TRUE,
                          status = "success", slim = TRUE)),
-        shinyBS::bsTooltip(ns("longterm_tip"), tips$longterm, placement = "left"),
+        bsTooltip(ns("longterm_tip"), tips$longterm, placement = "left"),
         checkboxGroupButtons(
           ns("months"),
           label = "Months to plot",
@@ -42,12 +42,12 @@ ui_flows <- function(id) {
                          "Sep" = 9, "Oct" = 10,
                          "Nov" = 11, "Dec" = 12),
           selected = c(1:12)),
-        shinyBS::bsTooltip(ns("months"), "Months to include/exclude from the plot",
+        bsTooltip(ns("months"), "Months to include/exclude from the plot",
                            placement = "left"),
         select_custom_months(id),
 
         # Update button
-        shinyBS::bsButton(ns("compute"), "Update", style = "primary",
+        bsButton(ns("compute"), "Update", style = "primary",
                           class = "centreButton"),
       ),
       tabBox(

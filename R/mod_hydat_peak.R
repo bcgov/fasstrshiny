@@ -22,7 +22,7 @@ ui_hydat_peak <- function(id) {
       width = 12, h2("HYDAT Peak Volume Frequency Analysis"),
       box(width = 3,
 
-          shinyBS::bsButton(ns("compute"), "Compute Analysis", style = "primary",
+          bsButton(ns("compute"), "Compute Analysis", style = "primary",
                    class = "centreButton"),
           helpText("Placeholder descriptive text to describe this section, ",
                    "what it does and how to use it"),
@@ -41,8 +41,8 @@ ui_hydat_peak <- function(id) {
                                 choices = list("PIII" = "PIII",
                                                "Weibull" = "weibull")))
           ),
-          shinyBS::bsTooltip(ns("use_max_tip"), tips$use_max, placement = "left"),
-          shinyBS::bsTooltip(ns("fit_distr_tip"), tips$fit_distr, placement = "left"),
+          bsTooltip(ns("use_max_tip"), tips$use_max, placement = "left"),
+          bsTooltip(ns("fit_distr_tip"), tips$fit_distr, placement = "left"),
 
           selectizeInput(
             ns("fit_quantiles"),
@@ -51,7 +51,7 @@ ui_hydat_peak <- function(id) {
             selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
                          0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
             multiple = TRUE),
-          shinyBS::bsTooltip(ns("fit_quantiles"), tips$fit_quantiles,
+          bsTooltip(ns("fit_quantiles"), tips$fit_quantiles,
                              placement = "left"),
 
           fluidRow(
@@ -64,8 +64,8 @@ ui_hydat_peak <- function(id) {
                                 label = "Log trans", slim = TRUE,
                                 value = FALSE, status = "success"))
           ),
-          shinyBS::bsTooltip(ns("plot_curve_tip"), tips$plot_curve, placement = "left"),
-          shinyBS::bsTooltip(ns("use_log_tip"), tips$use_log, placement = "left"),
+          bsTooltip(ns("plot_curve_tip"), tips$plot_curve, placement = "left"),
+          bsTooltip(ns("use_log_tip"), tips$use_log, placement = "left"),
 
           fluidRow(
             column(6, id = ns("prob_plot_tip"),
@@ -81,8 +81,8 @@ ui_hydat_peak <- function(id) {
                      value = paste0("0.9999, 0.999, 0.99, 0.9, 0.5, 0.2, 0.1, ",
                                     "0.02, 0.01, 0.001, .0001")))
           ),
-          shinyBS::bsTooltip(ns("prob_plot_tip"), tips$prob_plot, placement = "left"),
-          shinyBS::bsTooltip(ns("prob_scale_tip"), tips$prob_scale, placement = "left"),
+          bsTooltip(ns("prob_plot_tip"), tips$prob_plot, placement = "left"),
+          bsTooltip(ns("prob_scale_tip"), tips$prob_scale, placement = "left"),
       ),
 
       tabBox(

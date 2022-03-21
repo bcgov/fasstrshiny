@@ -36,7 +36,7 @@ ui_hydro <- function(id) {
                                         "Long-term Monthly"),
                          selected = "Daily",
                          status = "primary")),
-        shinyBS::bsTooltip(ns("type"), "Type of statistic to calculate",
+        bsTooltip(ns("type"), "Type of statistic to calculate",
                            placement = "left"),
 
         # MAD Percents
@@ -45,7 +45,7 @@ ui_hydro <- function(id) {
                        choices = c(1:99),
                        selected = c(5, 10, 20),
                        multiple = TRUE),
-        shinyBS::bsTooltip(ns("mad"), tips$mad, placement = "left"),
+        bsTooltip(ns("mad"), tips$mad, placement = "left"),
 
         # Percentiles
         select_percentiles(

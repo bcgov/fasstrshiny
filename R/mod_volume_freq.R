@@ -25,7 +25,7 @@ ui_volume_freq <- function(id) {
       box(width = 3,
 
           # Buttons
-          shinyBS::bsButton(ns("compute"), "Compute Analysis", style = "primary",
+          bsButton(ns("compute"), "Compute Analysis", style = "primary",
                    class = "centreButton"),
           helpText("Placeholder descriptive text to describe this section, ",
                    "what it does and how to use it"),
@@ -52,9 +52,9 @@ ui_volume_freq <- function(id) {
                     ns("use_log"),
                     label = tags$span(strong("Log trans")),
                     value = FALSE, status = "success", slim = TRUE)),
-                shinyBS::bsTooltip(ns("use_max_tip"), tips$use_max,
+                bsTooltip(ns("use_max_tip"), tips$use_max,
                                    placement = "left"),
-                shinyBS::bsTooltip(ns("use_log_tip"), tips$use_log,
+                bsTooltip(ns("use_log_tip"), tips$use_log,
                                    placement = "left")
               ),
               select_allowed(id)
@@ -80,11 +80,11 @@ ui_volume_freq <- function(id) {
                   prettySwitch(ns("plot_curve"),
                                label = tags$span(strong("Plot curve")),
                                value = TRUE, status = "success", slim = TRUE)),
-              shinyBS::bsTooltip(ns("plot_curve_tip"), tips$plot_curve,
+              bsTooltip(ns("plot_curve_tip"), tips$plot_curve,
                                  placement = "left"),
-              shinyBS::bsTooltip(ns("prob_plot_tip"), tips$prob_plot,
+              bsTooltip(ns("prob_plot_tip"), tips$prob_plot,
                                  placement = "left"),
-              shinyBS::bsTooltip(ns("prob_scale_tip"), tips$prob_scale,
+              bsTooltip(ns("prob_scale_tip"), tips$prob_scale,
                                  placement = "left")
           ),
 
@@ -107,11 +107,11 @@ ui_volume_freq <- function(id) {
                 choices = list("Method of Moments (MOM)" = "MOM",
                                "Maximum Likelihood Estimation (MLE)" = "MLE")),
 
-              shinyBS::bsTooltip(ns("fit_quantiles"), tips$fit_quantiles,
+              bsTooltip(ns("fit_quantiles"), tips$fit_quantiles,
                                  placement = "left"),
-              shinyBS::bsTooltip(ns("fit_distr"), tips$fit_distr,
+              bsTooltip(ns("fit_distr"), tips$fit_distr,
                                  placement = "left"),
-              shinyBS::bsTooltip(ns("fit_distr_method"), tips$fit_distr_method,
+              bsTooltip(ns("fit_distr_method"), tips$fit_distr_method,
                                  placement = "left")
           )
       ),

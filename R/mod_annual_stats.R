@@ -32,7 +32,7 @@ ui_annual_stats <- function(id) {
                                         "Annual"),
                          selected = "Monthly",
                          status = "primary")),
-        shinyBS::bsTooltip(ns("type"), "Type of statistic to calculate", placement = "left"),
+        bsTooltip(ns("type"), "Type of statistic to calculate", placement = "left"),
         checkboxGroupButtons(
           ns("months_plot"),
           label = "Months to plot",
@@ -43,7 +43,7 @@ ui_annual_stats <- function(id) {
                          "Sep" = 9, "Oct" = 10,
                          "Nov" = 11, "Dec" = 12),
           selected = c(1:12)),
-        shinyBS::bsTooltip(ns("months_plot"),
+        bsTooltip(ns("months_plot"),
                   paste0("Months to include/exclude from Monthly calculations<br>",
                          "(Annual uses default months from the Data tab)"),
                   placement = "left"),

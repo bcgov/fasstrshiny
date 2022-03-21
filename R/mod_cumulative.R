@@ -26,14 +26,14 @@ ui_cumulative <- function(id) {
                      label = "Cumulative type",
                      choices = list("Daily", "Monthly"),
                      status = "primary"),
-        shinyBS::bsTooltip(ns("type"), "Type of cumulative statistics to calculate",
+        bsTooltip(ns("type"), "Type of cumulative statistics to calculate",
                            placement = "left"),
         awesomeRadio(ns("discharge"),
                      label = "Discharge type",
                      choices = list("Volumetric Discharge (m3)" = FALSE,
                                     "Runoff Yield (mm)" = TRUE),
                      selected = TRUE),
-        shinyBS::bsTooltip(ns("discharge"), tips$discharge, placement = "left")
+        bsTooltip(ns("discharge"), tips$discharge, placement = "left")
       ),
       tabBox(
         width = 9,

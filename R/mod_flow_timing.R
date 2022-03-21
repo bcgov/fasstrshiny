@@ -30,7 +30,7 @@ ui_flow_timing <- function(id) {
                            choices = c(1:99),
                            selected = c(25, 33, 50, 75),
                            multiple = TRUE),
-            shinyBS::bsTooltip(ns("percent"), tips$percent, placement = "left")
+            bsTooltip(ns("percent"), tips$percent, placement = "left")
         )),
       tabBox(
         width = 9,

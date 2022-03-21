@@ -43,7 +43,7 @@ ui_data_load <- function(id) {
                     accept=c("text/csv",
                              "text/comma-separated-values,text/plain",
                              ".csv"))),
-        shinyBS::bsButton(ns("load"), "Load Data", style = "primary"),
+        bsButton(ns("load"), "Load Data", style = "primary"),
         hr(),
 
         # show_ui("show_stn", "Station Information"),
@@ -135,7 +135,7 @@ server_data_load <- function(id, stations, bc_hydrozones) {
           label = "Water year start",
           choices = setNames(1:12, month.abb),
           selected = 1, size = "sm", width = "100%"),
-        shinyBS::bsTooltip(NS("water_year", id),
+        bsTooltip(NS("water_year", id),
                   title = tips$water_year, placement = "left"))
     })
 
@@ -148,7 +148,7 @@ server_data_load <- function(id, stations, bc_hydrozones) {
                     value = c(min(data_raw()$WaterYear),
                               max(data_raw()$WaterYear)),
                     dragRange = TRUE, sep = ""),
-        shinyBS::bsTooltip(NS(id, "years_range"), title = tips$years_range,
+        bsTooltip(NS(id, "years_range"), title = tips$years_range,
                   placement = "left"))
     })
 
@@ -170,7 +170,7 @@ server_data_load <- function(id, stations, bc_hydrozones) {
                                      to = input$years_range[2], by = 1),
                        selected = s,
                        multiple = TRUE),
-        shinyBS::bsTooltip(NS(id, "years_exclude"), title = tips$years_exclude,
+        bsTooltip(NS(id, "years_exclude"), title = tips$years_exclude,
                   placement = "left"))
     })
 
@@ -188,7 +188,7 @@ server_data_load <- function(id, stations, bc_hydrozones) {
                        choices = m,
                        selected = 1:12,
                        multiple = TRUE),
-        shinyBS::bsTooltip(NS(id, "months"), tips$months, placement = "left"))
+        bsTooltip(NS(id, "months"), tips$months, placement = "left"))
     })
 
     # Update station from Map button
