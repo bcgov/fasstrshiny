@@ -68,7 +68,7 @@ server_flow_timing <- function(id, data_settings, data_raw, data_loaded) {
 
       g <- create_fun(
         fun = "plot_annual_flow_timing", data_name = "data_flow",
-        input, input_data = data_settings,
+        input, input_data = data_settings(),
         extra = glue::glue("percent_total = ",
                            "c({glue::glue_collapse(input$percent, sep = ',')})"))
 
@@ -101,7 +101,7 @@ server_flow_timing <- function(id, data_settings, data_raw, data_loaded) {
 
       t <- create_fun(
         fun = "calc_annual_flow_timing", data_name = "data_flow",
-        input, input_data = data_settings,
+        input, input_data = data_settings(),
         extra = glue::glue("percent_total = ",
                            "c({glue::glue_collapse(input$percent, sep = ',')})"))
 

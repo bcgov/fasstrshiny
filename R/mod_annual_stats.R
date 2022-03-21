@@ -106,7 +106,7 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
                   "Monthly" = "plot_monthly_stats2",
                   "Annual" = "plot_annual_stats2") %>%
         create_fun(data_name = "data_flow", input,
-                   input_data = data_settings,
+                   input_data = data_settings(),
                    params_ignore = pi, extra = e)
 
       code$plot <- g
@@ -151,7 +151,7 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
       t <- switch(input$type,
                   "Monthly" = "calc_monthly_stats",
                   "Annual" = "calc_annual_stats") %>%
-        create_fun(data_name = "data_flow", input, input_data = data_settings,
+        create_fun(data_name = "data_flow", input, input_data = data_settings(),
                    params_ignore = pi, extra = e)
 
       code$table <- t

@@ -45,17 +45,18 @@ test_mod <- function(mod, hydat_stn = "08HB048") {
       fasstr::add_daily_volume() %>%
       fasstr::add_daily_yield()
 
-    data_settings <- reactiveValues(
-      discharge = "Value",
-      water_year = 1,
-      years_range = c(min(data$WaterYear), max(data$WaterYear)),
-      years_exclude = NULL,
-      months = 1:12,
-      roll_days = 1,
-      roll_align = "right",
-      complete = FALSE,
-      missing = TRUE,
-      allowed = 100)
+    data_settings <- reactive({
+      list(
+        discharge = "Value",
+        water_year = 1,
+        years_range = c(min(data$WaterYear), max(data$WaterYear)),
+        years_exclude = NULL,
+        months = 1:12,
+        roll_days = 1,
+        roll_align = "right",
+        complete = FALSE,
+        missing = TRUE,
+        allowed = 100)})
 
     data_raw <- reactive({return(data)})
 

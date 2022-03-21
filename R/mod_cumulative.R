@@ -69,7 +69,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
       select_plot_options(
         select_plot_log(
           id, value = formals(plot_daily_cumulative_stats)$log_discharge),
-        select_add_year(id, data_settings$years_range))
+        select_add_year(id, data_settings()$years_range))
     })
 
 
@@ -89,7 +89,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
       g <- switch(input$type,
                   "Monthly" = "plot_monthly_cumulative_stats",
                   "Daily"   = "plot_daily_cumulative_stats") %>%
-        create_fun(data_name = "data_flow", input, input_data = data_settings,
+        create_fun(data_name = "data_flow", input, input_data = data_settings(),
                    extra = e, params_ignore = "discharge")
 
       code$plot <- g
@@ -129,7 +129,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
       t <- switch(input$type,
                   "Monthly" = "calc_monthly_cumulative_stats",
                   "Daily"   = "calc_daily_cumulative_stats") %>%
-        create_fun(data_name = "data_flow", input, input_data = data_settings,
+        create_fun(data_name = "data_flow", input, input_data = data_settings(),
                    params_ignore = "discharge",
                    extra = glue::glue("use_yield = {input$discharge}"))
 

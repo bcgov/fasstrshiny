@@ -414,18 +414,27 @@ server_data_load <- function(id, stations, bc_hydrozones) {
 
 
     # Outputs ------------------------
-    data_settings <- reactiveValues()
-    observe({
-      data_settings[["discharge"]] <- input$discharge
-      data_settings[["water_year"]] <- input$water_year
-      data_settings[["years_range"]] <- input$years_range
-      data_settings[["years_exclude"]] <- input$years_exclude
-      data_settings[["months"]] <- input$months
-      data_settings[["roll_days"]] <- input$roll_days
-      data_settings[["roll_align"]] <- input$roll_align
-      data_settings[["complete"]] <- input$complete
-      data_settings[["missing"]] <- input$missing
-      data_settings[["allowed"]] <- input$allowed
+    data_settings <- reactive({
+      # data_settings[["discharge"]] <- input$discharge
+      # data_settings[["water_year"]] <- input$water_year
+      # data_settings[["years_range"]] <- input$years_range
+      # data_settings[["years_exclude"]] <- input$years_exclude
+      # data_settings[["months"]] <- input$months
+      # data_settings[["roll_days"]] <- input$roll_days
+      # data_settings[["roll_align"]] <- input$roll_align
+      # data_settings[["complete"]] <- input$complete
+      # data_settings[["missing"]] <- input$missing
+      # data_settings[["allowed"]] <- input$allowed
+      list("discharge" = input$discharge,
+           "water_year" = input$water_year,
+           "years_range" = input$years_range,
+           "years_exclude" = input$years_exclude,
+           "months" = input$months,
+           "roll_days" = input$roll_days,
+           "roll_align" = input$roll_align,
+           "complete" = input$complete,
+           "missing" = input$missing,
+           "allowed" = input$allowed)
     })
 
     list(

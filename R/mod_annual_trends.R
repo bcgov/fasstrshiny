@@ -115,16 +115,16 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
   moduleServer(id, function(input, output, session) {
 
     # UI -------------------------
-    # Excluded years, takes defaults from data_settings$years_exclude,
+    # Excluded years, takes defaults from data_settings()$years_exclude,
     # but allowed to modify here
     output$ui_exclude <- renderUI({
-      req(data_settings$years_range)
+      req(data_settings()$years_range)
       tagList(
         selectizeInput(NS(id, "years_exclude"),
                        label = "Years to exclude",
-                       choices = seq(from = data_settings$years_range[1],
-                                     to = data_settings$years_range[2], by = 1),
-                       selected = data_settings$years_exclude,
+                       choices = seq(from = data_settings()$years_range[1],
+                                     to = data_settings()$years_range[2], by = 1),
+                       selected = data_settings()$years_exclude,
                        multiple = TRUE),
         bsTooltip(id = "years_exclude", title = tips$years_exclude,
                            placement = "left"))
@@ -141,10 +141,10 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
       tagList(
         sliderInput(NS(id, "allowed_annual"),
                     label = "Annual - Allowed missing (%)",
-                    value = data_settings$allowed, step = 5, min = 0, max = 100),
+                    value = data_settings()$allowed, step = 5, min = 0, max = 100),
         sliderInput(NS(id, "allowed_monthly"),
                     label = "Monthly - Allowed missing (%)",
-                    value = data_settings$allowed, step = 5, min = 0, max = 100),
+                    value = data_settings()$allowed, step = 5, min = 0, max = 100),
         bsTooltip(NS(id, "allowed_annual"), tips$allowed, placement = "left"),
         bsTooltip(NS(id, "allowed_monthly"), tips$allowed, placement = "left")
       )
@@ -165,7 +165,7 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
         "low_roll_days", "low_roll_align", "percent", "normal",
         "allowed_annual", "allowed_monthly"))
       s$data_raw <- data_raw()
-      s$data_settings <- data_settings
+      s$data_settings <- data_settings()
       s
     })
 
@@ -209,8 +209,8 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
         glue::glue("zyp_method = '{input$zyp}'"),
         glue::glue("annual_percentiles = c({glue::glue_collapse(input$annual_percentiles, sep = ', ')})"),
         glue::glue("monthly_percentiles = c({glue::glue_collapse(input$monthly_percentiles, sep = ', ')})"),
-        glue::glue("stats_days = {data_settings$roll_days}"),
-        glue::glue("stats_align = '{data_settings$roll_align}'"),
+        glue::glue("stats_days = {data_settings()$roll_days}"),
+        glue::glue("stats_align = '{data_settings()$roll_align}'"),
         glue::glue("lowflow_days = c({glue::glue_collapse(input$low_roll_days, sep = ', ')})"),
         glue::glue("lowflow_align = '{input$low_roll_align}'"),
         glue::glue("timing_percent = c({glue::glue_collapse(input$percent, sep = ', ')})"),
@@ -223,7 +223,7 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
 
       r <- create_fun(
         fun = "compute_annual_trends", data_name = "data_flow", input,
-        input_data = data_settings, extra = p, params_ignore = "years_exclude")
+        input_data = data_settings(), extra = p, params_ignore = "years_exclude")
 
       code$data <- r
       eval_check(r)

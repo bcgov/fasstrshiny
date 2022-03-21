@@ -95,7 +95,7 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
         select_plot_log(
           id, value = formals(plot_longterm_daily_stats)$log_discharge),
         select_plot_extremes(id),
-        select_add_year(id, data_settings$years_range),
+        select_add_year(id, data_settings()$years_range),
         select_add_dates(id),
         select_add_mad(id))
     })
@@ -122,7 +122,7 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
                   "Daily" = "plot_daily_stats",
                   "Long-term Monthly" = "plot_longterm_monthly_stats",
                   "Long-term Daily" = "plot_longterm_daily_stats") %>%
-        create_fun(data_name = "data_flow", input, input_data = data_settings,
+        create_fun(data_name = "data_flow", input, input_data = data_settings(),
                    extra = dplyr::if_else(
                      input$add_year != "",
                      glue::glue("add_year = {input$add_year}"),
@@ -149,10 +149,10 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
       if(input$type == "Daily" & !is.null(input$add_dates)){
         dts <- data.frame(
           Date = get_date(input$add_dates,
-                          water_year = as.numeric(data_settings$water_year))) %>%
+                          water_year = as.numeric(data_settings()$water_year))) %>%
           dplyr::mutate(labs = format(Date, '%b-%d'),
                         hjust = dplyr::if_else(
-                          as.numeric(data_settings$water_year) ==
+                          as.numeric(data_settings()$water_year) ==
                             as.numeric(format(Date, "%m")),
                           -0.05, 1.05))
 
@@ -205,7 +205,7 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
 
       t <- create_fun(
         fun = "calc_longterm_mean",
-        data_name = "data_flow", input, input_data = data_settings,
+        data_name = "data_flow", input, input_data = data_settings(),
         extra = glue::glue(
           "percent_MAD = c({glue::glue_collapse(input$mad, sep = ',')})"))
 
@@ -234,7 +234,7 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
                   "Long-term Monthly" = "calc_longterm_monthly_stats",
                   "Daily" = "calc_daily_stats") %>%
         create_fun(
-          data_name = "data_flow", input, input_data = data_settings,
+          data_name = "data_flow", input, input_data = data_settings(),
           params_ignore = "percentiles",
           extra = glue::glue(
             "percentiles = c({glue::glue_collapse(perc, sep = ', ')})"))

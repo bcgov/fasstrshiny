@@ -153,7 +153,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
       data_flow <- data_raw()
 
       d <- create_fun("screen_flow_data", data_name = "data_flow", input,
-                      input_data = data_settings)
+                      input_data = data_settings())
 
       code$data <- glue::glue("data_available <- {d}")
       eval(parse(text = d))
@@ -173,7 +173,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
         glue::glue_collapse(sep = ", ")
 
       g <- create_fun("plot_data_screening", data_name = "data_flow",
-                      input, input_data = data_settings, extra = e)
+                      input, input_data = data_settings(), extra = e)
 
       code$plot_summary <- g
 
@@ -210,7 +210,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
       g <- switch(input$symbols_type,
                   "Flow" = "plot_flow_data_symbols",
                   "Days" = "plot_annual_symbols") %>%
-        create_fun(data_name = "data_flow", input, input_data = data_settings,
+        create_fun(data_name = "data_flow", input, input_data = data_settings(),
                    params_ignore = "discharge",
                    extra = dplyr::if_else(
                      input$symbols_type == "Days",
@@ -262,7 +262,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
 
       g <- create_fun(
         fun = "plot_missing_dates", data_name = "data_flow",
-        input, input_data = data_settings,
+        input, input_data = data_settings(),
         params_ignore = c("discharge", "months"),
         extra = glue::glue(
           "months = c({glue::glue_collapse(input$months_inc, sep = ', ')}), ",

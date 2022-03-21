@@ -94,7 +94,7 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
       data_flow <- data_raw()
 
       g <- create_fun(fun = "plot_flow_duration", data_name = "data_flow",
-                      input, input_data = data_settings)
+                      input, input_data = data_settings())
 
       code$plot <- g
 
@@ -127,7 +127,7 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
 
       t <- create_fun(
         fun = "calc_longterm_daily_stats",
-        data_name = "data_flow", input, input_data = data_settings,
+        data_name = "data_flow", input, input_data = data_settings(),
         extra = "percentiles = 1:99",
         end = "%>% dplyr::select(-Mean, -Median, -Minimum, -Maximum)")
 

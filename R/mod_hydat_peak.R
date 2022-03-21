@@ -87,7 +87,7 @@ server_hydat_peak <- function(id, data_settings, data_raw, data_loaded) {
         "plot_curve", "use_log",
         "prob_plot", "prob_scale"))
       s$data_raw <- data_raw()
-      s$data_settings <- data_settings
+      s$data_settings <- data_settings()
       s
     })
 
@@ -138,7 +138,7 @@ server_hydat_peak <- function(id, data_settings, data_raw, data_loaded) {
         glue::glue_collapse(sep = ", ")
 
       r <- create_fun(fun = "compute_hydat_peak_frequencies", input = input,
-                      input_data = data_settings, extra = p)
+                      input_data = data_settings(), extra = p)
 
       code$data <- r
       eval_check(r)

@@ -95,15 +95,15 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
 
   moduleServer(id, function(input, output, session) {
 
-    # Excluded years, takes defaults from data_settings$years_exclude,
+    # Excluded years, takes defaults from data_settings()$years_exclude,
     # but allowed to modify here
     output$ui_exclude <- renderUI({
-      req(data_settings$years_range)
+      req(data_settings()$years_range)
       selectizeInput(NS(id, "years_exclude"),
                      label = "Years to exclude",
-                     choices = seq(from = data_settings$years_range[1],
-                                   to = data_settings$years_range[2], by = 1),
-                     selected = data_settings$years_exclude,
+                     choices = seq(from = data_settings()$years_range[1],
+                                   to = data_settings()$years_range[2], by = 1),
+                     selected = data_settings()$years_exclude,
                      multiple = TRUE)
     })
 
@@ -134,7 +134,7 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
         "prob_plot", "prob_scale", "plot_curve",
         "fit_quantiles", "fit_distr", "fit_distr_method"))
       s$data_raw <- data_raw()
-      s$data_settings <- data_settings
+      s$data_settings <- data_settings()
       s
     })
 
@@ -185,7 +185,7 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
         glue::glue_collapse(sep = ", ")
 
       r <- create_fun(fun = "compute_annual_frequencies", data_name = "data_flow",
-                      input, input_data = data_settings,
+                      input, input_data = data_settings(),
                       extra = p, params_ignore = "years_exclude")
 
       code$data <- r
