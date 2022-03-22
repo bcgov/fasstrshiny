@@ -59,6 +59,7 @@ code_break_lines <- function(code) {
 # Plotting functions -----------------------------------------
 
 #' Create a ggplot patchwork of the fitdistrplus fitting plots
+#' @noRd
 gg_fitdistr <- function(fit, title) {
 
   g <- patchwork::wrap_plots(
@@ -74,6 +75,7 @@ gg_fitdistr <- function(fit, title) {
 }
 
 #' Create a vline interactive tooltip to add to ggiraph plots
+#' @noRd
 create_vline_interactive <- function(data, stats, date_fmt = "%b %d",
                                      combine = FALSE, digits = 4, size = 1,
                                      alpha = 0.005) {
@@ -125,12 +127,14 @@ create_vline_interactive <- function(data, stats, date_fmt = "%b %d",
 # Minor utility functions -----------------------------------
 
 #' Convert character strings to numeric vectors
+#' @noRd
 text_to_num <- function(x) {
   suppressWarnings(as.numeric(stringr::str_split(x, ",", simplify = TRUE)))
 }
 
 
 #' Return the *plotting date* for a day of year given the water water year
+#' @noRd
 get_date <- function(n, water_year) {
   d <- as.Date(as.numeric(n), origin = as.Date("1900-01-01") - 1)
   if(water_year != 1) {
@@ -141,11 +145,13 @@ get_date <- function(n, water_year) {
 }
 
 #' Turn Day of Year into a date given a year
+#' @noRd
 yday_as_date <- function(yday, year) {
  as.Date(yday, origin = paste0(year, "-01-01")) - 1
 }
 
 #' Get an SVG of the ggiraph lasso for use in messages
+#' @noRd
 lasso_svg <- function() {
   shiny::HTML("
 <svg xmlns='http://www.w3.org/2000/svg' width='10pt' height='10pt' viewBox='0 0 230 230' stroke = '#069'><g><ellipse ry='65.5' rx='86.5' cy='94' cx='115.5' stroke-width='20' fill='transparent'></ellipse><ellipse ry='11.500001' rx='10.5' cy='153' cx='91.5' stroke-width='20' fill='transparent'></ellipse><line y2='210.5' x2='105' y1='164.5' x1='96' stroke-width='20'></line></g></svg>")

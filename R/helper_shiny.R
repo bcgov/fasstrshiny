@@ -56,7 +56,7 @@ stop_ui_suspend <- function(id, output) {
 #'
 #' Takes text function expression, parses and evaluates it then checks for
 #' errors. Any errors are passed through to the Shiny app.
-
+#' @noRd
 eval_check <- function(t) {
   t <- try(eval(parse(text = t), envir = parent.frame(n = 1)), silent = TRUE)
   if("try-error" %in% class(t)) {
@@ -68,12 +68,14 @@ eval_check <- function(t) {
 
 
 #' Messages if data not loaded
+#' @noRd
 check_data <- function(x){
   validate(need(x, "You'll need to first load some data under Data > Loading"))
 }
 
 #' For multiple, sequential need() inside a validate
 #' <https://shiny.rstudio.com/articles/validation.html#then>
+#' @noRd
 
 `%then%` <- function(a, b) {
   if (is.null(a)) b else a

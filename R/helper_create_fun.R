@@ -98,6 +98,7 @@ create_fun <- function(fun, data_name = NULL, input, input_data = NULL,
 #'
 #' - All parameters here, must be listed in data-raw/parameters.R
 #' (and when adding to that file, you'll have to re-run it and re-load the package)
+#' @noRd
 
 combine_parameters <- function(values) {
   # Create standard parameters
