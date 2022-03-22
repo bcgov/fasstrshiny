@@ -66,31 +66,27 @@ create_fun <- function(fun, data_name = NULL, input, input_data = NULL,
   # Retrieve inputs for these parameters
   # (data + mod, but only data where not in mod)
 
-  values_data <- purrr::map(params_data, ~input_data[[.]])
-  values_mod <- purrr::map(params_mod, ~input[[.]])
+  values_data <- purrr::map(params_data, ~input_data[[.]]) %>%
+    setNames(params_data)
+  values_mod <- purrr::map(params_mod, ~input[[.]]) %>%
+    setNames(params_mod)
 
   # Join
   values <- append(values_data, values_mod)
-  params <- c(params_data, params_mod)
 
   # Remove NULL/empty
   nulls <- purrr::map_lgl(values, ~is.null(.) || (is.character(.) && . == ""))
   values <- values[!nulls]
-  params <- params[!nulls]
 
   # Find and remove defaults
-  defaults <- remove_defaults(fun, input_values = setNames(values, params))
-  params <- params[!defaults]
+  defaults <- remove_defaults(fun, input_values = values)
   values <- values[!defaults]
 
   # If we have allowed_missing (allowed), omit ignore_missing (missing)
-  if("allowed" %in% params) {
-    values <- values[params != "missing"]
-    params <- params[params != "missing"]
-  }
+  if("allowed" %in% names(values)) values <- values[names(values) != "missing"]
 
   # Put it all together
-  p <- combine_parameters(params, values)
+  p <- combine_parameters(values)
   if(extra == "") extra <- NULL
   args <- glue::glue_collapse(c(data_name, na.omit(p), extra), sep = ', ')
 
@@ -98,17 +94,24 @@ create_fun <- function(fun, data_name = NULL, input, input_data = NULL,
 }
 
 
+#' Determine how parameters should be written as fasstr arguments
+#'
+#' - All parameters here, must be listed in data-raw/parameters.R
+#' (and when adding to that file, you'll have to re-run it and re-load the package)
 
-combine_parameters <- function(params, values) {
+combine_parameters <- function(values) {
   # Create standard parameters
   #
   # - REMEMBER! When collapsing multiple elements with glue_collapse, use [[i]]
+  # - Note that character values (i.e. custom_months_label) need to be surrounded by ' '
+
+  params <- names(values)
+
   p <- vector()
   for(i in seq_along(params)) {
     p[i] <- dplyr::case_when(
 
       # Specific
-      params[i] == "discharge" ~ glue::glue("values = '{values[i]}'"),
       params[i] == "longterm" ~ glue::glue("include_longterm = {values[i]}"),
       params[i] == "percentiles" ~
         glue::glue("percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
@@ -122,16 +125,18 @@ combine_parameters <- function(params, values) {
       params[i] == "missing" ~ glue::glue("ignore_missing = {values[i]}"),
       params[i] == "allowed" ~ glue::glue("allowed_missing = {values[i]}"),
       params[i] == "complete" ~ glue::glue("complete_years = {values[i]}"),
-      params[i] == "plot_extremes" ~ glue::glue("include_extremes = {values[i]}"),
 
       # Data
+      params[i] == "discharge" ~ glue::glue("values = '{values[i]}'"),
+      params[i] == "basin_area" ~ glue::glue("basin_area = {values[i]}"),
       params[i] == "water_year" ~
         glue::glue("water_year_start = {values[i]}"),
       params[i] == "years_range" ~
         glue::glue("start_year = {values[[i]][1]}, end_year = {values[[i]][2]}"),
       params[i] == "years_exclude" ~
         glue::glue("exclude_years = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
-      params[i] == "roll_days" ~ glue::glue("roll_days = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
+      params[i] == "roll_days" ~
+        glue::glue("roll_days = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
       params[i] == "roll_align" ~ glue::glue("roll_align = '{values[i]}'"),
       params[i] == "months" ~
         glue::glue("months = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
@@ -139,7 +144,8 @@ combine_parameters <- function(params, values) {
       # Plot
       params[i] == "daterange" ~
         glue::glue("start_date = '{values[[i]][1]}', end_date = '{values[[i]][2]}'"),
-      params[i] == "plot_log" ~ glue::glue("log_discharge = {values[i]}")
+      params[i] == "plot_log" ~ glue::glue("log_discharge = {values[i]}"),
+      params[i] == "plot_extremes" ~ glue::glue("include_extremes = {values[i]}")
     )
   }
   p
