@@ -10,6 +10,9 @@ d <- fill_missing_dates(station_number = "08HB048") %>%
   add_daily_yield()
 
 
+plot_flow_data_symbols(d, values = "Volume_m3")
+plot_annual_symbols(d, plot_percent = FALSE)
+
 plot_monthly_stats2(d)
 plot_monthly_stats(d)
 

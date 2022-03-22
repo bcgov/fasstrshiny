@@ -19,7 +19,8 @@ ui_overview <- function(id) {
     column(
       width = 12, h2("Overview"),
       box(width = 3,
-          helpText("Placeholder descriptive text to describe this section, what it does and how to use it")),
+          helpText("Placeholder descriptive text to describe this section, ",
+                   "what it does and how to use it")),
       tabBox(
         width = 9,
 

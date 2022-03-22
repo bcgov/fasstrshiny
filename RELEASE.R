@@ -12,7 +12,6 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-
 # Set up HYDAT data base ------------------------------------------------------
 
 # We need to include HYDAT data in the shinyapps.io, but NOT in the fasstrshiny
@@ -21,7 +20,7 @@
 # with downloading as normal
 
 # Compare versions
-hy <- fasstrshiny:::find_hydat() # "inst/shiny_app/Hydat.sqlite3"
+hy <- find_hydat() # "inst/shiny_app/Hydat.sqlite3"
 
 v1 <- lubridate::as_date(tidyhydat::hy_version(hy)$Date) #LOCAL
 v2 <- "https://collaboration.cmc.ec.gc.ca/cmc/hydrometrics/www/" %>%
@@ -38,6 +37,9 @@ if(v1 != v2) tidyhydat::download_hydat("inst/shiny_app/")
 
 # Make sure ignored
 usethis::use_git_ignore("inst/shiny_app/Hydat.sqlite3")
+
+# Update internal data -----------------------------------
+source("data-raw/parameters.R")
 
 # Deplying on shinyapps.io ----------------------------------------------------
 
@@ -56,6 +58,8 @@ remotes::install_github("bcgov/fasstrshiny", ref = "steffi-dev", upgrade = "alwa
 remotes::install_github("bcgov/fasstr", upgrade = "always")
 
 ## Deploy shiny app --------------------------------
+
+# Restart R, to start fresh and make sure you haven't loaded fasstrshiny locally
 
 rsconnect::deployApp(appDir = "inst/shiny_app/", account = "bcgov-env",
                      appName = "fasstrshiny", forceUpdate = TRUE)
