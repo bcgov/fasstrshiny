@@ -42,22 +42,14 @@ ui_data_load <- function(id) {
           fileInput(ns("file"), label = "Select File",
                     accept=c("text/csv",
                              "text/comma-separated-values,text/plain",
-                             ".csv"))),
+                             ".csv")),
+          uiOutput(ns("ui_file_cols"))),
         bsButton(ns("load"), "Load Data", style = "primary"),
         hr(),
 
-        # show_ui("show_stn", "Station Information"),
-        # fluidRow(id = ns("stn"),
-        #          column(
-        #            width = 6,
-        #            textInput(ns("station_name"),
-        #                      label = "Name",
-        #                      placeholder = "ex. Mission Creek")),
-        #          column(
-        #            width = 6,
-        #            numericInput(ns("basin_area"),
-        #                         label = html("Basin area (km<sup>2</sup>)"), value = 0,
-        #                         min = 0, step = 0.1))),
+        show_ui(ns("show_stn"), "Station Information"),
+        div(id = ns("stn"), uiOutput(ns("ui_stn"))),
+
         show_ui(ns("show_dates"), "Dates"),
         div(id = ns("dates"),
             uiOutput(ns("ui_water_year")),
@@ -119,15 +111,84 @@ server_data_load <- function(id, stations, bc_hydrozones) {
 
     # Reactive Values
     code <- reactiveValues()
-    meta <- reactiveValues(station_id = "",
-                           station_name = "",
-                           basin_area = NA_real_)
 
     # Data loaded
     data_loaded <- reactiveVal(FALSE)
+    data_type <- reactiveVal("None")
+    data_id <- reactiveVal("None")
     observe(data_loaded(TRUE)) %>% bindEvent(data_raw())
 
     # UI elements ---------------------------------------
+
+    # Hide/Show based on toggle
+    observe(shinyjs::toggle("stn", condition = input$show_stn))
+    observe(shinyjs::toggle("dates", condition = input$show_dates))
+    observe(shinyjs::toggle("types", condition = input$show_types))
+
+    output$ui_file_cols <- renderUI({
+
+      if(!is.null(input$file)){
+        cols <- try(read.csv(input$file$datapath, nrows = 1))
+        validate(need(!"try-error" %in% class(cols),
+                      "Cannot read this csv, is it comma-separated with headers?"))
+        cols <- names(cols)
+      } else cols <- c("", "", "")
+
+      tagList(
+        h4(strong("Columns names")),
+        fluidRow(
+          column(width = 6,
+                 pickerInput(
+                   NS(id, "col_date"), width = "100%",
+                   label = HTML("Date column"),
+                   choices = cols, selected = cols[1])),
+          column(width = 6,
+                 pickerInput(
+                   NS(id, "col_value"),
+                   label = HTML("Flow column"),
+                   choices = cols, selected = cols[2]))),
+        fluidRow(
+          column(width = 6,
+                 pickerInput(
+                   NS(id, "col_symbol"),
+                   label = HTML("Symbols column"),
+                   choices = cols, selected = cols[3])),
+          column(width = 6,
+                 strong("Loading Tips"), br(),
+                 textOutput(NS(id, "csv_msg")))))
+    })
+
+    output$ui_stn <- renderUI({
+
+      if(input$source == "HYDAT") {
+        m <- dplyr::filter(stations, .data$STATION_NUMBER == input$station_num)
+        stn_name <- m$STATION_NAME
+        basin <- as.numeric(m$DRAINAGE_AREA_GROSS)
+      } else if(!is.null(input$file)) {
+        stn_name <- basename(input$file$name)
+        basin <- 0
+      } else {
+        stn_name <- ""
+        basin <- 0
+      }
+
+      fluidRow(
+        column(
+          width = 6,
+          textInput(NS(id, "station_name"),
+                    label = "Name", value = stn_name,
+                    placeholder = "ex. Mission Creek")),
+        column(
+          width = 6,
+            numericInput(NS(id, "basin_area"),
+                         label = HTML("Basin area (km<sup>2</sup>)"),
+                         value = basin,
+                         min = 0, step = 0.1)),
+        bsTooltip(NS(id, "station_name"), "Station Name for context",
+                  placement = "left"),
+        bsTooltip(NS(id, "basin_area"), tips$basin_area, placement = "left"))
+    })
+
     output$ui_water_year <- renderUI({
       tagList(
         radioGroupButtons(
@@ -214,14 +275,26 @@ server_data_load <- function(id, stations, bc_hydrozones) {
         select_daterange(id, data_raw()))
     })
 
+    output$csv_msg <- renderText({
+      validate(
 
-    # Hide/Show based on toggle
-    observe(shinyjs::toggle("stn", condition = input$show_stn))
-    observe(shinyjs::toggle("dates", condition = input$show_dates))
-    observe(shinyjs::toggle("types", condition = input$show_types))
+        need(input$file, "Select a file to upload") %then%
 
+          need(length(unique(c(input$col_date, input$col_value,
+                               input$col_symbol))) == 3,
+               "Date, Value and Symbol columns must be distinct") %then%
 
-    ## HYDAT Map -------------------------
+          need(!is.null(input$basin_area) && input$basin_area > 0,
+               paste0("Specify a non-zero basin area ",
+                      "under 'Station Information'")) %then%
+
+          need(data_id() == input$file$name,
+               "Click the Load Data button!"),
+
+        errorClass = "helper")
+    })
+
+    # HYDAT Map -------------------------
     output$hydat_map <- leaflet::renderLeaflet({
       leaflet::leaflet() %>%
         leaflet::addProviderTiles(
@@ -233,20 +306,20 @@ server_data_load <- function(id, stations, bc_hydrozones) {
           fillOpacity = 0.15, fillColor = "black", color = "black",
           label = ~stringr::str_to_title(HYDROLOGICZONE_NAME)) %>%
         leaflet::addCircleMarkers(
-          data = stations, lng = ~longitude, lat = ~latitude,
-          layerId = ~ station_number,
+          data = stations, lng = ~LONGITUDE, lat = ~LATITUDE,
+          layerId = ~ STATION_NUMBER,
           radius = 3, fillOpacity = 1, stroke = FALSE, color = "#31688E",
-          label = ~ station_number,
+          label = ~ STATION_NUMBER,
           popup = ~glue::glue("<strong>Station Name:</strong> ",
-                              "{stringr::str_to_title(station_name)}<br>",
-                              "<strong>Station Number:</strong> {station_number}"))
+                              "{stringr::str_to_title(STATION_NAME)}<br>",
+                              "<strong>Station Number:</strong> {STATION_NUMBER}"))
     })
 
-    ## HYDAT Table ------------------------
+    # HYDAT Table ------------------------
     output$hydat_table <- DT::renderDT({
       stations %>%
-        dplyr::select("station_number", "station_name", "province",
-                      "hyd_status", "real_time", "regulated", "parameters") %>%
+        dplyr::select("STATION_NUMBER", "STATION_NAME", "PROVINCE",
+                      "HYD_STATUS", "REAL_TIME", "REGULATED", "PARAMETERS") %>%
         DT::datatable(selection = "single", rownames = FALSE, filter = 'top',
                       extensions = c("Scroller"),
                       options = list(scrollX = TRUE,
@@ -255,49 +328,68 @@ server_data_load <- function(id, stations, bc_hydrozones) {
                                      dom = 'Brtip'))
     })
 
-    ## Raw data ------------------
+    # Raw data ------------------
     data_raw <- reactive({
-      req(input$station_num, input$water_year, input$load > 0)
+      req(input$water_year, input$load > 0)
 
       if (input$source == "HYDAT") {
-        m <- dplyr::filter(stations, .data$station_number == input$station_num)
-        meta$station_id <- input$station_num
-        meta$station_name <- m$station_name
-        meta$basin_area <- as.numeric(m$drainage_area_gross)
+        req(input$station_num)
 
-        d <- glue::glue(
+        d1 <- glue::glue(
           "data_flow <- fill_missing_dates(",
-          "        station_number = '{input$station_num}') %>%",
-          "  add_date_variables(water_year_start = {as.numeric(input$water_year)}) %>%",
-          "  add_daily_volume() %>%",
-          "  add_daily_yield()")
+          "        station_number = '{input$station_num}')")
+
+        d2 <- d1
+
+        # Set data info
+        data_type("HYDAT")
+        data_id(input$station_num)
 
       } else {
-        inFile <- input$file
-        if (is.null(inFile)) return(NULL)
+        req(input$file, input$col_date, input$col_value, input$col_symbol)
 
-        meta$station_id <- basename(input$file)
-        meta$station_name <- input$station_name
-        meta$basin_area <- as.numeric(input$basin_area)
+        validate(need(length(unique(c(
+          input$col_date, input$col_value, input$col_symbol))) == 3,
+          "Date, Value and Symbol columns must be distinct"))
+
+        validate(need(!is.null(input$basin_area) && input$basin_area > 0,
+                      paste0("Must have a valid, non-zero basin area ",
+                             "(see Station Information)")))
 
         d <- glue::glue(
-          "data_flow <- read.csv({inFile$datapath}) %>%",
-          "  fill_missing_dates() %>%",
-          "  add_date_variables(water_year_start = {as.numeric(input$water_year)})")
+          "dplyr::rename(Date = {input$col_date}, Value = {input$col_value}, ",
+          "              Symbol = {input$col_symbol}) %>%",
+          "fill_missing_dates()")
 
+        # For user to reproduce locally
+        d1 <- glue::glue("data_flow <- read.csv('{input$file$name}') %>% ", d)
+
+        # Real loading
+        d2 <- glue::glue("data_flow <- read.csv('{input$file$datapath}') %>% ",
+                         d)
+
+        data_type("CSV")
+        data_id(basename(input$file$name))
       }
 
-      # Save unevaluated code for code tab
-      code$data_raw <- d
+      d_dates <- glue::glue(
+        " %>% ",
+        "add_date_variables(water_year_start = {as.numeric(input$water_year)}) %>%",
+        "add_daily_volume() %>%",
+        "add_daily_yield(basin_area = {input$basin_area})")
+
+
+      # Save unevaluated user code for code tab
+      code$data_raw <- glue::glue(d1, d_dates)
 
       data_loaded(TRUE)
 
-      eval(parse(text = d)) # Evaluate and create data_flow
+      eval(parse(text = glue::glue(d2, d_dates))) # Evaluate and create data_flow
     }) %>%
       bindEvent(input$load, input$water_year,
                 ignoreInit = TRUE)
 
-    ## Plot ----------------
+    # Plot ----------------
     output$plot <- plotly::renderPlotly({
       check_data(data_loaded())
       req(input$daterange,
@@ -319,28 +411,26 @@ server_data_load <- function(id, stations, bc_hydrozones) {
                    "hoverCompareCartesian", "hoverClosestCartesian"))
     })
 
-    ## Table ----------------
+    # Table ----------------
     output$table <- DT::renderDT({
+      check_data(data_loaded())
       req(input$years_range)
-
-      check_data(input)
       data_raw() %>%
-        dplyr::rename("StationNumber" = "STATION_NUMBER") %>%
         dplyr::select(-"Month") %>%
-        dplyr::filter(WaterYear >= input$years_range[1],
-                      WaterYear <= input$years_range[2],
-                      !WaterYear %in% input$years_exclude,
-                      MonthName %in% month.abb[as.numeric(input$months)]) %>%
+        dplyr::filter(.data$WaterYear >= input$years_range[1],
+                      .data$WaterYear <= input$years_range[2],
+                      !.data$WaterYear %in% input$years_exclude,
+                      .data$MonthName %in% month.abb[as.numeric(input$months)]) %>%
         prep_DT()
     })
 
-    ## R Code ----------------
+    # R Code ----------------
     output$code <- renderText({
       code_format(code)
     })
 
 
-    ## Sidebar: Data Info ------------------------
+    # Sidebar: Data Info ------------------------
     output$info <- gt::render_gt({
 
       d <- dplyr::tibble(name = "", value = "", .rows = 0)
@@ -354,8 +444,8 @@ server_data_load <- function(id, stations, bc_hydrozones) {
           ye <- ""
         } else ye <- glue::glue_collapse(input$years_exclude, sep = ", ")
 
-        t <- glue::glue("Current Data: {meta$station_id}")
-        s <- meta$station_name
+        t <- glue::glue("Current Data: {data_id()}")
+        s <- input$station_name
 
         m <- input$months
         if(all(1:12 %in% m)) m <- "all" else m <- glue::glue_collapse(m, sep = ", ")
@@ -410,16 +500,6 @@ server_data_load <- function(id, stations, bc_hydrozones) {
 
     # Outputs ------------------------
     data_settings <- reactive({
-      # data_settings[["discharge"]] <- input$discharge
-      # data_settings[["water_year"]] <- input$water_year
-      # data_settings[["years_range"]] <- input$years_range
-      # data_settings[["years_exclude"]] <- input$years_exclude
-      # data_settings[["months"]] <- input$months
-      # data_settings[["roll_days"]] <- input$roll_days
-      # data_settings[["roll_align"]] <- input$roll_align
-      # data_settings[["complete"]] <- input$complete
-      # data_settings[["missing"]] <- input$missing
-      # data_settings[["allowed"]] <- input$allowed
       list("discharge" = input$discharge,
            "water_year" = input$water_year,
            "years_range" = input$years_range,
@@ -429,7 +509,9 @@ server_data_load <- function(id, stations, bc_hydrozones) {
            "roll_align" = input$roll_align,
            "complete" = input$complete,
            "missing" = input$missing,
-           "allowed" = input$allowed)
+           "allowed" = input$allowed,
+           "basin_area" = input$basin_area,
+           "station_name" = input$station_name)
     })
 
     list(

@@ -17,6 +17,7 @@ parameters <- dplyr::tribble(
   "years_exclude",        "exclude_years",       "Years to exclude from calculations", TRUE,
   "daterange",            "start_date",          "Range of dates to include", TRUE,
   "daterange",            "end_date",            "Range of dates to include", TRUE,
+  "basin_area",           "basin_area",          "Basin area in km<sup>2</sup>. Defaults to area specified by HYDAT stations data, but can be overriden here.<br>Must be specified for non-HYDAT data.", TRUE,
   "availability",         "plot_availability",   "Indicate years which contain only partial data", TRUE,
   "add_year",             "add_year",            "Add data from a given year to the plot", TRUE,
   "months",               "months",              "Months to include in calculations", TRUE,

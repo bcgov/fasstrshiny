@@ -102,7 +102,11 @@ test_mod <- function(mod, hydat_stn = "08HB048") {
         roll_align = "right",
         complete = FALSE,
         missing = TRUE,
-        allowed = 100)})
+        allowed = 100,
+        basin_area = 10.3,
+        station_name = "Carnation Creek At The Mouth")
+    })
+
 
     data_raw <- reactive({return(data)})
 

@@ -17,6 +17,10 @@
   font-weight: bold;
 }
 
+.shiny-output-error-helper {
+  color: #3c8dbc;
+}
+
 /* BC Gov themeing */
 
 /* Gold bottom border */
