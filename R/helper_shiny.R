@@ -1,4 +1,5 @@
 
+# UI Elements -----------------------------------
 ui_rcode <- function(id) {
   tabPanel(title = "R Code", verbatimTextOutput(NS(id, "code")))
 }
@@ -12,6 +13,9 @@ ui_plot_selection <- function(id) {
              strong("Compute Trends"), "."))
 
 }
+
+
+# Checkin inputs for change ------------------------
 
 update_on_change <- function(session, id, btn = "compute",
                              current, last,
@@ -29,12 +33,54 @@ update_on_change <- function(session, id, btn = "compute",
   })
 }
 
-
-
 get_inputs <- function(input, which) {
   purrr::map(which, ~input[[.]]) %>%
     setNames(which)
 }
+
+
+
+stop_ui_suspend <- function(id, output) {
+  names(outputOptions(output)) %>%
+    stringr::str_subset(glue::glue("{id}-ui_")) %>%
+    stringr::str_extract("ui_(.)+$") %>%
+    purrr::map(~outputOptions(output, ., suspendWhenHidden = FALSE))
+}
+
+
+
+# Data / Code Checks -----------------------------
+
+
+#' Evaluate and check for errors
+#'
+#' Takes text function expression, parses and evaluates it then checks for
+#' errors. Any errors are passed through to the Shiny app.
+
+eval_check <- function(t) {
+  t <- try(eval(parse(text = t), envir = parent.frame(n = 1)), silent = TRUE)
+  if("try-error" %in% class(t)) {
+    validate(need(FALSE, attr(t, "condition")$message),
+             errorClass = "red") # becomes shiny-output-error-red
+  }
+  t
+}
+
+#' Messages if data not loaded
+check_data <- function(x){
+  validate(need(x, "You'll need to first load some data under Data > Loading"))
+}
+
+#' For multiple, sequential need() inside a validate
+#' <https://shiny.rstudio.com/articles/validation.html#then>
+
+`%then%` <- function(a, b) {
+  if (is.null(a)) b else a
+}
+
+
+
+# Module testing function --------------------------------------------------
 
 test_mod <- function(mod, hydat_stn = "08HB048") {
 
@@ -62,7 +108,11 @@ test_mod <- function(mod, hydat_stn = "08HB048") {
 
     data_loaded <- reactiveVal(TRUE)
 
-    get(paste0("server_", mod))(id = mod, data_settings, data_raw, data_loaded)
+    if(mod == "data_load") {
+      server_data_load(id = mod, prep_hydat(), bc_hydrozones)
+    } else {
+      get(paste0("server_", mod))(id = mod, data_settings, data_raw, data_loaded)
+    }
   }
 
   ui <- tagList(

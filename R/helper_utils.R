@@ -1,3 +1,33 @@
+# Copyright 2022 Province of British Columbia
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
+
+# Formatting Data Table Output -----------------------------------------
+
+prep_DT <- function(data, digits = 4) {
+  data %>%
+    dplyr::mutate(dplyr::across(where(is.numeric), ~round(., digits))) %>%
+    DT::datatable(rownames = FALSE,
+                  filter = 'top',
+                  extensions = c("Scroller", "Buttons"),
+                  selection = "single",
+                  options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
+                                 deferRender = TRUE, dom = 'Brtip',
+                                 buttons = c('copy', 'csv', 'excel')))
+}
+
+# Styling Code -----------------------------------------------------------
+
 code_format <- function(code) {
   names(code) %>%
     sort() %>%
@@ -26,7 +56,9 @@ code_break_lines <- function(code) {
 }
 
 
+# Plotting functions -----------------------------------------
 
+#' Create a ggplot patchwork of the fitdistrplus fitting plots
 gg_fitdistr <- function(fit, title) {
 
   g <- patchwork::wrap_plots(
@@ -41,6 +73,7 @@ gg_fitdistr <- function(fit, title) {
     ggplot2::theme(legend.position = "none")
 }
 
+#' Create a vline interactive tooltip to add to ggiraph plots
 create_vline_interactive <- function(data, stats, date_fmt = "%b %d",
                                      combine = FALSE, digits = 4, size = 1,
                                      alpha = 0.005) {
@@ -89,16 +122,15 @@ create_vline_interactive <- function(data, stats, date_fmt = "%b %d",
 
 
 
+# Minor utility functions -----------------------------------
 
-
-
-
-
+#' Convert character strings to numeric vectors
 text_to_num <- function(x) {
   suppressWarnings(as.numeric(stringr::str_split(x, ",", simplify = TRUE)))
 }
 
 
+#' Return the *plotting date* for a day of year given the water water year
 get_date <- function(n, water_year) {
   d <- as.Date(as.numeric(n), origin = as.Date("1900-01-01") - 1)
   if(water_year != 1) {
@@ -108,10 +140,20 @@ get_date <- function(n, water_year) {
   d
 }
 
+#' Turn Day of Year into a date given a year
 yday_as_date <- function(yday, year) {
  as.Date(yday, origin = paste0(year, "-01-01")) - 1
 }
 
+#' Get an SVG of the ggiraph lasso for use in messages
+lasso_svg <- function() {
+  shiny::HTML("
+<svg xmlns='http://www.w3.org/2000/svg' width='10pt' height='10pt' viewBox='0 0 230 230' stroke = '#069'><g><ellipse ry='65.5' rx='86.5' cy='94' cx='115.5' stroke-width='20' fill='transparent'></ellipse><ellipse ry='11.500001' rx='10.5' cy='153' cx='91.5' stroke-width='20' fill='transparent'></ellipse><line y2='210.5' x2='105' y1='164.5' x1='96' stroke-width='20'></line></g></svg>")
+}
+
+
+
+# HYDAT functions ----------------------------
 find_hydat <- function() {
   h <- "Hydat.sqlite3"
   locs <- c("local" = file.path(tidyhydat::hy_dir(), h),
@@ -129,8 +171,6 @@ find_hydat <- function() {
 }
 
 prep_hydat <- function() {
-
-  # tidyhydat Stations data -----------------------
   stations_list <- tidyhydat::hy_stn_data_range() %>%
     dplyr::filter(DATA_TYPE == "Q") %>%
     dplyr::pull(STATION_NUMBER)
@@ -173,9 +213,4 @@ prep_hydat <- function() {
                   "DRAINAGE_AREA_GROSS", "Year_from", "Year_to",
                   "RECORD_LENGTH", "WSC_SUBSUB_DRAINAGE",
                   "LATITUDE", "LONGITUDE")
-}
-
-lasso_svg <- function() {
-  shiny::HTML("
-<svg xmlns='http://www.w3.org/2000/svg' width='10pt' height='10pt' viewBox='0 0 230 230' stroke = '#069'><g><ellipse ry='65.5' rx='86.5' cy='94' cx='115.5' stroke-width='20' fill='transparent'></ellipse><ellipse ry='11.500001' rx='10.5' cy='153' cx='91.5' stroke-width='20' fill='transparent'></ellipse><line y2='210.5' x2='105' y1='164.5' x1='96' stroke-width='20'></line></g></svg>")
 }
