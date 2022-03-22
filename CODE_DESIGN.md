@@ -10,18 +10,28 @@ arguments.
 Most sections of fasstrshiny related to families of functions within fasstr.
 
 ## Organization
-Each panel of the app has a corresponding section in both the server.R and the ui.R scripts.
-Interactively built UI elements are at the *top* of the server.R script under "UI elements".
-Non-interactively built UI elements are in their corresponding section in the ui.R script.
-Functions for building commonly used inputs are in the global.R script. 
-Functions used for generic, non-shiny specific, tasks are in utils.R script in the fasstrshiny R folder.
+Each panel of the app has corresponding module functions in a file named
+`mod_TYPE.R`.
+Interactively built UI elements are at the *top* of server functions.
+Non-interactively built UI elements are in their corresponding section in the ui function.
+Functions for building commonly used inputs are in the helper_ui_inputs.R script. 
+Other functions can be found in helper_...R files.
 
-The ui.R script has each panel built as a separate `fluidRow()` which is then combined in the the UI at the bottom of the script under "Combine". 
-In this section, the menu is created and the panels and tabs are assembled. 
-Note that each section needs to be created in the menu, which then links to dashboard body, which includes the `fluidRow()` object. 
+The fasster_shiny() function combines all modules into a single app. 
+Note that each section needs to be created in the menu, the UI tabsets AND the
+server section.
+
+## Namespace
+Because modules create their own ids, we need to use the `NS()` function to
+ensure that module ids are unique. In the UI functions, we use `ns <- NS(id)`
+at the top of the function. Then we can use `ns("my_input")` throughout.
+
+However, for server functions, we need to use `NS(id, "my_input")` directly.
+
+For functions that create UI inputs, the `NS(id, ...)` is inside the function, 
+so in the UI (or Server) function you would only pass the id: `select_rolling(id)`. 
 
 ## Inputs
-
 Many inputs are the same among sections in fasstrshiny because they related to
 arguments in fasstr which are common among function families.
 
@@ -29,17 +39,11 @@ To ensure consistency, functions (`select_XXXX()`) are used to create inputs for
 each section. These functions create separate instances of the inputs, with
 unique ids, but which are consistent.
 
-For example, `select_rolling(id = "sum", input)` creates inputs `sum_roll_days`
-(numeric input) and `sum_rolling_align` (select input) for the Summary
-Statistics section.
+For example, `select_rolling(id)` creates inputs `ID_roll_days`
+(numeric input) and `ID_rolling_align` (select input).
 
-To create a bunch of similar inputs, another function `build_ui()` can be used
-by supplying the sames of all the inputs required. This can be used directly in
-the ui, or with a renderUI() function in the server, depending on whether any
-elements need to be dynamically created.
-
-Interactively built inputs need to be created in the server under "UI elements" 
-before they can be referenced in the ui with `uiOutput()`.
+Interactively built inputs need to be created in the server functions
+under "UI elements" before they can be referenced in the ui with `uiOutput()`.
 
 ## Creating fasstr functions
 
@@ -54,23 +58,25 @@ code used in the app, all main fasstr functions are assembled as a text object
 and then evaluated. The text version can be used in the R Code panels, and the
 evaluated version used to create the shiny app outputs.
 
-For example, `create_fun()` takes the name of the fasstr function, the name of the
-dataset, an id, and the shiny input object. It then matches inputs with that id
-against parameters in the fasstr function (omitting those that are defaults), 
-and creates a *text* version of the fasstr function with arguments.
+For example, `create_fun()` takes the name of the fasstr function, the name of
+the dataset, the shiny `input` object, and data settings. It then matches inputs
+in that module against parameters in the fasstr function, omits those that have
+default values, and creates a *text* version of the fasstr function with arguments.
 
 Example from hydrograph figure:
 
 ```
-flow_data <- data_raw()
-g <- switch(input$hydro_type,
+data_flow <- data_raw()
+
+g <- switch(input$type,
             "Daily" = "plot_daily_stats",
             "Long-term Monthly" = "plot_longterm_monthly_stats",
             "Long-term Daily" = "plot_longterm_daily_stats") %>%
-    create_fun("data_flow", id = "hydro", input,
-               extra = if_else(input$hydro_add_year != "",
-                               glue("add_year = {input$hydro_add_year}"),
-                               ""))
+  create_fun(data_name = "data_flow", input, input_data = data_settings(),
+             extra = dplyr::if_else(
+               input$add_year != "",
+               glue::glue("add_year = {input$add_year}"),
+               ""))
 ```
 
 Example *text* output:
@@ -86,23 +92,22 @@ plot_daily_stats(data_flow,
 ```
 
 This can be saved for sharing with the user through the R Code panel, and can 
-then be parsed and evaluated with `eval(parse(text = t))`.
+then be parsed and evaluated with `eval_check(t)`, a function which evaluates
+the text code and checks for errors.
 
 **Adding new arguments**
 
 New arguments can be added in one of two ways. If an argument is used in a
-standard way in more than one function, it's name/id can be added to the
+standard way, it's name/id can be added to the
 `parameters` data frame created in `data-raw/parameters.R` and then how to use
 it in a function can be added to the workflow in the `combine_parameters()`
-function. As long as the input is labelled `id_param` where id is the id of the
-shiny group, and param is the id of the parameter in this shiny app, it will be
-automatically used by `create_fun()`, unless added to the `params_ignore` list.
+function. As long as the input id is called `param`, id of the parameter in this
+shiny app, it will be automatically used by `create_fun()`, unless added to the
+`params_ignore` list.
 
-Alternatively if an argument is only used once or used in a non-standard way, it
-can be added with the `extra` argument as in the example above. Note that if the
-argument exists in `parameters` and in the `combine_parameters()` workflow, but
-you would like to use it in a non-standard way with the `extra` argument, you'll
-also need to add it to `params_ignore` so as not to have two arguments.
+Alternatively if an argument is used in a non-standard way, it
+can be added with the `extra` argument. You'll also need to add it to 
+`params_ignore` so as not to have two arguments in the final function.
 
 For example, in the Hydrographs table, we use percentiles from several inputs
 (previously combined into `perc` in this example), so override the default usage
@@ -128,10 +133,10 @@ t <- switch(input$hydro_type,
   
 ## Missing vs. Allowed missing
 - If `allowed_missing` exists, use only that (it overrides `ignore_missing` anyway)
-- If a tab had options for either (i.e. when there is `type`) then use the `miss_allowed` ui to switch between the two.
+
 
 ## `ggiraph`
-- Always use `girafe`, `girafeOutput` and `renderGirafe` (not any of the ggiraph variantes)
+- Always use `girafe`, `girafeOutput` and `renderGirafe` (not any of the ggiraph variants)
 - Always use `girafe(ggobj = PLOT)` (`ggobj` is the important argument here)
 - When using the vline tooltip (`create_vline_interactive()`) you'll need to 
   adjust the `opts_hover()` option in the girafe output to make opacity 1. 
@@ -148,9 +153,6 @@ wrapped with `withSpinner()` in `ui.R`.
 ## Troubleshooting
 - Input/output doesn't render, no message, no error
   - Check to make sure id isn't duplicated
-- Changes to functions.R/global.R don't show in the app
-  - Make sure you completely restart the app (don't just refresh)
-
 
 ## Future considerations
 
