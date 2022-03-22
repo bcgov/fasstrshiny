@@ -12,9 +12,6 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-# Data Loading ------------------
-
-
 ui_data_load <- function(id) {
 
   ns <- NS(id)
@@ -30,12 +27,20 @@ ui_data_load <- function(id) {
                           label = "Source", choices = c("HYDAT", "CSV"),
                           justified = TRUE,
                           selected = "HYDAT"),
-
         conditionalPanel(
           "input.source == 'HYDAT'", ns = NS(id),
+          div(id = ns("hydat_bc_tip"),
+              prettySwitch(ns("hydat_bc"), label = "BC stations only",
+                           value = TRUE,status = "success", slim = TRUE)),
           textInput(ns("station_num"), label = "Station Number",
                     value = "08HB048",
-                    placeholder = "type station number or select from map")),
+                    placeholder = "type station number or select from map"),
+          bsTooltip(ns("hydat_bc_tip"),
+                    "Whether to show stations from just BC or all over Canada",
+                    placement = "left"),
+          bsTooltip(ns("station_num"), "HYDAT Station Number",
+                    placement = "left")
+          ),
 
         conditionalPanel(
           "input.source != 'HYDAT'", ns = NS(id),
@@ -67,63 +72,83 @@ ui_data_load <- function(id) {
       ),
 
       tabBox(
-        width = 9,
+        id = ns("tabs"),  width = 9,
 
-        ### HYDAT Map --------
+        # HYDAT Map --------
         tabPanel(
-          title = "HYDAT Map", width = 12,
+          title = "HYDAT Map", value = "tabs_hydat", width = 12,
+          helpText("Click on a station marker to select the station"),
           leaflet::leafletOutput(ns("hydat_map"), width = "100%", height = "500px")
         ),
 
-        ### HYDAT Table --------
+        # HYDAT Table --------
         tabPanel(
           title = "HYDAT Table", width = 12,
+          helpText(paste0("Click on a station row to select the station, ",
+                          "or filter stations and browse on the HYDAT Map")),
           DT::DTOutput(ns("hydat_table"))
         ),
 
-        ### Plot --------
+
+        # CSV preview -------------
         tabPanel(
-          title = "Plot", value = "tabs_plot",
+          title = "CSV Preview", value = "tabs_csv",
+          h3("Loading Tips"),
+          textOutput(ns("csv_status")),
+          textOutput(ns("csv_checks")),
+          h3("Preview"),
+          verbatimTextOutput(ns("csv_preview"))),
+
+
+        # Plot --------
+        tabPanel(
+          title = "Plot",
           uiOutput(ns("ui_plot_options"), align = "right"),
           shinycssloaders::withSpinner(
             plotly::plotlyOutput(ns("plot"), height = opts$plot_height))
         ),
 
-        ### Table --------
+        # Table --------
         tabPanel(
           title = "Table",
           DT::DTOutput(ns("table"))
         ),
 
-        ### R Code -----------------
-        tabPanel(
-          title = "R Code",
-          verbatimTextOutput(ns("code"))
-        )
+        # R Code -----------------
+        ui_rcode(id)
       )
     )
   )
 }
 
-server_data_load <- function(id, stations, bc_hydrozones) {
+server_data_load <- function(id, bc_hydrozones) {
 
   moduleServer(id, function(input, output, session) {
 
     # Reactive Values
-    code <- reactiveValues()
-
-    # Data loaded
     data_loaded <- reactiveVal(FALSE)
     data_type <- reactiveVal("None")
     data_id <- reactiveVal("None")
-    observe(data_loaded(TRUE)) %>% bindEvent(data_raw())
 
     # UI elements ---------------------------------------
+
+    # Jump to tab
+    observe({
+      if(input$source == "HYDAT") {
+        updateTabsetPanel(session, "tabs", selected = "tabs_hydat")
+      } else {
+        updateTabsetPanel(session, "tabs", selected = "tabs_csv")
+      }
+    }) %>%
+      bindEvent(input$source)
 
     # Hide/Show based on toggle
     observe(shinyjs::toggle("stn", condition = input$show_stn))
     observe(shinyjs::toggle("dates", condition = input$show_dates))
     observe(shinyjs::toggle("types", condition = input$show_types))
+
+
+
 
     output$ui_file_cols <- renderUI({
 
@@ -152,16 +177,14 @@ server_data_load <- function(id, stations, bc_hydrozones) {
                  pickerInput(
                    NS(id, "col_symbol"),
                    label = HTML("Symbols column"),
-                   choices = cols, selected = cols[3])),
-          column(width = 6,
-                 strong("Loading Tips"), br(),
-                 textOutput(NS(id, "csv_msg")))))
+                   choices = cols, selected = cols[3]))
+          ))
     })
 
     output$ui_stn <- renderUI({
 
       if(input$source == "HYDAT") {
-        m <- dplyr::filter(stations, .data$STATION_NUMBER == input$station_num)
+        m <- dplyr::filter(stations(), .data$STATION_NUMBER == input$station_num)
         stn_name <- m$STATION_NAME
         basin <- as.numeric(m$DRAINAGE_AREA_GROSS)
       } else if(!is.null(input$file)) {
@@ -172,7 +195,7 @@ server_data_load <- function(id, stations, bc_hydrozones) {
         basin <- 0
       }
 
-      fluidRow(
+      fluidRow(id = NS(id, "station_info"),
         column(
           width = 6,
           textInput(NS(id, "station_name"),
@@ -184,9 +207,10 @@ server_data_load <- function(id, stations, bc_hydrozones) {
                          label = HTML("Basin area (km<sup>2</sup>)"),
                          value = basin,
                          min = 0, step = 0.1)),
-        bsTooltip(NS(id, "station_name"), "Station Name for context",
-                  placement = "left"),
-        bsTooltip(NS(id, "basin_area"), tips$basin_area, placement = "left"))
+        bsTooltip(NS(id, "station_info"),
+                  paste0("Station Name for context<p><p>",
+                         tips$basin_area),
+                  placement = "left"))
     })
 
     output$ui_water_year <- renderUI({
@@ -263,21 +287,22 @@ server_data_load <- function(id, stations, bc_hydrozones) {
     observe({
       updateTextInput(
         session, "station_num",
-        value = stations$station_number[input$hydat_table_rows_selected])
+        value = stations()$station_number[input$hydat_table_rows_selected])
     }) %>%
       bindEvent(input$hydat_table_rows_selected)
 
 
     # Add plot options as Gear in corner
     output$ui_plot_options <- renderUI({
+      req(data_loaded())
       select_plot_options(
         select_plot_log(id, value = formals(plot_flow_data)$log_discharge), # Default
         select_daterange(id, data_raw()))
     })
 
-    output$csv_msg <- renderText({
+    # CSV Details ------------------
+    output$csv_status <- renderText({
       validate(
-
         need(input$file, "Select a file to upload") %then%
 
           need(length(unique(c(input$col_date, input$col_value,
@@ -285,14 +310,54 @@ server_data_load <- function(id, stations, bc_hydrozones) {
                "Date, Value and Symbol columns must be distinct") %then%
 
           need(!is.null(input$basin_area) && input$basin_area > 0,
-               paste0("Specify a non-zero basin area ",
-                      "under 'Station Information'")) %then%
+               paste0("Specify basin area under ",
+                      "Station Information")) %then%
 
           need(data_id() == input$file$name,
                "Click the Load Data button!"),
 
         errorClass = "helper")
+
     })
+
+    output$csv_checks <- renderText({
+      msgs <- list()
+
+      if(input$source == "CSV" & !is.null(input$file)) {
+        x <- read.csv(input$file$datapath)
+        x <- x[[input$col_date]]
+
+        if(any(duplicated(x))) {
+          msgs$dups <- paste0("There are duplicate dates in the data... ",
+                              "is this from a single station?")
+        }
+        if("try-error" %in% class(try(as.Date(x), silent = TRUE))) {
+          msgs$dates <- "Date column is not in the standard date format 'YYYY-MM-DD'"
+        }
+      }
+
+      if(input$basin_area == 0) msgs$basin <- "Specify basin area under Station Information"
+
+      validate(need(FALSE, paste0(msgs, collapse = "\n")), errorClass = "red")
+
+    }) %>%
+      bindEvent(input$load)
+
+    output$csv_preview <- renderText({
+      req(input$file)
+      readLines(input$file$datapath, n = 20) %>%
+        paste0(collapse = "\n") %>%
+        paste0("\n...")
+    })
+
+    # HYDAT Stations -------------------
+    stations <- reactive({
+      req(!is.null(input$hydat_bc))
+      prep_hydat(bc_only = input$hydat_bc)
+    }) %>%
+      bindCache(input$hydat_bc) %>%
+      bindEvent(input$hydat_bc)
+
 
     # HYDAT Map -------------------------
     output$hydat_map <- leaflet::renderLeaflet({
@@ -306,7 +371,7 @@ server_data_load <- function(id, stations, bc_hydrozones) {
           fillOpacity = 0.15, fillColor = "black", color = "black",
           label = ~stringr::str_to_title(HYDROLOGICZONE_NAME)) %>%
         leaflet::addCircleMarkers(
-          data = stations, lng = ~LONGITUDE, lat = ~LATITUDE,
+          data = stations(), lng = ~LONGITUDE, lat = ~LATITUDE,
           layerId = ~ STATION_NUMBER,
           radius = 3, fillOpacity = 1, stroke = FALSE, color = "#31688E",
           label = ~ STATION_NUMBER,
@@ -317,7 +382,7 @@ server_data_load <- function(id, stations, bc_hydrozones) {
 
     # HYDAT Table ------------------------
     output$hydat_table <- DT::renderDT({
-      stations %>%
+      stations() %>%
         dplyr::select("STATION_NUMBER", "STATION_NAME", "PROVINCE",
                       "HYD_STATUS", "REAL_TIME", "REGULATED", "PARAMETERS") %>%
         DT::datatable(selection = "single", rownames = FALSE, filter = 'top',
@@ -346,7 +411,8 @@ server_data_load <- function(id, stations, bc_hydrozones) {
         data_id(input$station_num)
 
       } else {
-        req(input$file, input$col_date, input$col_value, input$col_symbol)
+        req(input$file, input$col_date, input$col_value, input$col_symbol,
+            input$basin_area != 0)
 
         validate(need(length(unique(c(
           input$col_date, input$col_value, input$col_symbol))) == 3,
@@ -378,13 +444,10 @@ server_data_load <- function(id, stations, bc_hydrozones) {
         "add_daily_volume() %>%",
         "add_daily_yield(basin_area = {input$basin_area})")
 
-
-      # Save unevaluated user code for code tab
       code$data_raw <- glue::glue(d1, d_dates)
-
       data_loaded(TRUE)
+      eval_check(glue::glue(d2, d_dates))
 
-      eval(parse(text = glue::glue(d2, d_dates))) # Evaluate and create data_flow
     }) %>%
       bindEvent(input$load, input$water_year,
                 ignoreInit = TRUE)
@@ -425,6 +488,7 @@ server_data_load <- function(id, stations, bc_hydrozones) {
     })
 
     # R Code ----------------
+    code <- reactiveValues()
     output$code <- renderText({
       code_format(code)
     })

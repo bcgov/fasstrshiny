@@ -49,11 +49,6 @@ fasstr_shiny <- function() {
     cat(file = stderr(), "Link: ", list.files(th, full.names = TRUE)[1], " \n")
   }
 
-  if(msg)  cat(file = stderr(), "Getting tidyhydat stations \n")
-
-  # Prep -------------------------------------------
-  stations <- prep_hydat()
-
   # UI --------------------------------
   ui <- function(request) {
     tagList(
@@ -117,8 +112,7 @@ fasstr_shiny <- function() {
 
   server <- function(input, output, session) {
     # Load data and get settings
-    data_outputs <- server_data_load(id = "data", stations = stations,
-                                     bc_hydrozones = bc_hydrozones)
+    data_outputs <- server_data_load(id = "data", bc_hydrozones = bc_hydrozones)
     data_settings <- data_outputs$data_settings
     data_raw <- data_outputs$data_raw
     data_loaded <- data_outputs$data_loaded

@@ -170,8 +170,9 @@ find_hydat <- function() {
   locs[1]
 }
 
-prep_hydat <- function() {
-  stations_list <- tidyhydat::hy_stn_data_range() %>%
+prep_hydat <- function(bc_only = TRUE) {
+  if(bc_only) prov <- "BC" else prov <- NULL
+  stations_list <- tidyhydat::hy_stn_data_range(prov_terr_state_loc = prov) %>%
     dplyr::filter(DATA_TYPE == "Q") %>%
     dplyr::pull(STATION_NUMBER)
 

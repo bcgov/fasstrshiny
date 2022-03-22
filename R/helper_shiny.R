@@ -66,6 +66,7 @@ eval_check <- function(t) {
   t
 }
 
+
 #' Messages if data not loaded
 check_data <- function(x){
   validate(need(x, "You'll need to first load some data under Data > Loading"))
@@ -113,7 +114,7 @@ test_mod <- function(mod, hydat_stn = "08HB048") {
     data_loaded <- reactiveVal(TRUE)
 
     if(mod == "data_load") {
-      server_data_load(id = mod, prep_hydat(), bc_hydrozones)
+      server_data_load(id = mod, bc_hydrozones = bc_hydrozones)
     } else {
       get(paste0("server_", mod))(id = mod, data_settings, data_raw, data_loaded)
     }
