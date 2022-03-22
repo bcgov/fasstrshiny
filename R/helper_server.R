@@ -23,9 +23,11 @@ prep_DT <- function(data, digits = 4) {
     dplyr::mutate(dplyr::across(where(is.numeric), ~round(., digits))) %>%
     DT::datatable(rownames = FALSE,
                   filter = 'top',
-                  extensions = c("Scroller"),
+                  extensions = c("Scroller", "Buttons"),
+                  selection = "single",
                   options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
-                                 deferRender = TRUE, dom = 'Brtip'))
+                                 deferRender = TRUE, dom = 'Brtip',
+                                 buttons = c('copy', 'csv', 'excel')))
 }
 
 
