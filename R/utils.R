@@ -131,46 +131,48 @@ find_hydat <- function() {
 prep_hydat <- function() {
 
   # tidyhydat Stations data -----------------------
-  stations_list <- tidyhydat::hy_stn_data_range(prov_terr_state_loc = "BC") %>%
+  stations_list <- tidyhydat::hy_stn_data_range() %>%
     dplyr::filter(DATA_TYPE == "Q") %>%
     dplyr::pull(STATION_NUMBER)
 
-
   ## Create a dataframe of all station metadata and a list of all stations
-  stations <- tidyhydat::hy_stations(station_number = stations_list) %>%
-    dplyr::left_join(tidyhydat::hy_agency_list(), by = c("CONTRIBUTOR_ID" = "AGENCY_ID")) %>%
-    dplyr::rename("CONTRIBUTOR" = AGENCY_EN) %>%
-    dplyr::left_join(tidyhydat::hy_agency_list(), by = c("OPERATOR_ID" = "AGENCY_ID")) %>%
-    dplyr::rename("OPERATOR" = AGENCY_EN) %>%
-    dplyr::left_join(tidyhydat::hy_datum_list(), by = c("DATUM_ID" = "DATUM_ID")) %>%
-    dplyr::rename("DATUM" = DATUM_EN) %>%
-    dplyr::mutate(REGIONAL_OFFICE_ID = as.integer(REGIONAL_OFFICE_ID)) %>%
-    dplyr::left_join(tidyhydat::hy_reg_office_list(),
-                     by = c("REGIONAL_OFFICE_ID" = "REGIONAL_OFFICE_ID")) %>%
-    dplyr:: rename("REGIONAL_OFFICE" = REGIONAL_OFFICE_NAME_EN) %>%
-    dplyr::left_join(tidyhydat::hy_stn_regulation(), by="STATION_NUMBER") %>%
-    dplyr::select(STATION_NUMBER, STATION_NAME, PROV_TERR_STATE_LOC, HYD_STATUS,
-                  LATITUDE, LONGITUDE, DRAINAGE_AREA_GROSS, RHBN,
-                  REAL_TIME, REGULATED,CONTRIBUTOR, OPERATOR, REGIONAL_OFFICE, DATUM) %>%
-    dplyr::mutate(RHBN = ifelse(RHBN, "YES", "NO"),
-                  REAL_TIME = ifelse(REAL_TIME, "YES", "NO"),
-                  REGULATED = ifelse(REGULATED, "YES", "NO"),
-                  DRAINAGE_AREA_GROSS = round(DRAINAGE_AREA_GROSS, digits = 2))
+  stations_raw <- tidyhydat::hy_stations(station_number = stations_list) %>%
+    dplyr::left_join(tidyhydat::hy_stn_regulation(), by = "STATION_NUMBER") %>%
+    dplyr::select("STATION_NUMBER", "STATION_NAME", "PROV_TERR_STATE_LOC",
+                  "HYD_STATUS", "LATITUDE", "LONGITUDE", "DRAINAGE_AREA_GROSS",
+                  "RHBN", "REAL_TIME", "REGULATED") %>%
+    dplyr::mutate(RHBN = dplyr::if_else(.data$RHBN, "Yes", "No"),
+                  REAL_TIME = dplyr::if_else(.data$REAL_TIME, "Yes", "No"),
+                  REGULATED = dplyr::if_else(.data$REGULATED, "Yes", "No"),
+                  DRAINAGE_AREA_GROSS = round(.data$DRAINAGE_AREA_GROSS, digits = 2),
+                  STATION_NAME = stringr::str_to_title(.data$STATION_NAME),
+                  HYD_STATUS = stringr::str_to_title(.data$HYD_STATUS))
 
-  station_parameters <- tidyhydat::hy_stn_data_range() %>%
-    dplyr::filter(DATA_TYPE == "Q"| DATA_TYPE == "H")  %>%
-    dplyr::select(STATION_NUMBER, DATA_TYPE) %>% tidyr::spread(DATA_TYPE, DATA_TYPE) %>%
-    dplyr::mutate(PARAMETERS = dplyr::case_when(is.na(H) ~ "FLOW",
-                                                is.na(Q) ~ "LEVEL",
-                                                TRUE ~ paste("FLOW AND LEVEL")))
+  station_parameters <- tidyhydat::hy_stn_data_range(stations_list) %>%
+    dplyr::filter(.data$DATA_TYPE == "Q"| .data$DATA_TYPE == "H")  %>%
+    dplyr::select("STATION_NUMBER", "DATA_TYPE") %>%
+    tidyr::pivot_wider(names_from = .data$DATA_TYPE,
+                       values_from = .data$DATA_TYPE) %>%
+    dplyr::mutate(PARAMETERS = dplyr::case_when(is.na(.data$H) ~ "Flow",
+                                                is.na(.data$Q) ~ "Level",
+                                                TRUE ~ paste("Flow and Level"))) %>%
+    dplyr::select("STATION_NUMBER", "PARAMETERS") %>%
+    dplyr::left_join(
+      tidyhydat::hy_stn_data_range() %>%
+        dplyr::filter(.data$DATA_TYPE == "Q")  %>%
+        dplyr::select("STATION_NUMBER", "Year_from", "Year_to", "RECORD_LENGTH"),
+      by = "STATION_NUMBER")
 
-  dplyr::left_join(stations,
-                   dplyr::select(station_parameters, STATION_NUMBER, PARAMETERS),
+  dplyr::left_join(stations_raw,
+                   station_parameters,
                    by = "STATION_NUMBER") %>%
-    dplyr::rename_all(stringr::str_to_lower) %>%
-    dplyr::rename("province" = "prov_terr_state_loc") %>%
-    dplyr::mutate(dplyr::across(c(-"station_number", -"province", -"latitude", -"longitude",
-                                  "drainage_area_gross"), stringr::str_to_sentence))
+    dplyr::rename("PROVINCE" = "PROV_TERR_STATE_LOC") %>%
+    dplyr::mutate(WSC_SUBSUB_DRAINAGE = substr(.data$STATION_NUMBER, 1, 4)) %>%
+    dplyr::select("STATION_NUMBER", "STATION_NAME", "PROVINCE", "PARAMETERS",
+                  "HYD_STATUS", "REGULATED", "REAL_TIME", "RHBN",
+                  "DRAINAGE_AREA_GROSS", "Year_from", "Year_to",
+                  "RECORD_LENGTH", "WSC_SUBSUB_DRAINAGE",
+                  "LATITUDE", "LONGITUDE")
 }
 
 lasso_svg <- function() {
