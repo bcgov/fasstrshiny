@@ -83,8 +83,9 @@ create_fun <- function(fun, data_name = NULL, input, input_data = NULL,
   defaults <- remove_defaults(fun, input_values = values)
   values <- values[!defaults]
 
-  # If we have allowed_missing (allowed), omit ignore_missing (missing)
-  if("allowed" %in% names(values)) values <- values[names(values) != "missing"]
+  # Deal with special situations
+  values <- special_situations(values)
+
 
   # Put it all together
   p <- combine_parameters(values)
@@ -92,6 +93,18 @@ create_fun <- function(fun, data_name = NULL, input, input_data = NULL,
   args <- glue::glue_collapse(c(data_name, na.omit(p), extra), sep = ', ')
 
   glue::glue("{fun}({args}){end}")
+}
+
+special_situations <- function(values) {
+
+  # If we have allowed_missing (allowed), omit ignore_missing (missing)
+  if("allowed" %in% names(values)) values <- values[names(values) != "missing"]
+
+  # If we have add_year == "", make NULL (i.e. omit)
+  if("add_year" %in% names(values) && values$add_year == "") {
+    values$add_year <- NULL
+  }
+  values
 }
 
 
@@ -148,7 +161,8 @@ combine_parameters <- function(values) {
       params[i] == "daterange" ~
         glue::glue("start_date = '{values[[i]][1]}', end_date = '{values[[i]][2]}'"),
       params[i] == "plot_log" ~ glue::glue("log_discharge = {values[i]}"),
-      params[i] == "plot_extremes" ~ glue::glue("include_extremes = {values[i]}")
+      params[i] == "plot_extremes" ~ glue::glue("include_extremes = {values[i]}"),
+      params[i] == "add_year" ~ glue::glue("add_year = {values[i]}")
     )
   }
   p

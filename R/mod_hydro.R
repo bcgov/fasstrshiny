@@ -123,11 +123,7 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
                   "Daily" = "plot_daily_stats",
                   "Long-term Monthly" = "plot_longterm_monthly_stats",
                   "Long-term Daily" = "plot_longterm_daily_stats") %>%
-        create_fun(data_name = "data_flow", input, input_data = data_settings(),
-                   extra = dplyr::if_else(
-                     input$add_year != "",
-                     glue::glue("add_year = {input$add_year}"),
-                     ""))
+        create_fun(data_name = "data_flow", input, input_data = data_settings())
 
       code$plot <- g
       g <- eval_check(g)[[1]]

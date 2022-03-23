@@ -80,16 +80,10 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
 
       data_flow <- data_raw()
 
-      if(input$add_year != "") {
-        e <- glue::glue("add_year = {input$add_year}")
-      } else e <- ""
-
-
       g <- switch(input$type,
                   "Monthly" = "plot_monthly_cumulative_stats",
                   "Daily"   = "plot_daily_cumulative_stats") %>%
-        create_fun(data_name = "data_flow", input, input_data = data_settings(),
-                   extra = e)
+        create_fun(data_name = "data_flow", input, input_data = data_settings())
 
       code$plot <- g
 
