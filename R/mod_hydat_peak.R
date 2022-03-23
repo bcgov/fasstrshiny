@@ -124,21 +124,11 @@ server_hydat_peak <- function(id, data_settings, data_raw, data_loaded) {
 
       data_flow <- data_raw()
 
-      # Define parameters
-      p <- c(
-        glue::glue("station_number = '{unique(data_flow$STATION_NUMBER)}'"),
-        glue::glue("use_max = {input$use_max}"),
-        glue::glue("use_log = {input$use_log}"),
-        glue::glue("prob_plot_position = '{input$prob_plot}'"),
-        glue::glue("prob_scale_points = c({input$prob_scale})"),
-        glue::glue("fit_distr = '{input$fit_distr}'"),
-        glue::glue("fit_quantiles = c({glue::glue_collapse(input$fit_quantiles, sep = ', ')})"),
-        glue::glue("fit_distr_method = '{input$fit_distr_method}'"),
-        glue::glue("plot_curve = {input$plot_curve}")) %>%
-        glue::glue_collapse(sep = ", ")
-
-      r <- create_fun(fun = "compute_hydat_peak_frequencies", input = input,
-                      input_data = data_settings(), extra = p)
+      r <- create_fun(
+        fun = "compute_hydat_peak_frequencies", input = input,
+        input_data = data_settings(),
+        extra = glue::glue(
+          "station_number = '{unique(data_flow$STATION_NUMBER)}'"))
 
       code$data <- r
       eval_check(r)

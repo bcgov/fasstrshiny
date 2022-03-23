@@ -175,7 +175,36 @@ combine_parameters <- function(values) {
         glue::glue("start_date = '{values[[i]][1]}', end_date = '{values[[i]][2]}'"),
       params[i] == "plot_log" ~ glue::glue("log_discharge = {values[i]}"),
       params[i] == "plot_extremes" ~ glue::glue("include_extremes = {values[i]}"),
-      params[i] == "add_year" ~ glue::glue("add_year = {values[i]}")
+      params[i] == "add_year" ~ glue::glue("add_year = {values[i]}"),
+
+      # Analysis
+      params[i] == "zyp" ~ glue::glue("zyp_method = '{values[i]}'"),
+      params[i] == "annual_percentiles" ~
+        glue::glue("annual_percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
+      params[i] == "monthly_percentiles" ~
+        glue::glue("monthly_percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
+      params[i] == "low_roll_days" ~
+        glue::glue("lowflow_days = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
+      params[i] == "low_roll_align" ~
+        glue::glue("lowflow_align = '{values[i]}'"),
+      params[i] == "allowed_annual" ~
+        glue::glue("allowed_missing_annual = {values[i]}"),
+      params[i] == "allowed_monthly" ~
+        glue::glue("allowed_missing_monthly = {values[i]}"),
+      params[i] == "timing_percent" ~
+        glue::glue("timing_percent = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
+
+      params[i] == "alpha" ~ glue::glue("zyp_alpha = {values[i]}"),
+
+      params[i] == "use_max" ~ glue::glue("use_max = {values[i]}"),
+      params[i] == "use_log" ~ glue::glue("use_log = {values[i]}"),
+      params[i] == "prob_plot" ~ glue::glue("prob_plot_position = '{values[i]}'"),
+      params[i] == "prob_scale" ~ glue::glue("prob_scale_points = c({values[i]})"),
+      params[i] == "fit_distr" ~ glue::glue("fit_distr = '{values[i]}'"),
+      params[i] == "fit_quantiles" ~
+        glue::glue("fit_quantiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
+      params[i] == "fit_distr_method" ~ glue::glue("fit_distr_method = '{values[i]}'"),
+      params[i] == "plot_curve" ~ glue::glue("plot_curve = {values[i]}")
     )
   }
   p

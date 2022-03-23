@@ -230,7 +230,7 @@ test_that("Analyses Modules", {
       compute = 1, zyp = "zhang", alpha = 0.05,
       annual_percentiles = c(10, 90), monthly_percentiles = c(10, 20),
       low_roll_days = c(1, 3, 7, 30), low_roll_align = "right",
-      percent = c(25, 33, 50, 75), normal_percentiles = c(25, 75),
+      timing_percent = c(25, 33, 50, 75), normal_percentiles = c(25, 75),
       allowed_annual = 100, allowed_monthly = 100,
       table_fit_rows_selected = 1)
     expect_error(trends(), NA)

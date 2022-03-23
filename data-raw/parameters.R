@@ -38,7 +38,15 @@ parameters <- dplyr::tribble(
   "flow",                 "flow_value",          "Flow value from which to determine percentile rank", TRUE,
   "percent",              "percent_total",       "Percentiles of total annual flows for which to dermine dates", TRUE,
   "zyp",                  "zyp_method",          "Prewhitened trend method to use. zhang is recommended over yuepilon for hydrologic applications", TRUE,
+  "annual_percentiles",   "annual_percentiles",  "", FALSE,  # use percentiles
+  "monthly_percentiles",  "monthly_percentiles", "", FALSE,  # use percentiles
+  "low_roll_days",        "lowflow_days",        "", FALSE, # use roll_days
+  "low_roll_align",       "lowflow_align",       "", FALSE, # use roll_align
   "alpha",                "zyp_alpha",           "Alpha to use for determining significance of trends", TRUE,
+  "allowed_annual",       "allowed_missing_annual", "", FALSE, # use allowed
+  "allowed_monthly",      "allowed_missing_monthly", "", FALSE, # use allowed
+  "timing_percent",       "timing_percent",      "", FALSE, # use percent
+
   "prob_plot", "prob_plot_position", "Type of calculation used to determine plotting positions in the frequency plot", TRUE,
   "prob_scale", "prob_scale_points", "Probabilities to be plotted along the X axis in the frequency plot", TRUE,
   "use_max", "use_max", "Use low or high flow values in analysis", TRUE,

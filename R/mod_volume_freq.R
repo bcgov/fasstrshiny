@@ -171,22 +171,8 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
 
       data_flow <- data_raw()
 
-      # Define parameters
-      p <- c(
-        glue::glue("exclude_years = c({glue::glue_collapse(input$years_exclude, sep = ', ')})"),
-        glue::glue("use_max = {input$use_max}"),
-        glue::glue("use_log = {input$use_log}"),
-        glue::glue("prob_plot_position = '{input$prob_plot}'"),
-        glue::glue("prob_scale_points = c({input$prob_scale})"),
-        glue::glue("fit_distr = '{input$fit_distr}'"),
-        glue::glue("fit_distr_method = '{input$fit_distr_method}'"),
-        glue::glue("fit_quantiles = c({glue::glue_collapse(input$fit_quantiles, sep = ', ')})"),
-        glue::glue("plot_curve = {input$plot_curve}")) %>%
-        glue::glue_collapse(sep = ", ")
-
       r <- create_fun(fun = "compute_annual_frequencies", data_name = "data_flow",
-                      input, input_data = data_settings(),
-                      extra = p, params_ignore = "years_exclude")
+                      input, input_data = data_settings())
 
       code$data <- r
       eval_check(r)

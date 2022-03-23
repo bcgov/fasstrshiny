@@ -298,7 +298,7 @@ select_analysis_plots <- function(id) {
             NS(id, "prob_scale"),
             label = "Probabilies to plot",
             value = paste0("0.9999, 0.999, 0.99, 0.9, 0.5, 0.2, ",
-                           "0.1, 0.02, 0.01, 0.001, .0001")))
+                           "0.1, 0.02, 0.01, 0.001, 0.0001")))
       ),
       div(id = NS(id, "plot_curve_tip"),
           prettySwitch(NS(id, "plot_curve"),

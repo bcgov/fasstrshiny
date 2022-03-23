@@ -65,12 +65,12 @@ ui_annual_trends <- function(id) {
               strong("Low Flows"),
               select_rolling(id, name = "low_roll", set = FALSE, multiple = TRUE),
 
-              selectizeInput(ns("percent"),
+              selectizeInput(ns("timing_percent"),
                              label = "Percents of total annual flows",
                              choices = c(1:99),
                              selected = c(25, 33, 50, 75),
                              multiple = TRUE),
-              bsTooltip(ns("percent"), tips$percent, placement = "left"),
+              bsTooltip(ns("timing_percent"), tips$percent, placement = "left"),
 
               sliderInput(ns("normal_percentiles"), label = "Days Outside Normal - Range",
                           value = c(25, 75), min = 1, max = 99, step = 1),
@@ -162,7 +162,7 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
       s <- get_inputs(input, which = c(
         "years_exclude",
         "zyp", "alpha", "annual_percentiles", "monthly_percentiles",
-        "low_roll_days", "low_roll_align", "percent", "normal_percentiles",
+        "low_roll_days", "low_roll_align", "timing_percent", "normal_percentiles",
         "allowed_annual", "allowed_monthly"))
       s$data_raw <- data_raw()
       s$data_settings <- data_settings()
@@ -204,25 +204,15 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
       #basin area?
 
       # Define parameters
-      p <- c(
-        glue::glue("exclude_years = c({glue::glue_collapse(input$years_exclude, sep = ', ')})"),
-        glue::glue("zyp_method = '{input$zyp}'"),
-        glue::glue("annual_percentiles = c({glue::glue_collapse(input$annual_percentiles, sep = ', ')})"),
-        glue::glue("monthly_percentiles = c({glue::glue_collapse(input$monthly_percentiles, sep = ', ')})"),
-        glue::glue("stats_days = {data_settings()$roll_days}"),
-        glue::glue("stats_align = '{data_settings()$roll_align}'"),
-        glue::glue("lowflow_days = c({glue::glue_collapse(input$low_roll_days, sep = ', ')})"),
-        glue::glue("lowflow_align = '{input$low_roll_align}'"),
-        glue::glue("timing_percent = c({glue::glue_collapse(input$percent, sep = ', ')})"),
-        glue::glue("allowed_missing_annual = {input$allowed_annual}"),
-        glue::glue("allowed_missing_monthly = {input$allowed_monthly}"),
-        glue::glue("zyp_alpha = {input$alpha}")) %>%
+      # - These parameters are based on data_settings (roll_...), but have
+      #  different arguments names (stats_days), so need to be kept as "extra"
+      p <- c(glue::glue("stats_days = {data_settings()$roll_days}"),
+             glue::glue("stats_align = '{data_settings()$roll_align}'")) %>%
         glue::glue_collapse(sep = ", ")
-
 
       r <- create_fun(
         fun = "compute_annual_trends", data_name = "data_flow", input,
-        input_data = data_settings(), extra = p, params_ignore = "years_exclude")
+        input_data = data_settings(), extra = p)
 
       code$data <- r
       eval_check(r)
