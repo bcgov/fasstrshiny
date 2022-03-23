@@ -14,7 +14,8 @@ test_that("Basic modules", {
   ## Annual stats ----------------
   testServer(server_annual_stats, args = list(d$s, d$d, d$l), {
     session$setInputs(plot_log = TRUE, type = "Monthly", months_plot = 1:12,
-                      percentiles = c(10, 90))
+                      inner_percentiles = c(27, 75), outer_percentiles = c(5, 95),
+                      extra_percentiles = c(10, 90))
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
     expect_error(output$code, NA)

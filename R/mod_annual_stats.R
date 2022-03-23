@@ -33,6 +33,19 @@ ui_annual_stats <- function(id) {
                          selected = "Monthly",
                          status = "primary")),
         bsTooltip(ns("type"), "Type of statistic to calculate", placement = "left"),
+
+        # Percentiles
+        select_percentiles(
+          id, name = "inner_percentiles", label = "Inner percentiles",
+          selected = default("plot_daily_stats", "inner_percentiles")),
+        select_percentiles(
+          id, name = "outer_percentiles", label = "Outer percentiles",
+          selected = default("plot_daily_stats", "outer_percentiles")),
+        select_percentiles(
+          id, name = "extra_percentiles", label = "Additional percentiles (table)",
+          selected = default("calc_daily_stats", "percentiles")),
+
+        # Months
         checkboxGroupButtons(
           ns("months_plot"),
           label = "Months to plot",
@@ -61,7 +74,6 @@ ui_annual_stats <- function(id) {
         ## Table ---------------------
         tabPanel(
           title = "Table",
-          select_table_options(id, include = "percentiles"),
           DT::DTOutput(ns("table"))
         ),
 
@@ -90,6 +102,14 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
     # Plot -----------------------------
     output$plot <- ggiraph::renderGirafe({
       check_data(data_loaded())
+
+      validate(
+        need(length(input$inner_percentiles) %in% c(0, 2) &
+               length(input$outer_percentiles) %in% c(0, 2),
+             glue::glue("Inner and outer percentiles must each have two ",
+                        "(or no) values, corresponding to the limits of the ",
+                        "plot ribbons")))
+
       req(!is.null(input$plot_log), input$type)
 
       data_flow <- data_raw()
@@ -136,17 +156,24 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
     # Table -----------------------
     output$table <- DT::renderDT({
       check_data(data_loaded())
-      req(input$type, input$percentiles)
+      req(input$type)
 
       data_flow <- data_raw()
 
+      perc <- c(input$inner_percentiles,
+                input$outer_percentiles,
+                input$extra_percentiles) %>%
+        unique() %>%
+        as.numeric() %>%
+        sort()
+
+      pi <- "percentiles"
+      e <- glue::glue("percentiles = c({glue::glue_collapse(perc, sep = ', ')})")
+
       if(input$type == "Monthly") {
-        pi <- "months"
+        pi <- c(pi, "months")
         e <- glue::glue(
-          "months = c({glue::glue_collapse(input$months_plot, sep = ', ')})")
-      } else {
-        pi <- NULL
-        e <- ""
+          "{e}, months = c({glue::glue_collapse(input$months_plot, sep = ', ')})")
       }
 
       t <- switch(input$type,
