@@ -118,6 +118,8 @@ combine_parameters <- function(values) {
   # Create standard parameters
   #
   # - REMEMBER! When collapsing multiple elements with glue_collapse, use [[i]]
+  #      Otherwise use [i] to avoid warnings (case_when() compares the length of
+  #      inputs even if they're not the TRUE case).
   # - Note that character values (i.e. custom_months_label) need to be surrounded by ' '
 
   params <- names(values)
@@ -165,6 +167,7 @@ combine_parameters <- function(values) {
       params[i] == "stats" ~
         glue::glue("include_stats = ",
                  "c(\"{glue::glue_collapse(values[[i]], sep = '\", \"')}\")"),
+      params[i] == "availability" ~ glue::glue("plot_availability = {values[i]}"),
       params[i] == "daterange" ~
         glue::glue("start_date = '{values[[i]][1]}', end_date = '{values[[i]][2]}'"),
       params[i] == "plot_log" ~ glue::glue("log_discharge = {values[i]}"),

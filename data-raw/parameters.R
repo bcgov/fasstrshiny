@@ -3,6 +3,7 @@
 parameters <- dplyr::tribble(
   ~id,                    ~fasstr_arg,           ~tooltip,                             ~add_arg,
   "stats",                "include_stats",       "Choose statistics to display",       FALSE,
+  "availability",         "plot_availability",   "Indicate years which contain only partial data", TRUE,
   "add_dates",            "",                    "Choose dates to highlight on the plot",   FALSE,
   "add_mad",              "",                    "Add the calculated Mean Annual Discharge percentiles to the plot", FALSE,
 
@@ -18,13 +19,12 @@ parameters <- dplyr::tribble(
   "daterange",            "start_date",          "Range of dates to include", TRUE,
   "daterange",            "end_date",            "Range of dates to include", TRUE,
   "basin_area",           "basin_area",          "Basin area in km<sup>2</sup>. Defaults to area specified by HYDAT stations data, but can be overriden here.<br>Must be specified for non-HYDAT data.", TRUE,
-  "availability",         "plot_availability",   "Indicate years which contain only partial data", TRUE,
   "add_year",             "add_year",            "Add data from a given year to the plot", TRUE,
   "months",               "months",              "Months to include in calculations", TRUE,
   "percentiles",          "percentiles",         "Percentiles to add to calculations", TRUE,
   "inner_percentiles",    "inner_percentiles",   "Limits of inner percentile ribbon", TRUE,
   "outer_percentiles",    "outer_percentiles",   "Limits of outer percentile ribbon", TRUE,
-  "normal_percentiles",   "normal_percentiles",  "Range of percentiles in which data are considered normal", TRUE,       #Limited
+  "normal_percentiles",   "normal_percentiles",  "Range of percentiles in which data are considered normal", TRUE,
   "plot_log",             "log_discharge",       "Plot data on log scale",            TRUE,
   "plot_extremes",        "include_extremes",    "Plot extreme values as min-max ribbon",            TRUE,
   "custom_months",        "custom_months",       "Months to combine and summarize as an additional row in the table", TRUE,
@@ -33,9 +33,9 @@ parameters <- dplyr::tribble(
   "allowed",              "allowed_missing",     "Percentage of data that can be missing", TRUE,
   "complete",             "complete_years",      "Whether to include only years with complete data in calculations", TRUE,
   "seasons",              "include_seasons",     "Whether or not to include seasonal calculations", TRUE,
-  "mad",                  "percent_MAD",         "Percent of mean annual discharge to add to plot", TRUE,        #Unique
-  "flow",                 "flow_value",          "Flow value from which to determine percentile rank", TRUE,               #Unique
-  "percent",              "percent_total",       "Percentiles of total annual flows for which to dermine dates", TRUE,     #Unique
+  "mad",                  "percent_MAD",         "Percent of mean annual discharge to add to plot", TRUE,
+  "flow",                 "flow_value",          "Flow value from which to determine percentile rank", TRUE,
+  "percent",              "percent_total",       "Percentiles of total annual flows for which to dermine dates", TRUE,
   "zyp",                  "zyp_method",          "Prewhitened trend method to use. zhang is recommended over yuepilon for hydrologic applications", TRUE,
   "alpha",                "zyp_alpha",           "Alpha to use for determining significance of trends", TRUE,
   "prob_plot", "prob_plot_position", "Type of calculation used to determine plotting positions in the frequency plot", TRUE,

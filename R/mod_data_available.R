@@ -169,14 +169,12 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
     output$plot_summary <- ggiraph::renderGirafe({
 
       check_data(data_loaded())
-      req(input$availability, !is.null(input$stats))
+      req(!is.null(input$availability), !is.null(input$stats))
 
       data_flow <- data_raw()
 
-      e <- glue::glue("plot_availability = {input$availability}")
-
       g <- create_fun("plot_data_screening", data_name = "data_flow",
-                      input, input_data = data_settings(), extra = e)
+                      input, input_data = data_settings())
 
       code$plot_summary <- g
 
