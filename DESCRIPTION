@@ -48,4 +48,6 @@ Suggests:
     covr,
     bcmaps (>= 1.0.2),
     testthat (>= 3.0.0)
+Remotes:
+  bcgov/fasstr
 Config/testthat/edition: 3
