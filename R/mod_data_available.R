@@ -206,8 +206,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
     output$plot_symbols <- ggiraph::renderGirafe({
 
       check_data(data_loaded())
-      req(!is.null(input$plot_log), input$symbols_type,
-          !is.null(input$symbols_percent))
+      req(input$symbols_type, !is.null(input$symbols_percent))
 
       data_flow <- data_raw()
 

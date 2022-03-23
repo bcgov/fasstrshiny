@@ -70,7 +70,7 @@ server_annual_totals <- function(id, data_settings, data_raw, data_loaded) {
     # Plots -------------------
     plots <- reactive({
       check_data(data_loaded())
-      req(input$discharge)
+      req(!is.null(input$discharge))
 
       data_flow <- data_raw()
       g <- create_fun(fun = "plot_annual_cumulative_stats",

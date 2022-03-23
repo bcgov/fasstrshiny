@@ -295,20 +295,6 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
       bindEvent(input$years_exclude, ignoreNULL = FALSE, ignoreInit = TRUE)
 
 
-
-    # Table - years sub -----------------------
-    output$table_years_sub <- gt::render_gt({
-
-      trends()[[1]] %>%
-        filter(Statistic == stat()) %>%
-        select(-any_of(c("STATION_NUMBER", "Statistic"))) %>%
-        pivot_longer(cols = everything(),
-                     names_to = "Year",
-                     values_to = stat()) %>%
-        gt() %>%
-        fmt_number(-Year, decimals = 4)
-    }, height = px(400))
-
     # Table - years -----------------------
     output$table_years <- DT::renderDT({
 
