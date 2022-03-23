@@ -6,6 +6,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Codecov test
 coverage](https://codecov.io/gh/bcgov/fasstrshiny/branch/main/graph/badge.svg)](https://app.codecov.io/gh/bcgov/fasstrshiny?branch=main)
+[![R-CMD-check](https://github.com/bcgov/fasstrshiny/workflows/R-CMD-check/badge.svg)](https://github.com/bcgov/fasstrshiny/actions)
 <!-- badges: end -->
 
 A Shiny app to analyze, summarize, and visualize daily streamflow data
