@@ -72,9 +72,9 @@ ui_annual_trends <- function(id) {
                              multiple = TRUE),
               bsTooltip(ns("percent"), tips$percent, placement = "left"),
 
-              sliderInput(ns("normal"), label = "Days Outside Normal - Range",
+              sliderInput(ns("normal_percentiles"), label = "Days Outside Normal - Range",
                           value = c(25, 75), min = 1, max = 99, step = 1),
-              bsTooltip(ns("normal"), tips$normal, placement = "left")
+              bsTooltip(ns("normal_percentiles"), tips$normal_percentiles, placement = "left")
           ),
           show_ui(ns("show_allowed"), "Missing Dates"),
           div(id = ns("allowed"), uiOutput(ns("ui_allowed")))
@@ -162,7 +162,7 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
       s <- get_inputs(input, which = c(
         "years_exclude",
         "zyp", "alpha", "annual_percentiles", "monthly_percentiles",
-        "low_roll_days", "low_roll_align", "percent", "normal",
+        "low_roll_days", "low_roll_align", "percent", "normal_percentiles",
         "allowed_annual", "allowed_monthly"))
       s$data_raw <- data_raw()
       s$data_settings <- data_settings()
@@ -214,7 +214,6 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
         glue::glue("lowflow_days = c({glue::glue_collapse(input$low_roll_days, sep = ', ')})"),
         glue::glue("lowflow_align = '{input$low_roll_align}'"),
         glue::glue("timing_percent = c({glue::glue_collapse(input$percent, sep = ', ')})"),
-        glue::glue("normal_percentiles = c({glue::glue_collapse(input$normal, sep = ', ')})"),
         glue::glue("allowed_missing_annual = {input$allowed_annual}"),
         glue::glue("allowed_missing_monthly = {input$allowed_monthly}"),
         glue::glue("zyp_alpha = {input$alpha}")) %>%

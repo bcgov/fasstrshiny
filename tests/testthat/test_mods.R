@@ -89,7 +89,7 @@ test_that("Basic modules", {
 
   ## Outside normal --------------------
   testServer(server_outside_normal, args = list(d$s, d$d, d$l), {
-    session$setInputs(normal = c(25, 75))
+    session$setInputs(normal_percentiles = c(25, 75))
 
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
@@ -230,7 +230,7 @@ test_that("Analyses Modules", {
       compute = 1, zyp = "zhang", alpha = 0.05,
       annual_percentiles = c(10, 90), monthly_percentiles = c(10, 20),
       low_roll_days = c(1, 3, 7, 30), low_roll_align = "right",
-      percent = c(25, 33, 50, 75), normal = c(25, 75),
+      percent = c(25, 33, 50, 75), normal_percentiles = c(25, 75),
       allowed_annual = 100, allowed_monthly = 100,
       table_fit_rows_selected = 1)
     expect_error(trends(), NA)

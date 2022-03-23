@@ -23,7 +23,8 @@ parameters <- dplyr::tribble(
   "months",               "months",              "Months to include in calculations", TRUE,
   "percentiles",          "percentiles",         "Percentiles to add to calculations", TRUE,
   "inner_percentiles",    "inner_percentiles",   "Limits of inner percentile ribbon", TRUE,
-  "outer_percentiles",    "outer_percentiles",   "LImits of outer percentile ribbon", TRUE,
+  "outer_percentiles",    "outer_percentiles",   "Limits of outer percentile ribbon", TRUE,
+  "normal_percentiles",   "normal_percentiles",  "Range of percentiles in which data are considered normal", TRUE,       #Limited
   "plot_log",             "log_discharge",       "Plot data on log scale",            TRUE,
   "plot_extremes",        "include_extremes",    "Plot extreme values as min-max ribbon",            TRUE,
   "custom_months",        "custom_months",       "Months to combine and summarize as an additional row in the table", TRUE,
@@ -35,7 +36,6 @@ parameters <- dplyr::tribble(
   "mad",                  "percent_MAD",         "Percent of mean annual discharge to add to plot", TRUE,        #Unique
   "flow",                 "flow_value",          "Flow value from which to determine percentile rank", TRUE,               #Unique
   "percent",              "percent_total",       "Percentiles of total annual flows for which to dermine dates", TRUE,     #Unique
-  "normal",               "normal_percentiles",  "Range of percentiles in which data are considered normal", TRUE,       #Limited
   "zyp",                  "zyp_method",          "Prewhitened trend method to use. zhang is recommended over yuepilon for hydrologic applications", TRUE,
   "alpha",                "zyp_alpha",           "Alpha to use for determining significance of trends", TRUE,
   "prob_plot", "prob_plot_position", "Type of calculation used to determine plotting positions in the frequency plot", TRUE,

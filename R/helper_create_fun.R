@@ -128,12 +128,16 @@ combine_parameters <- function(values) {
 
       # Specific
       params[i] == "longterm" ~ glue::glue("include_longterm = {values[i]}"),
+
       params[i] == "percentiles" ~
         glue::glue("percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
       params[i] == "inner_percentiles" ~
         glue::glue("inner_percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
       params[i] == "outer_percentiles" ~
         glue::glue("outer_percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
+      params[i] == "normal_percentiles" ~
+        glue::glue("normal_percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
+
       params[i] == "custom_months" ~
         glue::glue("custom_months = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
       params[i] == "custom_months_label" ~ glue::glue("custom_months_label = '{values[i]}'"),

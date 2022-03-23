@@ -24,9 +24,9 @@ ui_outside_normal <- function(id) {
       box(
         width = 3,
         helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
-        sliderInput(ns("normal"), label = "Normal range ",
+        sliderInput(ns("normal_percentiles"), label = "Normal range ",
                     value = c(25, 75), min = 1, max = 99, step = 1),
-        bsTooltip(ns("normal"), tips$normal, placement = "left")
+        bsTooltip(ns("normal_percentiles"), tips$normal_percentiles, placement = "left")
       ),
       tabBox(
         width = 9,
@@ -58,15 +58,13 @@ server_outside_normal <- function(id, data_settings, data_raw, data_loaded) {
     # Plot --------------------
     output$plot <- ggiraph::renderGirafe({
       check_data(data_loaded())
-      req(input$normal)
+      req(input$normal_percentiles)
 
       data_flow <- data_raw()
 
       g <- create_fun(
         fun = "plot_annual_outside_normal", data_name = "data_flow",
-        input, input_data = data_settings(),
-        extra = glue::glue("normal_percentiles = ",
-                           "c({glue::glue_collapse(input$normal, sep = ',')})"))
+        input, input_data = data_settings())
 
       code$plot <- g
 
@@ -90,15 +88,13 @@ server_outside_normal <- function(id, data_settings, data_raw, data_loaded) {
 
     # Table -----------------------
     output$table <- DT::renderDT({
-      req(input$normal)
+      req(input$normal_percentiles)
 
       data_flow <- data_raw()
 
       t <- create_fun(
         fun = "calc_annual_outside_normal", data_name = "data_flow",
-        input, input_data = data_settings(),
-        extra = glue::glue("normal_percentiles = ",
-                           "c({glue::glue_collapse(input$normal, sep = ',')})"))
+        input, input_data = data_settings())
 
       code$table <- t
 
