@@ -108,7 +108,7 @@ server_low_flows <- function(id, data_settings, data_raw, data_loaded) {
     })
 
     output$plot <- ggiraph::renderGirafe({
-      req(input$display, input$roll_days)
+      req(input$display, input$roll_days, input$display %in% names(plots()))
 
       g <- plots()[[input$display]]
 
