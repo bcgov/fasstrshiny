@@ -75,7 +75,7 @@ server_flow_timing <- function(id, data_settings, data_raw, data_loaded) {
       code$plot <- g
 
       # Add interactivity
-      g <- eval(parse(text = g))[[1]]
+      g <- eval_check(g)[[1]]
 
       g <- g +
         ggiraph::geom_point_interactive(
@@ -107,8 +107,7 @@ server_flow_timing <- function(id, data_settings, data_raw, data_loaded) {
 
       code$table <- t
 
-      parse(text = t) %>%
-        eval() %>%
+      eval_check(t) %>%
         prep_DT()
     })
 

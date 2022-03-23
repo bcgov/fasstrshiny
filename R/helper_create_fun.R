@@ -29,7 +29,8 @@
 #'   common parameters defined at the end of `create_fun`
 #' @param end Character. String to put after the function (e.g., " %>% ...")
 #'
-#' @return String defining the function. Can be evaluated with `eval(parse(x))`.
+#' @return String defining the function. Can be evaluated with `eval_check()`.
+#'
 #' @noRd
 #'
 #'

@@ -156,7 +156,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
                       input_data = data_settings())
 
       code$data <- glue::glue("data_available <- {d}")
-      eval(parse(text = d))
+      eval_check(d)
     })
 
     # Summary plot ------------------
@@ -177,7 +177,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
 
       code$plot_summary <- g
 
-      g <- eval(parse(text = g))[[1]]
+      g <- eval_check(g)[[1]]
 
       # Add interactivity
       stats <- names(g$data) # Get stats from plot data
@@ -219,7 +219,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
 
       code$plot_symbols <- g
 
-      g <- eval(parse(text = g))[[1]]
+      g <- eval_check(g)[[1]]
 
       # Add interactivity
       if(input$symbols_type == "Flow") {
@@ -270,7 +270,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
 
       code$plot_available <- g
 
-      g <- eval(parse(text = g))[[1]]
+      g <- eval_check(g)[[1]]
 
       # Replace layers with interactive
       g$layers[[1]] <- ggiraph::geom_tile_interactive(

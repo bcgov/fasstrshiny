@@ -73,7 +73,7 @@ server_low_flows <- function(id, data_settings, data_raw, data_loaded) {
       code$plot <- g
 
       # Add interactivity
-      g <- eval(parse(text = g))
+      g <- eval_check(g)
 
       d1 <- dplyr::left_join(g[[1]]$data, g[[2]]$data,
                              by = c("Year", "Statistic"),
@@ -138,8 +138,7 @@ server_low_flows <- function(id, data_settings, data_raw, data_loaded) {
 
       code$table <- t
 
-      parse(text = t) %>%
-        eval() %>%
+      eval_check(t) %>%
         prep_DT()
     })
 

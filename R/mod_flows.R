@@ -98,7 +98,7 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
 
       code$plot <- g
 
-      g <- eval(parse(text = g))[[1]]
+      g <- eval_check(g)[[1]]
       g <- g +
         ggiraph::geom_point_interactive(
           ggplot2::aes(tooltip = glue::glue(
@@ -133,8 +133,7 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
 
       code$table <- t
 
-      parse(text = t) %>%
-        eval() %>%
+      eval_check(t) %>%
         tidyr::pivot_longer(cols = -c(STATION_NUMBER, Month),
                             names_to = "percentiles", values_to = "value") %>%
         tidyr::pivot_wider(names_from = Month, values_from = value) %>%

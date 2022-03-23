@@ -465,9 +465,7 @@ server_data_load <- function(id, bc_hydrozones) {
 
       code$data_plot <- g
 
-      parse(text = g) %>%
-        eval() %>%
-        .[[1]] %>%
+      eval_check(g)[[1]] %>%
         plotly::ggplotly() %>%
         plotly::config(modeBarButtonsToRemove =
                  c("pan", "autoscale", "zoomIn2d", "zoomOut2d",

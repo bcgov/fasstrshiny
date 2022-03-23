@@ -57,8 +57,7 @@ server_peak_flows <- function(id, data_settings, data_raw, data_loaded) {
 
       code$table <- t
 
-      parse(text = t) %>%
-        eval() %>%
+      eval_check(t) %>%
         prep_DT()
     })
 

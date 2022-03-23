@@ -95,7 +95,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
       code$plot <- g
 
       # Add interactivity
-      g <- eval(parse(text = g))[[1]]
+      g <- eval_check(g)[[1]]
 
       stats <- names(g$data) # Get stats from plot data
       stats <- stats[!stats %in% c("WaterYear", "AnalysisDate", "DayofYear")] # Omit these
@@ -135,8 +135,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
 
       code$table <- t
 
-      parse(text = t) %>%
-        eval() %>%
+      eval_check(t) %>%
         prep_DT()
     })
 

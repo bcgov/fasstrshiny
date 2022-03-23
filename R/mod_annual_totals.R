@@ -81,7 +81,7 @@ server_annual_totals <- function(id, data_settings, data_raw, data_loaded) {
                                          "include_seasons = TRUE"))
 
       code$plot <- g
-      g <- eval(parse(text = g))
+      g <- eval_check(g)
 
       # Add interactivity
       for(i in seq_along(g)) {
@@ -132,8 +132,7 @@ server_annual_totals <- function(id, data_settings, data_raw, data_loaded) {
 
       code$table <- t
 
-      parse(text = t) %>%
-        eval() %>%
+      eval_check(t) %>%
         prep_DT()
     })
 

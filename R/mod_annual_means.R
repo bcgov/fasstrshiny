@@ -53,7 +53,7 @@ server_annual_means <- function(id, data_settings, data_raw, data_loaded) {
 
       code$plot <- g
 
-      g <- eval(parse(text = g))[[1]]
+      g <- eval_check(g)[[1]]
 
       # Replace layers with interactive
       g$layers[[1]] <- ggiraph::geom_bar_interactive(

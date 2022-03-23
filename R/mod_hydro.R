@@ -129,7 +129,7 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
                      ""))
 
       code$plot <- g
-      g <- eval(parse(text = g))[[1]]
+      g <- eval_check(g)[[1]]
 
       # Add interactivity
       stats <- names(g$data) # Get stats from plot data
@@ -211,8 +211,7 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
 
       code$mad <- t
 
-      parse(text = t) %>%
-        eval()
+      eval_check(t)
     })
 
     ## Table -----------------------
@@ -241,8 +240,7 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
 
       code$table <- t
 
-      parse(text = t) %>%
-        eval() %>%
+      eval_check(t) %>%
         prep_DT()
     })
 
