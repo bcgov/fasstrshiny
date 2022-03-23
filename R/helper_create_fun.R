@@ -168,6 +168,7 @@ combine_parameters <- function(values) {
         glue::glue("include_stats = ",
                  "c(\"{glue::glue_collapse(values[[i]], sep = '\", \"')}\")"),
       params[i] == "availability" ~ glue::glue("plot_availability = {values[i]}"),
+      params[i] == "symbols_percent" ~ glue::glue("plot_percent = {values[i]}"),
       params[i] == "daterange" ~
         glue::glue("start_date = '{values[[i]][1]}', end_date = '{values[[i]][2]}'"),
       params[i] == "plot_log" ~ glue::glue("log_discharge = {values[i]}"),

@@ -2,8 +2,9 @@
 
 parameters <- dplyr::tribble(
   ~id,                    ~fasstr_arg,           ~tooltip,                             ~add_arg,
-  "stats",                "include_stats",       "Choose statistics to display",       FALSE,
+  "stats",                "include_stats",       "Choose statistics to display",       TRUE,
   "availability",         "plot_availability",   "Indicate years which contain only partial data", TRUE,
+  "symbols_percent",      "plot_percent",        "Plot days as proportion rather than number", TRUE,
   "add_dates",            "",                    "Choose dates to highlight on the plot",   FALSE,
   "add_mad",              "",                    "Add the calculated Mean Annual Discharge percentiles to the plot", FALSE,
 

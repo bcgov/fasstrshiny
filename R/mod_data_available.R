@@ -74,8 +74,7 @@ ui_data_available <- function(id) {
                     choices = c("Number of days" = FALSE,
                                 "Percent of days" = TRUE),
                     selected = default("plot_annual_symbols", "plot_percent")),
-                  bsTooltip(ns("symbols_percent_tip"),
-                            "Plot days as proportion rather than number",
+                  bsTooltip(ns("symbols_percent_tip"), tips$symbols_percent,
                             placement = "left"))
               ),
               strong("HYDAT data symbols are: "), br(),
@@ -211,11 +210,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
                   "Flow" = "plot_flow_data_symbols",
                   "Days" = "plot_annual_symbols") %>%
         create_fun(data_name = "data_flow", input, input_data = data_settings(),
-                   params_ignore = "discharge",
-                   extra = dplyr::if_else(
-                     input$symbols_type == "Days",
-                     glue::glue("plot_percent = {input$symbols_percent}"),
-                     ""))
+                   params_ignore = "discharge")
 
       code$plot_symbols <- g
 
