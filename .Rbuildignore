@@ -11,3 +11,5 @@
 ^COMPLIANCE\.yaml$
 ^CONTRIBUTING\.md$
 ^README\.Rmd$
+^codecov\.yml$
+^\.github$

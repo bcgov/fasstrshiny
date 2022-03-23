@@ -89,36 +89,13 @@ test_mod <- function(mod, hydat_stn = "08HB048") {
 
 
   server <- function(input, output, session) {
-    data <- fasstr::fill_missing_dates(station_number = hydat_stn) %>%
-      fasstr::add_date_variables(water_year_start = 1) %>%
-      fasstr::add_daily_volume() %>%
-      fasstr::add_daily_yield()
 
-    data_settings <- reactive({
-      list(
-        discharge = "Value",
-        water_year = 1,
-        years_range = c(min(data$WaterYear), max(data$WaterYear)),
-        years_exclude = NULL,
-        months = 1:12,
-        roll_days = 1,
-        roll_align = "right",
-        complete = FALSE,
-        missing = TRUE,
-        allowed = 100,
-        basin_area = 10.3,
-        station_name = "Carnation Creek At The Mouth")
-    })
-
-
-    data_raw <- reactive({return(data)})
-
-    data_loaded <- reactiveVal(TRUE)
+    d <- dummy_data(hydat_stn)
 
     if(mod == "data_load") {
       server_data_load(id = mod, bc_hydrozones = bc_hydrozones)
     } else {
-      get(paste0("server_", mod))(id = mod, data_settings, data_raw, data_loaded)
+      get(paste0("server_", mod))(id = mod, d$s, d$d, d$l)
     }
   }
 
@@ -138,4 +115,32 @@ test_mod <- function(mod, hydat_stn = "08HB048") {
 
   shinyApp(ui = ui, server = server)
 
+}
+
+
+
+dummy_data <- function(hydat_stn = "08HB048") {
+
+  data_raw <- fasstr::fill_missing_dates(station_number = hydat_stn) %>%
+    fasstr::add_date_variables(water_year_start = 1) %>%
+    fasstr::add_daily_volume() %>%
+    fasstr::add_daily_yield()
+
+  data_settings <- list(
+    discharge = "Value",
+    water_year = 1,
+    years_range = c(min(data_raw$WaterYear), max(data_raw$WaterYear)),
+    years_exclude = NULL,
+    months = 1:12,
+    roll_days = 1,
+    roll_align = "right",
+    complete = FALSE,
+    missing = TRUE,
+    allowed = 100,
+    basin_area = 10.3,
+    station_name = "Carnation Creek At The Mouth")
+
+  list("d" = reactive(data_raw),
+       "s" = reactive(data_settings),
+       "l" = reactiveVal(TRUE))
 }
