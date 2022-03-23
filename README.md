@@ -1,4 +1,10 @@
 
+<!-- badges: start -->
+
+[![Codecov test
+coverage](https://codecov.io/gh/bcgov/fasstrshiny/branch/main/graph/badge.svg)](https://app.codecov.io/gh/bcgov/fasstrshiny?branch=main)
+<!-- badges: end -->
+
 # fasstr Shiny App
 
 [![img](https://img.shields.io/badge/Lifecycle-Experimental-339999)](https://github.com/bcgov/repomountie/blob/master/doc/lifecycle-badges.md)
