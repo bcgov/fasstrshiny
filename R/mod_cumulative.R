@@ -68,7 +68,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
     output$ui_plot_options <- renderUI({
       select_plot_options(
         select_plot_log(
-          id, value = formals(plot_daily_cumulative_stats)$log_discharge),
+          id, value = default("plot_daily_cumulative_stats", "log_discharge")),
         select_add_year(id, data_settings()$years_range))
     })
 

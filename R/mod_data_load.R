@@ -296,7 +296,7 @@ server_data_load <- function(id, bc_hydrozones) {
     output$ui_plot_options <- renderUI({
       req(data_loaded())
       select_plot_options(
-        select_plot_log(id, value = formals(plot_flow_data)$log_discharge), # Default
+        select_plot_log(id, value = default("plot_flow_data", "log_discharge")),
         select_daterange(id, data_raw()))
     })
 

@@ -50,13 +50,13 @@ ui_hydro <- function(id) {
         # Percentiles
         select_percentiles(
           id, name = "inner_percentiles", label = "Inner percentiles",
-          selected = eval(formals("plot_daily_stats")$inner_percentiles)),
+          selected = default("plot_daily_stats", "inner_percentiles")),
         select_percentiles(
           id, name = "outer_percentiles", label = "Outer percentiles",
-          selected = eval(formals("plot_daily_stats")$outer_percentiles)),
+          selected = default("plot_daily_stats", "outer_percentiles")),
         select_percentiles(
           id, name = "extra_percentiles", label = "Additional percentiles (table)",
-          selected = eval(formals("calc_daily_stats")$percentiles))
+          selected = default("calc_daily_stats", "percentiles"))
       ),
 
       # Outputs
@@ -89,11 +89,12 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
 
   moduleServer(id, function(input, output, session) {
 
+    # UI Elements ------------------------------------------
     # Plot options
     output$ui_plot_options <- renderUI({
       select_plot_options(
         select_plot_log(
-          id, value = formals(plot_longterm_daily_stats)$log_discharge),
+          id, value = default("plot_longterm_daily_stats", "log_discharge")),
         select_plot_extremes(id),
         select_add_year(id, data_settings()$years_range),
         select_add_dates(id),

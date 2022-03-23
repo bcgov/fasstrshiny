@@ -157,6 +157,10 @@ lasso_svg <- function() {
 <svg xmlns='http://www.w3.org/2000/svg' width='10pt' height='10pt' viewBox='0 0 230 230' stroke = '#069'><g><ellipse ry='65.5' rx='86.5' cy='94' cx='115.5' stroke-width='20' fill='transparent'></ellipse><ellipse ry='11.500001' rx='10.5' cy='153' cx='91.5' stroke-width='20' fill='transparent'></ellipse><line y2='210.5' x2='105' y1='164.5' x1='96' stroke-width='20'></line></g></svg>")
 }
 
+#' Fetch default values of an argument in a function
+#' @noRd
+default <- function(fun, arg) eval(formals(fun)[[arg]])
+
 
 
 # HYDAT functions ----------------------------

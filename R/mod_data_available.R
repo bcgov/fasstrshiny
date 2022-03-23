@@ -20,6 +20,7 @@ ui_data_available <- function(id) {
   fluidRow(
     column(
       width = 12, h2("Data Availability"),
+
       tabBox(
         width = 12,
 
@@ -27,8 +28,7 @@ ui_data_available <- function(id) {
         tabPanel(
           title = "Data Summary Plot",
           fluidRow(
-            column(
-              width = 3,
+            column(width = 3,
               helpText("Placeholder descriptive text to describe this section, ",
                        "what it does and how to use it"),
               div(id = ns("availability_tip"),
@@ -37,16 +37,17 @@ ui_data_available <- function(id) {
                                value = TRUE,
                                status = "success", slim = TRUE, inline = TRUE)),
               bsTooltip(ns("availability_tip"), tips$availability,
-                                 placement = "left"),
+                        placement = "left"),
               selectizeInput(
                 ns("stats"),
                 label = "Statistics to include",
-                choices = eval(formals(plot_data_screening)$include_stat),
-                selected = eval(formals(plot_data_screening)$include_stat),
+                choices = default("plot_data_screening", "include_stats"),
+                selected = default("plot_data_screening", "include_stats"),
                 multiple = TRUE, width = "100%")),
             column(width = 9,
                    ggiraph::girafeOutput(ns("plot_summary"),
-                                         height = opts$plot_height)))),
+                                         height = opts$plot_height))
+            )),
 
         # Symbols Plot ----------------------
         tabPanel(
@@ -60,19 +61,20 @@ ui_data_available <- function(id) {
                   awesomeRadio(ns("symbols_type"), label = "Plot type",
                                choices = c("Days", "Flow")),
                   bsTooltip(ns("symbols_type_tip"),
-                                     paste0("Plot type to show: Flow by year or ",
-                                            "Number/proportion of each symbol by year"),
-                                     placement = "left")),
+                            paste0("Plot type to show: Flow by year or ",
+                                   "Number/proportion of each symbol by year"),
+                            placement = "left")),
                 column(
                   width = 6, id = ns("symbols_percent_tip"),
-                  awesomeRadio(ns("symbols_percent"),
-                               label = "Plot days",
-                               choices = c("Number of days" = FALSE,
-                                           "Percent of days" = TRUE),
-                               selected = formals(plot_annual_symbols)$plot_percent),
+                  awesomeRadio(
+                    ns("symbols_percent"),
+                    label = "Plot days",
+                    choices = c("Number of days" = FALSE,
+                                "Percent of days" = TRUE),
+                    selected = default("plot_annual_symbols", "plot_percent")),
                   bsTooltip(ns("symbols_percent_tip"),
-                                     "Plot days as proportion rather than number",
-                                     placement = "left"))
+                            "Plot days as proportion rather than number",
+                            placement = "left"))
               ),
               strong("HYDAT data symbols are: "), br(),
               strong("'E'"), "Estimate", br(),
@@ -109,8 +111,8 @@ ui_data_available <- function(id) {
                      selected = c(1:12),
                      direction = "vertical"),
                    bsTooltip(ns("months_inc"),
-                                      "Months to include/exclude from the plot",
-                                      placement = "left"),
+                             "Months to include/exclude from the plot",
+                             placement = "left"),
             ),
             column(width = 11, ggiraph::girafeOutput(ns("plot_available"),
                                                      height = opts$plot_height))
@@ -140,12 +142,14 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
     output$ui_plot_symbols_options <- renderUI({
       select_plot_options(
         select_plot_log(
-          id, value = formals(plot_flow_data_symbols)$log_discharge), # Default
+          id, value = default("plot_flow_data_symbols", "log_discharge")), # Default
       )
     })
 
     observe(shinyjs::toggleState("symbols_percent",
                                  condition = input$symbols_type == "Days"))
+    observe(shinyjs::toggleState("plot_log",
+                                 condition = input$symbols_type == "Flow"))
 
     # Data --------------
     available_raw <- reactive({

@@ -80,7 +80,8 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
     # UI Plot options ------------------
     output$ui_plot_options <- renderUI({
       select_plot_options(
-        select_plot_log(id, value = formals(plot_monthly_stats2)$log_discharge))
+        select_plot_log(id, value = default("plot_monthly_stats2",
+                                            "log_discharge")))
     })
 
     observe(shinyjs::toggleState("months_plot",

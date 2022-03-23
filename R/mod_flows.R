@@ -81,7 +81,8 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
     # Plot options
     output$ui_plot_options <- renderUI({
       select_plot_options(
-        select_plot_log(id, value = formals(plot_flow_duration)$log_discharge))
+        select_plot_log(id,
+                        value = default("plot_flow_duration", "log_discharge")))
     })
 
     # Flows --------------------------------------
