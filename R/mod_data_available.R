@@ -43,7 +43,9 @@ ui_data_available <- function(id) {
                 label = "Statistics to include",
                 choices = default("plot_data_screening", "include_stats"),
                 selected = default("plot_data_screening", "include_stats"),
-                multiple = TRUE, width = "100%")),
+                multiple = TRUE, width = "100%"),
+              bsTooltip(ns("stats"), tips$stats,
+                        placement = "left")),
             column(width = 9,
                    ggiraph::girafeOutput(ns("plot_summary"),
                                          height = opts$plot_height))
@@ -171,10 +173,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
 
       data_flow <- data_raw()
 
-      e <- c(glue::glue("include_stats = ",
-                        "c(\"{glue::glue_collapse(input$stats, sep = '\", \"')}\")"),
-             glue::glue("plot_availability = {input$availability}")) %>%
-        glue::glue_collapse(sep = ", ")
+      e <- glue::glue("plot_availability = {input$availability}")
 
       g <- create_fun("plot_data_screening", data_name = "data_flow",
                       input, input_data = data_settings(), extra = e)

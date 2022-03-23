@@ -162,6 +162,9 @@ combine_parameters <- function(values) {
         glue::glue("months = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
 
       # Plot
+      params[i] == "stats" ~
+        glue::glue("include_stats = ",
+                 "c(\"{glue::glue_collapse(values[[i]], sep = '\", \"')}\")"),
       params[i] == "daterange" ~
         glue::glue("start_date = '{values[[i]][1]}', end_date = '{values[[i]][2]}'"),
       params[i] == "plot_log" ~ glue::glue("log_discharge = {values[i]}"),
