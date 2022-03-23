@@ -32,17 +32,8 @@ ui_flows <- function(id) {
                          value = TRUE,
                          status = "success", slim = TRUE)),
         bsTooltip(ns("longterm_tip"), tips$longterm, placement = "left"),
-        checkboxGroupButtons(
-          ns("months"),
-          label = "Months to plot",
-          choices = list("Jan" = 1, "Feb" = 2,
-                         "Mar" = 3, "Apr" = 4,
-                         "May" = 5, "Jun" = 6,
-                         "Jul" = 7, "Aug" = 8,
-                         "Sep" = 9, "Oct" = 10,
-                         "Nov" = 11, "Dec" = 12),
-          selected = c(1:12)),
-        bsTooltip(ns("months"), "Months to include/exclude from the plot",
+        uiOutput(ns("ui_months")),
+        bsTooltip(ns("ui_months"), "Months to include/exclude from the plot",
                            placement = "left"),
         select_custom_months(id),
 
@@ -77,6 +68,21 @@ ui_flows <- function(id) {
 server_flows <- function(id, data_settings, data_raw, data_loaded) {
 
   moduleServer(id, function(input, output, session) {
+
+    # UI Elements -----------------------------------------------
+
+    output$ui_months <- renderUI({
+      checkboxGroupButtons(
+        NS(id, "months"),
+        label = "Months to plot",
+        choices = list("Jan" = 1, "Feb" = 2,
+                       "Mar" = 3, "Apr" = 4,
+                       "May" = 5, "Jun" = 6,
+                       "Jul" = 7, "Aug" = 8,
+                       "Sep" = 9, "Oct" = 10,
+                       "Nov" = 11, "Dec" = 12),
+        selected = data_settings()$months)
+    })
 
     # Plot options
     output$ui_plot_options <- renderUI({
