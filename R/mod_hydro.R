@@ -111,10 +111,11 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
     output$plot <- ggiraph::renderGirafe({
       check_data(data_loaded())
       validate(
-        need(length(input$inner_percentiles) == 2 &
-               length(input$outer_percentiles) == 2,
-             glue::glue("Inner and outer percentiles must each have two values, ",
-                        "corresponding to the limits of the plot ribbons")))
+        need(length(input$inner_percentiles) %in% c(0, 2) &
+               length(input$outer_percentiles) %in% c(0, 2),
+             glue::glue("Inner and outer percentiles must each have two ",
+                        "(or no) values, corresponding to the limits of the ",
+                        "plot ribbons")))
       req(input$type, !is.null(input$add_year))
 
       data_flow <- data_raw()

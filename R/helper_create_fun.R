@@ -75,16 +75,24 @@ create_fun <- function(fun, data_name = NULL, input, input_data = NULL,
   # Join
   values <- append(values_data, values_mod)
 
-  # Remove NULL/empty
+  # Keep some NULLs
+  values <- keep_null(values, c("inner_percentiles", "outer_percentiles"))
+
+  # Remove NULL/empty (except those to keep)
   nulls <- purrr::map_lgl(values, ~is.null(.) || (is.character(.) && . == ""))
   values <- values[!nulls]
+
+  # Mark missing inputs as NULL
+  mark_null(values, c("add_year"))
 
   # Find and remove defaults
   defaults <- remove_defaults(fun, input_values = values)
   values <- values[!defaults]
 
-  # Deal with special situations
-  values <- special_situations(values)
+  # If we have allowed_missing (allowed), omit ignore_missing (missing)
+  if("allowed" %in% names(values)) {
+    values <- values[names(values) != "missing"]
+  }
 
 
   # Put it all together
@@ -95,14 +103,18 @@ create_fun <- function(fun, data_name = NULL, input, input_data = NULL,
   glue::glue("{fun}({args}){end}")
 }
 
-special_situations <- function(values) {
+mark_null <- function(values, args) {
+  for(a in args) {
+    if(a %in% names(values) && values[[a]] == "") values[[a]] <- NULL
+  }
+  values
+}
 
-  # If we have allowed_missing (allowed), omit ignore_missing (missing)
-  if("allowed" %in% names(values)) values <- values[names(values) != "missing"]
-
-  # If we have add_year == "", make NULL (i.e. omit)
-  if("add_year" %in% names(values) && values$add_year == "") {
-    values$add_year <- NULL
+keep_null <- function(values, args) {
+  for(a in args) {
+    if(a %in% names(values) && is.null(values[[a]])) {
+      values[[a]] <- "NULL"
+    }
   }
   values
 }
