@@ -130,6 +130,7 @@ combine_parameters <- function(values) {
 
       # Data
       params[i] == "discharge" ~ glue::glue("values = '{values[i]}'"),
+      params[i] == "discharge2" ~ glue::glue("use_yield = {values[i]}"),
       params[i] == "basin_area" ~ glue::glue("basin_area = {values[i]}"),
       params[i] == "water_year" ~
         glue::glue("water_year_start = {values[i]}"),

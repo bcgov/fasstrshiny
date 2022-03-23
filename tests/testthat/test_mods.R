@@ -30,7 +30,7 @@ test_that("Basic modules", {
 
   testServer(server_annual_totals, args = list(d$s, d$d, d$l), {
 
-    session$setInputs(discharge = TRUE, display = "Total_Yield")
+    session$setInputs(discharge2 = TRUE, display = "Total_Yield")
     expect_error(plots(), NA)
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
@@ -44,7 +44,7 @@ test_that("Basic modules", {
     expect_error(plots(), NA)
     expect_error(output$plot, NA)
 
-    session$setInputs(discharge = FALSE, display = "Total_Volume")
+    session$setInputs(discharge2 = FALSE, display = "Total_Volume")
     expect_error(plots(), NA)
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
@@ -202,7 +202,7 @@ test_that("Flows and Hydrograph Modules don't have errors", {
 
   ## Cumulative -----------------------
   testServer(server_cumulative, args = list(d$s, d$d, d$l), {
-    session$setInputs(type = "Daily", discharge = TRUE, plot_log = FALSE,
+    session$setInputs(type = "Daily", discharge2 = TRUE, plot_log = FALSE,
                       add_year = "")
     expect_error(output$plot, NA)
     expect_error(output$table, NA)

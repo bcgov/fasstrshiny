@@ -24,12 +24,12 @@ ui_annual_totals <- function(id) {
       box(width = 3,
           helpText("Placeholder descriptive text to describe this section, ",
                    "what it does and how to use it"),
-          awesomeRadio(ns("discharge"),
+          awesomeRadio(ns("discharge2"),
                        label = "Discharge type",
                        choices = list("Volumetric Discharge (m3)" = FALSE,
                                       "Runoff Yield (mm)" = TRUE),
                        selected = TRUE),
-          bsTooltip(ns("discharge"), tips$discharge,
+          bsTooltip(ns("discharge2"), tips$discharge2,
                              placement = "left"),
           uiOutput(ns("ui_display"))),
 
@@ -70,15 +70,13 @@ server_annual_totals <- function(id, data_settings, data_raw, data_loaded) {
     # Plots -------------------
     plots <- reactive({
       check_data(data_loaded())
-      req(!is.null(input$discharge))
+      req(!is.null(input$discharge2))
 
       data_flow <- data_raw()
       g <- create_fun(fun = "plot_annual_cumulative_stats",
                       data_name = "data_flow",
                       input, input_data = data_settings(),
-                      params_ignore = "discharge",
-                      extra = glue::glue("use_yield = {input$discharge}, ",
-                                         "include_seasons = TRUE"))
+                      extra = "include_seasons = TRUE")
 
       code$plot <- g
       g <- eval_check(g)
@@ -126,9 +124,7 @@ server_annual_totals <- function(id, data_settings, data_raw, data_loaded) {
       t <- create_fun("calc_annual_cumulative_stats",
                       data_name = "data_flow",
                       input, input_data = data_settings(),
-                      params_ignore = "discharge",
-                      extra = glue::glue("use_yield = {input$discharge}, ",
-                                         "include_seasons = TRUE"))
+                      extra = "include_seasons = TRUE")
 
       code$table <- t
 

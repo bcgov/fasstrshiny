@@ -7,7 +7,7 @@ parameters <- dplyr::tribble(
   "add_mad",              "",                    "Add the calculated Mean Annual Discharge percentiles to the plot", FALSE,
 
   "discharge",            "values",              "Discharge to use in calculations",   FALSE,
-  "discharge",            "use_yield",           "Discharge to use in calculations",   FALSE,
+  "discharge2",           "use_yield",           "Discharge to use in calculations",   FALSE,
   "roll_days",            "roll_days",           "Number of days over which to roll the mean", TRUE,
   "roll_align",           "roll_align",          "Alignment of the rolling day window", TRUE,
   "longterm",             "include_longterm",    "Include long-term data in calculations", TRUE,
@@ -54,9 +54,11 @@ parameters <- dplyr::tribble(
                                                 "</code>)"),
                                          tooltip))
 
-tips <- as.list(parameters$tooltip) %>%
-  unique() %>%
-  setNames(unique(parameters$id))
+tips <- parameters %>%
+  dplyr::select(id, tooltip) %>%
+  dplyr::distinct() %>%
+  dplyr::pull(tooltip, id) %>%
+  as.list()
 
 
 opts <- list(

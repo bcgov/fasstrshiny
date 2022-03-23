@@ -28,12 +28,12 @@ ui_cumulative <- function(id) {
                      status = "primary"),
         bsTooltip(ns("type"), "Type of cumulative statistics to calculate",
                            placement = "left"),
-        awesomeRadio(ns("discharge"),
+        awesomeRadio(ns("discharge2"),
                      label = "Discharge type",
                      choices = list("Volumetric Discharge (m3)" = FALSE,
                                     "Runoff Yield (mm)" = TRUE),
                      selected = TRUE),
-        bsTooltip(ns("discharge"), tips$discharge, placement = "left")
+        bsTooltip(ns("discharge2"), tips$discharge2, placement = "left")
       ),
       tabBox(
         width = 9,
@@ -76,21 +76,20 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
     # Plot --------------------
     output$plot <- ggiraph::renderGirafe({
       check_data(data_loaded())
-      req(input$type, !is.null(input$add_year), input$discharge)
+      req(input$type, !is.null(input$add_year), input$discharge2)
 
       data_flow <- data_raw()
 
-      e <- glue::glue("use_yield = {input$discharge}")
       if(input$add_year != "") {
-        e <- glue::glue("{e}, add_year = {input$add_year}")
-      }
+        e <- glue::glue("add_year = {input$add_year}")
+      } else e <- ""
 
 
       g <- switch(input$type,
                   "Monthly" = "plot_monthly_cumulative_stats",
                   "Daily"   = "plot_daily_cumulative_stats") %>%
         create_fun(data_name = "data_flow", input, input_data = data_settings(),
-                   extra = e, params_ignore = "discharge")
+                   extra = e)
 
       code$plot <- g
 
@@ -122,16 +121,14 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
     # Table -----------------------
     output$table <- DT::renderDT({
       check_data(data_loaded())
-      req(input$discharge)
+      req(input$discharge2)
 
       data_flow <- data_raw()
 
       t <- switch(input$type,
                   "Monthly" = "calc_monthly_cumulative_stats",
                   "Daily"   = "calc_daily_cumulative_stats") %>%
-        create_fun(data_name = "data_flow", input, input_data = data_settings(),
-                   params_ignore = "discharge",
-                   extra = glue::glue("use_yield = {input$discharge}"))
+        create_fun(data_name = "data_flow", input, input_data = data_settings())
 
       code$table <- t
 
