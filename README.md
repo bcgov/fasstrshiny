@@ -1,14 +1,12 @@
+# fasstr Shiny App
 
 <!-- badges: start -->
 
+[![img](https://img.shields.io/badge/Lifecycle-Experimental-339999)](https://github.com/bcgov/repomountie/blob/master/doc/lifecycle-badges.md)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Codecov test
 coverage](https://codecov.io/gh/bcgov/fasstrshiny/branch/main/graph/badge.svg)](https://app.codecov.io/gh/bcgov/fasstrshiny?branch=main)
 <!-- badges: end -->
-
-# fasstr Shiny App
-
-[![img](https://img.shields.io/badge/Lifecycle-Experimental-339999)](https://github.com/bcgov/repomountie/blob/master/doc/lifecycle-badges.md)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 A Shiny app to analyze, summarize, and visualize daily streamflow data
 💧.
