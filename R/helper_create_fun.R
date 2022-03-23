@@ -146,6 +146,8 @@ combine_parameters <- function(values) {
       params[i] == "missing" ~ glue::glue("ignore_missing = {values[i]}"),
       params[i] == "allowed" ~ glue::glue("allowed_missing = {values[i]}"),
       params[i] == "complete" ~ glue::glue("complete_years = {values[i]}"),
+      params[i] == "mad" ~
+        glue::glue("percent_MAD = c({glue::glue_collapse(values[[i]], sep = ',')})"),
 
       # Data
       params[i] == "discharge" ~ glue::glue("values = '{values[i]}'"),

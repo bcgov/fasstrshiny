@@ -202,9 +202,7 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
 
       t <- create_fun(
         fun = "calc_longterm_mean",
-        data_name = "data_flow", input, input_data = data_settings(),
-        extra = glue::glue(
-          "percent_MAD = c({glue::glue_collapse(input$mad, sep = ',')})"))
+        data_name = "data_flow", input, input_data = data_settings())
 
       code$mad <- t
 
