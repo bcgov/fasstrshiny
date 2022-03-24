@@ -514,13 +514,13 @@ server_data_load <- function(id, bc_hydrozones) {
 
         if(is.null(input$years_exclude)) {
           ye <- ""
-        } else ye <- glue::glue_collapse(input$years_exclude, sep = ", ")
+        } else ye <- conseq(input$years_exclude, wrap = FALSE)
 
         t <- glue::glue("Current Data: {data_id()}")
         s <- input$station_name
 
         m <- input$months
-        if(all(1:12 %in% m)) m <- "all" else m <- glue::glue_collapse(m, sep = ", ")
+        if(all(1:12 %in% m)) m <- "all" else m <- conseq(m, type = "month")
 
         n <- data_raw() %>%
           dplyr::filter(WaterYear >= input$years_range[1],
@@ -534,7 +534,8 @@ server_data_load <- function(id, bc_hydrozones) {
         d <- list(`Water Year` = month.abb[as.numeric(input$water_year)],
                   `Year Range` = glue::glue_collapse(input$years_range, sep = "-"),
                   `Years Excl.` = ye,
-                  `Total Years` = as.character(n),
+                  `Total Years` = glue::glue(
+                    "{n} / {input$years_range[2] - input$years_range[1] + 1}"),
                   `Months` = m) %>%
           tibble::enframe() %>%
           tidyr::unnest(value)

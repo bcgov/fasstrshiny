@@ -94,9 +94,9 @@ create_fun <- function(fun, data_name = NULL, input, input_data = NULL,
     values <- values[names(values) != "missing"]
   }
 
-
   # Put it all together
-  p <- combine_parameters(values)
+  p <- purrr::imap(values, ~combine_parameters(.y, .x))
+
   if(extra == "") extra <- NULL
   args <- glue::glue_collapse(c(data_name, na.omit(p), extra), sep = ', ')
 
@@ -120,106 +120,87 @@ keep_null <- function(values, args) {
 }
 
 
-#' Determine how parameters should be written as fasstr arguments
+#' Create standard parameters
+#'
+#' Determine how parameters should be written as fasstr arguments.
+#'
+#' Strictly speaking, most of this function could be an internal data frame,
+#' created in parameters.R, but it might be easier to keep it here, close
+#' to `create_fun()`.
 #'
 #' - All parameters here, must be listed in data-raw/parameters.R
-#' (and when adding to that file, you'll have to re-run it and re-load the package)
+#'  (and when adding to that file, you'll have to re-run it and re-load
+#'  the package)
+#'
+#' - Note that character values (i.e. custom_months_label) need to be surrounded
+#'   by ' '
+#' - Can use conseq() for any numeric (or month character, with type = "months")
+#'   to collapse numbers
+#'
 #' @noRd
 
-combine_parameters <- function(values) {
-  # Create standard parameters
-  #
-  # - REMEMBER! When collapsing multiple elements with glue_collapse, use [[i]]
-  #      Otherwise use [i] to avoid warnings (case_when() compares the length of
-  #      inputs even if they're not the TRUE case).
-  # - Note that character values (i.e. custom_months_label) need to be surrounded by ' '
+combine_parameters <- function(p, v) {
 
-  params <- names(values)
+  v <- sort(v)
 
-  p <- vector()
-  for(i in seq_along(params)) {
-    p[i] <- dplyr::case_when(
+  dplyr::tribble(
+    ~param,                ~glued,
+    "longterm",            "include_longterm = {v}",
+    "percentiles",         "percentiles = {conseq(v)}",
+    "inner_percentiles",   "inner_percentiles = {conseq(v)}",
+    "outer_percentiles",   "outer_percentiles = {conseq(v)}",
+    "normal_percentiles",  "normal_percentiles = {conseq(v)}",
+    "custom_months",       "custom_months = {conseq(v)}",
+    "custom_months_label", "custom_months_label = '{v}'",
+    "missing",             "ignore_missing = {v}",
+    "allowed",             "allowed_missing = {v}",
+    "complete",            "complete_years = {v}",
+    "mad",                 "percent_MAD = {conseq(v)}",
 
-      # Specific
-      params[i] == "longterm" ~ glue::glue("include_longterm = {values[i]}"),
+    # Data
+    "discharge",           "values = '{v}'",
+    "discharge2",          "use_yield = {v}",
+    "basin_area",          "basin_area = {v}",
+    "water_year",          "water_year_start = {v}",
+    "years_range",         "start_year = {v[1]}, end_year = {v[2]}",
+    "years_exclude",       "exclude_years = {conseq(v)}",
+    "roll_days",           "roll_days = {conseq(v)}",
+    "roll_align",          "roll_align = '{v}'",
+    "months",              "months = {conseq(v)}",
 
-      params[i] == "percentiles" ~
-        glue::glue("percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
-      params[i] == "inner_percentiles" ~
-        glue::glue("inner_percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
-      params[i] == "outer_percentiles" ~
-        glue::glue("outer_percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
-      params[i] == "normal_percentiles" ~
-        glue::glue("normal_percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
+    # Plot
+    "stats",  "include_stats = c(\"{glue::glue_collapse(v, sep = '\", \"')}\")",
 
-      params[i] == "custom_months" ~
-        glue::glue("custom_months = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
-      params[i] == "custom_months_label" ~ glue::glue("custom_months_label = '{values[i]}'"),
-      params[i] == "missing" ~ glue::glue("ignore_missing = {values[i]}"),
-      params[i] == "allowed" ~ glue::glue("allowed_missing = {values[i]}"),
-      params[i] == "complete" ~ glue::glue("complete_years = {values[i]}"),
-      params[i] == "mad" ~
-        glue::glue("percent_MAD = c({glue::glue_collapse(values[[i]], sep = ',')})"),
+    "availability",        "plot_availability = {v}",
+    "symbols_percent",     "plot_percent = {v}",
+    "daterange",           "start_date = '{v[1]}', end_date = '{v[2]}'",
+    "plot_log",            "log_discharge = {v}",
+    "plot_extremes",       "include_extremes = {v}",
+    "add_year",            "add_year = {v}",
 
-      # Data
-      params[i] == "discharge" ~ glue::glue("values = '{values[i]}'"),
-      params[i] == "discharge2" ~ glue::glue("use_yield = {values[i]}"),
-      params[i] == "basin_area" ~ glue::glue("basin_area = {values[i]}"),
-      params[i] == "water_year" ~
-        glue::glue("water_year_start = {values[i]}"),
-      params[i] == "years_range" ~
-        glue::glue("start_year = {values[[i]][1]}, end_year = {values[[i]][2]}"),
-      params[i] == "years_exclude" ~
-        glue::glue("exclude_years = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
-      params[i] == "roll_days" ~
-        glue::glue("roll_days = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
-      params[i] == "roll_align" ~ glue::glue("roll_align = '{values[i]}'"),
-      params[i] == "months" ~
-        glue::glue("months = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
+    # Analysis
+    "zyp",                 "zyp_method = '{v}'",
+    "annual_percentiles",  "annual_percentiles = {conseq(v)}",
+    "monthly_percentiles", "monthly_percentiles = {conseq(v)}",
+    "low_roll_days",       "lowflow_days = {conseq(v)}",
+    "low_roll_align",      "lowflow_align = '{v}'",
+    "allowed_annual",      "allowed_missing_annual = {v}",
+    "allowed_monthly",     "allowed_missing_monthly = {v}",
+    "timing_percent",      "timing_percent = {conseq(v)}",
+    "alpha",               "zyp_alpha = {v}",
 
-      # Plot
-      params[i] == "stats" ~
-        glue::glue("include_stats = ",
-                 "c(\"{glue::glue_collapse(values[[i]], sep = '\", \"')}\")"),
-      params[i] == "availability" ~ glue::glue("plot_availability = {values[i]}"),
-      params[i] == "symbols_percent" ~ glue::glue("plot_percent = {values[i]}"),
-      params[i] == "daterange" ~
-        glue::glue("start_date = '{values[[i]][1]}', end_date = '{values[[i]][2]}'"),
-      params[i] == "plot_log" ~ glue::glue("log_discharge = {values[i]}"),
-      params[i] == "plot_extremes" ~ glue::glue("include_extremes = {values[i]}"),
-      params[i] == "add_year" ~ glue::glue("add_year = {values[i]}"),
+    "use_max",             "use_max = {v}",
+    "use_log",             "use_log = {v}",
+    "prob_plot",           "prob_plot_position = '{v}'",
+    "prob_scale",          "prob_scale_points = c({v})",
+    "fit_distr",           "fit_distr = '{v}'",
+    "fit_quantiles",       "fit_quantiles = {conseq(v)}",
+    "fit_distr_method",    "fit_distr_method = '{v}'",
+    "plot_curve",          "plot_curve = {v}") %>%
 
-      # Analysis
-      params[i] == "zyp" ~ glue::glue("zyp_method = '{values[i]}'"),
-      params[i] == "annual_percentiles" ~
-        glue::glue("annual_percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
-      params[i] == "monthly_percentiles" ~
-        glue::glue("monthly_percentiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
-      params[i] == "low_roll_days" ~
-        glue::glue("lowflow_days = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
-      params[i] == "low_roll_align" ~
-        glue::glue("lowflow_align = '{values[i]}'"),
-      params[i] == "allowed_annual" ~
-        glue::glue("allowed_missing_annual = {values[i]}"),
-      params[i] == "allowed_monthly" ~
-        glue::glue("allowed_missing_monthly = {values[i]}"),
-      params[i] == "timing_percent" ~
-        glue::glue("timing_percent = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
-
-      params[i] == "alpha" ~ glue::glue("zyp_alpha = {values[i]}"),
-
-      params[i] == "use_max" ~ glue::glue("use_max = {values[i]}"),
-      params[i] == "use_log" ~ glue::glue("use_log = {values[i]}"),
-      params[i] == "prob_plot" ~ glue::glue("prob_plot_position = '{values[i]}'"),
-      params[i] == "prob_scale" ~ glue::glue("prob_scale_points = c({values[i]})"),
-      params[i] == "fit_distr" ~ glue::glue("fit_distr = '{values[i]}'"),
-      params[i] == "fit_quantiles" ~
-        glue::glue("fit_quantiles = c({glue::glue_collapse(values[[i]], sep = ', ')})"),
-      params[i] == "fit_distr_method" ~ glue::glue("fit_distr_method = '{values[i]}'"),
-      params[i] == "plot_curve" ~ glue::glue("plot_curve = {values[i]}")
-    )
-  }
-  p
+    dplyr::filter(.data$param == .env$p) %>%
+    dplyr::pull(glued) %>%
+    glue::glue()
 }
 
 
