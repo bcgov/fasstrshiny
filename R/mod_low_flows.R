@@ -132,9 +132,7 @@ server_low_flows <- function(id, data_settings, data_raw, data_loaded) {
                                TRUE ~ c(10, 14))
 
       ggiraph::girafe(ggobj = g, width_svg = dims[1], height_svg = dims[2],
-                      options = list(
-                        ggiraph::opts_toolbar(position = "topleft"),
-                        ggiraph::opts_selection(type = "none")))
+                      options = ggiraph_opts())
     })
 
 

@@ -199,9 +199,7 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
 
       ggiraph::girafe(
         ggobj = g, width_svg = 8, height_svg = 5,
-        options = list(
-          ggiraph::opts_selection(css = opts$css_selected, type = "multiple"),
-          ggiraph::opts_toolbar(position = "topleft")))
+        options = ggiraph_opts(selection = "multiple"))
     })
 
     # Remove selected points if changing the numericInput

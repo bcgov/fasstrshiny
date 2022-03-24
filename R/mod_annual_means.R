@@ -86,8 +86,7 @@ server_annual_means <- function(id, data_settings, data_raw, data_loaded) {
                        legend.key = ggplot2::element_rect(colour = NA))
       ggiraph::girafe(
         ggobj = g, width_svg = 14, height_svg = 4,
-        options = list(ggiraph::opts_selection(type = "none"),
-                       ggiraph::opts_toolbar(position = "topleft")))
+        options = ggiraph_opts())
     })
 
     # R Code -----------------

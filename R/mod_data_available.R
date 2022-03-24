@@ -198,11 +198,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
 
       ggiraph::girafe(
         ggobj = g, width_svg = 13, height_svg = 7,
-        options = list(
-          ggiraph::opts_toolbar(position = "topleft"),
-          ggiraph::opts_selection(type = "none"),
-          ggiraph::opts_hover(
-            css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
+        options = ggiraph_opts())
     })
 
     # Symbols Plot -----------------------------
@@ -256,11 +252,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
 
       ggiraph::girafe(
         ggobj = g, width_svg = 13, height_svg = 7,
-        options = list(
-          ggiraph::opts_toolbar(position = "topleft"),
-          ggiraph::opts_selection(type = "none"),
-          ggiraph::opts_hover(
-            css = "fill:orange; stroke:gray; fill-opacity:1;")))
+        options = ggiraph_opts())
     })
 
     # Available Data Plot ---------------------------
@@ -317,11 +309,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
       }
 
       ggiraph::girafe(ggobj = g, width_svg = 14, height_svg = 7,
-                      options = list(
-                        ggiraph::opts_toolbar(position = "topleft"),
-                        ggiraph::opts_selection(type = "none"),
-                        ggiraph::opts_hover(
-                          css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
+                      options = ggiraph_opts())
     })
 
     # Summary table ------------------

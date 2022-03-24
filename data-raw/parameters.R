@@ -71,8 +71,8 @@ tips <- parameters %>%
 
 
 opts <- list(
-  plot_height = "500px",
-  css_selected = "fill:red;stroke:gray;r:5pt")
+  plot_height = "500px"
+)
 
 bc_hydrozones <- bcmaps::hydrozones(ask = FALSE) %>%
   sf::st_transform(crs = 4326)

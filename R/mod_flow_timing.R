@@ -94,9 +94,7 @@ server_flow_timing <- function(id, data_settings, data_raw, data_loaded) {
             data_id = Year), size = 3)
 
       ggiraph::girafe(ggobj = g, width_svg = 13, height_svg = 7,
-                      options = list(
-                        ggiraph::opts_toolbar(position = "topleft"),
-                        ggiraph::opts_selection(type = "none")))
+                      options = ggiraph_opts())
     })
 
 

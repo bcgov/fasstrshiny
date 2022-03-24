@@ -267,7 +267,7 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
         ggobj = g, width_svg = 7, height_svg = 5,
         options = list(
           ggiraph::opts_selection(css = opts$css_selected, type = "multiple"),
-          ggiraph::opts_toolbar(position = "topleft")))
+          opts$ggiraph_toolbar))
     })
 
     # Add/Remove selected points if changing the numericInput

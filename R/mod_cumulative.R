@@ -115,10 +115,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
 
       ggiraph::girafe(
         ggobj = g, width_svg = 14, height_svg = 6,
-        options = list(
-          ggiraph::opts_toolbar(position = "topleft"),
-          ggiraph::opts_selection(type = "none"),
-          ggiraph::opts_hover(css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
+        options = ggiraph_opts())
     })
 
 

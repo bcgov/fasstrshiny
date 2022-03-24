@@ -26,6 +26,21 @@ prep_DT <- function(data, digits = 4) {
                                  buttons = c('copy', 'csv', 'excel')))
 }
 
+#' Set ggiraph options
+#'
+#' @noRd
+ggiraph_opts <- function(selection = "none") {
+  list(
+    ggiraph::opts_toolbar(position = "topright"),
+    ggiraph::opts_selection(type = selection,
+                            css = "fill:red; stroke:gray; r:5pt"),
+    ggiraph::opts_hover(
+      css = "fill:orange; stroke:gray; stroke-opacity:0.5; fill-opacity:1;"))
+}
+
+
+
+
 # Styling Code -----------------------------------------------------------
 
 code_format <- function(code) {

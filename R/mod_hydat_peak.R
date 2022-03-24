@@ -153,9 +153,7 @@ server_hydat_peak <- function(id, data_settings, data_raw, data_loaded) {
                            "Return Period: ", round(Return_P)),
           data_id = Year), size = 4)
 
-      ggiraph::girafe(ggobj = g,
-                      options = list(ggiraph::opts_selection(type = "none"),
-                                     ggiraph::opts_toolbar(position = "topleft")))
+      ggiraph::girafe(ggobj = g, options = ggiraph_opts())
     })
 
 
