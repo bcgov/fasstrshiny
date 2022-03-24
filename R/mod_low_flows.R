@@ -65,8 +65,6 @@ server_low_flows <- function(id, data_settings, data_raw, data_loaded) {
 
     # Plots --------------------
     plots <- reactive({
-      check_data(data_loaded())
-
       data_flow <- data_raw()
 
       g <- create_fun(fun = "plot_annual_lowflows", data_name = "data_flow",
@@ -111,6 +109,7 @@ server_low_flows <- function(id, data_settings, data_raw, data_loaded) {
 
     # Plot output -------------------------
     output$plot <- ggiraph::renderGirafe({
+      check_data(data_loaded())
       req(input$display, input$roll_days, input$display %in% names(plots()))
 
       g <- plots()[[input$display]]

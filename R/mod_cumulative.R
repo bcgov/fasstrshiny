@@ -66,6 +66,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
 
     # UI Elements ------------
     output$ui_plot_options <- renderUI({
+      req(data_loaded())
       select_plot_options(
         select_plot_title(id),
         select_plot_log(

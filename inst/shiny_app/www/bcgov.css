@@ -25,6 +25,14 @@
   margin-left: 15px;
 }
 
+.tab-content {
+  min-height: 400px;
+}
+
+.box {
+  min-height: 445px;
+}
+
 /* BC Gov themeing */
 
 /* Gold bottom border */
