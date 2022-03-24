@@ -140,9 +140,10 @@ test_that("Peak flows", {
 test_that("Data Load", {
   d <- dummy_data()
 
-  testServer(server_data_load, args = list(bc_hydrozones), {
+  testServer(server_data_load, {
     session$setInputs(
-      source = "HYDAT", station_num = "08HB048",
+      source = "HYDAT", station_number = "08HB048",
+      hydat_table_rows_all = 1:1000,
       hydat_bc = TRUE, load = 1, years_range = c(1980, 2010),
       water_year = 1, basin_area = 10.3,
       daterange = c("1980-01-01", "2010-01-01"),

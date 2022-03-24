@@ -93,7 +93,7 @@ test_mod <- function(mod, hydat_stn = "08HB048") {
     d <- dummy_data(hydat_stn)
 
     if(mod == "data_load") {
-      server_data_load(id = mod, bc_hydrozones = bc_hydrozones)
+      server_data_load(id = mod)
     } else {
       get(paste0("server_", mod))(id = mod, d$s, d$d, d$l)
     }

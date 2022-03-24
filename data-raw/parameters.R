@@ -74,10 +74,27 @@ opts <- list(
   plot_height = "500px"
 )
 
-bc_hydrozones <- bcmaps::hydrozones(ask = FALSE) %>%
-  sf::st_transform(crs = 4326)
+bc_maps_layers <- list(
+  "hydrozones" = bcmaps::hydrozones(ask = FALSE),
+  "nr_regions" = bcmaps::nr_regions(ask = FALSE),
+  "nr_areas" = bcmaps::nr_areas(ask = FALSE),
+  "ecoprovinces" = bcmaps::ecoprovinces(ask = FALSE),
+  "wsc_drainages" = bcmaps::wsc_drainages(ask = FALSE)) %>%
+  purrr::map(~sf::st_transform(., crs = 4326)) %>%
+  purrr::map(~sf::st_simplify(., dTolerance = 2000))
 
-usethis::use_data(parameters, tips, opts, bc_hydrozones,
+bc_maps_labs <- dplyr::tribble(
+  ~id, ~group, ~label,
+  "hydrozones", "Hydrologic Zones",
+  ~glue::glue("{stringr::str_to_title(HYDROLOGICZONE_NAME)}",
+              "(No. {HYDROLOGICZONE_NO})"),
+  "nr_regions", "Natural Resource Regions", ~stringr::str_to_title(REGION_NAME),
+  "nr_areas", "Natural Resource Areas", ~stringr::str_to_title(AREA_NAME),
+  "ecoprovinces", "Ecoprovinces", ~stringr::str_to_title(ECOPROVINCE_NAME),
+  "wsc_drainages", "WSC Drainages",
+  ~stringr::str_to_title(SUB_SUB_DRAINAGE_AREA_NAME))
+
+usethis::use_data(parameters, tips, opts, bc_maps_layers, bc_maps_labs,
                   internal = TRUE, overwrite = TRUE)
 
 # Many parameters in compute_annual_trends are already covered here,

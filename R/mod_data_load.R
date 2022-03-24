@@ -32,13 +32,13 @@ ui_data_load <- function(id) {
           div(id = ns("hydat_bc_tip"),
               prettySwitch(ns("hydat_bc"), label = "BC stations only",
                            value = TRUE,status = "success", slim = TRUE)),
-          textInput(ns("station_num"), label = "Station Number",
+          textInput(ns("station_number"), label = "Station Number",
                     value = "08HB048",
                     placeholder = "type station number or select from map"),
           bsTooltip(ns("hydat_bc_tip"),
                     "Whether to show stations from just BC or all over Canada",
                     placement = "left"),
-          bsTooltip(ns("station_num"), "HYDAT Station Number",
+          bsTooltip(ns("station_number"), "HYDAT Station Number",
                     placement = "left")
           ),
 
@@ -121,7 +121,7 @@ ui_data_load <- function(id) {
   )
 }
 
-server_data_load <- function(id, bc_hydrozones) {
+server_data_load <- function(id) {
 
   moduleServer(id, function(input, output, session) {
 
@@ -184,7 +184,7 @@ server_data_load <- function(id, bc_hydrozones) {
     output$ui_stn <- renderUI({
 
       if(input$source == "HYDAT") {
-        m <- dplyr::filter(stations(), .data$STATION_NUMBER == input$station_num)
+        m <- dplyr::filter(stations(), .data$STATION_NUMBER == input$station_number)
         stn_name <- m$STATION_NAME
         basin <- as.numeric(m$DRAINAGE_AREA_GROSS)
       } else if(!is.null(input$file)) {
@@ -278,7 +278,7 @@ server_data_load <- function(id, bc_hydrozones) {
 
     # Update station from Map button
     observe({
-      updateTextInput(session, "station_num",
+      updateTextInput(session, "station_number",
                       value = input$hydat_map_marker_click$id)
     }) %>%
       bindEvent(input$hydat_map_marker_click)
@@ -286,8 +286,8 @@ server_data_load <- function(id, bc_hydrozones) {
     # Update station from Table button
     observe({
       updateTextInput(
-        session, "station_num",
-        value = stations()$station_number[input$hydat_table_rows_selected])
+        session, "station_number",
+        value = stations()$STATION_NUMBER[input$hydat_table_rows_selected])
     }) %>%
       bindEvent(input$hydat_table_rows_selected)
 
@@ -354,38 +354,98 @@ server_data_load <- function(id, bc_hydrozones) {
     # HYDAT Stations -------------------
     stations <- reactive({
       req(!is.null(input$hydat_bc))
-      prep_hydat(bc_only = input$hydat_bc)
+      prep_hydat(bc_only = input$hydat_bc) %>%
+        dplyr::mutate(
+          selected = .data$STATION_NUMBER == isolate(input$station_number))
     }) %>%
       bindCache(input$hydat_bc) %>%
       bindEvent(input$hydat_bc)
 
+    stations_sub <- reactive({
+      if(is.null(sub <- input$hydat_table_rows_all)) sub <- 1:nrow(stations())
+
+      stations() %>%
+        dplyr::slice(sub) %>%
+        dplyr::mutate(selected = .data$STATION_NUMBER == input$station_number) %>%
+        dplyr::arrange(selected)
+    })
 
     # HYDAT Map -------------------------
+
+    pal <- leaflet::colorNumeric(c("#31688E", "red"), c(FALSE, TRUE))
+
+    add_markers <- function(map, data) {
+      leaflet::addCircleMarkers(
+        map, data = data,
+        group = "points",
+        options = leaflet::pathOptions(pane = "points"),
+        lng = ~LONGITUDE, lat = ~LATITUDE,
+        layerId = ~STATION_NUMBER,
+        radius = 6, fillOpacity = 1, stroke = TRUE,
+        fillColor = ~pal(selected),
+        color = "black", opacity = 1, weight = 1,
+        label = ~purrr::map(glue::glue(
+          "<strong>{stringr::str_to_title(STATION_NAME)}</strong><br>",
+          "<strong>Station ID</strong>: {STATION_NUMBER}<br>",
+          "<strong>Status</strong>: {HYD_STATUS}<br>",
+          "<strong>Year range</strong>: {Year_from}-{Year_to}<br>",
+          "<strong>No. Years</strong>: {RECORD_LENGTH}"), HTML))
+    }
+
     output$hydat_map <- leaflet::renderLeaflet({
-      leaflet::leaflet() %>%
+
+      l <- leaflet::leaflet() %>%
+
+        # base maps
+        leaflet::addTiles(group = "OpenStreetMap") %>%
         leaflet::addProviderTiles(
-          leaflet::providers$Stamen.TonerLite,
-          options = leaflet::providerTileOptions(noWrap = TRUE)) %>%
-        leaflet::addPolygons(
-          data = bc_hydrozones,
-          stroke = 0.5, opacity = 1, weight = 1,
-          fillOpacity = 0.15, fillColor = "black", color = "black",
-          label = ~stringr::str_to_title(HYDROLOGICZONE_NAME)) %>%
-        leaflet::addCircleMarkers(
-          data = stations(), lng = ~LONGITUDE, lat = ~LATITUDE,
-          layerId = ~ STATION_NUMBER,
-          radius = 3, fillOpacity = 1, stroke = FALSE, color = "#31688E",
-          label = ~ STATION_NUMBER,
-          popup = ~glue::glue("<strong>Station Name:</strong> ",
-                              "{stringr::str_to_title(STATION_NAME)}<br>",
-                              "<strong>Station Number:</strong> {STATION_NUMBER}"))
+          leaflet::providers$Stamen.Terrain, group = "Stamen (Terrain)") %>%
+
+        # Map panes for vertical sorting
+        leaflet::addMapPane("points", zIndex = 430) %>%
+        leaflet::addMapPane("polygons", zIndex = 410) %>%
+
+        # Stations
+        add_markers(data = stations()) %>%
+
+        # Controls
+        leaflet::addLayersControl(
+          baseGroups = c("Stamen (Terrain)", "OpenStreetMap"),
+          overlayGroups = bc_maps_labs$group,
+          options = leaflet::layersControlOptions(collapsed = FALSE)
+        )
+
+      # Hide all polygons except the first one
+      for(i in bc_maps_labs$group[-1]) l <- leaflet::hideGroup(l, i)
+
+      for(i in seq_along(bc_maps_layers)) {
+        l <- l %>%
+          leaflet::addPolygons(
+            options = leaflet::pathOptions(pane = "polygons"),
+            data = bc_maps_layers[[i]], group = bc_maps_labs$group[[i]],
+            stroke = 0.5, opacity = 1, weight = 1,
+            fillOpacity = 0.15, fillColor = "black", color = "black",
+            label = bc_maps_labs$label[[i]])
+      }
+
+      map_ready(TRUE)
+      l
     })
+
+    map_ready <- reactiveVal(FALSE)
+
+    observe({
+      leaflet::leafletProxy("hydat_map") %>%
+        leaflet::clearGroup("points") %>%
+        add_markers(data = stations_sub())
+    }) %>%
+      bindEvent(stations_sub())
+
+
 
     # HYDAT Table ------------------------
     output$hydat_table <- DT::renderDT({
       stations() %>%
-        dplyr::select("STATION_NUMBER", "STATION_NAME", "PROVINCE",
-                      "HYD_STATUS", "REAL_TIME", "REGULATED", "PARAMETERS") %>%
         DT::datatable(selection = "single", rownames = FALSE, filter = 'top',
                       extensions = c("Scroller"),
                       options = list(scrollX = TRUE,
@@ -399,17 +459,17 @@ server_data_load <- function(id, bc_hydrozones) {
       req(input$water_year, input$load > 0)
 
       if (input$source == "HYDAT") {
-        req(input$station_num)
+        req(input$station_number)
 
         d1 <- glue::glue(
           "data_flow <- fill_missing_dates(",
-          "        station_number = '{input$station_num}')")
+          "        station_number = '{input$station_number}')")
 
         d2 <- d1
 
         # Set data info
         data_type("HYDAT")
-        data_id(input$station_num)
+        data_id(input$station_number)
 
       } else {
         req(input$file, input$col_date, input$col_value, input$col_symbol,
