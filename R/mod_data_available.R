@@ -47,6 +47,7 @@ ui_data_available <- function(id) {
               bsTooltip(ns("stats"), tips$stats,
                         placement = "left")),
             column(width = 9,
+                   select_plot_options(select_plot_title(id, "summary")),
                    ggiraph::girafeOutput(ns("plot_summary"),
                                          height = opts$plot_height))
             )),
@@ -80,13 +81,18 @@ ui_data_available <- function(id) {
               strong("HYDAT data symbols are: "), br(),
               strong("'E'"), "Estimate", br(),
               strong("'A'"), "Partial Day", br(),
-              strong("'C'"), "Ice Conditions", br(),
+              strong("'B'"), "Ice Conditions", br(),
               strong("'D'"), "Dry", br(),
               strong("'R'"), "Revised"
             ),
             column(
               width = 9,
               uiOutput(ns("ui_plot_symbols_options"), align = "right"),
+              select_plot_options(
+                select_plot_title(id, "symbols"),
+                select_plot_log(
+                  id, value = default("plot_flow_data_symbols",
+                                      "log_discharge"))),
               shinycssloaders::withSpinner(
                 ggiraph::girafeOutput(ns("plot_symbols"),
                                       height = opts$plot_height))
@@ -115,8 +121,10 @@ ui_data_available <- function(id) {
                              "Months to include/exclude from the plot",
                              placement = "left"),
             ),
-            column(width = 11, ggiraph::girafeOutput(ns("plot_available"),
-                                                     height = opts$plot_height))
+            column(width = 11,
+                   select_plot_options(select_plot_title(id, "available")),
+                   ggiraph::girafeOutput(ns("plot_available"),
+                                         height = opts$plot_height))
           )
         ),
 
@@ -138,15 +146,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
 
   moduleServer(id, function(input, output, session) {
 
-    # UI -------------
-    # Add plot options as Gear in corner
-    output$ui_plot_symbols_options <- renderUI({
-      select_plot_options(
-        select_plot_log(
-          id, value = default("plot_flow_data_symbols", "log_discharge")), # Default
-      )
-    })
-
+    # UI Elements -------------
     observe(shinyjs::toggleState("symbols_percent",
                                  condition = input$symbols_type == "Days"))
     observe(shinyjs::toggleState("plot_log",
@@ -178,6 +178,13 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
       code$plot_summary <- g
 
       g <- eval_check(g)[[1]]
+
+      # Add title
+      if(input$plot_title_summary) {
+        g <- g +
+          ggplot2::ggtitle(plot_title(data_settings(), "Data Availability")) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
 
       # Add interactivity
       stats <- names(g$data) # Get stats from plot data
@@ -215,6 +222,15 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
       code$plot_symbols <- g
 
       g <- eval_check(g)[[1]]
+
+
+      # Add title
+      if(input$plot_title_symbols) {
+        g <- g +
+          ggplot2::ggtitle(plot_title(
+            data_settings(), glue::glue("Symbols by {input$symbols_type}"))) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
 
       # Add interactivity
       if(input$symbols_type == "Flow") {
@@ -267,26 +283,45 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
 
       g <- eval_check(g)[[1]]
 
-      # Replace layers with interactive
-      g$layers[[1]] <- ggiraph::geom_tile_interactive(
-        colour = "grey",
-        ggplot2::aes(fill = Percent_Missing,
-                     tooltip = glue::glue(
-                       "Year: {Year}\n",
-                       "Month: {Month}\n",
-                       "Missing Days: {Missing} ({Percent_Missing}%)",
-                       .trim = FALSE),
-                     data_id = glue::glue("{Year}-{Month}")))
+      # Add title
+      if(input$plot_title_available) {
+        g <- g +
+          ggplot2::ggtitle(plot_title(data_settings(), "Missing Data")) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
 
-      g <- g +
-        ggplot2::guides(fill = ggplot2::guide_coloursteps(
-          even.steps = FALSE,
-          show.limits = TRUE))
+      # Replace layers with interactive
+      if(input$available_type == "tile") {
+        g$layers[[1]] <- ggiraph::geom_tile_interactive(
+          colour = "grey",
+          ggplot2::aes(fill = Percent_Missing,
+                       tooltip = glue::glue(
+                         "Year: {Year}\n",
+                         "Month: {Month}\n",
+                         "Missing Days: {Missing} ({Percent_Missing}%)",
+                         .trim = FALSE),
+                       data_id = glue::glue("{Year}-{Month}")))
+
+        g <- g +
+          ggplot2::guides(fill = ggplot2::guide_coloursteps(
+            even.steps = FALSE,
+            show.limits = TRUE))
+      } else {
+        # Add interactivity
+        stats <- names(g$data) # Get stats from plot data
+
+        # For tooltips labels...
+        names(stats)[stats == "Value"] <- "No. Missing Days"
+
+        g <- g + create_vline_interactive(data = g$data, stats = stats, size = 5)
+      }
 
       ggiraph::girafe(ggobj = g, width_svg = 14, height_svg = 7,
                       options = list(
                         ggiraph::opts_toolbar(position = "topleft"),
-                        ggiraph::opts_selection(type = "none")))
+                        ggiraph::opts_selection(type = "none"),
+                        ggiraph::opts_hover(
+                          css = "fill:orange; stroke:gray; stroke-opacity:0.5;")))
     })
 
     # Summary table ------------------
@@ -309,4 +344,5 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
     code <- reactiveValues()
     output$code <- renderText(code_format(code))
   })
+
 }

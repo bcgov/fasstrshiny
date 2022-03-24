@@ -67,7 +67,10 @@ ui_annual_stats <- function(id) {
         ## Plot ---------------------
         tabPanel(
           title = "Plot",
-          uiOutput(ns("ui_plot_options"), align = "right"),
+          select_plot_options(
+            select_plot_title(id),
+            select_plot_log(id, value = default("plot_monthly_stats2",
+                                                "log_discharge"))),
           ggiraph::girafeOutput(ns("plot"), height = opts$plot_height)
         ),
 
@@ -89,13 +92,7 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
 
   moduleServer(id, function(input, output, session) {
 
-    # UI Plot options ------------------
-    output$ui_plot_options <- renderUI({
-      select_plot_options(
-        select_plot_log(id, value = default("plot_monthly_stats2",
-                                            "log_discharge")))
-    })
-
+    # UI Elements ------------------
     observe(shinyjs::toggleState("months_plot",
                                  condition = input$type == "Monthly"))
 
@@ -134,6 +131,13 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
 
       g <- eval_check(g)[[1]]
 
+      # Add title
+      if(input$plot_title) {
+        g <- g +
+          ggplot2::ggtitle(plot_title(
+            data_settings(), glue::glue("{input$type} Statistics"))) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
 
       # Add interactivity
       date_cols <- "Year"

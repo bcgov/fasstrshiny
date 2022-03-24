@@ -26,6 +26,7 @@ ui_annual_means <- function(id) {
           title = "Plot",
           helpText("Placeholder descriptive text to describe this section, ",
                    "what it does and how to use it"),
+          select_plot_options(select_plot_title(id)),
           ggiraph::girafeOutput(ns("plot"), height = opts$plot_height)
         ),
 
@@ -55,6 +56,15 @@ server_annual_means <- function(id, data_settings, data_raw, data_loaded) {
 
       g <- eval_check(g)[[1]]
 
+      # Add title
+      if(input$plot_title) {
+        g <- g +
+          ggplot2::ggtitle(plot_title(data_settings(), "Annual Means")) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
+
+
+
       # Replace layers with interactive
       g$layers[[1]] <- ggiraph::geom_bar_interactive(
         ggplot2::aes(tooltip = glue::glue("Year: {Year}\n",
@@ -74,8 +84,10 @@ server_annual_means <- function(id, data_settings, data_raw, data_loaded) {
         ggplot2::theme(legend.position = c(0.8, 0.8),
                        legend.title = ggplot2::element_blank(),
                        legend.key = ggplot2::element_rect(colour = NA))
-      ggiraph::girafe(ggobj = g, width_svg = 14, height_svg = 4,
-                      options = list(ggiraph::opts_selection(type = "none")))
+      ggiraph::girafe(
+        ggobj = g, width_svg = 14, height_svg = 4,
+        options = list(ggiraph::opts_selection(type = "none"),
+                       ggiraph::opts_toolbar(position = "topleft")))
     })
 
     # R Code -----------------

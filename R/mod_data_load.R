@@ -130,7 +130,7 @@ server_data_load <- function(id, bc_hydrozones) {
     data_type <- reactiveVal("None")
     data_id <- reactiveVal("None")
 
-    # UI elements ---------------------------------------
+    # UI Elements ---------------------------------------
 
     # Jump to tab
     observe({
@@ -296,6 +296,7 @@ server_data_load <- function(id, bc_hydrozones) {
     output$ui_plot_options <- renderUI({
       req(data_loaded())
       select_plot_options(
+        select_plot_title(id),
         select_plot_log(id, value = default("plot_flow_data", "log_discharge")),
         select_daterange(id, data_raw()))
     })
@@ -465,7 +466,16 @@ server_data_load <- function(id, bc_hydrozones) {
 
       code$data_plot <- g
 
-      eval_check(g)[[1]] %>%
+      g <- eval_check(g)[[1]]
+
+      # Add title
+      if(input$plot_title) {
+        g <- g +
+          ggplot2::ggtitle(plot_title(data_settings(), "Flow")) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
+
+      g %>%
         plotly::ggplotly() %>%
         plotly::config(modeBarButtonsToRemove =
                  c("pan", "autoscale", "zoomIn2d", "zoomOut2d",

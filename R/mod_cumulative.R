@@ -64,9 +64,10 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
 
   moduleServer(id, function(input, output, session) {
 
-    # UI Plot ------------
+    # UI Elements ------------
     output$ui_plot_options <- renderUI({
       select_plot_options(
+        select_plot_title(id),
         select_plot_log(
           id, value = default("plot_daily_cumulative_stats", "log_discharge")),
         select_add_year(id, data_settings()$years_range))
@@ -87,9 +88,18 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
 
       code$plot <- g
 
-      # Add interactivity
       g <- eval_check(g)[[1]]
 
+      # Add title
+      if(input$plot_title) {
+        g <- g +
+          ggplot2::ggtitle(plot_title(
+            data_settings(),
+            glue::glue("{input$type} Cumulative Hydrograph")))+
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
+
+      # Add interactivity
       stats <- names(g$data) # Get stats from plot data
       stats <- stats[!stats %in% c("WaterYear", "AnalysisDate", "DayofYear")] # Omit these
 

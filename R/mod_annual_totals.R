@@ -39,6 +39,7 @@ ui_annual_totals <- function(id) {
         ### Plot ---------------------
         tabPanel(
           title = "Plot",
+          select_plot_options(select_plot_title(id)),
           ggiraph::girafeOutput(ns("plot"), height = opts$plot_height)
         ),
 
@@ -60,7 +61,7 @@ server_annual_totals <- function(id, data_settings, data_raw, data_loaded) {
 
   moduleServer(id, function(input, output, session) {
 
-    # UI plot display
+    # UI Elements --------------------------------------
     output$ui_display <- renderUI({
       req(plots())
       select_plot_display(id, plots())
@@ -99,6 +100,15 @@ server_annual_totals <- function(id, data_settings, data_raw, data_loaded) {
       req(input$display, input$display %in% names(plots()))
 
       g <- plots()[[input$display]]
+
+      # Add title
+      if(input$plot_title) {
+        g <- g +
+          ggplot2::ggtitle(
+            plot_title(data_settings(),
+                       stringr::str_replace(input$display, "_", " "))) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
 
       h <- switch(stringr::str_extract(input$display, "^[^_]+"),
                   "Two" = 8,

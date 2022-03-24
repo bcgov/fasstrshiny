@@ -237,6 +237,15 @@ select_add_mad <- function(id) {
               placement = "left"))
 }
 
+select_plot_title <- function(id, name = "") {
+  div(id = NS(id, glue::glue("plot_title_{name}_tip")),
+      prettySwitch(NS(id, glue::glue("plot_title_{name}")),
+                   label = "Add plot title",
+                   value = TRUE, status = "success", slim = TRUE),
+      bsTooltip(NS(id, glue::glue("plot_title_{name}_tip")), "Add/remove title from plot",
+                placement = "left"))
+}
+
 select_plot_display <- function(id, plots) {
   plot_names <- names(plots) %>%
     setNames(., stringr::str_replace_all(., "_", " "))

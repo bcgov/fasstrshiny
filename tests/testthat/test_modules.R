@@ -1,21 +1,25 @@
 
 # Basic Modules ----------------
-test_that("Basic modules", {
 
-  ## Setup -------
+## Annual means ---------------
+test_that("Annual means", {
   d <- dummy_data()
 
-  ## Annual means ---------------
   testServer(server_annual_means, args = list(d$s, d$d, d$l), {
+    session$setInputs(plot_title = TRUE)
     expect_silent(output$plot)
     expect_silent(output$code)
   }) %>% suppressWarnings()
+})
 
-  ## Annual stats ----------------
+## Annual stats ----------------
+test_that("Annual stats", {
+  d <- dummy_data()
+
   testServer(server_annual_stats, args = list(d$s, d$d, d$l), {
     session$setInputs(plot_log = TRUE, type = "Monthly", months_plot = 1:12,
                       inner_percentiles = c(27, 75), outer_percentiles = c(5, 95),
-                      extra_percentiles = c(10, 90))
+                      extra_percentiles = c(10, 90), plot_title = TRUE)
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
     expect_error(output$code, NA)
@@ -26,12 +30,16 @@ test_that("Basic modules", {
     expect_error(output$code, NA)
 
   }) %>% suppressWarnings()
+})
 
-  ## Annual totals ----------------
+## Annual totals ----------------
+test_that("Annual totals", {
+  d <- dummy_data()
 
   testServer(server_annual_totals, args = list(d$s, d$d, d$l), {
 
-    session$setInputs(discharge2 = TRUE, display = "Total_Yield")
+    session$setInputs(discharge2 = TRUE, display = "Total_Yield",
+                      plot_title = TRUE)
     expect_error(plots(), NA)
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
@@ -60,11 +68,14 @@ test_that("Basic modules", {
     expect_error(output$plot, NA)
 
   }) %>% suppressWarnings()
+})
 
+## Flow timing ------------------
+test_that("Flow timing", {
+  d <- dummy_data()
 
-  ## Flow timing ------------------
   testServer(server_flow_timing, args = list(d$s, d$d, d$l), {
-    session$setInputs(percent = c(25, 33, 50, 75))
+    session$setInputs(percent = c(25, 33, 50, 75), plot_title = TRUE)
 
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
@@ -72,10 +83,15 @@ test_that("Basic modules", {
 
   }) %>% suppressWarnings()
 
-  ## Low flows ------------------
+})
+
+## Low flows ------------------
+test_that("Low flows", {
+  d <- dummy_data()
+
   testServer(server_low_flows, args = list(d$s, d$d, d$l), {
     session$setInputs(roll_days = c(1,3, 7, 30), roll_align = "right",
-                      display = "Annual_Low_Flows")
+                      display = "Annual_Low_Flows", plot_title = TRUE)
 
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
@@ -88,18 +104,26 @@ test_that("Basic modules", {
 
   }) %>% suppressWarnings()
 
-  ## Outside normal --------------------
+})
+
+## Outside normal --------------------
+test_that("Outside normal", {
+  d <- dummy_data()
+
   testServer(server_outside_normal, args = list(d$s, d$d, d$l), {
-    session$setInputs(normal_percentiles = c(25, 75))
+    session$setInputs(normal_percentiles = c(25, 75), plot_title = TRUE)
 
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
     expect_error(output$code, NA)
 
   }) %>% suppressWarnings()
+})
 
+## Peak flows --------------------
+test_that("Peak flows", {
+  d <- dummy_data()
 
-  ## Peak flows --------------------
   testServer(server_peak_flows, args = list(d$s, d$d, d$l), {
     session$setInputs(roll_day = 1, roll_align = "right")
 
@@ -111,12 +135,11 @@ test_that("Basic modules", {
 })
 
 # Data Modules -------------------------
-test_that("Data Modules", {
 
-  ## Setup -------
+## Data Load -------------------
+test_that("Data Load", {
   d <- dummy_data()
 
-  ## Data Load -------------------
   testServer(server_data_load, args = list(bc_hydrozones), {
     session$setInputs(
       source = "HYDAT", station_num = "08HB048",
@@ -126,7 +149,8 @@ test_that("Data Modules", {
       file = data.frame(
         name = "test_data.csv",
         datapath = system.file("extdata", "test_data.csv", package = "fasstrshiny")),
-      col_date = "dt", col_value = "flow", col_symbol = "sym")
+      col_date = "dt", col_value = "flow", col_symbol = "sym",
+      plot_title = TRUE)
 
     expect_error(stations(), NA)
     expect_error(output$hydat_map, NA)
@@ -137,12 +161,19 @@ test_that("Data Modules", {
     expect_error(output$info, NA)
     expect_error(output$code, NA)
   }) %>% suppressWarnings()
+})
 
-  ## Data Available -----------------
+## Data Available -----------------
+test_that("Data Available", {
+  d <- dummy_data()
+
   testServer(server_data_available, args = list(d$s, d$d, d$l), {
     session$setInputs(availability = TRUE, stats = "Mean", symbols_type = "Days",
                       symbols_percent = FALSE, available_type = "tile",
-                      plot_log = FALSE, months_inc = 1:12)
+                      plot_log = FALSE, months_inc = 1:12,
+                      plot_title_summary = TRUE, plot_title_symbols = TRUE,
+                      plot_title_available = TRUE)
+
     expect_error(output$plot_summary, NA)
     expect_error(output$plot_symbols, NA)
     expect_error(output$plot_available, NA)
@@ -152,20 +183,23 @@ test_that("Data Modules", {
     session$setInputs(symbols_type = "Flow")
     expect_error(output$plot_symbols, NA)
 
+    session$setInputs(available_type = "bar")
+    expect_error(output$plot_available, NA)
+
   }) %>% suppressWarnings()
 
 })
 
 # Flows and Hydrograph Modules ------------------------
-test_that("Flows and Hydrograph Modules don't have errors", {
 
-  ## Setup -------
+## Flows -----------------
+test_that("Flows", {
   d <- dummy_data()
 
-  ## Flows -----------------
   testServer(server_flows, args = list(d$s, d$d, d$l), {
     session$setInputs(months = 1:12, longterm = TRUE, custom_months = "",
-                      custom_months_label = "", plot_log = TRUE, update = 0)
+                      custom_months_label = "", plot_log = TRUE, update = 0,
+                      plot_title = TRUE)
 
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
@@ -173,14 +207,20 @@ test_that("Flows and Hydrograph Modules don't have errors", {
 
   }) %>% suppressWarnings()
 
-  ## Hydro -------------
+})
+
+## Hydro -------------
+test_that("Hydro", {
+  d <- dummy_data()
+
   testServer(server_hydro, args = list(d$s, d$d, d$l), {
     session$setInputs(type = "Daily", mad = c(5, 10, 20),
                       inner_percentiles = c(27, 75), outer_percentiles = c(5, 95),
                       extra_percentiles = c(5, 25, 75, 95),
                       plot_log = TRUE, include_extreme = TRUE, add_year = "",
                       add_date = "", add_mad = FALSE,
-                      custom_months = "", custom_months_label = "")
+                      custom_months = "", custom_months_label = "",
+                      plot_title = TRUE)
 
     expect_error(mad(), NA)
     expect_error(output$plot, NA)
@@ -201,10 +241,15 @@ test_that("Flows and Hydrograph Modules don't have errors", {
 
   }) %>% suppressWarnings()
 
-  ## Cumulative -----------------------
+})
+
+## Cumulative -----------------------
+test_that("Cumulative", {
+  d <- dummy_data()
+
   testServer(server_cumulative, args = list(d$s, d$d, d$l), {
     session$setInputs(type = "Daily", discharge2 = TRUE, plot_log = FALSE,
-                      add_year = "")
+                      add_year = "", plot_title = TRUE)
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
     expect_error(output$code, NA)
@@ -220,12 +265,11 @@ test_that("Flows and Hydrograph Modules don't have errors", {
 })
 
 # Analysis Modules --------------------
-test_that("Analyses Modules", {
 
-  ## Setup -------
+## Annual Trends -----------------------------
+test_that(" Annual Trends", {
   d <- dummy_data()
 
-  ## Annual Trends -----------------------------
   testServer(server_annual_trends, args = list(d$s, d$d, d$l), {
     session$setInputs(
       compute = 1, zyp = "zhang", alpha = 0.05,
@@ -241,8 +285,12 @@ test_that("Analyses Modules", {
     expect_error(output$table_years, NA)
     expect_error(output$code, NA)
   }) %>% suppressWarnings()
+})
 
-  ## Volume Freq ---------------------------------
+## Volume Freq ---------------------------------
+test_that("Volume Freq ", {
+  d <- dummy_data()
+
   testServer(server_volume_freq, args = list(d$s, d$d, d$l), {
     session$setInputs(compute = 1, use_max = FALSE, use_log = FALSE,
                       roll_day = c(1, 3, 7, 30), roll_align = "right",
@@ -262,9 +310,12 @@ test_that("Analyses Modules", {
     expect_error(output$code, NA)
 
   }) %>% suppressWarnings() %>% suppressMessages()
+})
 
+## Hydat Peak -----------------------------
+test_that("Hydat Peak", {
+  d <- dummy_data()
 
-  ## Hydat Peak -----------------------------
   testServer(server_hydat_peak, args = list(d$s, d$d, d$l), {
     session$setInputs(compute = 1, use_max = FALSE, use_log = FALSE,
                       prob_plot = "weibull",

@@ -157,6 +157,55 @@ lasso_svg <- function() {
 <svg xmlns='http://www.w3.org/2000/svg' width='10pt' height='10pt' viewBox='0 0 230 230' stroke = '#069'><g><ellipse ry='65.5' rx='86.5' cy='94' cx='115.5' stroke-width='20' fill='transparent'></ellipse><ellipse ry='11.500001' rx='10.5' cy='153' cx='91.5' stroke-width='20' fill='transparent'></ellipse><line y2='210.5' x2='105' y1='164.5' x1='96' stroke-width='20'></line></g></svg>")
 }
 
+#' Create pretty consecutive text lists of numbers
+#' e.g., c(1, 2, 3, 4, 6, 7, 8, 9) ===> c(1:4, 6:9)
+conseq <- function(s, type = "num") {
+
+  if(length(s) == 1) {
+    if(type == "num") return(as.character(s))
+    if(type == "month") return(month.abb[s])
+  }
+
+  dif <- s[seq(length(s))][-1] - s[seq(length(s)-1)]
+  new <- !c(0, dif == 1)
+  cs <- cumsum(new)
+  res <- vector(mode="list", max(cs))
+  for(i in seq(res)){
+    s.i <- s[which(cs == i)]
+    if(length(s.i) > 2){
+      if(type == "num") res[[i]] <- paste(min(s.i), max(s.i), sep=":")
+      if(type == "month") res[[i]] <- paste(month.abb[min(s.i)],
+                                            month.abb[max(s.i)], sep="-")
+    } else {
+      if(type == "num") res[[i]] <- as.character(s.i)
+      if(type == "month") res[[i]] <- as.character(month.abb[s.i])
+    }
+  }
+
+  if(type == "num") res <- paste0("c(", paste(unlist(res), collapse = ", "), ")")
+  if(type == "month") res <- paste0(paste(unlist(res), collapse = ", "))
+
+  res
+}
+
+plot_title <- function(settings, desc = "") {
+
+  wy <- ""
+  months_chr <- ""
+
+  if(desc != "") desc <- glue::glue("{desc}: ")
+  if(settings$water_year != 1) wy <- "Water Year "
+  if(!(all(settings$months %in% 1:12) & all(1:12 %in% settings$months))) {
+    months_chr <- paste0(conseq(settings$months, type = "month"), " ")
+  }
+
+  glue::glue_data(
+    settings,
+    "{desc}{station_name} ",
+    "({months_chr}{wy}{years_range[1]}-{years_range[2]})")
+}
+
+
 #' Fetch default values of an argument in a function
 #' @noRd
 default <- function(fun, arg) eval(formals(fun)[[arg]])

@@ -95,6 +95,7 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
 
   moduleServer(id, function(input, output, session) {
 
+    # UI Elements ---------------------------------
     # Excluded years, takes defaults from data_settings()$years_exclude,
     # but allowed to modify here
     output$ui_exclude <- renderUI({

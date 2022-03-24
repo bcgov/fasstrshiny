@@ -93,6 +93,7 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
     # Plot options
     output$ui_plot_options <- renderUI({
       select_plot_options(
+        select_plot_title(id),
         select_plot_log(
           id, value = default("plot_longterm_daily_stats", "log_discharge")),
         select_plot_extremes(id),
@@ -128,6 +129,15 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
 
       code$plot <- g
       g <- eval_check(g)[[1]]
+
+      # Add title
+      if(input$plot_title) {
+        g <- g +
+          ggplot2::ggtitle(plot_title(data_settings(),
+                                      glue::glue("{input$type} Hydrograph"))) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
+
 
       # Add interactivity
       stats <- names(g$data) # Get stats from plot data

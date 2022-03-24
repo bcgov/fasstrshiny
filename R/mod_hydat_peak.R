@@ -73,7 +73,7 @@ server_hydat_peak <- function(id, data_settings, data_raw, data_loaded) {
 
   moduleServer(id, function(input, output, session) {
 
-    # UI -----------------------
+    # UI Elements -----------------------
     observe(shinyjs::toggle("data", condition = input$show_data))
     observe(shinyjs::toggle("plotting", condition = input$show_plotting))
     observe(shinyjs::toggle("fitting", condition = input$show_fitting))

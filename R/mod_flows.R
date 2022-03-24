@@ -19,7 +19,7 @@ ui_flows <- function(id) {
 
   fluidRow(
     column(
-      width = 12, h2("Flow duration and percentiles"),
+      width = 12, h2("Flow Duration and Percentiles"),
 
       ## Settings -----------------------------
       box(
@@ -40,6 +40,8 @@ ui_flows <- function(id) {
         # Update button
         bsButton(ns("compute"), "Update", style = "primary",
                           class = "centreButton"),
+        helpText("Click 'Update' after making any changes to settings ",
+                 "(including plot settings)")
       ),
       tabBox(
         width = 9,
@@ -47,7 +49,10 @@ ui_flows <- function(id) {
         ## Plot ---------------------
         tabPanel(
           title = "Plot - Flow duration",
-          uiOutput(ns("ui_plot_options"), align = "right"),
+          select_plot_options(
+            select_plot_title(id),
+            select_plot_log(id, value = default("plot_flow_duration",
+                                                "log_discharge"))),
           shinycssloaders::withSpinner(
             ggiraph::girafeOutput(ns("plot"), height = opts$plot_height))
         ),
@@ -84,13 +89,6 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
         selected = data_settings()$months)
     })
 
-    # Plot options
-    output$ui_plot_options <- renderUI({
-      select_plot_options(
-        select_plot_log(id,
-                        value = default("plot_flow_duration", "log_discharge")))
-    })
-
     # Flows --------------------------------------
 
     ## Plot --------------------
@@ -106,6 +104,15 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
       code$plot <- g
 
       g <- eval_check(g)[[1]]
+
+      # Add title
+      if(input$plot_title) {
+        g <- g +
+          ggplot2::ggtitle(plot_title(data_settings(), "Flow Duration")) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
+
+      # Add interactivity
       g <- g +
         ggiraph::geom_point_interactive(
           ggplot2::aes(tooltip = glue::glue(

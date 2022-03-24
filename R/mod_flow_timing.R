@@ -38,6 +38,7 @@ ui_flow_timing <- function(id) {
         ### Plot ---------------------
         tabPanel(
           title = "Plot",
+          select_plot_options(select_plot_title(id)),
           ggiraph::girafeOutput(ns("plot"), height = opts$plot_height)
         ),
 
@@ -74,9 +75,16 @@ server_flow_timing <- function(id, data_settings, data_raw, data_loaded) {
 
       code$plot <- g
 
-      # Add interactivity
       g <- eval_check(g)[[1]]
 
+      # Add title
+      if(input$plot_title) {
+        g <- g +
+          ggplot2::ggtitle(plot_title(data_settings(), "Flow Timing")) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
+
+      # Add interactivity
       g <- g +
         ggiraph::geom_point_interactive(
           ggplot2::aes(tooltip = glue::glue(
