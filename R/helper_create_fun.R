@@ -150,12 +150,14 @@ combine_parameters <- function(p, v) {
     "inner_percentiles",   "inner_percentiles = {conseq(v)}",
     "outer_percentiles",   "outer_percentiles = {conseq(v)}",
     "normal_percentiles",  "normal_percentiles = {conseq(v)}",
+
     "custom_months",       "custom_months = {conseq(v)}",
     "custom_months_label", "custom_months_label = '{v}'",
     "missing",             "ignore_missing = {v}",
     "allowed",             "allowed_missing = {v}",
     "complete",            "complete_years = {v}",
     "mad",                 "percent_MAD = {conseq(v)}",
+    "percent",             "percent_total = {conseq(v)}",
 
     # Data
     "discharge",           "values = '{v}'",
