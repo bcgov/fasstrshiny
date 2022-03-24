@@ -175,13 +175,15 @@ test_that("Data Available", {
                       plot_title_available = TRUE)
 
     expect_error(output$plot_summary, NA)
-    expect_error(output$plot_symbols, NA)
+    expect_error(plot_symbols(), NA)
+    expect_error(output$plot_symbols_days, NA)
     expect_error(output$plot_available, NA)
     expect_error(output$table, NA)
     expect_error(output$code, NA)
 
     session$setInputs(symbols_type = "Flow")
-    expect_error(output$plot_symbols, NA)
+    expect_error(plot_symbols(), NA)
+    expect_error(output$plot_symbols_flow, NA)
 
     session$setInputs(available_type = "bar")
     expect_error(output$plot_available, NA)
