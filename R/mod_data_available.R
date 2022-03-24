@@ -93,9 +93,18 @@ ui_data_available <- function(id) {
                 select_plot_log(
                   id, value = default("plot_flow_data_symbols",
                                       "log_discharge"))),
-              shinycssloaders::withSpinner(
-                ggiraph::girafeOutput(ns("plot_symbols"),
-                                      height = opts$plot_height))
+
+              conditionalPanel(
+                "input.symbols_type == 'Flow'", ns = NS(id),
+                shinycssloaders::withSpinner(
+                  plotly::plotlyOutput(ns("plot_symbols_flow"),
+                                       height = opts$plot_height))),
+
+              conditionalPanel(
+                "input.symbols_type == 'Days'", ns = NS(id),
+                shinycssloaders::withSpinner(
+                  ggiraph::girafeOutput(ns("plot_symbols_days"),
+                                        height = opts$plot_height)))
             ))),
 
 
@@ -202,8 +211,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
     })
 
     # Symbols Plot -----------------------------
-    output$plot_symbols <- ggiraph::renderGirafe({
-
+    plot_symbols <- reactive({
       check_data(data_loaded())
       req(input$symbols_type, !is.null(input$symbols_percent))
 
@@ -228,31 +236,42 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
+      g
+    })
+
+
+    output$plot_symbols_days <- ggiraph::renderGirafe({
+      req(input$symbols_type == "Days")
+
+      g <- plot_symbols()
+
       # Add interactivity
-      if(input$symbols_type == "Flow") {
-        stats <- c("Date", "Value", "Symbol")
-        names(stats)[stats == "Value"] <- "Discharge"
-        g <- g + create_vline_interactive(data = g$data, stats = stats)
+      d <- g$data %>%
+        dplyr::mutate(tooltip = glue::glue(
+          "{Symbol}: {Count} ({round(Percent, 1)}%)")) %>%
+        dplyr::group_by(Year) %>%
+        dplyr::summarize(Count = sum(Count),
+                         tooltip = glue::glue("Year: {Year}\n",
+                                              glue::glue_collapse(tooltip, "\n")))
 
-      } else{
-        d <- g$data %>%
-          dplyr::mutate(tooltip = glue::glue(
-            "{Symbol}: {Count} ({round(Percent, 1)}%)")) %>%
-          dplyr::group_by(Year) %>%
-          dplyr::summarize(Count = sum(Count),
-                           tooltip = glue::glue("Year: {Year}\n",
-                                                glue::glue_collapse(tooltip, "\n")))
-
-        g <- g +
-          ggiraph::geom_bar_interactive(
-            data = d, fill = "grey", alpha = 0.005,
-            stat = "identity", inherit.aes = FALSE,
-            ggplot2::aes(x = Year, y = Inf, tooltip = tooltip, data_id = Year))
-      }
+      g <- g +
+        ggiraph::geom_bar_interactive(
+          data = d, fill = "grey", alpha = 0.005,
+          stat = "identity", inherit.aes = FALSE,
+          ggplot2::aes(x = Year, y = Inf, tooltip = tooltip, data_id = Year))
 
       ggiraph::girafe(
         ggobj = g, width_svg = 13, height_svg = 7,
         options = ggiraph_opts())
+
+    })
+
+    output$plot_symbols_flow <- plotly::renderPlotly({
+      req(input$symbols_type == "Flow")
+      plotly::ggplotly(plot_symbols()) %>%
+        plotly::config(modeBarButtonsToRemove =
+                         c("pan", "autoscale", "zoomIn2d", "zoomOut2d",
+                           "hoverCompareCartesian", "hoverClosestCartesian"))
     })
 
     # Available Data Plot ---------------------------
