@@ -24,34 +24,6 @@ ui_data_available <- function(id) {
       tabBox(
         width = 12,
 
-        # Summary Plot -----------------
-        tabPanel(
-          title = "Data Summary Plot",
-          fluidRow(
-            column(width = 3,
-              helpText("Placeholder descriptive text to describe this section, ",
-                       "what it does and how to use it"),
-              div(id = ns("availability_tip"),
-                  prettySwitch(ns("availability"),
-                               label = "Plot availability",
-                               value = TRUE,
-                               status = "success", slim = TRUE, inline = TRUE)),
-              bsTooltip(ns("availability_tip"), tips$availability,
-                        placement = "left"),
-              selectizeInput(
-                ns("stats"),
-                label = "Statistics to include",
-                choices = default("plot_data_screening", "include_stats"),
-                selected = default("plot_data_screening", "include_stats"),
-                multiple = TRUE, width = "100%"),
-              bsTooltip(ns("stats"), tips$stats,
-                        placement = "left")),
-            column(width = 9,
-                   select_plot_options(select_plot_title(id, "plot_title_summary")),
-                   ggiraph::girafeOutput(ns("plot_summary"),
-                                         height = opts$plot_height))
-            )),
-
         # Symbols Plot ----------------------
         tabPanel(
           title = "Symbols Plots",
@@ -106,6 +78,34 @@ ui_data_available <- function(id) {
                   ggiraph::girafeOutput(ns("plot_symbols_days"),
                                         height = opts$plot_height)))
             ))),
+
+        # Summary Plot -----------------
+        tabPanel(
+          title = "Data Summary Plot",
+          fluidRow(
+            column(width = 3,
+              helpText("Placeholder descriptive text to describe this section, ",
+                       "what it does and how to use it"),
+              div(id = ns("availability_tip"),
+                  prettySwitch(ns("availability"),
+                               label = "Plot availability",
+                               value = TRUE,
+                               status = "success", slim = TRUE, inline = TRUE)),
+              bsTooltip(ns("availability_tip"), tips$availability,
+                        placement = "left"),
+              selectizeInput(
+                ns("stats"),
+                label = "Statistics to include",
+                choices = default("plot_data_screening", "include_stats"),
+                selected = default("plot_data_screening", "include_stats"),
+                multiple = TRUE, width = "100%"),
+              bsTooltip(ns("stats"), tips$stats,
+                        placement = "left")),
+            column(width = 9,
+                   select_plot_options(select_plot_title(id, "plot_title_summary")),
+                   ggiraph::girafeOutput(ns("plot_summary"),
+                                         height = opts$plot_height))
+            )),
 
 
         # Availability Plot -----------------
@@ -173,43 +173,6 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
       eval_check(d)
     })
 
-    # Summary plot ------------------
-    output$plot_summary <- ggiraph::renderGirafe({
-
-      check_data(data_loaded())
-      req(!is.null(input$availability), !is.null(input$stats))
-
-      data_flow <- data_raw()
-
-      g <- create_fun("plot_data_screening", data_name = "data_flow",
-                      input, input_data = data_settings())
-
-      code$plot_summary <- g
-
-      g <- eval_check(g)[[1]]
-
-      # Add title
-      if(input$plot_title_summary) {
-        g <- g +
-          ggplot2::ggtitle(plot_title(data_settings(), "Data Availability")) +
-          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
-      }
-
-      # Add interactivity
-      stats <- names(g$data) # Get stats from plot data
-
-      # For tooltips labels...
-      names(stats)[stats == "n_missing_Q"] <- "Data Completeness"
-
-      # Add interactive vline
-      g <- g + create_vline_interactive(data = g$data, stats = stats, size = 5)
-
-
-      ggiraph::girafe(
-        ggobj = g, width_svg = 13, height_svg = 7,
-        options = ggiraph_opts())
-    })
-
     # Symbols Plot -----------------------------
     plot_symbols <- reactive({
       check_data(data_loaded())
@@ -273,6 +236,45 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
                          c("pan", "autoscale", "zoomIn2d", "zoomOut2d",
                            "hoverCompareCartesian", "hoverClosestCartesian"))
     })
+
+    # Summary plot ------------------
+    output$plot_summary <- ggiraph::renderGirafe({
+
+      check_data(data_loaded())
+      req(!is.null(input$availability), !is.null(input$stats))
+
+      data_flow <- data_raw()
+
+      g <- create_fun("plot_data_screening", data_name = "data_flow",
+                      input, input_data = data_settings())
+
+      code$plot_summary <- g
+
+      g <- eval_check(g)[[1]]
+
+      # Add title
+      if(input$plot_title_summary) {
+        g <- g +
+          ggplot2::ggtitle(plot_title(data_settings(), "Data Availability")) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
+
+      # Add interactivity
+      stats <- names(g$data) # Get stats from plot data
+
+      # For tooltips labels...
+      names(stats)[stats == "n_missing_Q"] <- "Data Completeness"
+
+      # Add interactive vline
+      g <- g + create_vline_interactive(data = g$data, stats = stats, size = 5)
+
+
+      ggiraph::girafe(
+        ggobj = g, width_svg = 13, height_svg = 7,
+        options = ggiraph_opts())
+    })
+
+
 
     # Available Data Plot ---------------------------
     output$plot_available <- ggiraph::renderGirafe({
