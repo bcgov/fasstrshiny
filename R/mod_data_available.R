@@ -47,7 +47,7 @@ ui_data_available <- function(id) {
               bsTooltip(ns("stats"), tips$stats,
                         placement = "left")),
             column(width = 9,
-                   select_plot_options(select_plot_title(id, "summary")),
+                   select_plot_options(select_plot_title(id, "plot_title_summary")),
                    ggiraph::girafeOutput(ns("plot_summary"),
                                          height = opts$plot_height))
             )),
@@ -89,7 +89,7 @@ ui_data_available <- function(id) {
               width = 9,
               uiOutput(ns("ui_plot_symbols_options"), align = "right"),
               select_plot_options(
-                select_plot_title(id, "symbols"),
+                select_plot_title(id, "plot_title_symbols"),
                 select_plot_log(
                   id, value = default("plot_flow_data_symbols",
                                       "log_discharge"))),
@@ -122,7 +122,7 @@ ui_data_available <- function(id) {
                              placement = "left"),
             ),
             column(width = 11,
-                   select_plot_options(select_plot_title(id, "available")),
+                   select_plot_options(select_plot_title(id, "plot_title_available")),
                    ggiraph::girafeOutput(ns("plot_available"),
                                          height = opts$plot_height))
           )
