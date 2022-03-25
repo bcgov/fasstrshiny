@@ -31,6 +31,7 @@ fasstr_shiny <- function() {
 
   # On shinyapps ----------------------------------
   on_shinyapps <- !identical(serverInfo(), list(shinyServer = FALSE))
+
   msg <- on_shinyapps
 
   if(on_shinyapps) {
@@ -47,6 +48,10 @@ fasstr_shiny <- function() {
     file.symlink(h, th)                # Create a new link
 
     cat(file = stderr(), "Link: ", list.files(th, full.names = TRUE)[1], " \n")
+
+    enableBookmarking("url")
+  } else {
+    enableBookmarking("server")
   }
 
   # UI --------------------------------
@@ -117,6 +122,13 @@ fasstr_shiny <- function() {
     data_raw <- data_outputs$data_raw
     data_loaded <- data_outputs$data_loaded
 
+    # Bookmarking
+
+    onBookmarked(function(url) {
+      if(on_shinyapps) url <- urlshorteneR::vgd_LinksShorten(url)
+      showModal(urlModal(url, "Bookmark link"))
+    })
+
     # Other modules
     for(m in c("data_available", "hydro", "cumulative", "flows",
                "annual_stats", "annual_means", "annual_totals", "flow_timing",
@@ -126,7 +138,7 @@ fasstr_shiny <- function() {
     }
   }
 
- shinyApp(ui = ui, server = server, enableBookmarking = "server")
+ shinyApp(ui = ui, server = server)
 }
 
 
