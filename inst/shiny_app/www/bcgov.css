@@ -25,6 +25,10 @@
   margin-left: 15px;
 }
 
+h5 {
+  font-weight: bold;
+}
+
 .tab-content {
   min-height: 400px;
 }

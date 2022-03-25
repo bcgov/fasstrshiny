@@ -16,31 +16,70 @@
 ui_home <- function(id) {
   fluidRow(
     column(
-      width = 12, h2("Welcome to fasstrshiny"),
+      width = 12, h2("Welcome to ", code("fasstrshiny")),
 
       tabBox(
         width = 12,
 
         # Disclaimer
         tabPanel(
-          title = "Disclaimer", width = 12,
-          p("This is an R Shiny app offering a user interface to the fasstr R package.",
-            "To get started, first go to the Data tab on the Navigation menu, ",
-            "choose a HYDAT station and load some data!"),
-          p(strong("(Note that loading CSV data is not yet implemented)")),
+          title = "Welcome", width = 12,
+
+
+          "This is an R Shiny app offering a user interface to the ",
+          code(a(href = "https://bcgov.github.io/fasstr", "fasstr")), "R package.",
+          p(),
+
+          tags$ul(
+            tags$li("See the '", strong("Overview"), "' tab for how to use this app"),
+            tags$li("If you would like to install ", code("fasstr"), " and ",
+               code("fasstrshiny"), "on your own computer, see the '",
+               strong("Getting Setup"), "' tab")),
+
+
+          hr(),
+          # Disclaimer -----------------------
+          h5("Warranty Disclaimer"),
+          p("This information is provided as a public service by the Government ",
+            "of British Columbia, Box 9411, Victoria, British Columbia, Canada ",
+            "V8W 9V1."),
+
+          p("This website and all of the information it contains are provided ",
+            "\"as is\" without warranty of any kind, whether express or implied. ",
+            "All implied warranties, including, without limitation, implied ",
+            "warranties of merchantability, fitness for a particular purpose, ",
+            "and non-infringement, are hereby expressly disclaimed. Links and ",
+            "references to any other websites are provided for information only ",
+            "and listing shall not be taken as endorsement of any kind. The ",
+            "Government of British Columbia is not responsible for the content ",
+            "or reliability of the linked websites and does not endorse the ",
+            "content, products, services or views expressed within them."),
+
+          h5("Limitation of Liabilities"),
+          p("Under no circumstances will the Government of British Columbia ",
+            "be liable to any person or business entity for any direct, ",
+            "indirect, special, incidental, consequential, or other damages ",
+            "based on any use of this website or any other website to which ",
+            "this site is linked, including, without limitation, any lost ",
+            "profits, business interruption, or loss of programs or ",
+            "information, even if the Government of British Columbia has been",
+            "specifically advised of the possibility of such damages.")
+        ),
+
+        # Overview --------------------------------
+        tabPanel(
+          title = "Overview", width = 12,
+
+          "To get started, first go to the Data tab on the Navigation menu, ",
+          "choose a HYDAT station and load some data!",
+
           br(),
           p("Once you have loaded data you'll be able to explore the other tabs."),
           p("Remeber that this is a work in progress so keep track of what you like,",
-            "don't like and what broke so we can make it better!")
+            "don't like and what broke so we can make it better!"),
         ),
 
-        # Overview
-        tabPanel(
-          title = "Overview", width = 12,
-          p("Blah, blah, blah")
-        ),
-
-        # R Workflow - Setup
+        # R Workflow - Setup -------------------------------
         tabPanel(
           title = "Getting Setup", width = 12,
           p("Blah, blah, blah")
