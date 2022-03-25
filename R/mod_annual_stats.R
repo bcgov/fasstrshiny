@@ -114,7 +114,7 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
       if(input$type == "Monthly") {
         pi <- "months"
         e <- glue::glue(
-          "months = c({glue::glue_collapse(input$months_plot, sep = ', ')})")
+          "months = {conseq(input$months_plot)}")
       } else {
         pi <- NULL
         e <- ""
