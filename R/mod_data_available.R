@@ -24,31 +24,51 @@ ui_data_available <- function(id) {
       tabBox(
         width = 12,
 
-        # Symbols Plot ----------------------
+        # Symbols Flow Plot -----------------
         tabPanel(
-          title = "Symbols Plots",
+          title = "Symbols Flow Plot",
+          fluidRow(
+            column(
+              width = 2,
+              strong("HYDAT data symbols are: "), br(),
+              strong("'E'"), "Estimate", br(),
+              strong("'A'"), "Partial Day", br(),
+              strong("'B'"), "Ice Conditions", br(),
+              strong("'D'"), "Dry", br(),
+              strong("'R'"), "Revised"
+            ),
+            column(
+              width = 10,
+              uiOutput(ns("ui_plot_symbols_flow_options"), align = "right"),
+              select_plot_options(
+                select_plot_title(id, "plot_title_symbols_flow"),
+                select_plot_log(
+                  id, value = default("plot_flow_data_symbols",
+                                      "log_discharge"))),
+
+
+              # Plot
+              shinycssloaders::withSpinner(
+                plotly::plotlyOutput(ns("plot_symbols_flow"),
+                                     height = opts$plot_height))))
+          ),
+
+        # Symbols Agg Plot ----------------------
+        tabPanel(
+          title = "Symbols Aggregate Plots",
           fluidRow(
             column(
               width = 3,
-              fluidRow(
-                column(
-                  width = 6, id = ns("symbols_type_tip"),
-                  awesomeRadio(ns("symbols_type"), label = "Plot type",
-                               choices = c("Days", "Flow")),
-                  bsTooltip(ns("symbols_type_tip"),
-                            paste0("Plot type to show: Flow by year or ",
-                                   "Number/proportion of each symbol by year"),
-                            placement = "left")),
-                column(
-                  width = 6, id = ns("symbols_percent_tip"),
+              div(id = ns("symbols_agg_type_tip"),
                   awesomeRadio(
-                    ns("symbols_percent"),
-                    label = "Plot days",
-                    choices = c("Number of days" = FALSE,
-                                "Percent of days" = TRUE),
-                    selected = default("plot_annual_symbols", "plot_percent")),
-                  bsTooltip(ns("symbols_percent_tip"), tips$symbols_percent,
-                            placement = "left"))
+                    ns("symbols_agg_type"), label = "Plot type",
+                    choices = c("Day of Year" = "dayofyear",
+                                "No. Days" = "count", "% Days" = "percent")),
+                  bsTooltip(ns("symbols_agg_type_tip"),
+                            paste0("Plot symbols by ",
+                                   "Day of Year; by Number of Days; ",
+                                   "or by Percent of Days"),
+                            placement = "left")
               ),
               strong("HYDAT data symbols are: "), br(),
               strong("'E'"), "Estimate", br(),
@@ -59,25 +79,14 @@ ui_data_available <- function(id) {
             ),
             column(
               width = 9,
-              uiOutput(ns("ui_plot_symbols_options"), align = "right"),
-              select_plot_options(
-                select_plot_title(id, "plot_title_symbols"),
-                select_plot_log(
-                  id, value = default("plot_flow_data_symbols",
-                                      "log_discharge"))),
+              uiOutput(ns("ui_plot_symbols_agg_options"), align = "right"),
+              select_plot_options(select_plot_title(id,
+                                                    "plot_title_symbols_agg")),
 
-              conditionalPanel(
-                "input.symbols_type == 'Flow'", ns = NS(id),
-                shinycssloaders::withSpinner(
-                  plotly::plotlyOutput(ns("plot_symbols_flow"),
-                                       height = opts$plot_height))),
-
-              conditionalPanel(
-                "input.symbols_type == 'Days'", ns = NS(id),
-                shinycssloaders::withSpinner(
-                  ggiraph::girafeOutput(ns("plot_symbols_days"),
-                                        height = opts$plot_height)))
-            ))),
+              shinycssloaders::withSpinner(
+                ggiraph::girafeOutput(ns("plot_symbols_agg"),
+                                      height = opts$plot_height)))
+            )),
 
         # Summary Plot -----------------
         tabPanel(
@@ -173,68 +182,91 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
       eval_check(d)
     })
 
-    # Symbols Plot -----------------------------
-    plot_symbols <- reactive({
+    # Symbols Flow Plot -----------------------------
+    output$plot_symbols_flow <- plotly::renderPlotly({
       check_data(data_loaded())
-      req(input$symbols_type, !is.null(input$symbols_percent))
 
       data_flow <- data_raw()
 
-      g <- switch(input$symbols_type,
-                  "Flow" = "plot_flow_data_symbols",
-                  "Days" = "plot_annual_symbols") %>%
-        create_fun(data_name = "data_flow", input, input_data = data_settings(),
-                   params_ignore = "discharge")
+      g <- create_fun("plot_flow_data_symbols", data_name = "data_flow", input,
+                      input_data = data_settings(), params_ignore = "discharge")
 
-      code$plot_symbols <- g
+      code$plot_symbols_flow <- g
 
       g <- eval_check(g)[[1]]
 
 
       # Add title
-      if(input$plot_title_symbols) {
+      if(input$plot_title_symbols_flow) {
         g <- g +
           ggplot2::ggtitle(plot_title(
-            data_settings(), glue::glue("Symbols by {input$symbols_type}"))) +
+            data_settings(), glue::glue("Flow with symbols"))) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
-      g
+      plotly::ggplotly(g, ) %>%
+        plotly::config(modeBarButtonsToRemove =
+                         c("pan", "autoscale", "zoomIn2d", "zoomOut2d",
+                           "hoverCompareCartesian", "hoverClosestCartesian"))
     })
 
+    # Symbols Agg Plot -----------------------------
+    output$plot_symbols_agg <- ggiraph::renderGirafe({
+      check_data(data_loaded())
+      req(input$symbols_agg_type)
 
-    output$plot_symbols_days <- ggiraph::renderGirafe({
-      req(input$symbols_type == "Days")
+      data_flow <- data_raw()
 
-      g <- plot_symbols()
+      g <- create_fun("plot_annual_symbols", data_name = "data_flow", input,
+                      input_data = data_settings(), params_ignore = "discharge",
+                      extra = glue::glue("plot_type = '{input$symbols_agg_type}'"))
+
+      code$plot_symbols_agg <- g
+
+      g <- eval_check(g)[[1]]
+
+
+      # Add title
+      if(input$plot_title_symbols_agg) {
+        g <- g +
+          ggplot2::ggtitle(plot_title(
+            data_settings(), glue::glue("Aggregate symbols"))) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
 
       # Add interactivity
-      d <- g$data %>%
-        dplyr::mutate(tooltip = glue::glue(
-          "{Symbol}: {Count} ({round(Percent, 1)}%)")) %>%
-        dplyr::group_by(Year) %>%
-        dplyr::summarize(Count = sum(Count),
-                         tooltip = glue::glue("Year: {Year}\n",
-                                              glue::glue_collapse(tooltip, "\n")))
+      if(input$symbols_agg_type == "dayofyear") {
+        d <- g$data %>%
+          dplyr::mutate(tooltip = glue::glue("Date: {Date}"),
+                        tooltip = dplyr::if_else(
+                          !is.na(Value),
+                          glue::glue("{tooltip}\nSymbol: {Symbol}"),
+                          glue::glue("{tooltip}\nMissing value")))
 
-      g <- g +
-        ggiraph::geom_bar_interactive(
-          data = d, fill = "grey", alpha = 0.005,
-          stat = "identity", inherit.aes = FALSE,
-          ggplot2::aes(x = Year, y = Inf, tooltip = tooltip, data_id = Year))
+        g <- g +
+          ggiraph::geom_tile_interactive(
+            data = d,
+            ggplot2::aes(tooltip = tooltip, data_id = Date))
+      } else {
+        d <- g$data %>%
+          dplyr::mutate(tooltip = glue::glue(
+            "{Symbol}: {Count} ({round(Percent, 1)}%)")) %>%
+          dplyr::group_by(Year) %>%
+          dplyr::summarize(Count = sum(Count),
+                           tooltip = glue::glue("Year: {Year}\n",
+                                                glue::glue_collapse(tooltip, "\n")))
+
+        g <- g +
+          ggiraph::geom_bar_interactive(
+            data = d, fill = "grey", alpha = 0.005,
+            stat = "identity", inherit.aes = FALSE,
+            ggplot2::aes(x = Year, y = Inf, tooltip = tooltip, data_id = Year))
+      }
 
       ggiraph::girafe(
         ggobj = g, width_svg = 13, height_svg = 7,
         options = ggiraph_opts())
 
-    })
-
-    output$plot_symbols_flow <- plotly::renderPlotly({
-      req(input$symbols_type == "Flow")
-      plotly::ggplotly(plot_symbols()) %>%
-        plotly::config(modeBarButtonsToRemove =
-                         c("pan", "autoscale", "zoomIn2d", "zoomOut2d",
-                           "hoverCompareCartesian", "hoverClosestCartesian"))
     })
 
     # Summary plot ------------------
