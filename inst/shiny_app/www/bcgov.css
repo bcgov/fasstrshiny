@@ -33,6 +33,10 @@
   min-height: 445px;
 }
 
+.gt_table {
+  min-height: 40px;
+}
+
 /* BC Gov themeing */
 
 /* Gold bottom border */
