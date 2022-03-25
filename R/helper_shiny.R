@@ -94,7 +94,9 @@ test_mod <- function(mod, hydat_stn = "08HB048") {
 
     if(mod == "data_load") {
       server_data_load(id = mod)
-    } else {
+    } else if(mod == "home") {
+      moduleServer("home", function(input, output, session) {})
+      } else {
       get(paste0("server_", mod))(id = mod, d$s, d$d, d$l)
     }
   }
