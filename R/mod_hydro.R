@@ -129,6 +129,7 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
         create_fun(data_name = "data_flow", input, input_data = data_settings())
 
       code$plot <- g
+      labels$plot <- glue::glue("Plot {input$type} hydrographs")
       g <- eval_check(g)[[1]]
 
       # Add title
@@ -213,6 +214,7 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
         data_name = "data_flow", input, input_data = data_settings())
 
       code$mad <- t
+      labels$mad <- "Calculate Mean Annual Dischrage (for adding to plot)"
 
       eval_check(t)
     })
@@ -242,6 +244,7 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
             "percentiles = c({glue::glue_collapse(perc, sep = ', ')})"))
 
       code$table <- t
+      labels$table <- glue::glue("Calculate {input$type} hydrograph statistics")
 
       eval_check(t) %>%
         prep_DT()
@@ -250,9 +253,9 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
 
     ## R Code -----------------
     code <- reactiveValues()
-    output$code <- renderText({
-      code_format(code)
-    })
+    labels <- reactiveValues()
+    output$code <- renderText(code_format(code, labels,
+                                          order = c("plot", "mad", "table")))
 
   })
 }

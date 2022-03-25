@@ -131,6 +131,8 @@ server_hydat_peak <- function(id, data_settings, data_raw, data_loaded) {
           "station_number = '{unique(data_flow$STATION_NUMBER)}'"))
 
       code$data <- r
+      labels$data <- "Compute HYDAT peak frequencies"
+
       eval_check(r)
     }) %>%
       bindEvent(input$compute)
@@ -189,7 +191,8 @@ server_hydat_peak <- function(id, data_settings, data_raw, data_loaded) {
 
     # R Code -----------------
     code <- reactiveValues()
-    output$code <- renderText(code_format(code))
+    labels <- reactiveValues()
+    output$code <- renderText(code_format(code, labels))
 
   })
 }

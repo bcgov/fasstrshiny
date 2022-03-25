@@ -42,19 +42,31 @@ ggiraph_opts <- function(selection = "none") {
 
 
 # Styling Code -----------------------------------------------------------
+code_order <- function(nm, order) {
+  nm <- sort(nm)
+  c(order[order %in% nm], nm[!nm %in% order])
+}
 
-code_format <- function(code) {
-  names(code) %>%
-    sort() %>%
-    purrr::map(~code[[.]]) %>%
-    as.character() %>%
-    stringr::str_remove_all("^\\{|\\}$") %>%
-    stringr::str_squish() %>%
-    glue::glue_collapse("\n\n") %>%
-    stringr::str_replace_all("%>%", "%>%\n ") %>%
-    stringr::str_replace_all("\\+", "\\+\n ") %>%
-    stringr::str_replace_all("&&", "\n\n") %>%
-    code_break_lines()
+code_format <- function(code, labels, order = c("data", "plot", "table")) {
+  order <- code_order(names(code), order)
+
+  if(is.reactivevalues(code)) code <- reactiveValuesToList(code)
+  if(is.reactivevalues(labels)) labels <- reactiveValuesToList(labels)
+
+  code_formatted <- purrr::map(code, ~ {
+    as.character(.x) %>%
+      stringr::str_remove_all("^\\{|\\}$") %>%
+      stringr::str_squish() %>%
+      glue::glue_collapse("\n\n") %>%
+      stringr::str_replace_all("%>%", "%>%\n ") %>%
+      stringr::str_replace_all("\\+", "\\+\n ") %>%
+      stringr::str_replace_all("&&", "\n\n") %>%
+      code_break_lines()
+  })
+
+  purrr::map2(labels[order], code_formatted[order], ~glue::glue("# {.x}\n{.y}")) %>%
+    glue::glue_collapse(sep = "\n\n")
+
 }
 
 code_break_lines <- function(code) {

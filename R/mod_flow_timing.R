@@ -72,6 +72,7 @@ server_flow_timing <- function(id, data_settings, data_raw, data_loaded) {
         input, input_data = data_settings())
 
       code$plot <- g
+      labels$plot <- "Plot Annual flow timings"
 
       g <- eval_check(g)[[1]]
 
@@ -108,6 +109,7 @@ server_flow_timing <- function(id, data_settings, data_raw, data_loaded) {
         input, input_data = data_settings())
 
       code$table <- t
+      labels$table <- "Calculate Annual flow timings"
 
       eval_check(t) %>%
         prep_DT()
@@ -117,7 +119,8 @@ server_flow_timing <- function(id, data_settings, data_raw, data_loaded) {
 
     # R Code -----------------
     code <- reactiveValues()
-    output$code <- renderText(code_format(code))
+    labels <- reactiveValues()
+    output$code <- renderText(code_format(code, labels))
 
   })
 }

@@ -102,6 +102,7 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
                       input, input_data = data_settings())
 
       code$plot <- g
+      labels$plot <- "Plot flow duration"
 
       g <- eval_check(g)[[1]]
 
@@ -142,6 +143,7 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
         end = "%>% dplyr::select(-Mean, -Median, -Minimum, -Maximum)")
 
       code$table <- t
+      labels$table <- "Calculate flows duration"
 
       eval_check(t) %>%
         tidyr::pivot_longer(cols = -c(STATION_NUMBER, Month),
@@ -154,7 +156,8 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
 
     # R Code -----------------
     code <- reactiveValues()
-    output$code <- renderText(code_format(code))
+    labels <- reactiveValues()
+    output$code <- renderText(code_format(code, labels))
 
   })
 }

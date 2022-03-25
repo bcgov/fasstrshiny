@@ -179,6 +179,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
                       input_data = data_settings())
 
       code$data <- glue::glue("data_available <- {d}")
+      labels$data <- "Summarize statistics, missing values, symbols from flow data"
       eval_check(d)
     })
 
@@ -192,6 +193,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
                       input_data = data_settings(), params_ignore = "discharge")
 
       code$plot_symbols_flow <- g
+      labels$plot_symbols_flow <- glue::glue("Plot Symbols by flow")
 
       g <- eval_check(g)[[1]]
 
@@ -222,6 +224,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
                       extra = glue::glue("plot_type = '{input$symbols_agg_type}'"))
 
       code$plot_symbols_agg <- g
+      labels$plot_symbols_agg <- glue::glue("Plot aggregates of symbols")
 
       g <- eval_check(g)[[1]]
 
@@ -281,6 +284,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
                       input, input_data = data_settings())
 
       code$plot_summary <- g
+      labels$plot_summary <- "Plot summary statistics for data screening"
 
       g <- eval_check(g)[[1]]
 
@@ -325,6 +329,7 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
           "plot_type = '{input$available_type}'"))
 
       code$plot_available <- g
+      labels$plot_available <- "Plot missing dates"
 
       g <- eval_check(g)[[1]]
 
@@ -383,7 +388,10 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
 
     # R Code -----------------
     code <- reactiveValues()
-    output$code <- renderText(code_format(code))
+    labels <- reactiveValues()
+    output$code <- renderText(code_format(
+      code, labels, order = c("plot_symbols_flow", "plot_symbols_agg",
+                              "plot_summary", "plot_available", "data")))
   })
 
 }

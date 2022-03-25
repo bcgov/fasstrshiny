@@ -1,3 +1,13 @@
+# Testing modules
+#
+# - A good first pass
+# - Will fail on errors (but note that only the SERVER is tested, not the UI)
+# - Will fail if you forget to add an input
+# - Will fail if the code doesn't have a label: expect_false(output$code == "")
+#   - Fix by adding `labels$XXX <- "R code comment"
+#
+# Will not check if the figures/tables are what they should be
+
 
 # Basic Modules ----------------
 
@@ -7,8 +17,8 @@ test_that("Annual means", {
 
   testServer(server_annual_means, args = list(d$s, d$d, d$l), {
     session$setInputs(plot_title = TRUE)
-    expect_silent(output$plot)
-    expect_silent(output$code)
+    expect_error(output$plot, NA)
+    expect_false(output$code == "")
   }) %>% suppressWarnings()
 })
 
@@ -18,16 +28,17 @@ test_that("Annual stats", {
 
   testServer(server_annual_stats, args = list(d$s, d$d, d$l), {
     session$setInputs(plot_log = TRUE, type = "Monthly", months_plot = 1:12,
-                      inner_percentiles = c(27, 75), outer_percentiles = c(5, 95),
+                      inner_percentiles = c(27, 75),
+                      outer_percentiles = c(5, 95),
                       extra_percentiles = c(10, 90), plot_title = TRUE)
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
     session$setInputs(type = "Annual")
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
   }) %>% suppressWarnings()
 })
@@ -43,29 +54,37 @@ test_that("Annual totals", {
     expect_error(plots(), NA)
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
     session$setInputs(display = "Two_Seasons_Yield")
     expect_error(plots(), NA)
     expect_error(output$plot, NA)
+    expect_error(output$table, NA)
+    expect_false(output$code == "")
 
     session$setInputs(display = "Four_Seasons_Yield")
     expect_error(plots(), NA)
     expect_error(output$plot, NA)
+    expect_error(output$table, NA)
+    expect_false(output$code == "")
 
     session$setInputs(discharge2 = FALSE, display = "Total_Volume")
     expect_error(plots(), NA)
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
     session$setInputs(display = "Two_Seasons_Volume")
     expect_error(plots(), NA)
     expect_error(output$plot, NA)
+    expect_error(output$table, NA)
+    expect_false(output$code == "")
 
     session$setInputs(display = "Four_Seasons_Volume")
     expect_error(plots(), NA)
     expect_error(output$plot, NA)
+    expect_error(output$table, NA)
+    expect_false(output$code == "")
 
   }) %>% suppressWarnings()
 })
@@ -79,7 +98,7 @@ test_that("Flow timing", {
 
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
   }) %>% suppressWarnings()
 
@@ -95,12 +114,12 @@ test_that("Low flows", {
 
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
     session$setInputs(display = "Annual_Low_Flows_Dates")
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
   }) %>% suppressWarnings()
 
@@ -115,7 +134,7 @@ test_that("Outside normal", {
 
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
   }) %>% suppressWarnings()
 })
@@ -128,7 +147,7 @@ test_that("Peak flows", {
     session$setInputs(roll_day = 1, roll_align = "right")
 
     expect_error(output$table, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
   }) %>% suppressWarnings()
 
@@ -156,11 +175,12 @@ test_that("Data Load", {
     expect_error(stations(), NA)
     expect_error(output$hydat_map, NA)
     expect_error(output$hydat_table, NA)
+    expect_error(output$info, NA)
     #expect_error(data_raw(), NA)   # Can't test because of ignoreInit = TRUE
     #expect_error(output$plot, NA)  # need data_raw()
     #expect_error(output$table, NA) # need data_raw()
-    expect_error(output$info, NA)
-    expect_error(output$code, NA)
+    #expect_false(output$code == "") # need data_raw()
+
   }) %>% suppressWarnings()
 })
 
@@ -169,27 +189,35 @@ test_that("Data Available", {
   d <- dummy_data()
 
   testServer(server_data_available, args = list(d$s, d$d, d$l), {
-    session$setInputs(availability = TRUE, stats = "Mean", symbols_type = "Days",
-                      symbols_percent = FALSE, available_type = "tile",
+    session$setInputs(availability = TRUE, stats = "Mean",
+                      symbols_agg_type = "dayofyear",
+                      available_type = "tile",
                       plot_log = FALSE, months_inc = 1:12,
-                      plot_title_summary = TRUE, plot_title_symbols = TRUE,
+                      plot_title_summary = TRUE,
+                      plot_title_symbols_flow = TRUE,
+                      plot_title_symbols_agg = TRUE,
                       plot_title_available = TRUE)
 
     expect_error(output$plot_summary, NA)
-    expect_error(plot_symbols(), NA)
-    expect_error(output$plot_symbols_days, NA)
+    expect_error(output$plot_symbols_flow, NA)
+    expect_error(output$plot_symbols_agg, NA)
     expect_error(output$plot_available, NA)
     expect_error(output$table, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
-    session$setInputs(symbols_type = "Flow")
-    expect_error(plot_symbols(), NA)
-    expect_error(output$plot_symbols_flow, NA)
+    session$setInputs(symbols_agg_type = "count")
+    expect_error(output$plot_symbols_agg, NA)
+    expect_false(output$code == "")
+
+    session$setInputs(symbols_agg_type = "percent")
+    expect_error(output$plot_symbols_agg, NA)
+    expect_false(output$code == "")
 
     session$setInputs(available_type = "bar")
     expect_error(output$plot_available, NA)
+    expect_false(output$code == "")
 
-  }) %>% suppressWarnings()
+  }) %>% suppressWarnings() %>% suppressMessages()
 
 })
 
@@ -206,7 +234,7 @@ test_that("Flows", {
 
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
-    expect_error(output$code, NA)
+        expect_false(output$code == "")
 
   }) %>% suppressWarnings()
 
@@ -228,19 +256,19 @@ test_that("Hydro", {
     expect_error(mad(), NA)
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
     session$setInputs(type = "Long-term Daily")
     expect_error(mad(), NA)
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
     session$setInputs(type = "Long-term Monthly")
     expect_error(mad(), NA)
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
   }) %>% suppressWarnings()
 
@@ -255,12 +283,12 @@ test_that("Cumulative", {
                       add_year = "", plot_title = TRUE)
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
     session$setInputs(type = "Monthly")
     expect_error(output$plot, NA)
     expect_error(output$table, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
   }) %>% suppressWarnings()
 
@@ -286,7 +314,7 @@ test_that(" Annual Trends", {
     expect_error(output$plot, NA)
     expect_error(output$table_fit, NA)
     expect_error(output$table_years, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
   }) %>% suppressWarnings()
 })
 
@@ -310,7 +338,7 @@ test_that("Volume Freq ", {
     expect_error(output$table_plot, NA)
     expect_error(output$table_fit, NA)
     expect_error(output$fit_stats, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
   }) %>% suppressWarnings() %>% suppressMessages()
 })
@@ -333,7 +361,7 @@ test_that("Hydat Peak", {
     expect_error(output$table, NA)
     expect_error(output$fit_stats, NA)
     expect_error(output$fit_plot, NA)
-    expect_error(output$code, NA)
+    expect_false(output$code == "")
 
   }) %>% suppressWarnings()
 

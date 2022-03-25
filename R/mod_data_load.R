@@ -506,6 +506,8 @@ server_data_load <- function(id) {
         "add_daily_yield(basin_area = {input$basin_area})")
 
       code$data_raw <- glue::glue(d1, d_dates)
+      labels$data_raw <- "Load data, prep dates, calculate volume/yield"
+
       data_loaded(TRUE)
       eval_check(glue::glue(d2, d_dates))
 
@@ -525,6 +527,7 @@ server_data_load <- function(id) {
       g <- create_fun(fun = "plot_flow_data", data_name = "data_flow", input)
 
       code$data_plot <- g
+      labels$data_plot <- "Plot general flows"
 
       g <- eval_check(g)[[1]]
 
@@ -557,9 +560,9 @@ server_data_load <- function(id) {
 
     # R Code ----------------
     code <- reactiveValues()
-    output$code <- renderText({
-      code_format(code)
-    })
+    labels <- reactiveValues()
+    output$code <- renderText(code_format(code, labels,
+                                          order = c("data_raw", "data_plot")))
 
 
     # Sidebar: Data Info ------------------------

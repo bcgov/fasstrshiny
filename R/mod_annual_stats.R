@@ -128,6 +128,7 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
                    params_ignore = pi, extra = e)
 
       code$plot <- g
+      labels$plot <- glue::glue("Plot {input$type} hydrograph statistics")
 
       g <- eval_check(g)[[1]]
 
@@ -184,6 +185,7 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
                    params_ignore = pi, extra = e)
 
       code$table <- t
+      labels$table <- glue::glue("Calculate {input$type} hydrograph statistics")
 
       eval_check(t) %>%
         prep_DT()
@@ -192,7 +194,8 @@ server_annual_stats <- function(id, data_settings, data_raw, data_loaded) {
 
     # R Code -----------------
     code <- reactiveValues()
-    output$code <- renderText(code_format(code))
+    labels <- reactiveValues()
+    output$code <- renderText(code_format(code, labels))
 
   })
 }

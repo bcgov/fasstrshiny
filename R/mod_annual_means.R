@@ -53,6 +53,7 @@ server_annual_means <- function(id, data_settings, data_raw, data_loaded) {
                       params_ignore = "discharge")
 
       code$plot <- g
+      labels$plot <- "Plotting annual means"
 
       g <- eval_check(g)[[1]]
 
@@ -91,7 +92,8 @@ server_annual_means <- function(id, data_settings, data_raw, data_loaded) {
 
     # R Code -----------------
     code <- reactiveValues()
-    output$code <- renderText(code_format(code))
+    labels <- reactiveValues()
+    output$code <- renderText(code_format(code, labels))
 
   })
 }

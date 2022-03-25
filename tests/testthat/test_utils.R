@@ -1,3 +1,24 @@
+test_that("code_format()", {
+  code <- list("extra" = "AA", "apple" = "XZ",
+               "first" = "A", "third" = "B", "second" = "C")
+  labels <- c("extra" = "Extra Comment", "apple" = "Apple Comment",
+              "first" = "First Comment", "second" = "Second Comment",
+              "third" = "Third Comment")
+  order <- c("first", "second", "third")
+
+  expect_equal(code_order(names(code), order),
+               c("first", "second", "third", "apple", "extra"))
+
+  expect_equal(code_format(code, labels, order),
+               glue::glue("# First Comment\nA\n\n# Second Comment\nC\n\n",
+                          "# Third Comment\nB\n\n# Apple Comment\nXZ\n\n",
+                          "# Extra Comment\nAA"))
+
+  expect_equal(code_order(names(code), order = c("lsdjkf", "sldjf")),
+               sort(names(code)))
+
+})
+
 
 test_that("conseq()", {
   expect_equal(conseq(c(1, 4, 5, 6)), "c(1, 4:6)")

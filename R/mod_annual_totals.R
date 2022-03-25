@@ -79,6 +79,7 @@ server_annual_totals <- function(id, data_settings, data_raw, data_loaded) {
                       extra = "include_seasons = TRUE")
 
       code$plot <- g
+      labels$plot <- "Plot Annual cumulative hydrograph statistics"
       g <- eval_check(g)
 
       # Add interactivity
@@ -132,6 +133,7 @@ server_annual_totals <- function(id, data_settings, data_raw, data_loaded) {
                       extra = "include_seasons = TRUE")
 
       code$table <- t
+      labels$table <- "Calculate Annual cumulative hydrograph statistics"
 
       eval_check(t) %>%
         prep_DT()
@@ -140,7 +142,8 @@ server_annual_totals <- function(id, data_settings, data_raw, data_loaded) {
 
     # R Code -----------------
     code <- reactiveValues()
-    output$code <- renderText(code_format(code))
+    labels <- reactiveValues()
+    output$code <- renderText(code_format(code, labels))
 
   })
 }

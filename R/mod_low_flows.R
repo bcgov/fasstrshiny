@@ -71,6 +71,7 @@ server_low_flows <- function(id, data_settings, data_raw, data_loaded) {
                       input, input_data = data_settings())
 
       code$plot <- g
+      labels$plot <- "Plot Annual low flows"
 
       g <- eval_check(g)
 
@@ -145,6 +146,7 @@ server_low_flows <- function(id, data_settings, data_raw, data_loaded) {
                       input, input_data = data_settings())
 
       code$table <- t
+      labels$table <- "Calculate Annual low flows"
 
       eval_check(t) %>%
         prep_DT()
@@ -152,7 +154,7 @@ server_low_flows <- function(id, data_settings, data_raw, data_loaded) {
 
     # R Code -----------------
     code <- reactiveValues()
-    output$code <- renderText(code_format(code))
-
+    labels <- reactiveValues()
+    output$code <- renderText(code_format(code, labels))
   })
 }

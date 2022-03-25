@@ -215,6 +215,8 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
         input_data = data_settings(), extra = p)
 
       code$data <- r
+      labels$data <- "Compute Annual Trends (creates all outputs as a list)"
+
       eval_check(r)
     }) %>%
       bindEvent(input$compute)
@@ -302,7 +304,8 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
 
     # R Code -----------------
     code <- reactiveValues()
-    output$code <- renderText(code_format(code))
+    labels <- reactiveValues()
+    output$code <- renderText(code_format(code, labels))
 
   })
 }

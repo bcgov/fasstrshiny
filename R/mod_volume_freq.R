@@ -176,6 +176,8 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
                       input, input_data = data_settings())
 
       code$data <- r
+      labels$data <- paste0("Compute Annual flow volume frequency analysis ",
+                            "(creates all outputs as a list)")
       eval_check(r)
     }) %>%
       bindEvent(input$compute)
@@ -269,7 +271,8 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
 
     # R Code -----------------
     code <- reactiveValues()
-    output$code <- renderText(code_format(code))
+    labels <- reactiveValues()
+    output$code <- renderText(code_format(code, labels))
 
   })
 }
