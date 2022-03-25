@@ -126,7 +126,7 @@ fasstr_shiny <- function() {
     }
   }
 
- shinyApp(ui = ui, server = server, enableBookmarking = "url")
+ shinyApp(ui = ui, server = server, enableBookmarking = "server")
 }
 
 
