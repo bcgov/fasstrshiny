@@ -122,10 +122,8 @@ fasstr_shiny <- function() {
     data_raw <- data_outputs$data_raw
     data_loaded <- data_outputs$data_loaded
 
-    # Bookmarking
-
     onBookmarked(function(url) {
-      if(on_shinyapps) url <- urlshorteneR::vgd_LinksShorten(url)
+      #if(on_shinyapps) url <- urlshorteneR::vgd_LinksShorten(url)
       showModal(urlModal(url, "Bookmark link"))
     })
 
