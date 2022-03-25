@@ -123,7 +123,7 @@ fasstr_shiny <- function() {
     data_loaded <- data_outputs$data_loaded
 
     onBookmarked(function(url) {
-      #if(on_shinyapps) url <- urlshorteneR::vgd_LinksShorten(url)
+      if(on_shinyapps) url <- urlshorteneR::isgd_LinksShorten(url)
       showModal(urlModal(url, "Bookmark link"))
     })
 
