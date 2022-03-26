@@ -9,7 +9,7 @@ test_that("code_format()", {
   expect_equal(code_order(names(code), order),
                c("first", "second", "third", "apple", "extra"))
 
-  expect_equal(code_format(code, labels, order),
+  expect_equal(code_format(code, labels, order = order),
                glue::glue("# First Comment\nA\n\n# Second Comment\nC\n\n",
                           "# Third Comment\nB\n\n# Apple Comment\nXZ\n\n",
                           "# Extra Comment\nAA"))
