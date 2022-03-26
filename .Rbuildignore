@@ -12,3 +12,5 @@
 ^README\.Rmd$
 ^codecov\.yml$
 ^\.github$
+^shiny_bookmarks$
+^inst/shiny_app$
