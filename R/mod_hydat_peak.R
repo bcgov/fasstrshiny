@@ -69,7 +69,8 @@ ui_hydat_peak <- function(id) {
   )
 }
 
-server_hydat_peak <- function(id, data_settings, data_raw, data_loaded) {
+server_hydat_peak <- function(id, data_settings, data_raw,
+                              data_loaded, data_code) {
 
   moduleServer(id, function(input, output, session) {
 
@@ -112,7 +113,7 @@ server_hydat_peak <- function(id, data_settings, data_raw, data_loaded) {
 
       # Inputs
       need(
-        isTruthy(data_raw()$STATION_NUMBER) &
+        isTruthy("STATION_NUMBER" %in% names(data_raw())) &&
           length(unique(data_raw()$STATION_NUMBER)) == 1,
         paste0("This analysis is only available for HYDAT data with a ",
                "valid STATION_NUMBER")) %>%
@@ -192,7 +193,7 @@ server_hydat_peak <- function(id, data_settings, data_raw, data_loaded) {
     # R Code -----------------
     code <- reactiveValues()
     labels <- reactiveValues()
-    output$code <- renderText(code_format(code, labels))
+    output$code <- renderText(code_format(code, labels, data_code))
 
   })
 }

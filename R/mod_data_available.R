@@ -160,7 +160,8 @@ ui_data_available <- function(id) {
 }
 
 
-server_data_available <- function(id, data_settings, data_raw, data_loaded) {
+server_data_available <- function(id, data_settings, data_raw,
+                                  data_loaded, data_code) {
 
   moduleServer(id, function(input, output, session) {
 
@@ -390,8 +391,9 @@ server_data_available <- function(id, data_settings, data_raw, data_loaded) {
     code <- reactiveValues()
     labels <- reactiveValues()
     output$code <- renderText(code_format(
-      code, labels, order = c("plot_symbols_flow", "plot_symbols_agg",
-                              "plot_summary", "plot_available", "data")))
+      code, labels, data_code,
+      order = c("data_raw", "plot_symbols_flow", "plot_symbols_agg",
+                "plot_summary", "plot_available", "data")))
   })
 
 }

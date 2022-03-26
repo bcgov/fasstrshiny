@@ -85,7 +85,8 @@ ui_hydro <- function(id) {
 }
 
 
-server_hydro <- function(id, data_settings, data_raw, data_loaded) {
+server_hydro <- function(id, data_settings, data_raw,
+                         data_loaded, data_code) {
 
   moduleServer(id, function(input, output, session) {
 
@@ -184,7 +185,9 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
 
       # Add mad
       if(isTRUE(input$add_mad)) {
-        mad <- tidyr::pivot_longer(mad(), -STATION_NUMBER, names_to = "type")
+        mad <- tidyr::pivot_longer(mad(),
+                                   -dplyr::any_of("STATION_NUMBER"),
+                                   names_to = "type")
 
         g <- g +
           ggplot2::geom_hline(
@@ -260,8 +263,9 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
     ## R Code -----------------
     code <- reactiveValues()
     labels <- reactiveValues()
-    output$code <- renderText(code_format(code, labels,
-                                          order = c("plot", "mad", "table")))
+    output$code <- renderText(code_format(
+      code, labels, data_code,
+      order = c("data_raw", "plot", "mad", "table")))
 
   })
 }

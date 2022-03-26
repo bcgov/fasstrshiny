@@ -70,7 +70,8 @@ ui_flows <- function(id) {
   )
 }
 
-server_flows <- function(id, data_settings, data_raw, data_loaded) {
+server_flows <- function(id, data_settings, data_raw,
+                         data_loaded, data_code) {
 
   moduleServer(id, function(input, output, session) {
 
@@ -150,7 +151,7 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
       labels$table <- "Calculate flows duration"
 
       eval_check(t) %>%
-        tidyr::pivot_longer(cols = -c(STATION_NUMBER, Month),
+        tidyr::pivot_longer(cols = -dplyr::any_of(c("STATION_NUMBER", "Month")),
                             names_to = "percentiles", values_to = "value") %>%
         tidyr::pivot_wider(names_from = Month, values_from = value) %>%
         prep_DT()
@@ -161,7 +162,7 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
     # R Code -----------------
     code <- reactiveValues()
     labels <- reactiveValues()
-    output$code <- renderText(code_format(code, labels))
+    output$code <- renderText(code_format(code, labels, data_code))
 
   })
 }

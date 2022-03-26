@@ -178,7 +178,7 @@ test_mod <- function(mod, hydat_stn = "08HB048", file = FALSE) {
     } else if(mod == "home") {
       moduleServer("home", function(input, output, session) {})
       } else {
-      get(paste0("server_", mod))(id = mod, d$s, d$d, d$l)
+      get(paste0("server_", mod))(id = mod, d$s, d$d, d$l, d$c)
     }
   }
 
@@ -209,15 +209,26 @@ dummy_data <- function(hydat_stn = "08HB048", file = FALSE) {
     data_raw <- utils::read.csv(system.file("extdata", "test_data.csv",
                                             package = "fasstrshiny")) %>%
       dplyr::rename(Date = .data$dt, Value = .data$flow, Symbol = .data$sym) %>%
-      fasstr::fill_missing_dates()
+      fill_missing_dates()
+
+    code <- paste0("data_flow <- read.csv('test_data.csv') %>%",
+                   "dplyr::rename(Date = dt, Value = flow, Symbol = sym) %>%",
+                   "fill_missing_dates()")
   } else {
     data_raw <- fasstr::fill_missing_dates(station_number = hydat_stn)
+    code <- glue::glue("data_flow <- fill_missing_dates(",
+                       "station_number = '{hydat_stn}')")
   }
 
   data_raw <- data_raw %>%
-    fasstr::add_date_variables(water_year_start = 1) %>%
-    fasstr::add_daily_volume() %>%
-    fasstr::add_daily_yield()
+    add_date_variables(water_year_start = 1) %>%
+    add_daily_volume() %>%
+    add_daily_yield()
+
+  code <- paste0(code,
+                 "%>% add_date_variables(water_year_start = 1) %>%",
+                 "add_daily_volume() %>%",
+                 "add_daily_yield()")
 
   data_settings <- list(
     discharge = "Value",
@@ -235,5 +246,6 @@ dummy_data <- function(hydat_stn = "08HB048", file = FALSE) {
 
   list("d" = reactive(data_raw),
        "s" = reactive(data_settings),
-       "l" = reactiveVal(TRUE))
+       "l" = reactiveVal(TRUE),
+       "c" = reactiveVal(code))
 }

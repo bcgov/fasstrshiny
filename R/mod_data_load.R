@@ -661,7 +661,8 @@ server_data_load <- function(id) {
     list(
       data_settings = data_settings,
       data_raw = data_raw,
-      data_loaded = data_loaded)
+      data_loaded = data_loaded,
+      data_code = reactiveVal(code$data_raw))
   })
 }
 

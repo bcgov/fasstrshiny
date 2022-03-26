@@ -47,11 +47,18 @@ code_order <- function(nm, order) {
   c(order[order %in% nm], nm[!nm %in% order])
 }
 
-code_format <- function(code, labels, order = c("data", "plot", "table")) {
-  order <- code_order(names(code), order)
+code_format <- function(code, labels, data_code = NULL,
+                        order = c("data_raw", "data", "plot", "table")) {
 
   if(is.reactivevalues(code)) code <- reactiveValuesToList(code)
   if(is.reactivevalues(labels)) labels <- reactiveValuesToList(labels)
+  if(is.reactive(data_code)) data_code <- data_code()
+
+  if(!is.null(data_code)) {
+    code$data_raw <- data_code
+    labels$data_raw <- "Load flow data"
+  }
+  order <- code_order(names(code), order)
 
   code_formatted <- purrr::map(code, ~ {
     as.character(.x) %>%
