@@ -7,7 +7,6 @@
 ^data-raw$
 ^misc$
 ^RELEASE\.R$
-^inst$
 ^COMPLIANCE\.yaml$
 ^CONTRIBUTING\.md$
 ^README\.Rmd$
