@@ -41,7 +41,7 @@ fasstr_url_modal <- function(url){
         "$('#shiny-bookmark-copy-text')\n",
         ".text(function() {\n",
         "if (/Mac/i.test(navigator.userAgent)) {\n",
-        "return 'Press ⌘-C to copy.';\n} else {\n",
+        "return 'Press \u2318-C to copy.';\n} else {\n",
         "return 'Press Ctrl-C to copy.';\n          }\n        });\n      "))
   })
 }
