@@ -103,6 +103,7 @@ fasstr_shiny <- function() {
     data_settings <- data_outputs$data_settings
     data_raw <- data_outputs$data_raw
     data_loaded <- data_outputs$data_loaded
+    data_code <- data_outputs$data_code
 
     onBookmarked(function(url) {
       if(on_shinyapps) {
@@ -115,7 +116,8 @@ fasstr_shiny <- function() {
                "annual_stats", "annual_means", "annual_totals", "flow_timing",
                "low_flows", "peak_flows", "outside_normal",
                "annual_trends", "volume_freq", "hydat_peak")) {
-      get(glue::glue("server_{m}"))(id = m, data_settings, data_raw, data_loaded)
+      get(glue::glue("server_{m}"))(id = m, data_settings, data_raw,
+                                    data_loaded, data_code)
     }
   }
 

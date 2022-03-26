@@ -658,11 +658,13 @@ server_data_load <- function(id) {
            "station_name" = input$station_name)
     })
 
+    data_code <- reactive(code$data_raw)
+
     list(
       data_settings = data_settings,
       data_raw = data_raw,
       data_loaded = data_loaded,
-      data_code = reactiveVal(code$data_raw))
+      data_code = data_code)
   })
 }
 
