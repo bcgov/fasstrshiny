@@ -109,7 +109,12 @@ ui_data_available <- function(id) {
                 selected = default("plot_data_screening", "include_stats"),
                 multiple = TRUE, width = "100%"),
               bsTooltip(ns("stats"), tips$stats,
-                        placement = "left")),
+                        placement = "left"),
+
+              strong("Note"), br(),
+              "Statistics are calculated ignoring missing dates",
+
+              ),
             column(width = 9,
                    select_plot_options(select_plot_title(id, "plot_title_summary")),
                    ggiraph::girafeOutput(ns("plot_summary"),
