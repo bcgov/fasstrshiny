@@ -273,9 +273,10 @@ server_annual_trends <- function(id, data_settings, data_raw,
                            s, ": ", round(Value, 4)),
           data_id = Year), size = 4, na.rm = TRUE)
 
-      ggiraph::girafe(
-        ggobj = g, width_svg = 10, height_svg = 5,
-        options = ggiraph_opts(selection = "multiple"))
+      ggiraph::girafe(ggobj = g,
+                      width_svg = 10 * opts$scale,
+                      height_svg = 5 * opts$scale,
+                      options = ggiraph_opts(selection = "multiple"))
     })
 
     # Add/Remove selected points if changing the numericInput

@@ -93,7 +93,9 @@ server_flow_timing <- function(id, data_settings, data_raw,
             "Date: {yday_as_date(Value, Year)}"),
             data_id = Year), size = 3)
 
-      ggiraph::girafe(ggobj = g, width_svg = 13, height_svg = 7,
+      ggiraph::girafe(ggobj = g,
+                      width_svg = 13 * opts$scale,
+                      height_svg = 7 * opts$scale,
                       options = ggiraph_opts())
     })
 

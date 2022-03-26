@@ -88,9 +88,10 @@ server_outside_normal <- function(id, data_settings, data_raw,
                                       "No. Days: ", round(Value, 4)),
                      data_id = Year), size = 3)
 
-      ggiraph::girafe(
-        ggobj = g, width_svg = 12, height_svg = 8,
-        options = ggiraph_opts())
+      ggiraph::girafe(ggobj = g,
+                      width_svg = 12 * opts$scale,
+                      height_svg = 8 * opts$scale,
+                      options = ggiraph_opts())
     })
 
 

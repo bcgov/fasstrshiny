@@ -71,7 +71,8 @@ tips <- parameters %>%
 
 
 opts <- list(
-  plot_height = "500px"
+  plot_height = "500px",
+  scale = 0.75
 )
 
 bc_maps_layers <- list(

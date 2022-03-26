@@ -207,9 +207,10 @@ server_hydro <- function(id, data_settings, data_raw,
             hjust = c(1.1, rep(-0.1, nrow(mad) -1)), vjust = -0.5)
       }
 
-      ggiraph::girafe(
-        ggobj = g, width_svg = 12, height = 6,
-        options = ggiraph_opts())
+      ggiraph::girafe(ggobj = g,
+                      width_svg = 12 * opts$scale,
+                      height_svg = 6 * opts$scale,
+                      options = ggiraph_opts())
     })
 
 

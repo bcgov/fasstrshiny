@@ -117,7 +117,9 @@ server_annual_totals <- function(id, data_settings, data_raw,
                   "Four" = 10,
                   "Total" = 5)
 
-      ggiraph::girafe(ggobj = g, width_svg = 10, height_svg = h,
+      ggiraph::girafe(ggobj = g,
+                      width_svg = 10 * opts$scale,
+                      height_svg = h * opts$scale,
                       options = ggiraph_opts())
     })
 

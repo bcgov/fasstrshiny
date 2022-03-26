@@ -119,9 +119,10 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded, data_cod
         size = dplyr::if_else(input$type == "Monthly", 20, 1))
 
 
-      ggiraph::girafe(
-        ggobj = g, width_svg = 14, height_svg = 6,
-        options = ggiraph_opts())
+      ggiraph::girafe(ggobj = g,
+                      width_svg = 14 * opts$scale,
+                      height_svg = 6 * opts$scale,
+                      options = ggiraph_opts())
     })
 
 

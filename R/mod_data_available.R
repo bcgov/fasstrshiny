@@ -267,9 +267,10 @@ server_data_available <- function(id, data_settings, data_raw,
             ggplot2::aes(x = Year, y = Inf, tooltip = tooltip, data_id = Year))
       }
 
-      ggiraph::girafe(
-        ggobj = g, width_svg = 13, height_svg = 7,
-        options = ggiraph_opts())
+      ggiraph::girafe(ggobj = g,
+                      width_svg = 13 * opts$scale,
+                      height_svg = 7 * opts$scale,
+                      options = ggiraph_opts())
 
     })
 
@@ -306,9 +307,10 @@ server_data_available <- function(id, data_settings, data_raw,
       g <- g + create_vline_interactive(data = g$data, stats = stats, size = 5)
 
 
-      ggiraph::girafe(
-        ggobj = g, width_svg = 13, height_svg = 7,
-        options = ggiraph_opts())
+      ggiraph::girafe(ggobj = g,
+                      width_svg = 13 * opts$scale,
+                      height_svg = 7 * opts$scale,
+                      options = ggiraph_opts())
     })
 
 
@@ -367,7 +369,9 @@ server_data_available <- function(id, data_settings, data_raw,
         g <- g + create_vline_interactive(data = g$data, stats = stats, size = 5)
       }
 
-      ggiraph::girafe(ggobj = g, width_svg = 14, height_svg = 7,
+      ggiraph::girafe(ggobj = g,
+                      width_svg = 14 * opts$scale,
+                      height_svg = 7 * opts$scale,
                       options = ggiraph_opts())
     })
 

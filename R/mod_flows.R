@@ -129,7 +129,9 @@ server_flows <- function(id, data_settings, data_raw,
             data_id = Percentile),
           show.legend = FALSE, alpha = 0.01, size = 3)
 
-      ggiraph::girafe(ggobj = g, width_svg = 12, height = 6,
+      ggiraph::girafe(ggobj = g,
+                      width_svg = 12 * opts$scale,
+                      height_svg = 6 * opts$scale,
                       options = ggiraph_opts())
     }) %>%
       bindEvent(input$compute, ignoreNULL = FALSE)
