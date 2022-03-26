@@ -285,7 +285,8 @@ test_that("Hydro", {
                         plot_log = TRUE, include_extreme = TRUE, add_year = "",
                         add_date = "", add_mad = FALSE,
                         custom_months = "", custom_months_label = "",
-                        plot_title = TRUE)
+                        plot_title = TRUE,
+                        add_custom = TRUE, custom = 5, custom_label = "Testing")
 
       expect_error(mad(), NA)
       expect_error(output$plot, NA)

@@ -94,15 +94,17 @@ server_hydro <- function(id, data_settings, data_raw,
 
     # Plot options
     output$ui_plot_options <- renderUI({
-      req(data_settings()$years_range)
+      req(data_settings()$years_range, data_settings()$discharge)
       select_plot_options(
         select_plot_title(id),
         select_plot_log(
           id, value = default("plot_longterm_daily_stats", "log_discharge")),
         select_plot_extremes(id),
+        h4("Add to plot:"),
         select_add_year(id, data_settings()$years_range), # Dynamically created from data
         select_add_dates(id),
-        select_add_mad(id))
+        select_add_mad(id),
+        select_custom(id, values = data_raw()[[data_settings()$discharge]]))
     })
 
     # Preserve dynamic UI inputs during bookmarking
@@ -116,6 +118,8 @@ server_hydro <- function(id, data_settings, data_raw,
     observe(shinyjs::toggleState("add_dates", condition = input$type == "Daily"))
     observe(shinyjs::toggleState("custom_months_all",
                                  condition = input$type != "Daily"))
+    observe(shinyjs::toggleState("custom", condition = input$add_custom))
+    observe(shinyjs::toggleState("custom_label", condition = input$add_custom))
 
 
     ## Plot --------------------
@@ -193,7 +197,8 @@ server_hydro <- function(id, data_settings, data_raw,
           ggplot2::geom_hline(
             data = mad,
             ggplot2::aes(yintercept = value),
-            size = c(2, rep(1, nrow(mad) - 1))) +
+            size = c(1, rep(0.5, nrow(mad) - 0.75)),
+            linetype = "dashed") +
           ggiraph::geom_hline_interactive(
             data = mad,
             ggplot2::aes(tooltip = paste0(stringr::str_replace(type, "%", "% "),
@@ -206,6 +211,25 @@ server_hydro <- function(id, data_settings, data_raw,
             x = c(Inf, rep(-Inf, nrow(mad) - 1)), colour = "black",
             hjust = c(1.1, rep(-0.1, nrow(mad) -1)), vjust = -0.5)
       }
+
+      # Add custom
+      if(isTRUE(input$add_custom)) {
+        g <- g +
+          ggplot2::geom_hline(
+            ggplot2::aes(yintercept = input$custom),
+            size = 1) +
+          ggiraph::geom_hline_interactive(
+            ggplot2::aes(
+              tooltip = glue::glue("{input$custom_label}: {round(input$custom, 2)}"),
+              yintercept = input$custom),
+            alpha = 0.01, size = 3) +
+          ggplot2::geom_text(
+            data = data.frame(y = round(input$custom, 2),
+                              label = input$custom_label),
+            ggplot2::aes(y = y, label = input$custom_label), x = Inf,
+            colour = "black", hjust = 1.1, vjust = -0.5)
+      }
+
 
       ggiraph::girafe(ggobj = g,
                       width_svg = 12 * opts$scale,

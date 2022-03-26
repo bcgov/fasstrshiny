@@ -29,6 +29,32 @@ set_input <- function(type, input, set, value) {
 
 
 ## Functions for inputs ------------
+select_custom <- function(id, values) {
+  div(id = NS(id, "custom_all"),
+      prettySwitch(NS(id, "add_custom"),
+                   label = "Add custom lines marking discharge",
+                   value = FALSE,
+                   status = "success", slim = TRUE),
+      column(width = 6,
+             numericInput(NS(id, "custom"),
+                          label = "Discharge",
+                          min = min(values, na.rm = TRUE),
+                          max = max(values, na.rm = TRUE),
+                          value = round(median(values, na.rm = TRUE), 2),
+                          step = 0.01)),
+      column(width = 6,
+             textInput(NS(id, "custom_label"),
+                       label = "Label for line",
+                       placeholder = "ex. Threshold",
+                       value = "My Label")),
+      bsTooltip(id = NS(id, "custom_all"),
+                title = glue::glue(
+                  "Add special lines marking discharge?<br>",
+                  "Discharge value at which to add a line<br>",
+                  "Label for the line on the plot"),
+                placement = "left")
+  )
+}
 
 select_custom_months <- function(id) {
   fluidRow(id = NS(id, "custom_months_all"),
