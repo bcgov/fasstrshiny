@@ -118,27 +118,5 @@ usethis::use_data(parameters, tips, opts, bc_maps_layers, bc_maps_labs,
 # plot_flow_duration
 # - include_longterm
 
-# plot_daily_cumulative_stats
-# - basin_area
-
-# plot_monthly_cumulative_stats
-# - basin_area
-
-# plot_annual_cumulative_stats
-# - basin_area
-
-# calc_daily_cumulative_stats
-# - basin_area
-
-# calc_monthly_cumulative_stats
-# - basin_area
-
-# calc_annual_cumulative_stats
-# - basin_area
-
-# calc_annual_trends
-# - basin_area
-
-
 # compute_annual_frequencies
 # - fit_distr_method -> Deliberately not included, allow default use depending on fit distribution

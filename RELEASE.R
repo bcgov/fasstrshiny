@@ -55,7 +55,6 @@ source("data-raw/parameters.R")
 # In particular, fasstrshiny should be installed from GitHub
 
 remotes::install_github("bcgov/fasstrshiny", ref = "steffi-dev", upgrade = "always")
-remotes::install_github("bcgov/fasstr", upgrade = "always")
 
 ## Deploy shiny app --------------------------------
 
