@@ -14,6 +14,39 @@ ui_plot_selection <- function(id) {
 
 }
 
+# Bookmarking Modal -----------------------------
+fasstr_url_modal <- function(url){
+  showModal({
+    modalDialog(
+      title = "Bookmarked Link",
+      "Here is the URL for your bookmark. Ctrl-C to copy it and store it ",
+      "for future use.", p(),
+      strong("If you use Internet Explorer or Edge"),
+      " we strongly recommend copying ",
+      "this URL and using ", a(href = "http://tinyurl.com", "TinyURL"),
+      ", or a similar service to create a short link as these browsers ",
+      "cannot handle very long URLS.", p(),
+      tags$textarea(class = "form-control",
+                    rows = "1", style = "resize: none;", readonly = "readonly",
+                    url),
+      tags$script(
+        "$('#shiny-modal').\n",
+        "one('show.bs.modal', function() {\n",
+        "setTimeout(function() {\n",
+        "var $textarea = $('#shiny-modal textarea');\n",
+        "$textarea.innerHeight($textarea[0].scrollHeight);\n}, 200);\n});\n",
+        "$('#shiny-modal')\n",
+        ".one('shown.bs.modal', function() {\n",
+        "$('#shiny-modal textarea').select().focus();\n });\n",
+        "$('#shiny-bookmark-copy-text')\n",
+        ".text(function() {\n",
+        "if (/Mac/i.test(navigator.userAgent)) {\n",
+        "return 'Press ⌘-C to copy.';\n} else {\n",
+        "return 'Press Ctrl-C to copy.';\n          }\n        });\n      "))
+  })
+}
+
+
 # Restoring dynamic inputs on bookmarking --------------------------
 
 #' Restore inputs
