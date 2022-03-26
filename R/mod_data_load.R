@@ -78,7 +78,9 @@ ui_data_load <- function(id) {
         tabPanel(
           title = "HYDAT Map", value = "tabs_hydat", width = 12,
           helpText("Click on a station marker to select the station"),
-          leaflet::leafletOutput(ns("hydat_map"), width = "100%", height = "500px")
+          shinycssloaders::withSpinner(
+            leaflet::leafletOutput(ns("hydat_map"), width = "100%", height = "500px")
+          )
         ),
 
         # HYDAT Table --------
@@ -146,8 +148,6 @@ server_data_load <- function(id) {
     observe(shinyjs::toggle("stn", condition = input$show_stn))
     observe(shinyjs::toggle("dates", condition = input$show_dates))
     observe(shinyjs::toggle("types", condition = input$show_types))
-
-
 
 
     output$ui_file_cols <- renderUI({
@@ -232,7 +232,7 @@ server_data_load <- function(id) {
                     max = max(data_raw()$WaterYear),
                     value = c(min(data_raw()$WaterYear),
                               max(data_raw()$WaterYear)),
-                    dragRange = TRUE, sep = ""),
+                    dragRange = TRUE, sep = "", step = 1),
         bsTooltip(NS(id, "years_range"), title = tips$years_range,
                   placement = "left"))
     })

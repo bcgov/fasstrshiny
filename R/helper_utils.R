@@ -192,7 +192,7 @@ conseq <- function(s, type = "num", wrap = NULL) {
   if(is.null(wrap) && type == "num") wrap <- TRUE
   if(is.null(wrap) && type == "month") wrap <- FALSE
 
-  s <- as.numeric(s)
+  s <- sort(as.numeric(s))
 
   if(length(s) == 1) {
     if(type == "num") return(as.character(s))
