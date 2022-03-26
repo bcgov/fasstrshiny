@@ -46,8 +46,7 @@ fasstr_shiny <- function() {
         dashboardSidebar(
           tags$script(src = "tips.js"),
           sidebar_order(),
-          div(style = "margin-top: 10px", gt::gt_output("data-info")),
-          bookmarkButton()
+          div(style = "margin-top: 10px", gt::gt_output("data-info"))
         ),
         ## Body -----------------
         dashboardBody(
@@ -78,6 +77,8 @@ fasstr_shiny <- function() {
       ## Footer --------------------
       tags$footer(
         div(
+          div(style = "position:absolute; right: 7px; bottom: 7px",
+              bookmarkButton(label = "Bookmark")),
           a(href="https://www2.gov.bc.ca/gov/content/home", "Home"),
           " | ",
           a(href="https://www2.gov.bc.ca/gov/content/home/disclaimer",
