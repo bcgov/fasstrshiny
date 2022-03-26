@@ -177,8 +177,11 @@ wrapped with `withSpinner()` in `ui.R`.
     - the `combine_parameters.R` function in `helper_create_fun.R`
   - New arguments that aren't standard (i.e. `percentiles` in `mod_hydro.R`)
     can be added via the `extra` argument
-  - **If new inputs are created dynamically, ensure they are saved (`onBookmark()`)
-    and restored (`onRestored()`) during bookmarking** (see `mod_hydro.R`)
+  - **If new inputs are created dynamically, ensure they are saved during bookmarking.** 
+    Add new types of inputs to `restore_inputs()` in `helper_shiny.R` 
+    (see `mod_hydro.R` for example). 
+    If a compute button is required, ensure it is **NOT** bookmarked 
+    (see `mod_annual_trends.R` for example)
 - Add tests to `test_mod.R`, make sure every input gets a starting value
   
 

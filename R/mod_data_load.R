@@ -163,18 +163,18 @@ server_data_load <- function(id) {
         h4(strong("Columns names")),
         fluidRow(
           column(width = 6,
-                 pickerInput(
+                 selectizeInput(
                    NS(id, "col_date"), width = "100%",
                    label = HTML("Date column"),
                    choices = cols, selected = cols[1])),
           column(width = 6,
-                 pickerInput(
+                 selectizeInput(
                    NS(id, "col_value"),
                    label = HTML("Flow column"),
                    choices = cols, selected = cols[2]))),
         fluidRow(
           column(width = 6,
-                 pickerInput(
+                 selectizeInput(
                    NS(id, "col_symbol"),
                    label = HTML("Symbols column"),
                    choices = cols, selected = cols[3]))
@@ -276,6 +276,24 @@ server_data_load <- function(id) {
         bsTooltip(NS(id, "months"), tips$months, placement = "left"))
     })
 
+    # Add plot options as Gear in corner
+    output$ui_plot_options <- renderUI({
+      req(data_loaded())
+      select_plot_options(
+        select_plot_title(id),
+        select_plot_log(id, value = default("plot_flow_data", "log_discharge")),
+        select_daterange(id, data_raw()))
+    })
+
+
+    # Bookmarking -----
+    # Preserve dynamic UI inputs during bookmarking
+    keep <- c("col_date", "col_value", "col_symbol",
+              "plot_title", "plot_log", "station_name", "basin_area",
+              "water_year", "years_range", "years_exclude", "months")
+    onBookmark(function(state) for(k in keep) state$values[[k]] <- input[[k]])
+    onRestored(function(state) restore_inputs(session, keep, state$values))
+
     # Update station from Map button
     observe({
       updateTextInput(session, "station_number",
@@ -290,16 +308,6 @@ server_data_load <- function(id) {
         value = stations()$STATION_NUMBER[input$hydat_table_rows_selected])
     }) %>%
       bindEvent(input$hydat_table_rows_selected)
-
-
-    # Add plot options as Gear in corner
-    output$ui_plot_options <- renderUI({
-      req(data_loaded())
-      select_plot_options(
-        select_plot_title(id),
-        select_plot_log(id, value = default("plot_flow_data", "log_discharge")),
-        select_daterange(id, data_raw()))
-    })
 
     # CSV Details ------------------
     output$csv_status <- renderText({

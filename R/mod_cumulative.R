@@ -66,7 +66,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
 
     # UI Elements ------------
     output$ui_plot_options <- renderUI({
-      req(data_loaded())
+      req(data_settings()$years_range)
       select_plot_options(
         select_plot_title(id),
         select_plot_log(
@@ -74,6 +74,10 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded) {
         select_add_year(id, data_settings()$years_range))
     })
 
+    # Preserve dynamic UI inputs during bookmarking
+    keep <- c("plot_title", "plot_log", "add_year")
+    onBookmark(function(state) for(k in keep) state$values[[k]] <- input[[k]])
+    onRestored(function(state) restore_inputs(session, keep, state$values))
 
     # Plot --------------------
     output$plot <- ggiraph::renderGirafe({

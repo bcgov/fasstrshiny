@@ -89,19 +89,27 @@ server_hydro <- function(id, data_settings, data_raw, data_loaded) {
 
   moduleServer(id, function(input, output, session) {
 
-    # UI Elements ------------------------------------------
+    ## UI Elements ------------------------------------------
+
     # Plot options
     output$ui_plot_options <- renderUI({
-      req(data_loaded())
+      req(data_settings()$years_range)
       select_plot_options(
         select_plot_title(id),
         select_plot_log(
           id, value = default("plot_longterm_daily_stats", "log_discharge")),
         select_plot_extremes(id),
-        select_add_year(id, data_settings()$years_range),
+        select_add_year(id, data_settings()$years_range), # Dynamically created from data
         select_add_dates(id),
         select_add_mad(id))
     })
+
+    # Preserve dynamic UI inputs during bookmarking
+    keep <- c("plot_title",
+              "plot_log", "plot_extremes", "add_year",
+              "add_dates", "add_mad")
+    onBookmark(function(state) for(k in keep) state$values[[k]] <- input[[k]])
+    onRestored(function(state) restore_inputs(session, keep, state$values))
 
     # Enable/Disable based on toggle
     observe(shinyjs::toggleState("add_dates", condition = input$type == "Daily"))

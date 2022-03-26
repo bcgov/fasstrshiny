@@ -150,6 +150,13 @@ server_annual_trends <- function(id, data_settings, data_raw, data_loaded) {
       )
     })
 
+    # Preserve dynamic UI inputs during bookmarking
+    setBookmarkExclude(c("compute")) # Set inputs, but user must click button
+    keep <- c("allowed_annual", "allowed_monthly", "years_exclude")
+    onBookmark(function(state) for(k in keep) state$values[[k]] <- input[[k]])
+    onRestored(function(state) restore_inputs(session, keep, state$values))
+
+
     # General toggles
     observe(shinyjs::toggle("methods", condition = input$show_methods))
     observe(shinyjs::toggle("options", condition = input$show_options))

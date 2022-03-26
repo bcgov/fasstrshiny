@@ -89,9 +89,13 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
         selected = data_settings()$months)
     })
 
-    # Flows --------------------------------------
 
-    ## Plot --------------------
+    # Preserve dynamic UI inputs during bookmarking
+    keep <- c("months")
+    onBookmark(function(state) for(k in keep) state$values[[k]] <- input[[k]])
+    onRestored(function(state) restore_inputs(session, keep, state$values))
+
+    # Plot --------------------
 
     output$plot <- ggiraph::renderGirafe({
       check_data(data_loaded())
@@ -130,7 +134,7 @@ server_flows <- function(id, data_settings, data_raw, data_loaded) {
       bindEvent(input$compute, ignoreNULL = FALSE)
 
 
-    ## Table -----------------------
+    # Table -----------------------
     output$table <- DT::renderDT({
       check_data(data_loaded())
 

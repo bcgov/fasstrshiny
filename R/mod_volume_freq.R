@@ -121,6 +121,14 @@ server_volume_freq <- function(id, data_settings, data_raw, data_loaded) {
                         selected = names(freqs()$Freq_Fitting)[1])
     })
 
+    # Preserve dynamic UI inputs during bookmarking
+    setBookmarkExclude(c("compute")) # Set inputs, but user must click button
+    keep <- c("years_exclude")
+    onBookmark(function(state) for(k in keep) state$values[[k]] <- input[[k]])
+    onRestored(function(state) restore_inputs(session, keep, state$values))
+
+
+    # Toggles
     observe(shinyjs::toggle("data", condition = input$show_data))
     observe(shinyjs::toggle("plotting", condition = input$show_plotting))
     observe(shinyjs::toggle("fitting", condition = input$show_fitting))

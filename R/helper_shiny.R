@@ -14,8 +14,52 @@ ui_plot_selection <- function(id) {
 
 }
 
+# Restoring dynamic inputs on bookmarking --------------------------
 
-# Checkin inputs for change ------------------------
+#' Restore inputs
+#' Note that each input type, must get it's own update functon. Also
+#' note that some use `value` and some `selected`.
+#' `delay` is for making sure these update *after* the dynamic inputs have
+#' evaluated to their default values. Otherwise this restore is overriddent
+#' back to default values
+#'
+#' @noRd
+restore_inputs <- function(session, i, values, delay = 1000) {
+
+  pretty_inputs <- c("plot_title", "plot_log", "plot_extremes", "add_mad")
+  selectize_inputs <- c("col_date", "col_value", "col_symbol",
+                        "add_year", "add_dates", "years_exclude", "months")
+  slider_inputs <- c("years_range", "allowed_annual", "allowed_monthly")
+  text_inputs <- "station_name"
+  numeric_inputs <- "basin_area"
+  radiogroup_inputs <- "water_year"
+
+  shinyjs::delay(delay, {
+    i[i %in% pretty_inputs] %>%
+      purrr::map(~updatePrettySwitch(session, ., value = values[[.]]))
+
+    i[i %in% selectize_inputs] %>%
+      purrr::map(~updateSelectizeInput(session, ., selected = values[[.]]))
+
+    i[i %in% slider_inputs] %>%
+      purrr::map(~updateSliderInput(session, ., value = values[[.]]))
+
+    i[i %in% text_inputs] %>%
+      purrr::map(~updateTextInput(session, ., value = values[[.]]))
+
+    i[i %in% numeric_inputs] %>%
+      purrr::map(~updateNumericInput(session, ., value = values[[.]]))
+
+    i[i %in% radiogroup_inputs] %>%
+      purrr::map(~updateRadioGroupButtons(session, ., selected = values[[.]]))
+  })
+}
+
+
+
+
+
+# Checking inputs for change ------------------------
 
 update_on_change <- function(session, id, btn = "compute",
                              current, last,
