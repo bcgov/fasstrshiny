@@ -5,7 +5,7 @@
 [![img](https://img.shields.io/badge/Lifecycle-Experimental-339999)](https://github.com/bcgov/repomountie/blob/master/doc/lifecycle-badges.md)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Codecov test
-coverage](https://codecov.io/gh/bcgov/fasstrshiny/branch/main/graph/badge.svg)](https://app.codecov.io/gh/bcgov/fasstrshiny?branch=main)
+coverage](https://codecov.io/gh/bcgov/fasstrshiny/branch/steffi-dev/graph/badge.svg)](https://app.codecov.io/gh/bcgov/fasstrshiny?branch=steffi-dev)
 [![R-CMD-check](https://github.com/bcgov/fasstrshiny/workflows/R-CMD-check/badge.svg)](https://github.com/bcgov/fasstrshiny/actions)
 <!-- badges: end -->
 
