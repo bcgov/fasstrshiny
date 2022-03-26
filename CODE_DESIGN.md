@@ -11,13 +11,16 @@ Most sections of fasstrshiny related to families of functions within fasstr.
 
 ## Organization
 Each panel of the app has corresponding module functions in a file named
-`mod_TYPE.R`.
+`mod_XXX.R`.
 Interactively built UI elements are at the *top* of server functions.
+Anything pertaining to modifying the UI (toggles, updates, bookmarking) are also 
+in this section.
+
 Non-interactively built UI elements are in their corresponding section in the ui function.
 Functions for building commonly used inputs are in the helper_ui_inputs.R script. 
-Other functions can be found in helper_...R files.
+Other functions can be found in `helper_XXX.R` files.
 
-The fasster_shiny() function combines all modules into a single app. 
+The `fasster_shiny()` function combines all modules into a single app. 
 Note that each section needs to be created in the menu, the UI tabsets AND the
 server section.
 
@@ -154,6 +157,42 @@ wrapped with `withSpinner()` in `ui.R`.
 - Input/output doesn't render, no message, no error
   - Check to make sure id isn't duplicated
 
+## Adding a new section
+
+- Create new `mod_XXX.R` file with UI and server functions
+- In `fasstr_shiny()`, 
+  - add `ui_XXX()` function to the UI function, 
+  - add reference to the sidebar function, 
+  - add name (`XXX`) to the server function
+- In the `server_XXX()` function, use `create_fun()` in the appropriate output
+  or reactive
+  - Add inputs for the values which are NOT set in data_settings() 
+    (see bottom of `mod_data_load.R`)
+  - `data_settings()` values will *automatically* be used in the function. If any
+    should not (i.e. `discharge` is use to set `value` to a different flow type 
+    column like yield or volume, but this isn't always appropriate), add
+    the parameter to the argument `params_ignore`.
+  - Add new arguments to 
+    - the `parameters` list in `data-raw/parameters.R`
+    - the `combine_parameters.R` function in `helper_create_fun.R`
+  - New arguments that aren't standard (i.e. `percentiles` in `mod_hydro.R`)
+    can be added via the `extra` argument
+  - **If new inputs are created dynamically, ensure they are saved (`onBookmark()`)
+    and restored (`onRestored()`) during bookmarking** (see `mod_hydro.R`)
+- Add tests to `test_mod.R`, make sure every input gets a starting value
+  
+
+## Tips
+- Ctrl-click on a function will jump you to the code where the function is created.
+  If it's not part of this package, it'll open an observer with information about the
+  function as well as the package it's from
+  
+- `browser()` in code will automatically pause the code/app and let you use the 
+  terminal. Great for testing shiny apps.
+  
+- https://mastering-shiny.org/
+
+
 ## Future considerations
 
 ### Interactive Plots
@@ -163,3 +202,4 @@ with plotly (ggplotly). In the future, interactivity *could* be added to fasstr
 plots, however, there is the risk of making it necessary to update the fasstr 
 app when all you to do is tweak something in fasstrshiny. It would also 
 require more dependencies in fasstr.
+
