@@ -167,6 +167,20 @@ check_data <- function(x){
 
 # Module testing function --------------------------------------------------
 
+#' Run a module with test data
+#'
+#' Run a module separately with prespecific test data
+#'
+#' @param mod Character. Id of the module to run e.g., "hydro"
+#' @param hydat_stn Character. HYDAT id of the station to test.
+#' @param file Logical. Whether to test module with data from
+#'   inst/extdata/test_data.csv (overrides `hydat_stn`)
+#'
+#' @examples
+#' \dontrun{mod_test("hydro")}
+#'
+#' @noRd
+
 test_mod <- function(mod, hydat_stn = "08HB048", file = FALSE) {
 
   server <- function(input, output, session) {
