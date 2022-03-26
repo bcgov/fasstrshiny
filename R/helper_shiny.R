@@ -167,12 +167,11 @@ check_data <- function(x){
 
 # Module testing function --------------------------------------------------
 
-test_mod <- function(mod, hydat_stn = "08HB048") {
-
+test_mod <- function(mod, hydat_stn = "08HB048", file = FALSE) {
 
   server <- function(input, output, session) {
 
-    d <- dummy_data(hydat_stn)
+    d <- dummy_data(hydat_stn, file)
 
     if(mod == "data_load") {
       server_data_load(id = mod)
@@ -203,9 +202,19 @@ test_mod <- function(mod, hydat_stn = "08HB048") {
 
 
 
-dummy_data <- function(hydat_stn = "08HB048") {
+dummy_data <- function(hydat_stn = "08HB048", file = FALSE) {
 
-  data_raw <- fasstr::fill_missing_dates(station_number = hydat_stn) %>%
+
+  if(file) {
+    data_raw <- utils::read.csv(system.file("extdata", "test_data.csv",
+                                            package = "fasstrshiny")) %>%
+      dplyr::rename(Date = .data$dt, Value = .data$flow, Symbol = .data$sym) %>%
+      fasstr::fill_missing_dates()
+  } else {
+    data_raw <- fasstr::fill_missing_dates(station_number = hydat_stn)
+  }
+
+  data_raw <- data_raw %>%
     fasstr::add_date_variables(water_year_start = 1) %>%
     fasstr::add_daily_volume() %>%
     fasstr::add_daily_yield()

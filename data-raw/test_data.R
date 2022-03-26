@@ -25,12 +25,12 @@ DBI::dbDisconnect(h)
 # Test files -------------------------
 
 d <- tidyhydat::hy_daily_flows(station_number = "08HB048") %>%
-  dplyr::select(dt = Date, flow = Value, sym = Symbol) %>%
-  dplyr::slice_sample(n = 100)
-
+  dplyr::select(dt = Date, flow = Value, sym = Symbol)
 
 # Good data
 write.csv(d, "inst/extdata/test_data.csv", row.names = FALSE)
+
+d <- dplyr::slice_sample(d, n = 100)
 
 # Duplicated data
 dplyr::bind_rows(d, d) %>%
