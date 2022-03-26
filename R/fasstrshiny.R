@@ -35,20 +35,7 @@ fasstr_shiny <- function() {
   msg <- on_shinyapps
 
   if(on_shinyapps) {
-
-    # Don't move HYDAT but create a symlink so we can use it as if it was where
-    # tidyhydat wanted it to be
-    h <- find_hydat()   # Where Hydat is
-    th <- tidyhydat::hy_dir()      # Where tidyhydat wants it to be
-
-    cat(file = stderr(), "Where hydat is: ", h, "\n")
-    cat(file = stderr(), "Where should be: ", th, "\n")
-    if(!dir.exists(th)) dir.create(th, recursive = TRUE)
-    unlink(file.path(th, basename(h))) # Delete any existing links
-    file.symlink(h, th)                # Create a new link
-
-    cat(file = stderr(), "Link: ", list.files(th, full.names = TRUE)[1], " \n")
-
+    tidyhydat::hy_set_default_db(find_hydat()) # Use packaged HYDAT
     enableBookmarking("url")
   } else {
     enableBookmarking("server")

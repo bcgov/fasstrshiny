@@ -7,13 +7,17 @@
 #   - Fix by adding `labels$XXX <- "R code comment"
 #
 # Will not check if the figures/tables are what they should be
-
+library(withr)
+local_hydat <- local_(tidyhydat::hy_set_default_db)
+hy <- system.file("extdata", "test_hydat.sqlite3", package = "fasstrshiny")
 
 # Basic Modules ----------------
 
 ## Annual means ---------------
 test_that("Annual means", {
+  local_hydat(hy)
   d <- dummy_data()
+  expect_equal(tidyhydat::hy_default_db(), hy)
 
   testServer(server_annual_means, args = list(d$s, d$d, d$l), {
     session$setInputs(plot_title = TRUE)
@@ -24,6 +28,7 @@ test_that("Annual means", {
 
 ## Annual stats ----------------
 test_that("Annual stats", {
+  local_hydat(hy)
   d <- dummy_data()
 
   testServer(server_annual_stats, args = list(d$s, d$d, d$l), {
@@ -45,6 +50,7 @@ test_that("Annual stats", {
 
 ## Annual totals ----------------
 test_that("Annual totals", {
+  local_hydat(hy)
   d <- dummy_data()
 
   testServer(server_annual_totals, args = list(d$s, d$d, d$l), {
@@ -91,6 +97,7 @@ test_that("Annual totals", {
 
 ## Flow timing ------------------
 test_that("Flow timing", {
+  local_hydat(hy)
   d <- dummy_data()
 
   testServer(server_flow_timing, args = list(d$s, d$d, d$l), {
@@ -106,6 +113,7 @@ test_that("Flow timing", {
 
 ## Low flows ------------------
 test_that("Low flows", {
+  local_hydat(hy)
   d <- dummy_data()
 
   testServer(server_low_flows, args = list(d$s, d$d, d$l), {
@@ -127,6 +135,7 @@ test_that("Low flows", {
 
 ## Outside normal --------------------
 test_that("Outside normal", {
+  local_hydat(hy)
   d <- dummy_data()
 
   testServer(server_outside_normal, args = list(d$s, d$d, d$l), {
@@ -141,6 +150,7 @@ test_that("Outside normal", {
 
 ## Peak flows --------------------
 test_that("Peak flows", {
+  local_hydat(hy)
   d <- dummy_data()
 
   testServer(server_peak_flows, args = list(d$s, d$d, d$l), {
@@ -157,6 +167,7 @@ test_that("Peak flows", {
 
 ## Data Load -------------------
 test_that("Data Load", {
+  local_hydat(hy)
   d <- dummy_data()
 
   testServer(server_data_load, {
@@ -186,6 +197,7 @@ test_that("Data Load", {
 
 ## Data Available -----------------
 test_that("Data Available", {
+  local_hydat(hy)
   d <- dummy_data()
 
   testServer(server_data_available, args = list(d$s, d$d, d$l), {
@@ -225,6 +237,7 @@ test_that("Data Available", {
 
 ## Flows -----------------
 test_that("Flows", {
+  local_hydat(hy)
   d <- dummy_data()
 
   testServer(server_flows, args = list(d$s, d$d, d$l), {
@@ -242,6 +255,7 @@ test_that("Flows", {
 
 ## Hydro -------------
 test_that("Hydro", {
+  local_hydat(hy)
   d <- dummy_data()
 
   testServer(server_hydro, args = list(d$s, d$d, d$l), {
@@ -276,6 +290,7 @@ test_that("Hydro", {
 
 ## Cumulative -----------------------
 test_that("Cumulative", {
+  local_hydat(hy)
   d <- dummy_data()
 
   testServer(server_cumulative, args = list(d$s, d$d, d$l), {
@@ -299,6 +314,7 @@ test_that("Cumulative", {
 
 ## Annual Trends -----------------------------
 test_that(" Annual Trends", {
+  local_hydat(hy)
   d <- dummy_data()
 
   testServer(server_annual_trends, args = list(d$s, d$d, d$l), {
@@ -320,6 +336,7 @@ test_that(" Annual Trends", {
 
 ## Volume Freq ---------------------------------
 test_that("Volume Freq ", {
+  local_hydat(hy)
   d <- dummy_data()
 
   testServer(server_volume_freq, args = list(d$s, d$d, d$l), {
@@ -345,6 +362,7 @@ test_that("Volume Freq ", {
 
 ## Hydat Peak -----------------------------
 test_that("Hydat Peak", {
+  local_hydat(hy)
   d <- dummy_data()
 
   testServer(server_hydat_peak, args = list(d$s, d$d, d$l), {
