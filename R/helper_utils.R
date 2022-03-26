@@ -186,6 +186,7 @@ lasso_svg <- function() {
 
 #' Create pretty consecutive text lists of numbers
 #' e.g., c(1, 2, 3, 4, 6, 7, 8, 9) ===> c(1:4, 6:9)
+#' @noRd
 conseq <- function(s, type = "num", wrap = NULL) {
 
   if(is.null(wrap) && type == "num") wrap <- TRUE

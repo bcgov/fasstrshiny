@@ -39,7 +39,12 @@ get_inputs <- function(input, which) {
 }
 
 
-
+#' Normally when UI elements are hidden, they aren't evaluated.
+#' This is a pain when they need to be evaluated to at least their default
+#' values. Use this function whenever a UI is dynamically created (renderUI()).
+#' Note that the UI must be identified with an id containing "ui_"
+#'
+#' @noRd
 stop_ui_suspend <- function(id, output) {
   names(outputOptions(output)) %>%
     stringr::str_subset(glue::glue("{id}-ui_")) %>%

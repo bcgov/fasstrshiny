@@ -16,11 +16,6 @@
 #' Launch fasstr shiny app
 #'
 #' @export
-#'
-#' @import fasstr
-#' @import shiny
-#' @import shinydashboard
-#' @import shinyWidgets
 
 fasstr_shiny <- function() {
 
