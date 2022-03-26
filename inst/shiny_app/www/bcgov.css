@@ -45,6 +45,10 @@ h5 {
   min-height: 40px;
 }
 
+a code {
+  color: #3c8dbc;
+}
+
 /* BC Gov themeing */
 
 /* Gold bottom border */

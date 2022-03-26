@@ -36,9 +36,34 @@ ui_home <- function(id) {
                code("fasstrshiny"), "on your own computer, see the '",
                strong("Getting Setup"), "' tab")),
 
+          p(),
+          hr(),
+          h4("Versions", style = "margin-left:0"),
+          p(
+            strong(
+              HTML(
+                paste0(
+                  "Using ",
+                  a(href = 'https://github.com/bcgov/fasstrshiny', code('fasstrshiny'), target="_blank"),
+                  glue::glue("v{packageVersion('fasstrshiny')}, "),
+                  a(href = "http://github.com/bcgov/fasstr", code('fasstr'), target="_blank"),
+                  glue::glue("v{packageVersion('fasstr')}, and "),
+                  a(href = "https://github.com/ropensci/tidyhydat", code('tidyhydat'), target="_blank"),
+                  glue::glue("v{packageVersion('tidyhydat')} to access "),
+                  a(href = file.path("https://www.canada.ca/en",
+                                     "environment-climate-change/services",
+                                     "water-overview/quantity/monitoring",
+                                     "survey/data-products-services",
+                                     "national-archive-hydat.html"),
+                    target="_blank",
+                    "HYDAT data")),
+                glue::glue_data(tidyhydat::hy_version(),
+                                "v{Version} ({substr(Date, 1, 10)})")))),
+
 
           hr(),
           # Disclaimer -----------------------
+          h4("Disclaimers", style = "margin-left:0"),
           h5("Warranty Disclaimer"),
           p("This information is provided as a public service by the Government ",
             "of British Columbia, Box 9411, Victoria, British Columbia, Canada ",
