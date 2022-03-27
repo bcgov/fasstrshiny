@@ -14,6 +14,12 @@ ui_plot_selection <- function(id) {
 
 }
 
+ui_plotly_info <- function() {
+  helpText("Click and drag from side to side to zoom to a date range. ",
+           "Double click to zoom back out.")
+}
+
+
 # Bookmarking Modal -----------------------------
 fasstr_url_modal <- function(url){
   showModal({

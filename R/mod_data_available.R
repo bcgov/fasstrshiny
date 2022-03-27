@@ -39,7 +39,6 @@ ui_data_available <- function(id) {
             ),
             column(
               width = 10,
-              uiOutput(ns("ui_plot_symbols_flow_options"), align = "right"),
               select_plot_options(
                 select_plot_title(id, "plot_title_symbols_flow"),
                 select_plot_log(
@@ -48,6 +47,7 @@ ui_data_available <- function(id) {
 
 
               # Plot
+              ui_plotly_info(),
               shinycssloaders::withSpinner(
                 plotly::plotlyOutput(ns("plot_symbols_flow"),
                                      height = opts$plot_height))))
@@ -221,6 +221,7 @@ server_data_available <- function(id, data_settings, data_raw,
       plotly::ggplotly(g, ) %>%
         plotly::config(modeBarButtonsToRemove =
                          c("pan", "autoscale", "zoomIn2d", "zoomOut2d",
+                           "lasso2d", "select2d",
                            "hoverCompareCartesian", "hoverClosestCartesian"))
     })
 

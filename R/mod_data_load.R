@@ -106,6 +106,7 @@ ui_data_load <- function(id) {
         tabPanel(
           title = "Plot",
           uiOutput(ns("ui_plot_options"), align = "right"),
+          ui_plotly_info(),
           shinycssloaders::withSpinner(
             plotly::plotlyOutput(ns("plot"), height = opts$plot_height))
         ),
@@ -550,6 +551,7 @@ server_data_load <- function(id) {
         plotly::ggplotly() %>%
         plotly::config(modeBarButtonsToRemove =
                  c("pan", "autoscale", "zoomIn2d", "zoomOut2d",
+                   "lasso2d", "select2d",
                    "hoverCompareCartesian", "hoverClosestCartesian"))
     })
 
