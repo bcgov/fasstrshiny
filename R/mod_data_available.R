@@ -143,6 +143,10 @@ ui_data_available <- function(id) {
                    bsTooltip(ns("months_inc"),
                              "Months to include/exclude from the plot",
                              placement = "left"),
+                   bsButton(ns("months_all"), label = "All Months",
+                            size = "small"),
+                   bsTooltip(ns("months_all"), "Select all months",
+                             placement = "left")
             ),
             column(width = 11,
                    select_plot_options(select_plot_title(id, "plot_title_available")),
@@ -175,6 +179,8 @@ server_data_available <- function(id, data_settings, data_raw,
                                  condition = input$symbols_type == "Days"))
     observe(shinyjs::toggleState("plot_log",
                                  condition = input$symbols_type == "Flow"))
+    observe(updateCheckboxGroupButtons(session, "months_inc", selected = 1:12)) %>%
+      bindEvent(input$months_all)
 
     # Data --------------
     available_raw <- reactive({
