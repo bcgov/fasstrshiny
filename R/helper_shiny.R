@@ -172,6 +172,30 @@ check_data <- function(x){
 }
 
 
+# Preprocessing functions for shinytests ------------------------
+
+# Only need this is using shinytests (see CREATING_TESTS.R)
+# If using replace ggiraph::renderGirafe() with renderGirafe_preprocess()
+#
+# renderGirafe_preprocess <- function(g) {
+#   snapshotPreprocessOutput(
+#     ggiraph::renderGirafe(g),
+#     function(value) {
+#       value <- jsonlite::fromJSON(value)
+#       id <- value$x$uid
+#       value$x$html <- stringr::str_replace_all(value$x$html, id,
+#                                                "svg_PREPROCESSED")
+#       value$x$uid <- "svg_PREPROCESSED"
+#       value <- jsonlite::toJSON(value)
+#       value
+#     })
+# }
+
+
+
+
+
+
 
 # Module testing function --------------------------------------------------
 
