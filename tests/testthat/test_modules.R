@@ -12,6 +12,10 @@ local_hydat <- local_(tidyhydat::hy_set_default_db)
 hy <- system.file("extdata", "test_hydat.sqlite3", package = "fasstrshiny")
 
 # Basic Modules ----------------
+test_that("UIs", {
+  for(m in mods) expect_silent(get(glue::glue("ui_{m}"))('testing'))
+})
+
 
 ## Annual means ---------------
 test_that("Annual means", {
