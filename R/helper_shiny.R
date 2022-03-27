@@ -212,7 +212,7 @@ check_data <- function(x){
 #' \dontrun{mod_test("hydro")}
 #'
 #' @noRd
-
+#'
 test_mod <- function(mod, hydat_stn = "08HB048", file = FALSE) {
 
   server <- function(input, output, session) {
@@ -228,7 +228,14 @@ test_mod <- function(mod, hydat_stn = "08HB048", file = FALSE) {
     }
   }
 
-  ui <- tagList(
+  ui <- ui_test(mod)
+
+  shinyApp(ui = ui, server = server)
+
+}
+
+ui_test <- function(mod) {
+  tagList(
     dashboardPage(
       dashboardHeader(title = "Test"),
       ## Sidebar ----------
@@ -241,11 +248,7 @@ test_mod <- function(mod, hydat_stn = "08HB048", file = FALSE) {
       )
     )
   )
-
-  shinyApp(ui = ui, server = server)
-
 }
-
 
 
 dummy_data <- function(hydat_stn = "08HB048", file = FALSE) {
