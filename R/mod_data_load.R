@@ -106,7 +106,7 @@ ui_data_load <- function(id) {
         tabPanel(
           title = "Plot",
           uiOutput(ns("ui_plot_options"), align = "right"),
-          ui_plotly_info(),
+          ui_plotly_info(range = TRUE),
           shinycssloaders::withSpinner(
             plotly::plotlyOutput(ns("plot"), height = opts$plot_height))
         ),
@@ -548,12 +548,14 @@ server_data_load <- function(id) {
       }
 
       g %>%
-        plotly::ggplotly() %>%
+        plotly::ggplotly(dynamicTicks = TRUE) %>%
+        plotly::rangeslider() %>%
         plotly::config(modeBarButtonsToRemove =
                  c("pan", "autoscale", "zoomIn2d", "zoomOut2d",
                    "lasso2d", "select2d",
                    "hoverCompareCartesian", "hoverClosestCartesian"))
-    })
+    }) %>%
+      bindCache(data_raw())
 
     # Table ----------------
     output$table <- DT::renderDT({

@@ -218,12 +218,13 @@ server_data_available <- function(id, data_settings, data_raw,
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
-      plotly::ggplotly(g, ) %>%
+      plotly::ggplotly(g, dynamicTicks = TRUE) %>%
         plotly::config(modeBarButtonsToRemove =
                          c("pan", "autoscale", "zoomIn2d", "zoomOut2d",
                            "lasso2d", "select2d",
                            "hoverCompareCartesian", "hoverClosestCartesian"))
-    })
+    }) %>%
+      bindCache(data_raw(), data_settings())
 
     # Symbols Agg Plot -----------------------------
     output$plot_symbols_agg <- ggiraph::renderGirafe({

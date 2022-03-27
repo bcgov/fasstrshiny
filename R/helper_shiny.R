@@ -14,9 +14,11 @@ ui_plot_selection <- function(id) {
 
 }
 
-ui_plotly_info <- function() {
-  helpText("Click and drag from side to side to zoom to a date range. ",
-           "Double click to zoom back out.")
+ui_plotly_info <- function(range = FALSE) {
+  helpText(
+    "Click and drag from side to side to zoom to a date range. ",
+    dplyr::if_else(range, "The bottom plot shows where you've zoomed to.", ""),
+    "Double click to zoom back out.")
 }
 
 
