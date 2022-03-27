@@ -95,7 +95,12 @@ bc_maps_labs <- dplyr::tribble(
   "wsc_drainages", "WSC Drainages",
   ~stringr::str_to_title(SUB_SUB_DRAINAGE_AREA_NAME))
 
-usethis::use_data(parameters, tips, opts, bc_maps_layers, bc_maps_labs,
+mods <- c("data_load", "data_available", "hydro", "cumulative", "flows",
+          "annual_stats", "annual_means", "annual_totals", "flow_timing",
+          "low_flows", "peak_flows", "outside_normal",
+          "annual_trends", "volume_freq", "hydat_peak")
+
+usethis::use_data(parameters, tips, opts, bc_maps_layers, bc_maps_labs, mods,
                   internal = TRUE, overwrite = TRUE)
 
 # Many parameters in compute_annual_trends are already covered here,

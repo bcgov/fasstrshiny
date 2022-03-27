@@ -99,8 +99,10 @@ fasstr_shiny <- function() {
   }
 
   server <- function(input, output, session) {
-    # Load data and get settings
+    # Load data
     data_outputs <- server_data_load(id = "data")
+
+    # Get settings
     data_settings <- data_outputs$data_settings
     data_raw <- data_outputs$data_raw
     data_loaded <- data_outputs$data_loaded
@@ -113,10 +115,7 @@ fasstr_shiny <- function() {
     })
 
     # Other modules
-    for(m in c("data_available", "hydro", "cumulative", "flows",
-               "annual_stats", "annual_means", "annual_totals", "flow_timing",
-               "low_flows", "peak_flows", "outside_normal",
-               "annual_trends", "volume_freq", "hydat_peak")) {
+    for(m in mods[mod != "data_load"]) {
       get(glue::glue("server_{m}"))(id = m, data_settings, data_raw,
                                     data_loaded, data_code)
     }

@@ -163,7 +163,7 @@ wrapped with `withSpinner()` in `ui.R`.
 - In `fasstr_shiny()`, 
   - add `ui_XXX()` function to the UI function, 
   - add reference to the sidebar function, 
-  - add name (`XXX`) to the server function
+  - add name (`XXX`) to the `mods` list in `data-raw/parameters.R`, re-run this file
 - In the `server_XXX()` function, use `create_fun()` in the appropriate output
   or reactive
   - Add inputs for the values which are NOT set in data_settings() 
