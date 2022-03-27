@@ -54,7 +54,8 @@ ui_volume_freq <- function(id) {
         tabPanel(
           title = "Plot",
           ui_plot_selection(id),
-          shinycssloaders::withSpinner(ggiraph::girafeOutput(ns("plot")))
+          shinycssloaders::withSpinner(ggiraph::girafeOutput(ns("plot"))),
+          uiOutput(ns("equations"))
         ),
 
         # Table - Plot Data ---------------------
@@ -191,6 +192,13 @@ server_volume_freq <- function(id, data_settings, data_raw,
     }) %>%
       bindEvent(input$compute)
 
+    # Equations ---------------
+    output$equations <- renderUI({
+      purrr::imap(freqs()$Freq_Fitting, ~ tagList(h4(.y),
+                                                  HTML(equation(.x))))
+    })
+
+
     # Plot --------------------
     output$plot <- ggiraph::renderGirafe({
 
@@ -200,13 +208,35 @@ server_volume_freq <- function(id, data_settings, data_raw,
           need(input$compute,
                "Choose your settings and click 'Compute Analysis'"))
 
+      fit <- freqs()[["Freq_Fitted_Quantiles"]] %>%
+        tidyr::pivot_longer(dplyr::matches("^[0-9]+"),
+                            names_to = "Measure", values_to = "Quantile") %>%
+        dplyr::group_by(Measure) %>%
+        dplyr::mutate(
+          prob1 = Probability,
+          prob2 = dplyr::lead(Probability),
+          quant1 = Quantile,
+          quant2 = dplyr::lead(Quantile),
+          Quantile = round(.data$Quantile, 4),
+          `Return Period` = round(.data[["Return Period"]], 4),
+          tooltip = glue::glue("Curve: {Measure}<br>",
+                               "Probability: {Probability}<br>",
+                               "Quantile: {Quantile}<br>",
+                               "Return Period: {`Return Period`}"))
+
+
       g <- freqs()[["Freq_Plot"]] +
         ggiraph::geom_point_interactive(ggplot2::aes(
           tooltip = paste0("Year: ", Year, "\n",
                            "Discharge", ": ", round(Value, 4), "\n",
                            "Probability", ": ", round(prob, 4)),
           data_id = Year), size = 3) +
-        ggplot2::scale_colour_viridis_d(end = 0.8)
+        ggplot2::scale_colour_viridis_d(end = 0.8) +
+        ggiraph::geom_segment_interactive(
+          data = fit, ggplot2::aes(x = prob1, xend = prob2,
+                                   y = quant1, yend = quant2,
+                                   group = Measure,
+                                   tooltip = tooltip), size = 2, alpha = 0.01)
 
       ggiraph::girafe(ggobj = g,
                       width_svg = 8 * opts$scale,

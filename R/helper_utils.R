@@ -160,6 +160,35 @@ create_vline_interactive <- function(data, stats, date_fmt = "%b %d",
 
 # Minor utility functions -----------------------------------
 
+#' Get equation
+equation <- function(fit) {
+
+  if(fit$distname == "PIII") {
+
+    a <- fit$estimate[["shape"]] %>% round(2)
+    s <- fit$estimate[["scale"]] %>% round(2)
+    l <- fit$estimate[["location"]] %>% round(2)
+
+    e <- glue::glue(
+      "f(x) = \\frac{1}{<<s>>^<<a>> \\Gamma(<<a>>)}",
+      "(x-<<l>>)^{<<a>>-1} e^{-(\\frac{x-<<l>>}{<<s>>})}",
+      .open = "<<", .close = ">>") %>%
+      katex::katex_html(output = "mathml", preview = FALSE)
+  } else if(fit$distname == "weibull") {
+
+    a <- fit$estimate[["shape"]] %>% round(2)
+    b <- fit$estimate[["scale"]] %>% round(2)
+
+    e <- glue::glue(
+      "f(x) = \\frac{<<a>>}{<<b>>}",
+      "\\frac{x}{<<b>>}^{<<a>>-1} e^{-(\\frac{x}{<<b>>})^{<<a>>}}",
+      .open = "<<", .close = ">>") %>%
+      katex::katex_html(output = "mathml", preview = FALSE)
+  }
+  e
+}
+
+
 #' Convert character strings to numeric vectors
 #' @noRd
 text_to_num <- function(x) {

@@ -43,7 +43,8 @@ Imports:
     patchwork (>= 1.1.1),
     sf (>= 1.0.7),
     rlang (>= 1.0.2),
-    urlshorteneR (>= 1.5.1)
+    urlshorteneR (>= 1.5.1),
+    katex (>= 1.4.0)
 Suggests: 
     covr,
     bcmaps (>= 1.0.2),
