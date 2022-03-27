@@ -161,6 +161,7 @@ create_vline_interactive <- function(data, stats, date_fmt = "%b %d",
 # Minor utility functions -----------------------------------
 
 #' Get equation
+#' @noRd
 equation <- function(fit) {
 
   if(fit$distname == "PIII") {
