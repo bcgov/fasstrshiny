@@ -98,32 +98,34 @@ fasstr_shiny <- function() {
     )
   }
 
-  server <- function(input, output, session) {
-    # Load data
-    data_outputs <- server_data_load(id = "data")
 
-    # Get settings
-    data_settings <- data_outputs$data_settings
-    data_raw <- data_outputs$data_raw
-    data_loaded <- data_outputs$data_loaded
-    data_code <- data_outputs$data_code
 
-    onBookmarked(function(url) {
-      if(on_shinyapps) {
-        fasstr_url_modal(url)
-      } else showModal(urlModal(url, "Bookmark link"))
-    })
-
-    # Other modules
-    for(m in mods[mod != "data_load"]) {
-      get(glue::glue("server_{m}"))(id = m, data_settings, data_raw,
-                                    data_loaded, data_code)
-    }
-  }
-
- shinyApp(ui = ui, server = server)
+ shinyApp(ui = ui, server = server_fasstr)
 }
 
+
+server_fasstr <- function(input, output, session) {
+  # Load data
+  data_outputs <- server_data_load(id = "data")
+
+  # Get settings
+  data_settings <- data_outputs$data_settings
+  data_raw <- data_outputs$data_raw
+  data_loaded <- data_outputs$data_loaded
+  data_code <- data_outputs$data_code
+
+  onBookmarked(function(url) {
+    if(on_shinyapps) {
+      fasstr_url_modal(url)
+    } else showModal(urlModal(url, "Bookmark link"))
+  })
+
+  # Other modules
+  for(m in mods[mods != "data_load"]) {
+    get(glue::glue("server_{m}"))(id = m, data_settings, data_raw,
+                                  data_loaded, data_code)
+  }
+}
 
 sidebar_order <- function() {
   sidebarMenu(
