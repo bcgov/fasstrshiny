@@ -160,6 +160,18 @@ create_vline_interactive <- function(data, stats, date_fmt = "%b %d",
 
 # Minor utility functions -----------------------------------
 
+#' Get CSS files
+#' @noRd
+get_css <- function() {
+  css <- system.file("shiny_app", "www", "bcgov.css", package = "fasstrshiny")
+  if(css == "" ) {
+    if(file.exists("../../shiny_app/www/bcgov.css")) {
+      css <- "../../shiny_app/www/bcgov.css"
+    } else css <- ""
+  }
+  css
+}
+
 #' Get equation
 #' @noRd
 equation <- function(fit) {

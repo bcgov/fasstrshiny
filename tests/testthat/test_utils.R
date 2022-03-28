@@ -19,6 +19,9 @@ test_that("code_format()", {
 
 })
 
+test_that("get_css()", {
+  expect_type(get_css(), "character")
+})
 
 test_that("conseq()", {
   expect_equal(conseq(c(1, 4, 5, 6)), "c(1, 4:6)")

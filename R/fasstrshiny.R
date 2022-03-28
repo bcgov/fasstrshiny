@@ -36,6 +36,8 @@ fasstr_shiny <- function() {
     enableBookmarking("server")
   }
 
+  css <- get_css()
+
   # UI --------------------------------
   ui <- function(request) {
     tagList(
@@ -45,14 +47,13 @@ fasstr_shiny <- function() {
         ## Sidebar ----------
         dashboardSidebar(
           tags$script(src = "tips.js"),
-          sidebar_order(),
+          sidebar_fasstr(),
           div(style = "margin-top: 10px", gt::gt_output("data-info"))
         ),
         ## Body -----------------
         dashboardBody(
           shinyjs::useShinyjs(),
-          includeCSS(system.file("shiny_app", "www", "bcgov.css",
-                                 package = "fasstrshiny")),
+          if(css != "") includeCSS(css),
           tabItems(
             tabItem("home", ui_home()),
             tabItem("data_load", ui_data_load("data")),
@@ -75,26 +76,7 @@ fasstr_shiny <- function() {
       ),
 
       ## Footer --------------------
-      tags$footer(
-        div(
-          div(style = "position:absolute; right: 7px; bottom: 7px",
-              bookmarkButton(label = "Bookmark")),
-          a(href="https://www2.gov.bc.ca/gov/content/home", "Home"),
-          " | ",
-          a(href="https://www2.gov.bc.ca/gov/content/home/disclaimer",
-            "Disclaimer"),
-          " | ",
-          a(href="https://www2.gov.bc.ca/gov/content/home/privacy", "Privacy"),
-          " | ",
-          a(href="https://www2.gov.bc.ca/gov/content/home/accessibility",
-            "Accessibility"),
-          " | ",
-          a(href="https://www2.gov.bc.ca/gov/content/home/copyright",
-            "Copyright"),
-          " | ",
-          a(href="https://www2.gov.bc.ca/StaticWebResources/static/gov3/html/contact-us.html",
-            "Contact"), class = "bcgov-footer")
-      )
+      footer_fasstr()
     )
   }
 
@@ -105,7 +87,7 @@ fasstr_shiny <- function() {
 
 
 server_fasstr <- function(input, output, session) {
-  # On shinyapps ----------------------------------
+
   on_shinyapps <- !identical(serverInfo(), list(shinyServer = FALSE))
 
   # Load data
@@ -130,7 +112,7 @@ server_fasstr <- function(input, output, session) {
   }
 }
 
-sidebar_order <- function() {
+sidebar_fasstr <- function() {
   sidebarMenu(
     id = "menu",
     menuItem("Home", tabName = "home", icon = icon("home")),
@@ -157,5 +139,28 @@ sidebar_order <- function() {
              menuSubItem("Annual Trends", tabName = "annual_trends"),
              menuSubItem("Volume Frequency", tabName = "volume_freq"),
              menuSubItem("HYDAT Peak", tabName = "hydat_peak"))
+  )
+}
+
+footer_fasstr <- function() {
+  tags$footer(
+    div(
+      div(style = "position:absolute; right: 7px; bottom: 7px",
+          bookmarkButton(label = "Bookmark")),
+      a(href="https://www2.gov.bc.ca/gov/content/home", "Home"),
+      " | ",
+      a(href="https://www2.gov.bc.ca/gov/content/home/disclaimer",
+        "Disclaimer"),
+      " | ",
+      a(href="https://www2.gov.bc.ca/gov/content/home/privacy", "Privacy"),
+      " | ",
+      a(href="https://www2.gov.bc.ca/gov/content/home/accessibility",
+        "Accessibility"),
+      " | ",
+      a(href="https://www2.gov.bc.ca/gov/content/home/copyright",
+        "Copyright"),
+      " | ",
+      a(href="https://www2.gov.bc.ca/StaticWebResources/static/gov3/html/contact-us.html",
+        "Contact"), class = "bcgov-footer")
   )
 }
