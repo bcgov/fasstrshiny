@@ -205,7 +205,7 @@ check_data <- function(x){
 #'
 #' @param mod Character. Id of the module to run e.g., "hydro"
 #' @param hydat_stn Character. HYDAT id of the station to test.
-#' @param file Logical. Whether to test module with data from
+#' @param local_file Logical. Whether to test module with data from
 #'   inst/extdata/test_data.csv (overrides `hydat_stn`)
 #'
 #' @examples
@@ -213,11 +213,11 @@ check_data <- function(x){
 #'
 #' @noRd
 #'
-test_mod <- function(mod, hydat_stn = "08HB048", file = FALSE) {
+test_mod <- function(mod, hydat_stn = "08HB048", local_file = FALSE) {
 
   server <- function(input, output, session) {
 
-    d <- dummy_data(hydat_stn, file)
+    d <- dummy_data(hydat_stn, local_file)
 
     if(mod == "data_load") {
       server_data_load(id = mod)
@@ -251,10 +251,10 @@ ui_test <- function(mod) {
 }
 
 
-dummy_data <- function(hydat_stn = "08HB048", file = FALSE) {
+dummy_data <- function(hydat_stn = "08HB048", local_file = FALSE) {
 
 
-  if(file) {
+  if(local_file) {
     data_raw <- utils::read.csv(system.file("extdata", "test_data.csv",
                                             package = "fasstrshiny")) %>%
       dplyr::rename(Date = .data$dt, Value = .data$flow, Symbol = .data$sym) %>%

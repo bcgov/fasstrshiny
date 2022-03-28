@@ -23,7 +23,7 @@ test_that("UIs", {
 test_that("Annual means", {
   local_hydat()
   for(f in c(FALSE, TRUE)) {
-    d <- dummy_data(file = f)
+    d <- dummy_data(local_file = f)
 
     testServer(server_annual_means, args = list(d$s, d$d, d$l, d$c), {
       session$setInputs(plot_title = TRUE)
@@ -37,7 +37,7 @@ test_that("Annual means", {
 test_that("Annual stats", {
   local_hydat()
   for(f in c(FALSE, TRUE)) {
-    d <- dummy_data(file = f)
+    d <- dummy_data(local_file = f)
 
     testServer(server_annual_stats, args = list(d$s, d$d, d$l, d$c), {
       session$setInputs(plot_log = TRUE, type = "Monthly", months_plot = 1:12,
@@ -60,7 +60,7 @@ test_that("Annual stats", {
 test_that("Annual totals", {
   local_hydat()
   for(f in c(FALSE, TRUE)) {
-    d <- dummy_data(file = f)
+    d <- dummy_data(local_file = f)
 
     testServer(server_annual_totals, args = list(d$s, d$d, d$l, d$c), {
 
@@ -110,7 +110,7 @@ test_that("Flow timing", {
   local_hydat()
 
   for(f in c(FALSE, TRUE)) {
-    d <- dummy_data(file = f)
+    d <- dummy_data(local_file = f)
 
     testServer(server_flow_timing, args = list(d$s, d$d, d$l, d$c), {
       session$setInputs(percent = c(25, 33, 50, 75), plot_title = TRUE)
@@ -128,7 +128,7 @@ test_that("Flow timing", {
 test_that("Low flows", {
   local_hydat()
   for(f in c(FALSE, TRUE)) {
-    d <- dummy_data(file = f)
+    d <- dummy_data(local_file = f)
 
     testServer(server_low_flows, args = list(d$s, d$d, d$l, d$c), {
       session$setInputs(roll_days = c(1,3, 7, 30), roll_align = "right",
@@ -151,7 +151,7 @@ test_that("Low flows", {
 test_that("Outside normal", {
   local_hydat()
   for(f in c(FALSE, TRUE)) {
-    d <- dummy_data(file = f)
+    d <- dummy_data(local_file = f)
 
     testServer(server_outside_normal, args = list(d$s, d$d, d$l, d$c), {
       session$setInputs(normal_percentiles = c(25, 75), plot_title = TRUE)
@@ -168,7 +168,7 @@ test_that("Outside normal", {
 test_that("Peak flows", {
   local_hydat()
   for(f in c(FALSE, TRUE)) {
-    d <- dummy_data(file = f)
+    d <- dummy_data(local_file = f)
 
     testServer(server_peak_flows, args = list(d$s, d$d, d$l, d$c), {
       session$setInputs(roll_day = 1, roll_align = "right")
@@ -186,7 +186,7 @@ test_that("Peak flows", {
 test_that("Data Load", {
   local_hydat()
   for(f in c(FALSE, TRUE)) {
-    d <- dummy_data(file = f)
+    d <- dummy_data(local_file = f)
 
     testServer(server_data_load, {
       session$setInputs(
@@ -218,7 +218,7 @@ test_that("Data Load", {
 test_that("Data Available", {
   local_hydat()
   for(f in c(FALSE, TRUE)) {
-    d <- dummy_data(file = f)
+    d <- dummy_data(local_file = f)
 
     testServer(server_data_available, args = list(d$s, d$d, d$l, d$c), {
       session$setInputs(availability = TRUE, stats = "Mean",
@@ -261,7 +261,7 @@ test_that("Data Available", {
 test_that("Flows", {
   local_hydat()
   for(f in c(FALSE, TRUE)) {
-    d <- dummy_data(file = f)
+    d <- dummy_data(local_file = f)
 
     testServer(server_flows, args = list(d$s, d$d, d$l, d$c), {
       session$setInputs(months = 1:12, longterm = TRUE, custom_months = "",
@@ -280,7 +280,7 @@ test_that("Flows", {
 test_that("Hydro", {
   local_hydat()
   for(f in c(FALSE, TRUE)) {
-    d <- dummy_data(file = f)
+    d <- dummy_data(local_file = f)
 
     testServer(server_hydro, args = list(d$s, d$d, d$l, d$c), {
       session$setInputs(type = "Daily", mad = c(5, 10, 20),
@@ -317,7 +317,7 @@ test_that("Hydro", {
 test_that("Cumulative", {
   local_hydat()
   for(f in c(FALSE, TRUE)) {
-    d <- dummy_data(file = f)
+    d <- dummy_data(local_file = f)
 
     testServer(server_cumulative, args = list(d$s, d$d, d$l, d$c), {
       session$setInputs(type = "Daily", discharge2 = TRUE, plot_log = FALSE,
@@ -342,7 +342,7 @@ test_that("Cumulative", {
 test_that(" Annual Trends", {
   local_hydat()
   for(f in c(FALSE, TRUE)) {
-    d <- dummy_data(file = f)
+    d <- dummy_data(local_file = f)
 
     testServer(server_annual_trends, args = list(d$s, d$d, d$l, d$c), {
       session$setInputs(
@@ -366,7 +366,7 @@ test_that(" Annual Trends", {
 test_that("Volume Freq ", {
   local_hydat()
   for(f in c(FALSE, TRUE)) {
-    d <- dummy_data(file = f)
+    d <- dummy_data(local_file = f)
 
     testServer(server_volume_freq, args = list(d$s, d$d, d$l, d$c), {
       session$setInputs(compute = 1, use_max = FALSE, use_log = FALSE,
@@ -414,7 +414,7 @@ test_that("Hydat Peak", {
 
   }) %>% suppressWarnings()
 
-  d <- dummy_data(file = TRUE)
+  d <- dummy_data(local_hydat() = TRUE)
 
   testServer(server_hydat_peak, args = list(d$s, d$d, d$l, d$c), {
     session$setInputs(compute = 1, use_max = FALSE, use_log = FALSE,
