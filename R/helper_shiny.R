@@ -120,7 +120,7 @@ update_on_change <- function(session, id, btn = "compute",
 
 get_inputs <- function(input, which) {
   purrr::map(which, ~input[[.]]) %>%
-    setNames(which)
+    stats::setNames(which)
 }
 
 

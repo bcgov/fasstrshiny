@@ -17,3 +17,13 @@
 #' @importFrom rlang .data .env
 #' @importFrom dplyr %>%
 NULL
+
+
+.onLoad <- function (libname, pkgname) { # nolint
+
+  # make some names global to avoid CHECK notes
+  utils::globalVariables(".")
+  utils::globalVariables("where") # May change in future dplyr/tidyselector
+
+  invisible ()
+}

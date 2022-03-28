@@ -69,10 +69,10 @@ server_annual_means <- function(id, data_settings, data_raw,
 
       # Replace layers with interactive
       g$layers[[1]] <- ggiraph::geom_bar_interactive(
-        ggplot2::aes(tooltip = glue::glue("Year: {Year}\n",
-                                          "MAD Diff: {round(MAD_diff, 4)}",
+        ggplot2::aes(tooltip = glue::glue("Year: {.data$Year}\n",
+                                          "MAD Diff: {round(.data$MAD_diff, 4)}",
                                           .trim = FALSE),
-                     data_id = Year, colour = "Annual MAD difference"),
+                     data_id = .data$Year, colour = "Annual MAD difference"),
         fill = "cornflowerblue", stat = "identity")
 
       g <- g + ggplot2::geom_hline(ggplot2::aes(yintercept = 0,

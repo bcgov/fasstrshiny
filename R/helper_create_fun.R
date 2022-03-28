@@ -47,8 +47,9 @@ create_fun <- function(fun, data_name = NULL, input, input_data = NULL,
 
   # Inputs expected by the function (getting the app input equivalents)
   params_fun <- names(formals(fun))
-  params_fun <- dplyr::filter(parameters, fasstr_arg %in% params_fun) %>%
-    dplyr::pull(id) %>%
+  params_fun <- dplyr::filter(parameters,
+                              .data$fasstr_arg %in% .env$params_fun) %>%
+    dplyr::pull(.data$id) %>%
     unique()
 
   # Filter params
@@ -68,9 +69,9 @@ create_fun <- function(fun, data_name = NULL, input, input_data = NULL,
   # (data + mod, but only data where not in mod)
 
   values_data <- purrr::map(params_data, ~input_data[[.]]) %>%
-    setNames(params_data)
+    stats::setNames(params_data)
   values_mod <- purrr::map(params_mod, ~input[[.]]) %>%
-    setNames(params_mod)
+    stats::setNames(params_mod)
 
   # Join
   values <- append(values_data, values_mod)
@@ -98,7 +99,7 @@ create_fun <- function(fun, data_name = NULL, input, input_data = NULL,
   p <- purrr::imap(values, ~combine_parameters(.y, .x))
 
   if(extra == "") extra <- NULL
-  args <- glue::glue_collapse(c(data_name, na.omit(p), extra), sep = ', ')
+  args <- glue::glue_collapse(c(data_name, stats::na.omit(p), extra), sep = ', ')
 
   glue::glue("{fun}({args}){end}")
 }
@@ -201,7 +202,7 @@ combine_parameters <- function(p, v) {
     "plot_curve",          "plot_curve = {v}") %>%
 
     dplyr::filter(.data$param == .env$p) %>%
-    dplyr::pull(glued) %>%
+    dplyr::pull(.data$glued) %>%
     glue::glue()
 }
 
@@ -220,10 +221,11 @@ remove_defaults <- function(fun, input_values) {
   id <- parameters %>%
     dplyr::left_join(defaults, by = "fasstr_arg") %>%
     dplyr::left_join(input_values, by = "id") %>%
-    dplyr::select(id, default, input) %>%
-    dplyr::mutate(same = purrr::map2_lgl(default, input, params_equal)) %>%
-    dplyr::filter(same) %>%
-    dplyr::pull(id)
+    dplyr::select("id", "default", "input") %>%
+    dplyr::mutate(same = purrr::map2_lgl(
+      .data$default, .data$input, params_equal)) %>%
+    dplyr::filter(.data$same) %>%
+    dplyr::pull(.data$id)
 
   # Return default params
   input_values$id %in% id

@@ -154,7 +154,7 @@ server_data_load <- function(id) {
     output$ui_file_cols <- renderUI({
 
       if(!is.null(input$file)){
-        cols <- try(read.csv(input$file$datapath, nrows = 1))
+        cols <- try(utils::read.csv(input$file$datapath, nrows = 1))
         validate(need(!"try-error" %in% class(cols),
                       "Cannot read this csv, is it comma-separated with headers?"))
         cols <- names(cols)
@@ -219,7 +219,7 @@ server_data_load <- function(id) {
         radioGroupButtons(
           NS(id, "water_year"),
           label = "Water year start",
-          choices = setNames(1:12, month.abb),
+          choices = stats::setNames(1:12, month.abb),
           selected = 1, size = "sm", width = "100%"),
         bsTooltip(NS("water_year", id),
                   title = tips$water_year, placement = "left"))
@@ -264,7 +264,7 @@ server_data_load <- function(id) {
       req(input$water_year)
 
       # Arrange months by water year
-      m <- setNames(1:12, month.abb)
+      m <- stats::setNames(1:12, month.abb)
       m <- c(m[m >= as.numeric(input$water_year)],
              m[m < as.numeric(input$water_year)])
 
@@ -334,7 +334,7 @@ server_data_load <- function(id) {
       msgs <- list()
 
       if(input$source == "CSV" & !is.null(input$file)) {
-        x <- read.csv(input$file$datapath)
+        x <- utils::read.csv(input$file$datapath)
         x <- x[[input$col_date]]
 
         if(any(duplicated(x))) {
@@ -374,9 +374,9 @@ server_data_load <- function(id) {
       if(is.null(sub <- input$hydat_table_rows_all)) sub <- 1:nrow(stations())
 
       stations() %>%
-        dplyr::slice(sub) %>%
+        dplyr::slice(.env$sub) %>%
         dplyr::mutate(selected = .data$STATION_NUMBER == input$station_number) %>%
-        dplyr::arrange(selected)
+        dplyr::arrange(.data$selected)
     })
 
     # HYDAT Map -------------------------
@@ -598,10 +598,10 @@ server_data_load <- function(id) {
         if(all(1:12 %in% m)) m <- "all" else m <- conseq(m, type = "month")
 
         n <- data_raw() %>%
-          dplyr::filter(WaterYear >= input$years_range[1],
-                        WaterYear <= input$years_range[2],
-                        !WaterYear %in% input$years_exclude) %>%
-          dplyr::pull(WaterYear) %>%
+          dplyr::filter(.data$WaterYear >= input$years_range[1],
+                        .data$WaterYear <= input$years_range[2],
+                        !.data$WaterYear %in% input$years_exclude) %>%
+          dplyr::pull(.data$WaterYear) %>%
           unique() %>%
           length()
 
@@ -613,7 +613,7 @@ server_data_load <- function(id) {
                     "{n} / {input$years_range[2] - input$years_range[1] + 1}"),
                   `Months` = m) %>%
           tibble::enframe() %>%
-          tidyr::unnest(value)
+          tidyr::unnest(.data$value)
       }
 
       gt::gt(d) %>%

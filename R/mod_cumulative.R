@@ -139,7 +139,8 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded, data_cod
         create_fun(data_name = "data_flow", input, input_data = data_settings())
 
       code$table <- t
-      labels$table <- glue::glue("Calculate {input$type} cumulative hydrograph statistics")
+      labels$table <- glue::glue(
+        "Calculate {input$type} cumulative hydrograph statistics")
 
       eval_check(t) %>%
         prep_DT()

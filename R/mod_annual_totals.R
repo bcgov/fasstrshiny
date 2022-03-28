@@ -87,10 +87,10 @@ server_annual_totals <- function(id, data_settings, data_raw,
       for(i in seq_along(g)) {
         g[[i]] <- g[[i]] + ggiraph::geom_point_interactive(
           ggplot2::aes(tooltip = glue::glue(
-            "Year: {Year}\n",
-            "{stringr::str_remove(Statistic, '_$')}: {round(Value, 4)}",
+            "Year: {.data$Year}\n",
+            "{stringr::str_remove(.data$Statistic, '_$')}: {round(.data$Value, 4)}",
             .trim = FALSE),
-            data_id = Year), size = 3)
+            data_id = .data$Year), size = 3)
       }
 
       g

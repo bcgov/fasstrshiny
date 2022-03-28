@@ -88,10 +88,10 @@ server_flow_timing <- function(id, data_settings, data_raw,
       g <- g +
         ggiraph::geom_point_interactive(
           ggplot2::aes(tooltip = glue::glue(
-            "Year: {Year}\n",
-            "{Statistic}\n",
-            "Date: {yday_as_date(Value, Year)}"),
-            data_id = Year), size = 3)
+            "Year: {.data$Year}\n",
+            "{.data$Statistic}\n",
+            "Date: {yday_as_date(.data$Value, .data$Year)}"),
+            data_id = .data$Year), size = 3)
 
       ggiraph::girafe(ggobj = g,
                       width_svg = 13 * opts$scale,

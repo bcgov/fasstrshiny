@@ -16,7 +16,7 @@
 
 prep_DT <- function(data, digits = 4) {
   data %>%
-    dplyr::mutate(dplyr::across(where(is.numeric), ~round(., digits))) %>%
+    dplyr::mutate(dplyr::across(where(is.numeric), ~round(., .env$digits))) %>%
     DT::datatable(rownames = FALSE,
                   filter = 'top',
                   extensions = c("Scroller", "Buttons"),
@@ -303,8 +303,8 @@ find_hydat <- function() {
 prep_hydat <- function(bc_only = TRUE) {
   if(bc_only) prov <- "BC" else prov <- NULL
   stations_list <- tidyhydat::hy_stn_data_range(prov_terr_state_loc = prov) %>%
-    dplyr::filter(DATA_TYPE == "Q") %>%
-    dplyr::pull(STATION_NUMBER)
+    dplyr::filter(.data$DATA_TYPE == "Q") %>%
+    dplyr::pull(.data$STATION_NUMBER)
 
   ## Create a dataframe of all station metadata and a list of all stations
   stations_raw <- tidyhydat::hy_stations(station_number = stations_list) %>%

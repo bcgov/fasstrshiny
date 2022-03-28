@@ -254,30 +254,32 @@ server_data_available <- function(id, data_settings, data_raw,
       # Add interactivity
       if(input$symbols_agg_type == "dayofyear") {
         d <- g$data %>%
-          dplyr::mutate(tooltip = glue::glue("Date: {Date}"),
+          dplyr::mutate(tooltip = glue::glue("Date: {.data$Date}"),
                         tooltip = dplyr::if_else(
-                          !is.na(Value),
-                          glue::glue("{tooltip}\nSymbol: {Symbol}"),
+                          !is.na(.data$Value),
+                          glue::glue("{tooltip}\nSymbol: {.data$Symbol}"),
                           glue::glue("{tooltip}\nMissing value")))
 
         g <- g +
           ggiraph::geom_tile_interactive(
             data = d,
-            ggplot2::aes(tooltip = tooltip, data_id = Date))
+            ggplot2::aes(tooltip = .data$tooltip, data_id = .data$Date))
       } else {
         d <- g$data %>%
           dplyr::mutate(tooltip = glue::glue(
             "{Symbol}: {Count} ({round(Percent, 1)}%)")) %>%
-          dplyr::group_by(Year) %>%
-          dplyr::summarize(Count = sum(Count),
-                           tooltip = glue::glue("Year: {Year}\n",
-                                                glue::glue_collapse(tooltip, "\n")))
+          dplyr::group_by(.data$Year) %>%
+          dplyr::summarize(Count = sum(.data$Count),
+                           tooltip = glue::glue(
+                             "Year: {.data$Year}\n",
+                             glue::glue_collapse(.data$tooltip, "\n")))
 
         g <- g +
           ggiraph::geom_bar_interactive(
             data = d, fill = "grey", alpha = 0.005,
             stat = "identity", inherit.aes = FALSE,
-            ggplot2::aes(x = Year, y = Inf, tooltip = tooltip, data_id = Year))
+            ggplot2::aes(x = .data$Year, y = Inf,
+                         tooltip = .data$tooltip, data_id = .data$Year))
       }
 
       ggiraph::girafe(ggobj = g,
@@ -360,13 +362,13 @@ server_data_available <- function(id, data_settings, data_raw,
       if(input$available_type == "tile") {
         g$layers[[1]] <- ggiraph::geom_tile_interactive(
           colour = "grey",
-          ggplot2::aes(fill = Percent_Missing,
+          ggplot2::aes(fill = .data$Percent_Missing,
                        tooltip = glue::glue(
-                         "Year: {Year}\n",
-                         "Month: {Month}\n",
-                         "Missing Days: {Missing} ({Percent_Missing}%)",
+                         "Year: {.data$Year}\n",
+                         "Month: {.data$Month}\n",
+                         "Missing Days: {.data$Missing} ({.data$Percent_Missing}%)",
                          .trim = FALSE),
-                       data_id = glue::glue("{Year}-{Month}")))
+                       data_id = glue::glue("{.data$Year}-{.data$Month}")))
 
         g <- g +
           ggplot2::guides(fill = ggplot2::guide_coloursteps(

@@ -40,7 +40,7 @@ select_custom <- function(id, values) {
                           label = "Discharge",
                           min = min(values, na.rm = TRUE),
                           max = max(values, na.rm = TRUE),
-                          value = round(median(values, na.rm = TRUE), 2),
+                          value = round(stats::median(values, na.rm = TRUE), 2),
                           step = 0.01)),
       column(width = 6,
              textInput(NS(id, "custom_label"),
@@ -238,8 +238,8 @@ select_add_year <- function(id, years_range) {
 }
 
 select_add_dates <- function(id) {
-  d <- setNames(1:365, format(as.Date(1:365, origin = "1899-12-31"),
-                              "%b-%d"))
+  d <- stats::setNames(1:365, format(as.Date(1:365, origin = "1899-12-31"),
+                                     "%b-%d"))
   tagList(
     selectizeInput(
       NS(id, "add_dates"),
@@ -274,7 +274,7 @@ select_plot_title <- function(id, name = "plot_title") {
 
 select_plot_display <- function(id, plots) {
   plot_names <- names(plots) %>%
-    setNames(., stringr::str_replace_all(., "_", " "))
+    stats::setNames(., stringr::str_replace_all(., "_", " "))
 
   tagList(
     selectizeInput(NS(id, "display"), "Display plot",

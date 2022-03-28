@@ -150,11 +150,11 @@ server_hydat_peak <- function(id, data_settings, data_raw,
       # Add interactivity
       g <- freqs()[["Freq_Plot"]] +
         ggiraph::geom_point_interactive(ggplot2::aes(
-          tooltip = paste0("Year: ", Year, "\n",
-                           "Probabily: ", round(prob, 4), "\n",
-                           "Discharge: ", round(Value, 4), "\n",
-                           "Return Period: ", round(Return_P)),
-          data_id = Year), size = 4)
+          tooltip = glue::glue("Year: {.data$Year}\n",
+                               "Probabily: {round(.data$prob, 4)}\n",
+                               "Discharge: {round(.data$Value, 4)}\n",
+                               "Return Period: {round(.data$Return_P)}"),
+          data_id = .data$Year), size = 4)
 
       ggiraph::girafe(ggobj = g, options = ggiraph_opts())
     })

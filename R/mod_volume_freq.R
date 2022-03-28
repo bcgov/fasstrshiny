@@ -211,32 +211,33 @@ server_volume_freq <- function(id, data_settings, data_raw,
       fit <- freqs()[["Freq_Fitted_Quantiles"]] %>%
         tidyr::pivot_longer(dplyr::matches("^[0-9]+"),
                             names_to = "Measure", values_to = "Quantile") %>%
-        dplyr::group_by(Measure) %>%
+        dplyr::group_by(.data$Measure) %>%
         dplyr::mutate(
-          prob1 = Probability,
-          prob2 = dplyr::lead(Probability),
-          quant1 = Quantile,
-          quant2 = dplyr::lead(Quantile),
+          prob1 = .data$Probability,
+          prob2 = dplyr::lead(.data$Probability),
+          quant1 = .data$Quantile,
+          quant2 = dplyr::lead(.data$Quantile),
           Quantile = round(.data$Quantile, 4),
           `Return Period` = round(.data[["Return Period"]], 4),
-          tooltip = glue::glue("Curve: {Measure}<br>",
-                               "Probability: {Probability}<br>",
-                               "Quantile: {Quantile}<br>",
-                               "Return Period: {`Return Period`}"))
+          tooltip = glue::glue("Curve: {.data$Measure}<br>",
+                               "Probability: {.data$Probability}<br>",
+                               "Quantile: {.data$Quantile}<br>",
+                               "Return Period: {.data$`Return Period`}"))
 
 
       g <- freqs()[["Freq_Plot"]] +
         ggiraph::geom_point_interactive(ggplot2::aes(
-          tooltip = paste0("Year: ", Year, "\n",
-                           "Discharge", ": ", round(Value, 4), "\n",
-                           "Probability", ": ", round(prob, 4)),
-          data_id = Year), size = 3) +
+          tooltip = glue::glue("Year: {.data$Year}\n",
+                               "Discharge: {round(.data$Value, 4)}\n",
+                               "Probability: {round(.data$prob, 4)}"),
+          data_id = .data$Year), size = 3) +
         ggplot2::scale_colour_viridis_d(end = 0.8) +
         ggiraph::geom_segment_interactive(
-          data = fit, ggplot2::aes(x = prob1, xend = prob2,
-                                   y = quant1, yend = quant2,
-                                   group = Measure,
-                                   tooltip = tooltip), size = 2, alpha = 0.01)
+          data = fit, ggplot2::aes(x = .data$prob1, xend = .data$prob2,
+                                   y = .data$quant1, yend = .data$quant2,
+                                   group = .data$Measure,
+                                   tooltip = .data$tooltip),
+          size = 2, alpha = 0.01)
 
       ggiraph::girafe(ggobj = g,
                       width_svg = 8 * opts$scale,

@@ -105,6 +105,9 @@ fasstr_shiny <- function() {
 
 
 server_fasstr <- function(input, output, session) {
+  # On shinyapps ----------------------------------
+  on_shinyapps <- !identical(serverInfo(), list(shinyServer = FALSE))
+
   # Load data
   data_outputs <- server_data_load(id = "data")
 

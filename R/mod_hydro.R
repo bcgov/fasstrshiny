@@ -173,17 +173,18 @@ server_hydro <- function(id, data_settings, data_raw,
         dts <- data.frame(
           Date = get_date(input$add_dates,
                           water_year = as.numeric(data_settings()$water_year))) %>%
-          dplyr::mutate(labs = format(Date, '%b-%d'),
+          dplyr::mutate(labs = format(.data$Date, '%b-%d'),
                         hjust = dplyr::if_else(
                           as.numeric(data_settings()$water_year) ==
-                            as.numeric(format(Date, "%m")),
+                            as.numeric(format(.data$Date, "%m")),
                           -0.05, 1.05))
 
         g <- g +
           ggiraph::geom_vline_interactive(
             xintercept = dts$Date, colour = 'grey20', tooltip = dts$labs) +
-          ggplot2::geom_text(data = dts, ggplot2::aes(x = Date, label = labs,
-                                                      hjust = hjust),
+          ggplot2::geom_text(data = dts, ggplot2::aes(x = .data$Date,
+                                                      label = .data$labs,
+                                                      hjust = .data$hjust),
                              y = Inf, vjust = 2)
       }
 
@@ -196,18 +197,19 @@ server_hydro <- function(id, data_settings, data_raw,
         g <- g +
           ggplot2::geom_hline(
             data = mad,
-            ggplot2::aes(yintercept = value),
+            ggplot2::aes(yintercept = .data$value),
             size = c(1, rep(0.5, nrow(mad) - 0.75)),
             linetype = "dashed") +
           ggiraph::geom_hline_interactive(
             data = mad,
-            ggplot2::aes(tooltip = paste0(stringr::str_replace(type, "%", "% "),
-                                          ": ", round(value, 4)),
-                         yintercept = value), alpha = 0.01,
+            ggplot2::aes(tooltip = paste0(
+              stringr::str_replace(.data$type, "%", "% "),
+              ": ", round(.data$value, 4)),
+              yintercept = .data$value), alpha = 0.01,
             size = 3) +
           ggplot2::geom_text(
             data = mad,
-            ggplot2::aes(y = value, label = type),
+            ggplot2::aes(y = .data$value, label = .data$type),
             x = c(Inf, rep(-Inf, nrow(mad) - 1)), colour = "black",
             hjust = c(1.1, rep(-0.1, nrow(mad) -1)), vjust = -0.5)
       }
@@ -226,7 +228,7 @@ server_hydro <- function(id, data_settings, data_raw,
           ggplot2::geom_text(
             data = data.frame(y = round(input$custom, 2),
                               label = input$custom_label),
-            ggplot2::aes(y = y, label = input$custom_label), x = Inf,
+            ggplot2::aes(y = .data$y, label = input$custom_label), x = Inf,
             colour = "black", hjust = 1.1, vjust = -0.5)
       }
 

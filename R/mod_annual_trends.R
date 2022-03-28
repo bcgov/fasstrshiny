@@ -258,7 +258,7 @@ server_annual_trends <- function(id, data_settings, data_raw,
       req(input$table_fit_rows_selected)
       trends()[["Annual_Trends_Results"]] %>%
         dplyr::slice(input$table_fit_rows_selected) %>%
-        dplyr::pull(Statistic) %>%
+        dplyr::pull(.data$Statistic) %>%
         as.character()
     })
 
@@ -269,9 +269,9 @@ server_annual_trends <- function(id, data_settings, data_raw,
       s <- stat()
       g <- trends()[[s]] +
         ggiraph::geom_point_interactive(ggplot2::aes(
-          tooltip = paste0("Year: ", Year, "\n",
-                           s, ": ", round(Value, 4)),
-          data_id = Year), size = 4, na.rm = TRUE)
+          tooltip = glue::glue("Year: {.data$Year}\n",
+                               "{.env$s}: {round(.data$Value, 4)}"),
+          data_id = .data$Year), size = 4, na.rm = TRUE)
 
       ggiraph::girafe(ggobj = g,
                       width_svg = 10 * opts$scale,

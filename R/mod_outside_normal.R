@@ -83,10 +83,10 @@ server_outside_normal <- function(id, data_settings, data_raw,
 
       # Add interactivity
       g <- g + ggiraph::geom_point_interactive(
-        ggplot2::aes(tooltip = paste0("Year: ", Year, "\n",
-                                      Statistic, "\n",
-                                      "No. Days: ", round(Value, 4)),
-                     data_id = Year), size = 3)
+        ggplot2::aes(tooltip = glue::glue("Year: {.data$Year}\n",
+                                          "{.data$Statistic}\n",
+                                          "No. Days: {round(.data$Value, 4)}"),
+                     data_id = .data$Year), size = 3)
 
       ggiraph::girafe(ggobj = g,
                       width_svg = 12 * opts$scale,

@@ -122,11 +122,11 @@ server_flows <- function(id, data_settings, data_raw,
       g <- g +
         ggiraph::geom_point_interactive(
           ggplot2::aes(tooltip = glue::glue(
-            "Month: {Month}\n",
-            "{Percentile}% time\n",
-            "Discharge cutoff: {round(Value, 3)}",
+            "Month: {.data$Month}\n",
+            "{.data$Percentile}% time\n",
+            "Discharge cutoff: {round(.data$Value, 3)}",
             .trim = FALSE),
-            data_id = Percentile),
+            data_id = .data$Percentile),
           show.legend = FALSE, alpha = 0.01, size = 3)
 
       ggiraph::girafe(ggobj = g,
@@ -155,7 +155,7 @@ server_flows <- function(id, data_settings, data_raw,
       eval_check(t) %>%
         tidyr::pivot_longer(cols = -dplyr::any_of(c("STATION_NUMBER", "Month")),
                             names_to = "percentiles", values_to = "value") %>%
-        tidyr::pivot_wider(names_from = Month, values_from = value) %>%
+        tidyr::pivot_wider(names_from = .data$Month, values_from = .data$value) %>%
         prep_DT()
     }) %>%
       bindEvent(input$compute, ignoreNULL = FALSE)
