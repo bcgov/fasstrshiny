@@ -154,7 +154,8 @@ server_data_load <- function(id) {
     output$ui_file_cols <- renderUI({
 
       if(!is.null(input$file)){
-        cols <- try(utils::read.csv(input$file$datapath, nrows = 1))
+        cols <- try(utils::read.csv(normalizePath(
+          input$file$datapath, winslash = "/"), nrows = 1))
         validate(need(!"try-error" %in% class(cols),
                       "Cannot read this csv, is it comma-separated with headers?"))
         cols <- names(cols)
@@ -334,7 +335,7 @@ server_data_load <- function(id) {
       msgs <- list()
 
       if(input$source == "CSV" & !is.null(input$file)) {
-        x <- utils::read.csv(input$file$datapath)
+        x <- utils::read.csv(normalizePath(input$file$datapath, winslash = "/"))
         x <- x[[input$col_date]]
 
         if(any(duplicated(x))) {
@@ -424,8 +425,8 @@ server_data_load <- function(id) {
           options = leaflet::layersControlOptions(collapsed = FALSE)
         )
 
-      # Hide all polygons except the first one
-      for(i in bc_maps_labs$group[-1]) l <- leaflet::hideGroup(l, i)
+      # Hide all polygons
+      for(i in bc_maps_labs$group) l <- leaflet::hideGroup(l, i)
 
       for(i in seq_along(bc_maps_layers)) {
         l <- l %>%
@@ -506,8 +507,8 @@ server_data_load <- function(id) {
       d1 <- glue::glue("data_flow <- read.csv('{input$file$name}') %>% ", d)
 
       # Real loading
-      d2 <- glue::glue("data_flow <- read.csv('{input$file$datapath}') %>% ",
-                       d)
+      f <- normalizePath(input$file$datapath, winslash = "/") #Otherwise parse() has issues
+      d2 <- glue::glue("data_flow <- read.csv('{f}') %>% ", d)
 
       data_type("CSV")
       data_id(basename(input$file$name))
