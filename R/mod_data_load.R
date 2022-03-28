@@ -463,63 +463,76 @@ server_data_load <- function(id) {
                                      dom = 'Brtip'))
     })
 
-    # Raw data ------------------
-    data_raw <- reactive({
-      req(input$water_year, input$load > 0)
 
-      if (input$source == "HYDAT") {
-        req(input$station_number)
+    # Raw data - HYDAT ---------------
+    data_raw_hydat <- reactive({
+      req(input$water_year, input$load > 0, input$station_number)
 
-        d1 <- glue::glue(
+        d <- glue::glue(
           "data_flow <- fill_missing_dates(",
-          "        station_number = '{input$station_number}')")
-
-        d2 <- d1
+          "  station_number = '{input$station_number}') %>% ",
+          "  add_date_variables(water_year_start = {as.numeric(input$water_year)}) %>%",
+          "  add_daily_volume() %>%",
+          "  add_daily_yield()")
 
         # Set data info
         data_type("HYDAT")
         data_id(input$station_number)
 
-      } else {
-        req(input$file, input$col_date, input$col_value, input$col_symbol,
-            input$basin_area != 0)
+        d
+    })
+    # Raw data - File ---------
+    data_raw_file <- reactive({
+      req(input$file, input$col_date, input$col_value, input$col_symbol,
+          input$basin_area != 0)
 
-        validate(need(length(unique(c(
-          input$col_date, input$col_value, input$col_symbol))) == 3,
-          "Date, Value and Symbol columns must be distinct"))
+      validate(need(length(unique(c(
+        input$col_date, input$col_value, input$col_symbol))) == 3,
+        "Date, Value and Symbol columns must be distinct"))
 
-        validate(need(!is.null(input$basin_area) && input$basin_area > 0,
-                      paste0("Must have a valid, non-zero basin area ",
-                             "(see Station Information)")))
+      validate(need(!is.null(input$basin_area) && input$basin_area > 0,
+                    paste0("Must have a valid, non-zero basin area ",
+                           "(see Station Information)")))
 
-        d <- glue::glue(
-          "dplyr::rename(Date = {input$col_date}, Value = {input$col_value}, ",
-          "              Symbol = {input$col_symbol}) %>%",
-          "fill_missing_dates()")
-
-        # For user to reproduce locally
-        d1 <- glue::glue("data_flow <- read.csv('{input$file$name}') %>% ", d)
-
-        # Real loading
-        d2 <- glue::glue("data_flow <- read.csv('{input$file$datapath}') %>% ",
-                         d)
-
-        data_type("CSV")
-        data_id(basename(input$file$name))
-      }
-
-      d_dates <- glue::glue(
-        " %>% ",
+      d <- glue::glue(
+        "dplyr::rename(Date = {input$col_date}, Value = {input$col_value}, ",
+        "              Symbol = {input$col_symbol}) %>%",
+        "fill_missing_dates() %>% ",
         "add_date_variables(water_year_start = {as.numeric(input$water_year)}) %>%",
         "add_daily_volume() %>%",
         "add_daily_yield(basin_area = {input$basin_area})")
 
-      code$data_raw <- glue::glue(d1, d_dates)
+      # For user to reproduce locally
+      d1 <- glue::glue("data_flow <- read.csv('{input$file$name}') %>% ", d)
+
+      # Real loading
+      d2 <- glue::glue("data_flow <- read.csv('{input$file$datapath}') %>% ",
+                       d)
+
+      data_type("CSV")
+      data_id(basename(input$file$name))
+
+      d2
+    })
+
+
+    # Raw data ------------------
+    data_raw <- reactive({
+      if (input$source == "HYDAT") {
+        d <- code$data_raw <- data_raw_hydat()
+      } else {
+        d <- data_raw_file()
+
+        code$data_raw <- stringr::str_replace( # Make pretty for R Code Tab
+          d,
+          "^data_flow <- read.csv\\([^\\)]+\\)",
+          glue::glue("data_flow <- read.csv('{input$file$name}')"))
+      }
+
       labels$data_raw <- "Load data, prep dates, calculate volume/yield"
 
       data_loaded(TRUE)
-      eval_check(glue::glue(d2, d_dates))
-
+      eval_check(d)
     }) %>%
       bindEvent(input$load, input$water_year,
                 ignoreInit = TRUE)

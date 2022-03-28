@@ -206,6 +206,13 @@ test_that("Data Load", {
       expect_error(output$hydat_map, NA)
       expect_error(output$hydat_table, NA)
       expect_error(output$info, NA)
+
+      # Check that data can be loaded
+      expect_error(data_raw_hydat(), NA)
+      expect_error(data_raw_file(), NA)
+      expect_silent(eval_check(data_raw_hydat()))
+      expect_silent(eval_check(data_raw_file()))
+
       #expect_error(data_raw(), NA)   # Can't test because of ignoreInit = TRUE
       #expect_error(output$plot, NA)  # need data_raw()
       #expect_error(output$table, NA) # need data_raw()
