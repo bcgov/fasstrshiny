@@ -15,4 +15,4 @@ test_that("shiny utils", {
   expect_silent(dummy_data()) %>%
     expect_type("list")
 
-}
+})
