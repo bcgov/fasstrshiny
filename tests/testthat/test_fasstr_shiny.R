@@ -1,8 +1,25 @@
 
+test_that("fasstr_shiny() components", {
+
+  # Side bar
+  expect_silent(s <- sidebar_fasstr()) %>%
+    expect_s3_class("shiny.tag")
+
+  # All mod ids appear in the sidebar menu
+  purrr::map_lgl(mods, ~stringr::str_detect(as.character(s), .)) %>%
+    all() %>%
+    expect_true()
+
+  # Footer
+  expect_silent(s <- footer_fasstr()) %>%
+    expect_s3_class("shiny.tag")
+})
 
 test_that("fasstr_shiny()", {
-
   local_hydat()
+
+  expect_silent(f <- fasstr_shiny()) %>%
+    expect_s3_class("shiny.appobj")
 
   i <- list(source = "HYDAT", station_number = "08HB048",
             hydat_table_rows_all = 1:1000,

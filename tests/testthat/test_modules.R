@@ -187,10 +187,11 @@ test_that("Data Load", {
   local_hydat()
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(local_file = f)
+    if(f) s <- "CSV" else s <- "HYDAT"
 
     testServer(server_data_load, {
       session$setInputs(
-        source = "HYDAT", station_number = "08HB048",
+        source = s, station_number = "08HB048",
         hydat_table_rows_all = 1:1000,
         hydat_bc = TRUE, load = 1, years_range = c(1980, 2010),
         water_year = 1, basin_area = 10.3,
@@ -304,6 +305,20 @@ test_that("Hydro", {
       expect_false(output$code == "")
 
       session$setInputs(type = "Long-term Monthly")
+      expect_error(mad(), NA)
+      expect_error(output$plot, NA)
+      expect_error(output$table, NA)
+      expect_false(output$code == "")
+
+      # Add dates
+      session$setInputs(type = "Daily", add_date = "1990-01-01")
+      expect_error(mad(), NA)
+      expect_error(output$plot, NA)
+      expect_error(output$table, NA)
+      expect_false(output$code == "")
+
+      # Add mad
+      session$setInputs(type = "Daily", add_mad = TRUE)
       expect_error(mad(), NA)
       expect_error(output$plot, NA)
       expect_error(output$table, NA)
