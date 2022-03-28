@@ -18,7 +18,9 @@ hy <- system.file("extdata", "test_hydat.sqlite3", package = "fasstrshiny")
 
 ## Run UIs for errors ------------------------
 test_that("UIs", {
-  for(m in c(mods, "home")) expect_silent(get(glue::glue("ui_{m}"))('testing'))
+  for(m in c(mods, "home", "overview")) {
+    expect_silent(get(glue::glue("ui_{m}"))('testing'))
+  }
 })
 
 
