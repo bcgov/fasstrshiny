@@ -9,8 +9,8 @@ test_that("shiny utils", {
 
   expect_error(eval_check("ggpl::ggplot()"))
 
-  expect_silent(t <- test_mod("home")) %>%
-    expect_s3_class("shiny.appobj")
+  #expect_silent(t <- test_mod("home")) %>%
+  #  expect_s3_class("shiny.appobj")
 
   expect_silent(dummy_data()) %>%
     expect_type("list")
