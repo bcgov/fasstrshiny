@@ -107,7 +107,7 @@ ui_home <- function(id) {
         # R Workflow - Setup -------------------------------
         tabPanel(
           title = "Getting Setup", width = 12,
-          p("Blah, blah, blah")
+          includeMarkdown(system.file("md", "setup.md", package = "fasstrshiny"))
         )
       )
     )
