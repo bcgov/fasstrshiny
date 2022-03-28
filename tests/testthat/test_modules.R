@@ -7,13 +7,18 @@
 #   - Fix by adding `labels$XXX <- "R code comment"
 #
 # Will not check if the figures/tables are what they should be
+
+
+# Use tiny hydat testing database
 library(withr)
 local_hydat <- local_(tidyhydat::hy_set_default_db)
 hy <- system.file("extdata", "test_hydat.sqlite3", package = "fasstrshiny")
 
 # Basic Modules ----------------
+
+## Run UIs for errors ------------------------
 test_that("UIs", {
-  for(m in mods) expect_silent(get(glue::glue("ui_{m}"))('testing'))
+  for(m in c(mods, "home")) expect_silent(get(glue::glue("ui_{m}"))('testing'))
 })
 
 
