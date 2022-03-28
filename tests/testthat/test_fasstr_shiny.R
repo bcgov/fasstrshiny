@@ -25,6 +25,9 @@ test_that("fasstr_shiny()", {
     expect_error(output$`data-hydat_map`, NA)
     expect_error(output$`data-hydat_table`, NA)
 
+    # helper_shiny.R functions
+    expect_silent(fasstr_url_modal("https://bcgov.ca"))
+    expect_equal(get_inputs(input, "data-source"), list(`data-source` = "HYDAT"))
   }) %>% suppressWarnings()
 
 

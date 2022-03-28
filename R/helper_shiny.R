@@ -58,7 +58,7 @@ fasstr_url_modal <- function(url){
 # Restoring dynamic inputs on bookmarking --------------------------
 
 #' Restore inputs
-#' Note that each input type, must get it's own update functon. Also
+#' Note that each input type, must get it's own update function. Also
 #' note that some use `value` and some `selected`.
 #' `delay` is for making sure these update *after* the dynamic inputs have
 #' evaluated to their default values. Otherwise this restore is overriddent
