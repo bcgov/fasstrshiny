@@ -8,16 +8,11 @@
 #
 # Will not check if the figures/tables are what they should be
 
-
-# Use tiny hydat testing database
-library(withr)
-local_hydat <- local_(tidyhydat::hy_set_default_db)
-hy <- system.file("extdata", "test_hydat.sqlite3", package = "fasstrshiny")
-
 # Basic Modules ----------------
 
 ## Run UIs for errors ------------------------
 test_that("UIs", {
+  local_hydat()
   for(m in c(mods, "home", "overview")) {
     expect_silent(get(glue::glue("ui_{m}"))('testing'))
   }
@@ -26,11 +21,9 @@ test_that("UIs", {
 
 ## Annual means ---------------
 test_that("Annual means", {
-  local_hydat(hy)
+  local_hydat()
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(file = f)
-
-    expect_equal(tidyhydat::hy_default_db(), hy)
 
     testServer(server_annual_means, args = list(d$s, d$d, d$l, d$c), {
       session$setInputs(plot_title = TRUE)
@@ -42,7 +35,7 @@ test_that("Annual means", {
 
 ## Annual stats ----------------
 test_that("Annual stats", {
-  local_hydat(hy)
+  local_hydat()
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(file = f)
 
@@ -65,7 +58,7 @@ test_that("Annual stats", {
 
 ## Annual totals ----------------
 test_that("Annual totals", {
-  local_hydat(hy)
+  local_hydat()
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(file = f)
 
@@ -114,7 +107,7 @@ test_that("Annual totals", {
 
 ## Flow timing ------------------
 test_that("Flow timing", {
-  local_hydat(hy)
+  local_hydat()
 
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(file = f)
@@ -133,7 +126,7 @@ test_that("Flow timing", {
 
 ## Low flows ------------------
 test_that("Low flows", {
-  local_hydat(hy)
+  local_hydat()
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(file = f)
 
@@ -156,7 +149,7 @@ test_that("Low flows", {
 
 ## Outside normal --------------------
 test_that("Outside normal", {
-  local_hydat(hy)
+  local_hydat()
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(file = f)
 
@@ -173,7 +166,7 @@ test_that("Outside normal", {
 
 ## Peak flows --------------------
 test_that("Peak flows", {
-  local_hydat(hy)
+  local_hydat()
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(file = f)
 
@@ -191,7 +184,7 @@ test_that("Peak flows", {
 
 ## Data Load -------------------
 test_that("Data Load", {
-  local_hydat(hy)
+  local_hydat()
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(file = f)
 
@@ -223,7 +216,7 @@ test_that("Data Load", {
 
 ## Data Available -----------------
 test_that("Data Available", {
-  local_hydat(hy)
+  local_hydat()
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(file = f)
 
@@ -266,7 +259,7 @@ test_that("Data Available", {
 
 ## Flows -----------------
 test_that("Flows", {
-  local_hydat(hy)
+  local_hydat()
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(file = f)
 
@@ -285,7 +278,7 @@ test_that("Flows", {
 
 ## Hydro -------------
 test_that("Hydro", {
-  local_hydat(hy)
+  local_hydat()
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(file = f)
 
@@ -322,7 +315,7 @@ test_that("Hydro", {
 
 ## Cumulative -----------------------
 test_that("Cumulative", {
-  local_hydat(hy)
+  local_hydat()
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(file = f)
 
@@ -347,7 +340,7 @@ test_that("Cumulative", {
 
 ## Annual Trends -----------------------------
 test_that(" Annual Trends", {
-  local_hydat(hy)
+  local_hydat()
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(file = f)
 
@@ -371,7 +364,7 @@ test_that(" Annual Trends", {
 
 ## Volume Freq ---------------------------------
 test_that("Volume Freq ", {
-  local_hydat(hy)
+  local_hydat()
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(file = f)
 
@@ -399,7 +392,7 @@ test_that("Volume Freq ", {
 
 ## Hydat Peak -----------------------------
 test_that("Hydat Peak", {
-  local_hydat(hy)
+  local_hydat()
 
   d <- dummy_data()
 
