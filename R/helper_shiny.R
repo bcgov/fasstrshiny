@@ -235,6 +235,13 @@ test_mod <- function(mod, hydat_stn = "08HB048", local_file = FALSE) {
 }
 
 ui_test <- function(mod) {
+  css <- system.file("shiny_app", "www", "bcgov.css", package = "fasstrshiny")
+  if(css == "" ) {
+    if(file.exists("../../shiny_app/www/bcgov.css")) {
+      css <- "../../shiny_app/www/bcgov.css"
+    } else css <- ""
+  }
+
   tagList(
     dashboardPage(
       dashboardHeader(title = "Test"),
@@ -243,7 +250,7 @@ ui_test <- function(mod) {
       ## Body -----------------
       dashboardBody(
         shinyjs::useShinyjs(),
-        includeCSS(system.file("shiny_app", "www", "bcgov.css", package = "fasstrshiny")),
+        if(css != "") includeCSS(css),
         get(paste0("ui_", mod))(mod)
       )
     )
