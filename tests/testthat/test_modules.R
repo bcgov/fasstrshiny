@@ -414,7 +414,7 @@ test_that("Hydat Peak", {
 
   }) %>% suppressWarnings()
 
-  d <- dummy_data(local_hydat() = TRUE)
+  d <- dummy_data(local_file = TRUE)
 
   testServer(server_hydat_peak, args = list(d$s, d$d, d$l, d$c), {
     session$setInputs(compute = 1, use_max = FALSE, use_log = FALSE,

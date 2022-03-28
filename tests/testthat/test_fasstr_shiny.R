@@ -1,12 +1,8 @@
 
-# Use tiny hydat testing database
-library(withr)
-local_hydat <- local_(tidyhydat::hy_set_default_db)
-hy <- system.file("extdata", "test_hydat.sqlite3", package = "fasstrshiny")
 
 test_that("fasstr_shiny()", {
 
-  local_hydat(hy)
+  local_hydat()
 
   i <- list(source = "HYDAT", station_number = "08HB048",
             hydat_table_rows_all = 1:1000,
