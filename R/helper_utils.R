@@ -78,9 +78,22 @@ code_format <- function(code, labels, data_code = NULL,
 
 code_break_lines <- function(code) {
   s <- stringr::str_split(code, "\n") %>% unlist()
-  l <- purrr::map_lgl(s, ~nchar(.) > 80)
+
+  # Which lines too long?
+  l <- purrr::map_lgl(s, ~nchar(.) > 100)
+
+  # Split after ),
   # only set new line if list items are longer than 4 and not near the end of a line
-  s[l] <- stringr::str_replace_all(s[l], ",(?! [:print:]{1,4}(,|[:punct:]{1,4}$))", ",\n")
+  s[l] <- stringr::str_replace_all(s[l], "\\),(?! [:print:]{1,4}(,|[:punct:]{1,4}$))", "),\n")
+  s <- stringr::str_split(s, "\n") %>% unlist()
+  l <- purrr::map_lgl(s, ~nchar(.) > 100)
+
+  # Still too long? split after ,
+  while(any(l)){
+    s[l] <- stringr::str_replace(s[l], ",(?! [:print:]{1,4}(,|[:punct:]{1,4}$))", ",\n")
+    s <- stringr::str_split(s, "\n") %>% unlist()
+    l <- purrr::map_lgl(s, ~nchar(.) > 100)
+  }
 
   glue::glue_collapse(s, "\n") %>%
     styler::style_text() %>%
