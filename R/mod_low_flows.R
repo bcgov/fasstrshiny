@@ -26,7 +26,8 @@ ui_low_flows <- function(id) {
         helpText("Placeholder descriptive text to describe this section, ",
                  "what it does and how to use it"),
         select_rolling(id, set = FALSE, multiple = TRUE),
-        uiOutput(ns("ui_display"))
+        uiOutput(ns("ui_display")),
+        ui_download(id = ns("plot"))
       ),
       tabBox(
         width = 9,
@@ -66,6 +67,9 @@ server_low_flows <- function(id, data_settings, data_raw,
 
     # Plots --------------------
     plots <- reactive({
+      check_data(data_loaded())
+      req(input$roll_days)
+
       data_flow <- data_raw()
 
       g <- create_fun(fun = "plot_annual_lowflows", data_name = "data_flow",
@@ -106,37 +110,49 @@ server_low_flows <- function(id, data_settings, data_raw,
             "Date: {.data$Date}\n",
             "Discharge: {round(.data$Value_discharge, 4)}"),
             data_id = .data$Year), size = 3)
-      g
-    })
-
-    # Plot output -------------------------
-    output$plot <- ggiraph::renderGirafe({
-      check_data(data_loaded())
-      req(input$display, input$roll_days, input$display %in% names(plots()))
-
-      g <- plots()[[input$display]]
 
       # Add title
       if(input$plot_title) {
-        g <- g +
+        for(i in seq_len(length(g))) {
+        g[[i]] <- g[[i]] +
           ggplot2::ggtitle(plot_title(
-            data_settings(), stringr::str_replace_all(input$display, "_", " "))) +
-              ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0, size = 12))
+            data_settings(), stringr::str_replace_all(names(g)[i], "_", " "))) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0, size = 12))
+        }
       }
 
-      r <- length(input$roll_days)
-      dims <- dplyr::case_when(r == 1 ~ c(7, 5),
-                               r == 2 ~ c(8, 7),
-                               r == 3 ~ c(9, 8),
-                               r == 4 ~ c(10, 8),
-                               r == 5 ~ c(10, 12),
-                               TRUE ~ c(10, 14))
+      g
+    })
 
-      ggiraph::girafe(ggobj = g,
-                      width_svg = dims[1] * opts$scale,
-                      height_svg = dims[2]* opts$scale,
+
+    plot <- reactive({
+      req(input$display, input$display %in% names(plots()))
+      plots()[[input$display]]
+    })
+
+    # Plot output -------------------------
+
+    dims <- reactive({
+      r <- length(input$roll_days)
+      dplyr::case_when(r == 1 ~ c(7, 5),
+                       r == 2 ~ c(8, 7),
+                       r == 3 ~ c(9, 8),
+                       r == 4 ~ c(10, 8),
+                       r == 5 ~ c(10, 12),
+                       TRUE ~ c(10, 14)) * opts$scale
+    })
+
+    output$plot <- ggiraph::renderGirafe({
+      ggiraph::girafe(ggobj = plot(),
+                      width_svg = dims()[1] ,
+                      height_svg = dims()[2],
                       options = ggiraph_opts())
     })
+
+    # Download Plot -----------------
+    download(id = "plot", plot = plot,
+             name = reactive(paste0("low_flows_", input$display)),
+             data_settings, dims)
 
 
     # Table -----------------------

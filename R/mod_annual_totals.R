@@ -31,7 +31,9 @@ ui_annual_totals <- function(id) {
                        selected = TRUE),
           bsTooltip(ns("discharge2"), tips$discharge2,
                              placement = "left"),
-          uiOutput(ns("ui_display"))),
+          uiOutput(ns("ui_display")),
+          ui_download(id = ns("plot"))
+          ),
 
       tabBox(
         width = 9,
@@ -71,6 +73,7 @@ server_annual_totals <- function(id, data_settings, data_raw,
 
     # Plots -------------------
     plots <- reactive({
+      check_data(data_loaded())
       req(!is.null(input$discharge2))
 
       data_flow <- data_raw()
@@ -93,35 +96,48 @@ server_annual_totals <- function(id, data_settings, data_raw,
             data_id = .data$Year), size = 3)
       }
 
+      # Add title
+      if(input$plot_title) {
+        for(i in seq_len(length(g))) {
+          g[[i]] <- g[[i]] +
+            ggplot2::ggtitle(
+              plot_title(data_settings(),
+                         stringr::str_replace_all(names(g)[i], "_", " "))) +
+            ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+        }
+      }
+
       g
     })
 
-    # Plot output --------------------
-    output$plot <- ggiraph::renderGirafe({
-      check_data(data_loaded())
+    plot <- reactive({
       req(input$display, input$display %in% names(plots()))
+      plots()[[input$display]]
+    })
 
-      g <- plots()[[input$display]]
-
-      # Add title
-      if(input$plot_title) {
-        g <- g +
-          ggplot2::ggtitle(
-            plot_title(data_settings(),
-                       stringr::str_replace(input$display, "_", " "))) +
-          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
-      }
-
+    # Plot output --------------------
+    dims <- reactive({
+      req(!is.null(input$display))
       h <- switch(stringr::str_extract(input$display, "^[^_]+"),
-                  "Two" = 8,
-                  "Four" = 10,
-                  "Total" = 5)
+             "Two" = 8,
+             "Four" = 10,
+             "Total" = 5)
 
-      ggiraph::girafe(ggobj = g,
-                      width_svg = 10 * opts$scale,
-                      height_svg = h * opts$scale,
+      c(10, h) * opts$scale
+    })
+
+    output$plot <- ggiraph::renderGirafe({
+      ggiraph::girafe(ggobj = plot(),
+                      width_svg = dims()[1],
+                      height_svg = dims()[2],
                       options = ggiraph_opts())
     })
+
+
+    # Download Plot -----------------
+    download(id = "plot", plot = plot,
+             name = reactive(paste0("annual_totals_", input$display)),
+             data_settings, dims)
 
 
     # Table -----------------------

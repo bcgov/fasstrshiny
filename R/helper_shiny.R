@@ -21,6 +21,54 @@ ui_plotly_info <- function(range = FALSE) {
     "Double click to zoom back out.")
 }
 
+# Downloads ----------------------------
+
+#' UI download button
+#' @noRd
+ui_download <- function(id) {
+  div(align = "center", id = NS(id, "download_tip"),
+      downloadBttn(NS(id, "download"), "Plot", color = "primary",
+                   style = "jelly", icon = icon("download"), size = "xs"),
+      bsTooltip(NS(id, "download_tip"), placement = "left",
+                "Download plot as high-quality PNG")
+  )
+}
+
+
+#' Server module
+#' Call with callModule(download, id = ...)
+#'
+#' @param id Module id (usually "plot")
+#' @param plot Reactive plot object
+#' @param name First part of file name, reactive as needed
+#' @param settings data_settings object
+#' @param dims Vector. Plot width and plot height, reactive as needed
+#' @param dpi Resolution
+#'
+#' @noRd
+download <- function(id, plot, name, settings, dims, dpi = 400) {
+
+  moduleServer(id, function(input, output, session) {
+    output$download <- downloadHandler(
+      filename = function() {
+        if(is.reactive(name)) name <- name()
+        paste0(stringr::str_replace_all(tolower(name), "-", "_"), "_",
+               stringr::str_remove(settings()$station_id,
+                                   "\\.[a-zA-Z]$"), ".png")
+      },
+      content = function(file) {
+        if(is.reactive(dims)) dims <- dims()
+        ggsave(file, plot(), device = "png",
+               width = dims[1], height = dims[2], dpi = dpi)
+      }
+    )
+  })
+
+}
+
+
+
+
 
 # Bookmarking Modal -----------------------------
 fasstr_url_modal <- function(url){
@@ -293,7 +341,8 @@ dummy_data <- function(hydat_stn = "08HB048", local_file = FALSE) {
     missing = TRUE,
     allowed = 100,
     basin_area = 10.3,
-    station_name = "Carnation Creek At The Mouth")
+    station_name = "Carnation Creek At The Mouth",
+    station_id = "08HB048")
 
   list("d" = reactive(data_raw),
        "s" = reactive(data_settings),

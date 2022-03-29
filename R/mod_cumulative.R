@@ -33,7 +33,8 @@ ui_cumulative <- function(id) {
                      choices = list("Volumetric Discharge (m3)" = FALSE,
                                     "Runoff Yield (mm)" = TRUE),
                      selected = TRUE),
-        bsTooltip(ns("discharge2"), tips$discharge2, placement = "left")
+        bsTooltip(ns("discharge2"), tips$discharge2, placement = "left"),
+        ui_download(id = ns("plot"))
       ),
       tabBox(
         width = 9,
@@ -80,7 +81,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded, data_cod
     onRestored(function(state) restore_inputs(session, keep, state$values))
 
     # Plot --------------------
-    output$plot <- ggiraph::renderGirafe({
+    plot <- reactive({
       check_data(data_loaded())
       req(input$type, !is.null(input$add_year), input$discharge2)
 
@@ -117,13 +118,21 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded, data_cod
       g <- g + create_vline_interactive(
         data = g$data, stats = stats,
         size = dplyr::if_else(input$type == "Monthly", 20, 1))
+    })
 
+    dims <- c(14, 6) * opts$scale
 
-      ggiraph::girafe(ggobj = g,
-                      width_svg = 14 * opts$scale,
-                      height_svg = 6 * opts$scale,
+    output$plot <- ggiraph::renderGirafe({
+      ggiraph::girafe(ggobj = plot(),
+                      width_svg = dims[1],
+                      height_svg = dims[2],
                       options = ggiraph_opts())
     })
+
+    # Download Plot -----------------
+    download(id = "plot", plot = plot,
+             name = reactive(paste0("cum_hydro_", input$type)),
+             data_settings, dims)
 
 
     # Table -----------------------

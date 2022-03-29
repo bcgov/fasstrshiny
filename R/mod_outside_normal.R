@@ -26,7 +26,8 @@ ui_outside_normal <- function(id) {
         helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
         sliderInput(ns("normal_percentiles"), label = "Normal range ",
                     value = c(25, 75), min = 1, max = 99, step = 1),
-        bsTooltip(ns("normal_percentiles"), tips$normal_percentiles, placement = "left")
+        bsTooltip(ns("normal_percentiles"), tips$normal_percentiles, placement = "left"),
+        ui_download(id = ns("plot"))
       ),
       tabBox(
         width = 9,
@@ -58,7 +59,7 @@ server_outside_normal <- function(id, data_settings, data_raw,
   moduleServer(id, function(input, output, session) {
 
     # Plot --------------------
-    output$plot <- ggiraph::renderGirafe({
+    plot <- reactive({
       check_data(data_loaded())
       req(input$normal_percentiles)
 
@@ -87,12 +88,21 @@ server_outside_normal <- function(id, data_settings, data_raw,
                                           "{.data$Statistic}\n",
                                           "No. Days: {round(.data$Value, 4)}"),
                      data_id = .data$Year), size = 3)
+    })
 
-      ggiraph::girafe(ggobj = g,
-                      width_svg = 12 * opts$scale,
-                      height_svg = 8 * opts$scale,
+
+    dims <- c(12, 8) * opts$scale
+
+    output$plot <- ggiraph::renderGirafe({
+      ggiraph::girafe(ggobj = plot(),
+                      width_svg = dims[1],
+                      height_svg = dims[2],
                       options = ggiraph_opts())
     })
+
+
+    # Download Plot -----------------
+    download(id = "plot", plot = plot, name = "outside_normal", data_settings, dims)
 
 
     # Table -----------------------

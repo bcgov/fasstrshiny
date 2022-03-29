@@ -130,7 +130,7 @@ server_data_load <- function(id) {
 
     # Reactive Values
     data_loaded <- reactiveVal(FALSE)
-    data_type <- reactiveVal("None")
+    data_source <- reactiveVal("None")
     data_id <- reactiveVal("None")
 
     # UI Elements ---------------------------------------
@@ -476,12 +476,10 @@ server_data_load <- function(id) {
           "  add_daily_volume() %>%",
           "  add_daily_yield()")
 
-        # Set data info
-        data_type("HYDAT")
-        data_id(input$station_number)
-
         d
     })
+
+
     # Raw data - File ---------
     data_raw_file <- reactive({
       req(input$file, input$col_date, input$col_value, input$col_symbol,
@@ -510,19 +508,22 @@ server_data_load <- function(id) {
       f <- normalizePath(input$file$datapath, winslash = "/") #Otherwise parse() has issues
       d2 <- glue::glue("data_flow <- read.csv('{f}') %>% ", d)
 
-      data_type("CSV")
-      data_id(basename(input$file$name))
-
       d2
     })
 
 
     # Raw data ------------------
     data_raw <- reactive({
+
       if (input$source == "HYDAT") {
         d <- code$data_raw <- data_raw_hydat()
-      } else {
+        data_source("HYDAT")
+        data_id(input$station_number)
+
+      } else if (input$source == "CSV") {
         d <- data_raw_file()
+        data_source("CSV")
+        data_id(basename(input$file$name))
 
         code$data_raw <- stringr::str_replace( # Make pretty for R Code Tab
           d,
@@ -673,7 +674,9 @@ server_data_load <- function(id) {
            "missing" = input$missing,
            "allowed" = input$allowed,
            "basin_area" = input$basin_area,
-           "station_name" = input$station_name)
+           "station_name" = input$station_name,
+           "station_id" = data_id(),
+           "source" = data_source())
     })
 
     data_code <- reactive(code$data_raw)

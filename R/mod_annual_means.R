@@ -26,6 +26,7 @@ ui_annual_means <- function(id) {
           title = "Plot",
           helpText("Placeholder descriptive text to describe this section, ",
                    "what it does and how to use it"),
+          ui_download(id = ns("plot")),
           select_plot_options(select_plot_title(id)),
           ggiraph::girafeOutput(ns("plot"), height = opts$plot_height)
         ),
@@ -44,7 +45,7 @@ server_annual_means <- function(id, data_settings, data_raw,
   moduleServer(id, function(input, output, session) {
 
     # Plot --------------------
-    output$plot <- ggiraph::renderGirafe({
+    plot <- reactive({
       check_data(data_loaded())
 
       data_flow <- data_raw()
@@ -87,11 +88,19 @@ server_annual_means <- function(id, data_settings, data_raw,
                        legend.title = ggplot2::element_blank(),
                        legend.key = ggplot2::element_rect(colour = NA))
 
-      ggiraph::girafe(ggobj = g,
-                      width_svg = 14 * opts$scale,
-                      height_svg = 4 * opts$scale,
+      g
+    })
+
+    dims <- c(14, 4) * opts$scale
+
+    output$plot <- ggiraph::renderGirafe({
+      ggiraph::girafe(ggobj = plot(), width_svg = dims[1], height_svg = dims[2],
                       options = ggiraph_opts())
     })
+
+    # Download Plot -----------------
+    download(id = "plot", plot = plot, name = "mad", data_settings, dims)
+
 
     # R Code -----------------
     code <- reactiveValues()

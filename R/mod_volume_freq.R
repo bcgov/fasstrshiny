@@ -29,6 +29,7 @@ ui_volume_freq <- function(id) {
                    class = "centreButton"),
           helpText("Placeholder descriptive text to describe this section, ",
                    "what it does and how to use it"),
+          ui_download(id = ns("plot")),
           hr(class = "narrowHr"),
 
           # Other
@@ -200,7 +201,7 @@ server_volume_freq <- function(id, data_settings, data_raw,
 
 
     # Plot --------------------
-    output$plot <- ggiraph::renderGirafe({
+    plot <- reactive({
 
       validate(
         need(data_loaded(),
@@ -230,7 +231,7 @@ server_volume_freq <- function(id, data_settings, data_raw,
           tooltip = glue::glue("Year: {.data$Year}\n",
                                "Discharge: {round(.data$Value, 4)}\n",
                                "Probability: {round(.data$prob, 4)}"),
-          data_id = .data$Year), size = 3) +
+          data_id = .data$Year), size = 2) +
         ggplot2::scale_colour_viridis_d(end = 0.8) +
         ggiraph::geom_segment_interactive(
           data = fit, ggplot2::aes(x = .data$prob1, xend = .data$prob2,
@@ -238,10 +239,13 @@ server_volume_freq <- function(id, data_settings, data_raw,
                                    group = .data$Measure,
                                    tooltip = .data$tooltip),
           size = 2, alpha = 0.01)
+    })
 
-      ggiraph::girafe(ggobj = g,
-                      width_svg = 8 * opts$scale,
-                      height_svg = 5 * opts$scale,
+    dims <- c(10, 6) * opts$scale
+    output$plot <- ggiraph::renderGirafe({
+      ggiraph::girafe(ggobj = plot(),
+                      width_svg = dims[1],
+                      height_svg = dims[2],
                       options = ggiraph_opts(selection = "multiple"))
     })
 
@@ -259,6 +263,9 @@ server_volume_freq <- function(id, data_settings, data_raw,
       bindEvent(input$years_exclude, ignoreNULL = FALSE, ignoreInit = TRUE)
 
 
+    # Download Plot -----------------
+    download(id = "plot", plot = plot, name = "volume_freq",
+             data_settings, dims)
 
 
 

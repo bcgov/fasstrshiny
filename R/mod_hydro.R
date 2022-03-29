@@ -22,7 +22,7 @@ ui_hydro <- function(id) {
     column(
       width = 12, h2("Daily and Long-term Hydrographs"),
 
-      ## Settings -----------------
+      # Settings -----------------
       box(
         width = 3,
         helpText("Placeholder descriptive text to describe this section, ",
@@ -56,28 +56,30 @@ ui_hydro <- function(id) {
           selected = default("plot_daily_stats", "outer_percentiles")),
         select_percentiles(
           id, name = "extra_percentiles", label = "Additional percentiles (table)",
-          selected = default("calc_daily_stats", "percentiles"))
+          selected = default("calc_daily_stats", "percentiles")),
+
+        ui_download(id = ns("plot"))
       ),
 
       # Outputs
       tabBox(
         width = 9,
 
-        ## Plot ---------------------
+        # Plot ---------------------
         tabPanel(
           title = "Plot",
           uiOutput(ns("ui_plot_options"), align = "right"),
           ggiraph::girafeOutput(ns("plot"), height = opts$plot_height)
         ),
 
-        ## Table ---------------------
+        # Table ---------------------
         tabPanel(
           title = "Table",
           select_table_options(id, include = "custom_months"),
           DT::DTOutput(ns("table"))
         ),
 
-        ## R Code ---------------------
+        # R Code ---------------------
         ui_rcode(id)
       )
     )
@@ -90,7 +92,7 @@ server_hydro <- function(id, data_settings, data_raw,
 
   moduleServer(id, function(input, output, session) {
 
-    ## UI Elements ------------------------------------------
+    # UI Elements ------------------------------------------
 
     # Plot options
     output$ui_plot_options <- renderUI({
@@ -104,7 +106,8 @@ server_hydro <- function(id, data_settings, data_raw,
         select_add_year(id, data_settings()$years_range), # Dynamically created from data
         select_add_dates(id),
         select_add_mad(id),
-        select_custom(id, values = data_raw()[[data_settings()$discharge]]))
+        select_custom(id, values = data_raw()[[data_settings()$discharge]])
+      )
     })
 
     # Preserve dynamic UI inputs during bookmarking
@@ -122,8 +125,8 @@ server_hydro <- function(id, data_settings, data_raw,
     observe(shinyjs::toggleState("custom_label", condition = input$add_custom))
 
 
-    ## Plot --------------------
-    output$plot <- ggiraph::renderGirafe({
+    # Plot --------------------
+    plot <- reactive({
       check_data(data_loaded())
       validate(
         need(length(input$inner_percentiles) %in% c(0, 2) &
@@ -260,23 +263,29 @@ server_hydro <- function(id, data_settings, data_raw,
           "label = '{input$custom_label}'), aes(y = y, label = label), ",
           "x = Inf, colour = 'black', hjust = 1.1, vjust = -0.5)")
         labels_plot <- glue::glue(labels_plot, " (with Custom hline)")
-
-
-
       }
 
       code$plot <- code_plot
       labels$plot <- paste0(labels_plot, "\nlibrary(ggplot2)")
 
-      ggiraph::girafe(ggobj = g,
-                      width_svg = 12 * opts$scale,
-                      height_svg = 6 * opts$scale,
-                      options = ggiraph_opts())
+      g
     })
 
+    dims <- c(12, 6) * opts$scale
 
+    output$plot <- ggiraph::renderGirafe({
+      ggiraph::girafe(ggobj = plot(),
+                      width_svg = dims[1],
+                      height_svg = dims[2],
+                      options = ggiraph_opts())
+      })
 
-    ## MAD -----------------------
+    # Download Plot -----------------
+    download(id = "plot", plot = plot,
+             name = reactive(paste0("hydro_", input$type)),
+             data_settings, dims)
+
+    # MAD -----------------------
     mad <- reactive({
       req(input$mad)
 
@@ -294,7 +303,7 @@ server_hydro <- function(id, data_settings, data_raw,
       eval_check(t)
     })
 
-    ## Table -----------------------
+    # Table -----------------------
     output$table <- DT::renderDT({
       check_data(data_loaded())
       req(input$type)
@@ -324,7 +333,7 @@ server_hydro <- function(id, data_settings, data_raw,
     })
 
 
-    ## R Code -----------------
+    # R Code -----------------
     code <- reactiveValues()
     labels <- reactiveValues()
     output$code <- renderText(code_format(

@@ -22,7 +22,8 @@ ui_peak_flows <- function(id) {
       width = 12, h2("Peak Flows"),
       box(
         width = 3,
-        helpText("Placeholder descriptive text to describe this section, what it does and how to use it"),
+        helpText("Placeholder descriptive text to describe this section, ",
+                 "what it does and how to use it"),
         select_rolling(id, set = FALSE)
       ),
       tabBox(

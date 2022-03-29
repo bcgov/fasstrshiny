@@ -26,6 +26,9 @@ ui_hydat_peak <- function(id) {
                    class = "centreButton"),
           helpText("Placeholder descriptive text to describe this section, ",
                    "what it does and how to use it"),
+
+
+          ui_download(id = ns("plot")),
           hr(class = "narrowHr"),
 
           show_ui(ns("show_data"), "Data"),
@@ -139,7 +142,7 @@ server_hydat_peak <- function(id, data_settings, data_raw,
       bindEvent(input$compute)
 
     ## Plot --------------------
-    output$plot <- ggiraph::renderGirafe({
+    plot <- reactive({
 
       validate(
         need(data_loaded(),
@@ -156,8 +159,19 @@ server_hydat_peak <- function(id, data_settings, data_raw,
                                "Return Period: {round(.data$Return_P)}"),
           data_id = .data$Year), size = 4)
 
-      ggiraph::girafe(ggobj = g, options = ggiraph_opts())
+      g
     })
+
+    dims <- c(12, 9) * opts$scale
+
+    output$plot <- ggiraph::renderGirafe({
+      ggiraph::girafe(ggobj = plot(), options = ggiraph_opts(),
+                      width_svg = dims[1], height_svg = dims[2])
+    })
+
+    # Download Plot -----------------
+    download(id = "plot", plot = plot, name = "hydat_peak",
+             data_settings, dims)
 
 
     ## Table -----------------------

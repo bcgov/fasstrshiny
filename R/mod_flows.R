@@ -26,6 +26,11 @@ ui_flows <- function(id) {
         width = 3,
         helpText("Placeholder descriptive text to describe this section, ",
                  "what it does and how to use it"),
+        # Update button
+        bsButton(ns("compute"), "Update", style = "primary",
+                 class = "centreButton"),
+        helpText("Click 'Update' after making any changes to settings ",
+                 "(including plot settings)"),
         div(id = ns("longterm_tip"),
             prettySwitch(ns("longterm"),
                          label = "Include Long-term",
@@ -37,11 +42,7 @@ ui_flows <- function(id) {
                            placement = "left"),
         select_custom_months(id),
 
-        # Update button
-        bsButton(ns("compute"), "Update", style = "primary",
-                          class = "centreButton"),
-        helpText("Click 'Update' after making any changes to settings ",
-                 "(including plot settings)")
+        ui_download(id = ns("plot"))
       ),
       tabBox(
         width = 9,
@@ -98,7 +99,7 @@ server_flows <- function(id, data_settings, data_raw,
 
     # Plot --------------------
 
-    output$plot <- ggiraph::renderGirafe({
+    plot <- reactive({
       check_data(data_loaded())
 
       data_flow <- data_raw()
@@ -128,13 +129,23 @@ server_flows <- function(id, data_settings, data_raw,
             .trim = FALSE),
             data_id = .data$Percentile),
           show.legend = FALSE, alpha = 0.01, size = 3)
-
-      ggiraph::girafe(ggobj = g,
-                      width_svg = 12 * opts$scale,
-                      height_svg = 6 * opts$scale,
-                      options = ggiraph_opts())
     }) %>%
       bindEvent(input$compute, ignoreNULL = FALSE)
+
+
+    dims <- c(12, 6) * opts$scale
+
+    output$plot <- ggiraph::renderGirafe({
+      ggiraph::girafe(ggobj = plot(),
+                      width_svg = dims[1],
+                      height_svg = dims[2],
+                      options = ggiraph_opts())
+    })
+
+    # Download Plot -----------------
+    download(id = "plot", plot = plot, name = "flows",
+             data_settings, dims)
+
 
 
     # Table -----------------------

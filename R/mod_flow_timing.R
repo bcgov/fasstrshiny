@@ -30,8 +30,9 @@ ui_flow_timing <- function(id) {
                            choices = c(1:99),
                            selected = c(25, 33, 50, 75),
                            multiple = TRUE),
-            bsTooltip(ns("percent"), tips$percent, placement = "left")
-        )),
+            bsTooltip(ns("percent"), tips$percent, placement = "left")),
+        ui_download(id = ns("plot"))
+        ),
       tabBox(
         width = 9,
 
@@ -62,7 +63,7 @@ server_flow_timing <- function(id, data_settings, data_raw,
   moduleServer(id, function(input, output, session) {
 
     # Plot --------------------
-    output$plot <- ggiraph::renderGirafe({
+    plot <- reactive({
       check_data(data_loaded())
       req(input$percent)
 
@@ -92,12 +93,22 @@ server_flow_timing <- function(id, data_settings, data_raw,
             "{.data$Statistic}\n",
             "Date: {yday_as_date(.data$Value, .data$Year)}"),
             data_id = .data$Year), size = 3)
+    })
 
-      ggiraph::girafe(ggobj = g,
-                      width_svg = 13 * opts$scale,
-                      height_svg = 7 * opts$scale,
+
+    dims <- c(13, 7) * opts$scale
+
+    output$plot <- ggiraph::renderGirafe({
+      ggiraph::girafe(ggobj = plot(),
+                      width_svg = dims[1],
+                      height_svg = dims[2],
                       options = ggiraph_opts())
     })
+
+    # Download Plot -----------------
+    download(id = "plot", plot = plot, name = "flow_timing",
+             data_settings, dims)
+
 
 
     # Table -----------------------

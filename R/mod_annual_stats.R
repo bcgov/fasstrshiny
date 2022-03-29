@@ -60,6 +60,8 @@ ui_annual_stats <- function(id) {
                   paste0("Months to include/exclude from Monthly calculations<br>",
                          "(Annual uses default months from the Data tab)"),
                   placement = "left"),
+
+        ui_download(id = ns("plot"))
       ),
       tabBox(
         width = 9,
@@ -98,7 +100,7 @@ server_annual_stats <- function(id, data_settings, data_raw,
                                  condition = input$type == "Monthly"))
 
     # Plot -----------------------------
-    output$plot <- ggiraph::renderGirafe({
+    plot <- reactive({
       check_data(data_loaded())
 
       validate(
@@ -151,11 +153,20 @@ server_annual_stats <- function(id, data_settings, data_raw,
       g <- g + create_vline_interactive(
         data = g$data, stats, size = dplyr::if_else(input$type == "Annual", 10, 2))
 
-      ggiraph::girafe(ggobj = g,
-                      width_svg = 12 * opts$scale,
-                      height_svg = 6 * opts$scale,
+      g
+    })
+
+    dims <- c(15, 9) * opts$scale
+
+    output$plot <- ggiraph::renderGirafe({
+      ggiraph::girafe(ggobj = plot(), width_svg = dims[1], height_svg = dims[2],
                       options = ggiraph_opts())
     })
+
+    # Download Plot -----------------
+    download(id = "plot", plot = plot,
+             name = reactive(paste0("annual_stats_", input$type)),
+             data_settings, dims)
 
     # Table -----------------------
     output$table <- DT::renderDT({
