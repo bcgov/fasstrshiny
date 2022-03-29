@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-# Formatting Data Table Output -----------------------------------------
+# Formatting Output -----------------------------------------
 
 prep_DT <- function(data, digits = 4) {
   data %>%
@@ -33,7 +33,7 @@ ggiraph_opts <- function(selection = "none") {
   list(
     ggiraph::opts_toolbar(position = "topright"),
     ggiraph::opts_selection(type = selection,
-                            css = "fill:red; stroke:gray; r:5pt"),
+                            css = "fill:red; stroke:gray; r:3pt"),
     ggiraph::opts_hover(
       css = "fill:orange; stroke:gray; stroke-opacity:0.5; fill-opacity:1;"))
 }

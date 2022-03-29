@@ -128,13 +128,15 @@ select_rolling <- function(id, input = NULL, name = "roll",
 select_percentiles <- function(id, name = "percentiles", selected = c(10, 90),
                                label = "Percentiles to calculate") {
 
+  if(!is.null(tips[[name]])) t <- tips[[name]] else t <- tips[["percentiles"]]
+
   tagList(
     selectizeInput(NS(id, name),
                    label = label,
                    choices = c(1:99),
                    selected = selected,
                    multiple = TRUE),
-    bsTooltip(NS(id, name), tips[[name]], placement = "left"))
+    bsTooltip(NS(id, name), t, placement = "left"))
 }
 
 select_complete <- function(id, input = NULL, set = TRUE) {
