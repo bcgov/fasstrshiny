@@ -50,7 +50,7 @@ test_that("Volume Freq ", {
   }
 })
 
-## Hydat Peak -----------------------------
+# Hydat Peak -----------------------------
 test_that("Hydat Peak", {
   local_hydat()
 

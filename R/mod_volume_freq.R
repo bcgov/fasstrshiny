@@ -55,8 +55,7 @@ ui_volume_freq <- function(id) {
         tabPanel(
           title = "Plot",
           ui_plot_selection(id),
-          shinycssloaders::withSpinner(ggiraph::girafeOutput(ns("plot"))),
-          uiOutput(ns("equations"))
+          shinycssloaders::withSpinner(ggiraph::girafeOutput(ns("plot")))
         ),
 
         # Table - Plot Data ---------------------
@@ -192,12 +191,6 @@ server_volume_freq <- function(id, data_settings, data_raw,
       eval_check(r)
     }) %>%
       bindEvent(input$compute)
-
-    # Equations ---------------
-    output$equations <- renderUI({
-      purrr::imap(freqs()$Freq_Fitting, ~ tagList(h4(.y),
-                                                  HTML(equation(.x))))
-    })
 
 
     # Plot --------------------
