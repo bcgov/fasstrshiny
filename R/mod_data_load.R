@@ -538,7 +538,8 @@ server_data_load <- function(id) {
 
       d <- eval_check(d)
 
-      if(data_source() == "CSV" & data_id() == input$file$name) {
+      if(data_source() == "CSV" && !is.null(input$file$name) &&
+         data_id() == input$file$name) {
         msgs <- c()
         if(any(duplicated(d$Date))) {
           msgs$dups <- paste0("There are duplicate dates in the data... ",
