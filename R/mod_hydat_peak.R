@@ -44,19 +44,21 @@ ui_hydat_peak <- function(id) {
       tabBox(
         width = 9,
 
-        ### Plot ---------------------
+        # Plot ---------------------
         tabPanel(
           title = "Plot",
+          select_plot_options(select_plot_title(id)),
           shinycssloaders::withSpinner(ggiraph::girafeOutput(ns("plot")))
         ),
 
-        ### Table ---------------------
+        # Table ---------------------
         tabPanel(
           title = "Table",
+          h4(textOutput(ns("table_title"))),
           shinycssloaders::withSpinner(DT::DTOutput(ns("table")))
         ),
 
-        ### Plot ---------------------
+        # Fit Checks ---------------------
         tabPanel(
           title = "Fit Checks",
           verbatimTextOutput(ns("fit_stats")),
@@ -141,7 +143,7 @@ server_hydat_peak <- function(id, data_settings, data_raw,
     }) %>%
       bindEvent(input$compute)
 
-    ## Plot --------------------
+    # Plot --------------------
     plot <- reactive({
 
       validate(
@@ -159,6 +161,13 @@ server_hydat_peak <- function(id, data_settings, data_raw,
                                "Return Period: {round(.data$Return_P)}"),
           data_id = .data$Year), size = 4)
 
+      # Add title
+      if(input$plot_title) {
+        g <- g +
+          ggplot2::ggtitle(title(data_settings(), "HYDAT Peak Volume Frequency")) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
+
       g
     })
 
@@ -174,7 +183,7 @@ server_hydat_peak <- function(id, data_settings, data_raw,
              data_settings, dims)
 
 
-    ## Table -----------------------
+    # Table -----------------------
     output$table <- DT::renderDT({
       validate(
         need(data_loaded(),
@@ -185,7 +194,9 @@ server_hydat_peak <- function(id, data_settings, data_raw,
       prep_DT(freqs()[["Freq_Fitted_Quantiles"]])
     })
 
-    ## Fit checks --------------------
+    output$table_title <- renderText(title(data_settings(), "Fitted Quantiles"))
+
+    # Fit checks --------------------
     output$fit_stats <- renderPrint({
       freqs()[["Freq_Fitting"]][[1]]
     })

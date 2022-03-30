@@ -54,6 +54,7 @@ ui_volume_freq <- function(id) {
         # Plot ---------------------
         tabPanel(
           title = "Plot",
+          select_plot_options(select_plot_title(id)),
           ui_plot_selection(id),
           shinycssloaders::withSpinner(ggiraph::girafeOutput(ns("plot")))
         ),
@@ -61,12 +62,14 @@ ui_volume_freq <- function(id) {
         # Table - Plot Data ---------------------
         tabPanel(
           title = "Table - Plot Data",
+          h4(textOutput(ns("table_plot_title"))),
           shinycssloaders::withSpinner(DT::DTOutput(ns("table_plot")))
         ),
 
         # Table - Fitted Quantiles ---------------------
         tabPanel(
           title = "Table - Fitted Quantiles",
+          h4(textOutput(ns("table_fit_title"))),
           shinycssloaders::withSpinner(DT::DTOutput(ns("table_fit")))
         ),
 
@@ -193,6 +196,9 @@ server_volume_freq <- function(id, data_settings, data_raw,
       bindEvent(input$compute)
 
 
+    # Titles ----------
+    titles <- reactive(title(data_settings(), glue::glue("Volume Frequency")))
+
     # Plot --------------------
     plot <- reactive({
 
@@ -232,6 +238,15 @@ server_volume_freq <- function(id, data_settings, data_raw,
                                    group = .data$Measure,
                                    tooltip = .data$tooltip),
           size = 2, alpha = 0.01)
+
+      # Add title
+      if(input$plot_title) {
+        g <- g +
+          ggplot2::ggtitle(titles()) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
+
+      g
     })
 
     dims <- c(10, 6) * opts$scale
@@ -273,6 +288,7 @@ server_volume_freq <- function(id, data_settings, data_raw,
 
       prep_DT(freqs()[["Freq_Plot_Data"]])
     })
+    output$table_plot_title <- renderText(titles())
 
     # Table - Fitted Quantiles -----------------------
     output$table_fit <- DT::renderDT({
@@ -284,6 +300,7 @@ server_volume_freq <- function(id, data_settings, data_raw,
 
       prep_DT(freqs()[["Freq_Fitted_Quantiles"]])
     })
+    output$table_fit_title <- renderText(title(data_settings(), "Fitted Quantiles"))
 
     # Fit checks --------------------
     output$fit_stats <- renderPrint({

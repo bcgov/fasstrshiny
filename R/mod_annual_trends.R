@@ -94,6 +94,7 @@ ui_annual_trends <- function(id) {
         ### Table ---------------------
         tabPanel(
           title = "Table - Annual Values",
+          h4(textOutput(ns("table_years_title"))),
           shinycssloaders::withSpinner(DT::DTOutput(ns("table_years")))
         ),
 
@@ -307,6 +308,8 @@ server_annual_trends <- function(id, data_settings, data_raw,
       prep_DT(trends()[[1]])
 
     })
+
+    output$table_years_title <- renderText(title(data_settings(), "Annual Values"))
 
     # Ensure that ui elements are not suspended when hidden
     stop_ui_suspend(id, output)

@@ -48,7 +48,7 @@ select_custom <- function(id, values) {
 
 select_custom_months <- function(id) {
   fluidRow(id = NS(id, "custom_months_all"),
-           h4("Combine and summarize months"),
+           h4("Combine and summarize months", style = "margin-left: 15px;"),
            column(width = 6,
                   selectizeInput(NS(id, "custom_months"),
                                  label = "Months to combine",

@@ -158,6 +158,7 @@ ui_data_available <- function(id) {
         # Table -----------------
         tabPanel(
           title = "Table",
+          h4(textOutput(ns("table_title"))),
           DT::dataTableOutput(ns("table"))
         ),
 
@@ -408,6 +409,10 @@ server_data_available <- function(id, data_settings, data_raw,
           .cols = dplyr::ends_with("_missing_Q"),
           ~ stringr::str_replace(., "_missing_Q", " missing days")) %>%
         prep_DT()
+    })
+
+    output$table_title <- renderText({
+      title(data_settings(), "Screening")
     })
 
     # R Code -----------------

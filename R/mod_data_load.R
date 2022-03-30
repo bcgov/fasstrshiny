@@ -115,6 +115,7 @@ ui_data_load <- function(id) {
         # Table --------
         tabPanel(
           title = "Table",
+          h4(textOutput(ns("table_title"))),
           DT::DTOutput(ns("table"))
         ),
 
@@ -600,6 +601,10 @@ server_data_load <- function(id) {
                       !.data$WaterYear %in% input$years_exclude,
                       .data$MonthName %in% month.abb[as.numeric(input$months)]) %>%
         prep_DT()
+    })
+
+    output$table_title <- renderText({
+      title(data_settings(), "Raw flow data")
     })
 
     # R Code ----------------

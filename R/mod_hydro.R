@@ -75,6 +75,7 @@ ui_hydro <- function(id) {
         # Table ---------------------
         tabPanel(
           title = "Table",
+          h4(textOutput(ns("table_title"))),
           select_table_options(id, include = "custom_months"),
           DT::DTOutput(ns("table"))
         ),
@@ -125,6 +126,9 @@ server_hydro <- function(id, data_settings, data_raw,
     observe(shinyjs::toggleState("custom_label", condition = input$add_custom))
 
 
+    # Titles ----------
+    titles <- reactive(title(data_settings(), glue::glue("{input$type} Hydrograph")))
+
     # Plot --------------------
     plot <- reactive({
       check_data(data_loaded())
@@ -151,8 +155,7 @@ server_hydro <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title) {
         g <- g +
-          ggplot2::ggtitle(title(data_settings(),
-                                 glue::glue("{input$type} Hydrograph"))) +
+          ggplot2::ggtitle(titles()) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
@@ -294,6 +297,8 @@ server_hydro <- function(id, data_settings, data_raw,
       eval_check(t) %>%
         prep_DT()
     })
+
+    output$table_title <- renderText(titles())
 
 
     # R Code -----------------

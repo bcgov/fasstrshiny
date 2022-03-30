@@ -42,6 +42,7 @@ ui_outside_normal <- function(id) {
         ### Table ---------------------
         tabPanel(
           title = "Table",
+          h4(textOutput(ns("table_title"))),
           DT::DTOutput(ns("table"))
         ),
 
@@ -57,6 +58,9 @@ server_outside_normal <- function(id, data_settings, data_raw,
                                   data_loaded, data_code) {
 
   moduleServer(id, function(input, output, session) {
+
+    # Titles --------------------
+    titles <- reactive(title(data_settings(), "Days Outside Normal"))
 
     # Plot --------------------
     plot <- reactive({
@@ -77,8 +81,7 @@ server_outside_normal <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title) {
         g <- g +
-          ggplot2::ggtitle(title(
-            data_settings(), "Days Outside Normal")) +
+          ggplot2::ggtitle(titles()) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0, size = 12))
       }
 
@@ -123,6 +126,7 @@ server_outside_normal <- function(id, data_settings, data_raw,
     })
 
 
+    output$table_title <- renderText(titles())
 
     # R Code -----------------
     code <- reactiveValues()

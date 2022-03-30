@@ -46,6 +46,7 @@ ui_flow_timing <- function(id) {
         ### Table ---------------------
         tabPanel(
           title = "Table",
+          h4(textOutput(ns("table_title"))),
           DT::DTOutput(ns("table"))
         ),
 
@@ -61,6 +62,9 @@ server_flow_timing <- function(id, data_settings, data_raw,
                                data_loaded, data_code) {
 
   moduleServer(id, function(input, output, session) {
+
+    # Titles -----------
+    titles <- reactive(title(data_settings(), "Flow Timing"))
 
     # Plot --------------------
     plot <- reactive({
@@ -81,7 +85,7 @@ server_flow_timing <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title) {
         g <- g +
-          ggplot2::ggtitle(title(data_settings(), "Flow Timing")) +
+          ggplot2::ggtitle(titles()) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
@@ -128,6 +132,8 @@ server_flow_timing <- function(id, data_settings, data_raw,
       eval_check(t) %>%
         prep_DT()
     })
+
+    output$table_title <- renderText(titles())
 
 
 

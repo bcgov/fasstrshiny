@@ -61,6 +61,7 @@ ui_flows <- function(id) {
         ## Table ---------------------
         tabPanel(
           title = "Table - Percentiles",
+          h4(textOutput(ns("table_title"))),
           shinycssloaders::withSpinner(DT::DTOutput(ns("table")))
         ),
 
@@ -97,6 +98,9 @@ server_flows <- function(id, data_settings, data_raw,
     onBookmark(function(state) for(k in keep) state$values[[k]] <- input[[k]])
     onRestored(function(state) restore_inputs(session, keep, state$values))
 
+    # Titles ----------------
+    titles <- reactive(title(data_settings(), "Flow Duration"))
+
     # Plot --------------------
 
     plot <- reactive({
@@ -115,7 +119,7 @@ server_flows <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title) {
         g <- g +
-          ggplot2::ggtitle(title(data_settings(), "Flow Duration")) +
+          ggplot2::ggtitle(titles()) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
@@ -171,6 +175,7 @@ server_flows <- function(id, data_settings, data_raw,
     }) %>%
       bindEvent(input$compute, ignoreNULL = FALSE)
 
+    output$table_title <- renderText(titles())
 
     # R Code -----------------
     code <- reactiveValues()

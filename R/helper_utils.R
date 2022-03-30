@@ -23,7 +23,8 @@ prep_DT <- function(data, digits = 4) {
                   selection = "single",
                   options = list(scrollX = TRUE, scrollY = 450, scroller = TRUE,
                                  deferRender = TRUE, dom = 'Brtip',
-                                 buttons = c('copy', 'csv', 'excel')))
+                                 buttons = list(list(extend = 'copy', title = NULL),
+                                                'csv', 'excel')))
 }
 
 #' Set ggiraph options

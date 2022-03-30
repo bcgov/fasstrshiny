@@ -37,7 +37,7 @@ test_that("Volume Freq ", {
                         fit_quantiles = c(0.975, 0.99, 0.98, 0.95, 0.9, 0.8,
                                           0.5, 0.2, 0.1, 0.05, 0.01),
                         fit_distr = "PIII", fit_distr_method = "MOM",
-                        day = "1-Day")
+                        day = "1-Day", plot_title = TRUE)
 
       expect_error(freqs(), NA)
       expect_error(output$plot, NA)
@@ -63,7 +63,8 @@ test_that("Hydat Peak", {
                       plot_curve = TRUE,
                       fit_quantiles = c(0.975, 0.99, 0.98, 0.95, 0.9, 0.8,
                                         0.5, 0.2, 0.1, 0.05, 0.01),
-                      fit_distr = "PIII", fit_distr_method = "MOM")
+                      fit_distr = "PIII", fit_distr_method = "MOM",
+                      plot_title = TRUE)
 
     expect_error(freqs(), NA)
     expect_error(output$plot, NA)

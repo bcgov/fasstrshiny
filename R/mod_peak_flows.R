@@ -32,6 +32,7 @@ ui_peak_flows <- function(id) {
         ### Table ---------------------
         tabPanel(
           title = "Table",
+          h4(textOutput(ns("table_title"))),
           DT::DTOutput(ns("table"))
         ),
 
@@ -63,6 +64,10 @@ server_peak_flows <- function(id, data_settings, data_raw,
       eval_check(t) %>%
         prep_DT()
     })
+
+
+
+    output$table_title <- renderText(title(data_settings(), "Peak Flows"))
 
 
     # R Code -----------------

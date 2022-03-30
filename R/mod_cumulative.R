@@ -49,6 +49,7 @@ ui_cumulative <- function(id) {
         # Table ---------------------
         tabPanel(
           title = "Table",
+          h4(textOutput(ns("table_title"))),
           select_table_options(id, include = "percentiles"),
           DT::DTOutput(ns("table"))
         ),
@@ -80,6 +81,11 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded, data_cod
     onBookmark(function(state) for(k in keep) state$values[[k]] <- input[[k]])
     onRestored(function(state) restore_inputs(session, keep, state$values))
 
+    # Titles -------------
+    titles <- reactive({
+      title(data_settings(), glue::glue("{input$type} Cumulative Hydrograph"))
+    })
+
     # Plot --------------------
     plot <- reactive({
       check_data(data_loaded())
@@ -101,9 +107,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded, data_cod
       # Add title
       if(input$plot_title) {
         g <- g +
-          ggplot2::ggtitle(title(
-            data_settings(),
-            glue::glue("{input$type} Cumulative Hydrograph")))+
+          ggplot2::ggtitle(titles())+
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
@@ -156,6 +160,8 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded, data_cod
       eval_check(t) %>%
         prep_DT()
     })
+
+    output$table_title <- renderText(titles())
 
     # R Code -----------------
     code <- reactiveValues()

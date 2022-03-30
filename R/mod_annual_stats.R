@@ -79,6 +79,7 @@ ui_annual_stats <- function(id) {
         ## Table ---------------------
         tabPanel(
           title = "Table",
+          h4(textOutput(ns("table_title"))),
           DT::DTOutput(ns("table"))
         ),
 
@@ -98,6 +99,12 @@ server_annual_stats <- function(id, data_settings, data_raw,
     # UI Elements ------------------
     observe(shinyjs::toggleState("months_plot",
                                  condition = input$type == "Monthly"))
+
+
+    # Titles --------------
+    titles <- reactive({
+      title(data_settings(), glue::glue("{input$type} Statistics"))
+    })
 
     # Plot -----------------------------
     plot <- reactive({
@@ -138,8 +145,7 @@ server_annual_stats <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title) {
         g <- g +
-          ggplot2::ggtitle(title(
-            data_settings(), glue::glue("{input$type} Statistics"))) +
+          ggplot2::ggtitle(titles()) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
@@ -203,6 +209,8 @@ server_annual_stats <- function(id, data_settings, data_raw,
       eval_check(t) %>%
         prep_DT()
     })
+
+    output$table_title <- renderText(titles())
 
 
     # R Code -----------------
