@@ -296,10 +296,13 @@ plot_title <- function(settings, desc = "") {
   if(!(all(settings$months %in% 1:12) & all(1:12 %in% settings$months))) {
     months_chr <- paste0(conseq(settings$months, type = "month"), " ")
   }
+  if(settings$source == "HYDAT") {
+    name <- paste0(settings$station_name, " - ", settings$station_id)
+  } else name <- settings$station_name
 
   glue::glue_data(
     settings,
-    "{desc}{station_name} ",
+    "{desc}{name} ",
     "({months_chr}{wy}{years_range[1]}-{years_range[2]})")
 }
 
