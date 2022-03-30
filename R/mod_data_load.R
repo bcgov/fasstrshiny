@@ -574,7 +574,7 @@ server_data_load <- function(id) {
       # Add title
       if(input$plot_title) {
         g <- g +
-          ggplot2::ggtitle(plot_title(data_settings(), "Flow")) +
+          ggplot2::ggtitle(title(data_settings(), "Flow")) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 

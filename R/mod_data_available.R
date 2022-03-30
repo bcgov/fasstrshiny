@@ -215,7 +215,7 @@ server_data_available <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title_symbols_flow) {
         g <- g +
-          ggplot2::ggtitle(plot_title(
+          ggplot2::ggtitle(title(
             data_settings(), glue::glue("Flow with symbols"))) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
@@ -250,7 +250,7 @@ server_data_available <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title_symbols_agg) {
         g <- g +
-          ggplot2::ggtitle(plot_title(
+          ggplot2::ggtitle(title(
             data_settings(), glue::glue("Aggregate symbols"))) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
@@ -312,7 +312,7 @@ server_data_available <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title_summary) {
         g <- g +
-          ggplot2::ggtitle(plot_title(data_settings(), "Data Availability")) +
+          ggplot2::ggtitle(title(data_settings(), "Data Availability")) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
@@ -358,7 +358,7 @@ server_data_available <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title_available) {
         g <- g +
-          ggplot2::ggtitle(plot_title(data_settings(), "Missing Data")) +
+          ggplot2::ggtitle(title(data_settings(), "Missing Data")) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 

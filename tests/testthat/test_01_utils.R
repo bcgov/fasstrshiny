@@ -38,64 +38,64 @@ test_that("conseq()", {
   expect_equal(conseq(c(1990, 1991, 1992, 1993), wrap = FALSE), "1990:1993")
 })
 
-test_that("plot_title()", {
+test_that("title()", {
   s <- list(years_range = c(1900, 2000), water_year = 1, months = 1:12,
             station_name = "Carnation Creek", station_id = "08HB048",
             source = "HYDAT")
 
-  plot_title(s) %>%
+  title(s) %>%
     expect_equal("Carnation Creek - 08HB048 (1900-2000)")
 
-  plot_title(s, "Annual Means") %>%
+  title(s, "Annual Means") %>%
     expect_equal("Annual Means: Carnation Creek - 08HB048 (1900-2000)")
 
   s$water_year <- 10
 
-  plot_title(s) %>%
+  title(s) %>%
     expect_equal("Carnation Creek - 08HB048 (Water Year 1900-2000)")
 
-  plot_title(s, "Annual Means") %>%
+  title(s, "Annual Means") %>%
     expect_equal("Annual Means: Carnation Creek - 08HB048 (Water Year 1900-2000)")
 
   s$months <- c(1, 2, 3, 4)
 
-  plot_title(s) %>%
+  title(s) %>%
     expect_equal("Carnation Creek - 08HB048 (Jan-Apr Water Year 1900-2000)")
 
-  plot_title(s, "Annual Means") %>%
+  title(s, "Annual Means") %>%
     expect_equal("Annual Means: Carnation Creek - 08HB048 (Jan-Apr Water Year 1900-2000)")
 
   s$water_year <- 1
 
-  plot_title(s) %>%
+  title(s) %>%
     expect_equal("Carnation Creek - 08HB048 (Jan-Apr 1900-2000)")
 
-  plot_title(s, "Annual Means") %>%
+  title(s, "Annual Means") %>%
     expect_equal("Annual Means: Carnation Creek - 08HB048 (Jan-Apr 1900-2000)")
 
   s$months <- c(1, 2, 3, 4, 12)
 
-  plot_title(s) %>%
+  title(s) %>%
     expect_equal("Carnation Creek - 08HB048 (Jan-Apr, Dec 1900-2000)")
 
-  plot_title(s, "Annual Means") %>%
+  title(s, "Annual Means") %>%
     expect_equal("Annual Means: Carnation Creek - 08HB048 (Jan-Apr, Dec 1900-2000)")
 
   s$water_year <- 10
 
-  plot_title(s) %>%
+  title(s) %>%
     expect_equal("Carnation Creek - 08HB048 (Jan-Apr, Dec Water Year 1900-2000)")
 
-  plot_title(s, "Annual Means") %>%
+  title(s, "Annual Means") %>%
     expect_equal("Annual Means: Carnation Creek - 08HB048 (Jan-Apr, Dec Water Year 1900-2000)")
 
 
   s$source <- "CSV"
 
-  plot_title(s) %>%
+  title(s) %>%
     expect_equal("Carnation Creek (Jan-Apr, Dec Water Year 1900-2000)")
 
-  plot_title(s, "Annual Means") %>%
+  title(s, "Annual Means") %>%
     expect_equal("Annual Means: Carnation Creek (Jan-Apr, Dec Water Year 1900-2000)")
 
 })

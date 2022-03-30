@@ -77,7 +77,7 @@ server_outside_normal <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title) {
         g <- g +
-          ggplot2::ggtitle(plot_title(
+          ggplot2::ggtitle(title(
             data_settings(), "Days Outside Normal")) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0, size = 12))
       }

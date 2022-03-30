@@ -115,7 +115,7 @@ server_low_flows <- function(id, data_settings, data_raw,
       if(input$plot_title) {
         for(i in seq_len(length(g))) {
         g[[i]] <- g[[i]] +
-          ggplot2::ggtitle(plot_title(
+          ggplot2::ggtitle(title(
             data_settings(), stringr::str_replace_all(names(g)[i], "_", " "))) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0, size = 12))
         }

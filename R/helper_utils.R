@@ -286,7 +286,7 @@ conseq <- function(s, type = "num", wrap = NULL) {
   res
 }
 
-plot_title <- function(settings, desc = "") {
+title <- function(settings, desc = "") {
 
   wy <- ""
   months_chr <- ""

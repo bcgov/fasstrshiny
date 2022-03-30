@@ -102,7 +102,7 @@ server_annual_totals <- function(id, data_settings, data_raw,
         for(i in seq_len(length(g))) {
           g[[i]] <- g[[i]] +
             ggplot2::ggtitle(
-              plot_title(data_settings(),
+              title(data_settings(),
                          stringr::str_replace_all(names(g)[i], "_", " "))) +
             ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
         }

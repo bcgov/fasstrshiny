@@ -81,7 +81,7 @@ server_flow_timing <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title) {
         g <- g +
-          ggplot2::ggtitle(plot_title(data_settings(), "Flow Timing")) +
+          ggplot2::ggtitle(title(data_settings(), "Flow Timing")) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 

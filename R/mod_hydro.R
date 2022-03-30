@@ -151,8 +151,8 @@ server_hydro <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title) {
         g <- g +
-          ggplot2::ggtitle(plot_title(data_settings(),
-                                      glue::glue("{input$type} Hydrograph"))) +
+          ggplot2::ggtitle(title(data_settings(),
+                                 glue::glue("{input$type} Hydrograph"))) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
