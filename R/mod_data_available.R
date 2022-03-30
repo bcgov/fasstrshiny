@@ -198,6 +198,8 @@ server_data_available <- function(id, data_settings, data_raw,
     # Symbols Flow Plot -----------------------------
     output$plot_symbols_flow <- plotly::renderPlotly({
       check_data(data_loaded())
+      validate(need("Symbol" %in% names(data_raw()),
+                    "Cannot plot unless there is a 'Symbol' column in the data"))
 
       data_flow <- data_raw()
 
@@ -230,6 +232,8 @@ server_data_available <- function(id, data_settings, data_raw,
     output$plot_symbols_agg <- ggiraph::renderGirafe({
       check_data(data_loaded())
       req(input$symbols_agg_type)
+      validate(need("Symbol" %in% names(data_raw()),
+                    "Cannot plot unless there is a 'Symbol' column in the data"))
 
       data_flow <- data_raw()
 

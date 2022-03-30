@@ -6,7 +6,7 @@ set.seed(111)
 
 
 # Create small testing Hydat database
-file.copy("inst/shiny_app/Hydat.sqlite3", "inst/extdata/test_hydat.sqlite3")
+file.copy("inst/shiny_app/Hydat.sqlite3", "inst/extdata/test_hydat.sqlite3", overwrite = TRUE)
 h <- DBI::dbConnect(RSQLite::SQLite(), "inst/extdata/test_hydat.sqlite3")
 
 t <- DBI::dbListTables(h) %>%
@@ -30,10 +30,15 @@ d <- tidyhydat::hy_daily_flows(station_number = "08HB048") %>%
 # Good data
 write.csv(d, "inst/extdata/test_data.csv", row.names = FALSE)
 
-d <- dplyr::slice_sample(d, n = 100)
+# No symbols
+d %>%
+  dplyr::select(-sym) %>%
+  write.csv("inst/extdata/test_data_sym.csv", row.names = FALSE)
+
 
 # Duplicated data
-dplyr::bind_rows(d, d) %>%
+dplyr::slice_sample(d, n = 100) %>%
+  dplyr::bind_rows(., .) %>%
   write.csv("inst/extdata/test_data_dups.csv", row.names = FALSE)
 
 # Bad dates

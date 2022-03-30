@@ -97,9 +97,10 @@ ui_data_load <- function(id) {
           title = "CSV Preview", value = "tabs_csv",
           h3("Loading Tips"),
           textOutput(ns("csv_status")),
-          textOutput(ns("csv_checks")),
-          h3("Preview"),
-          verbatimTextOutput(ns("csv_preview"))),
+          h3("CSV Preview"),
+          verbatimTextOutput(ns("csv_preview")),
+          h3("Loaded Data Preview"),
+          verbatimTextOutput(ns("data_preview"))),
 
 
         # Plot --------
@@ -200,7 +201,7 @@ server_data_load <- function(id) {
                  selectizeInput(
                    NS(id, "col_symbol"),
                    label = HTML("Symbols column"),
-                   choices = cols, selected = cols[3]))
+                   choices = c(" ", cols), selected = NULL))
           ))
     })
 
@@ -353,33 +354,20 @@ server_data_load <- function(id) {
 
     })
 
-    output$csv_checks <- renderText({
-      msgs <- list()
-
-      if(input$source == "CSV" & !is.null(input$file)) {
-        x <- utils::read.csv(normalizePath(input$file$datapath, winslash = "/"))
-        x <- x[[input$col_date]]
-
-        if(any(duplicated(x))) {
-          msgs$dups <- paste0("There are duplicate dates in the data... ",
-                              "is this from a single station?")
-        }
-        if("try-error" %in% class(try(as.Date(x), silent = TRUE))) {
-          msgs$dates <- "Date column is not in the standard date format 'YYYY-MM-DD'"
-        }
-      }
-
-      validate(need(FALSE, paste0(msgs, collapse = "\n")), errorClass = "red")
-
-    }) %>%
-      bindEvent(input$load)
-
     output$csv_preview <- renderText({
       req(input$file)
-      readLines(input$file$datapath, n = 20) %>%
+      readLines(input$file$datapath, n = 6) %>%
         paste0(collapse = "\n") %>%
         paste0("\n...")
     })
+    output$data_preview <- renderText({
+      req(data_source() == "CSV" & data_loaded() & data_id() == input$file$name)
+      dplyr::slice(data_raw(), 1:6) %>%
+        capture.output() %>%
+        paste0(collapse = "\n") %>%
+        paste0("\n...")
+    })
+
 
     # HYDAT Stations -------------------
     stations <- reactive({
@@ -509,19 +497,20 @@ server_data_load <- function(id) {
 
     # Raw data - File ---------
     data_raw_file <- reactive({
-      req(input$file, input$col_date, input$col_value, input$col_symbol)
+      req(input$file, input$col_date, input$col_value)
 
       validate(need(length(unique(c(
         input$col_date, input$col_value, input$col_symbol))) == 3,
-        "Date, Value and Symbol columns must be distinct"))
+        "Date, Value and Symbol columns must be distinct"), errorClass = "red")
 
-      f <- normalizePath(input$file$datapath, winslash = "/") #Otherwise parse() has issues
+      # Get proper paths for diff OS (Need "/" otherwise parse() has issues)
+      f <- normalizePath(input$file$datapath, winslash = "/")
 
       glue::glue(
         "data_flow <- read.csv('{f}') %>% ",
-        "  dplyr::rename(Date = {input$col_date}, Value = {input$col_value}, ",
-        "                Symbol = {input$col_symbol}) %>%",
-        "  fill_missing_dates()") %>%
+        "  dplyr::select(Date = {input$col_date}, Value = {input$col_value}",
+        dplyr::if_else(!input$col_symbol %in% c("", " "), ", Symbol = {input$col_symbol}", ""),
+        ") %>% fill_missing_dates()") %>%
         add_dates_discharge()
     })
 
@@ -547,8 +536,22 @@ server_data_load <- function(id) {
 
       labels$data_raw <- "Load data, prep dates, calculate volume/yield"
 
+      d <- eval_check(d)
+
+      if(data_source() == "CSV" & data_id() == input$file$name) {
+        msgs <- c()
+        if(any(duplicated(d$Date))) {
+          msgs$dups <- paste0("There are duplicate dates in the data... ",
+                              "is this from a single station?")
+        }
+        if("try-error" %in% class(try(as.Date(d$Date), silent = TRUE))) {
+          msgs$dates <- "Date column is not in the standard date format 'YYYY-MM-DD'"
+        }
+        validate(need(length(msgs) == 0, paste0(msgs, collapse = "\n")), errorClass = "red")
+      }
+
       data_loaded(TRUE)
-      eval_check(d)
+      d
     }) %>%
       bindEvent(input$load, input$water_year, input$basin_area,
                 ignoreInit = TRUE)
