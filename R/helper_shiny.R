@@ -207,8 +207,27 @@ eval_check <- function(t) {
 
 #' Messages if data not loaded
 #' @noRd
-check_data <- function(x){
+check_data <- function(x) {
   validate(need(x, "You'll need to first load some data under Data > Loading"))
+}
+
+#' Message if no basin area and trying yield
+#'
+#' x is data_settions(), y generally input$discharge2 for modules which have
+#' use_yield.
+#'
+#' @noRd
+check_yield <- function(x, y = FALSE, require = FALSE) {
+
+  if(!require) {
+    need(
+      !(x$basin_area == 0 && (x$discharge == "Yield_mm" || y)),
+      message = paste0("Cannot calculate yield statistics without basin area ",
+                       "(set basin area under Data > Loading) ")) %>%
+      validate()
+  } else {
+    req(!(x$basin_area == 0 && (x$discharge == "Yield_mm" || y)))
+  }
 }
 
 #' For multiple, sequential need() inside a validate
@@ -301,7 +320,8 @@ ui_test <- function(mod) {
 }
 
 
-dummy_data <- function(hydat_stn = "08HB048", local_file = FALSE) {
+dummy_data <- function(hydat_stn = "08HB048", local_file = FALSE,
+                       basin_area = TRUE) {
 
 
   if(local_file) {
@@ -321,13 +341,16 @@ dummy_data <- function(hydat_stn = "08HB048", local_file = FALSE) {
 
   data_raw <- data_raw %>%
     add_date_variables(water_year_start = 1) %>%
-    add_daily_volume() %>%
-    add_daily_yield()
+    add_daily_volume()
 
   code <- paste0(code,
                  "%>% add_date_variables(water_year_start = 1) %>%",
-                 "add_daily_volume() %>%",
-                 "add_daily_yield()")
+                 "add_daily_volume() ")
+  if(basin_area) {
+    data_raw <- add_daily_volume(data_raw)
+    code <- paste0(code, "%>% add_daily_yield(basin_area = 10.3)")
+  }
+
 
   data_settings <- list(
     discharge = "Value",
@@ -340,7 +363,7 @@ dummy_data <- function(hydat_stn = "08HB048", local_file = FALSE) {
     complete = FALSE,
     missing = TRUE,
     allowed = 100,
-    basin_area = 10.3,
+    basin_area = dplyr::if_else(basin_area, 10.3, 0),
     station_name = "Carnation Creek At The Mouth",
     station_id = "08HB048")
 

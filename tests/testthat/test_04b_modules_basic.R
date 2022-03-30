@@ -100,9 +100,24 @@ test_that("Annual totals", {
       expect_error(output$plot, NA)
       expect_error(output$table, NA)
       expect_false(output$code == "")
-
     }) %>% suppressWarnings()
   }
+
+  # Test no basin area
+  for(f in c(FALSE, TRUE)) {
+    d <- dummy_data(local_file = f, basin_area = FALSE)
+
+    testServer(server_annual_totals, args = list(d$s, d$d, d$l, d$c), {
+
+      session$setInputs(discharge2 = TRUE, display = "Total_Yield",
+                        plot_title = TRUE)
+      expect_error(plots())
+      expect_error(output$plot, "Cannot calculate yield")
+      expect_error(output$table, "Cannot calculate yield")
+    })
+  }
+
+
 })
 
 ## Flow timing ------------------

@@ -73,8 +73,9 @@ server_annual_totals <- function(id, data_settings, data_raw,
 
     # Plots -------------------
     plots <- reactive({
-      check_data(data_loaded())
       req(!is.null(input$discharge2))
+      check_yield(data_settings(), input$discharge2, require = TRUE)
+      check_data(data_loaded())
 
       data_flow <- data_raw()
       g <- create_fun(fun = "plot_annual_cumulative_stats",
@@ -127,6 +128,7 @@ server_annual_totals <- function(id, data_settings, data_raw,
     })
 
     output$plot <- ggiraph::renderGirafe({
+      check_yield(data_settings(), input$discharge2)
       ggiraph::girafe(ggobj = plot(),
                       width_svg = dims()[1],
                       height_svg = dims()[2],
@@ -143,6 +145,7 @@ server_annual_totals <- function(id, data_settings, data_raw,
     # Table -----------------------
     output$table <- DT::renderDT({
       check_data(data_loaded())
+      check_yield(data_settings(), input$discharge2)
 
       data_flow <- data_raw()
 

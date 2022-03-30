@@ -84,6 +84,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded, data_cod
     plot <- reactive({
       check_data(data_loaded())
       req(input$type, !is.null(input$add_year), input$discharge2)
+      check_yield(data_settings(), input$discharge2)
 
       data_flow <- data_raw()
 
@@ -139,6 +140,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded, data_cod
     output$table <- DT::renderDT({
       check_data(data_loaded())
       req(input$discharge2)
+      check_yield(data_settings(), input$discharge2)
 
       data_flow <- data_raw()
 

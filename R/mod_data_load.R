@@ -135,6 +135,27 @@ server_data_load <- function(id) {
 
     # UI Elements ---------------------------------------
 
+    # Discharge
+    observe({
+      req(input$basin_area)
+      s <- input$discharge
+      if(input$basin_area == 0) {
+        if(s == "Yield_mm") s <- "Value"
+        updateAwesomeRadio(
+          session, "discharge",
+          choices = list("Discharge (cms)" = "Value",
+                         "Volumetric Discharge (m3)" = "Volume_m3"),
+          selected = s)
+      } else {
+        updateAwesomeRadio(
+          session, "discharge",
+          selected = s,
+          choices = list("Discharge (cms)" = "Value",
+                         "Volumetric Discharge (m3)" = "Volume_m3",
+                         "Runoff Yield (mm)" = "Yield_mm"))
+      }
+    })
+
     # Jump to tab
     observe({
       if(input$source == "HYDAT") {
@@ -321,8 +342,9 @@ server_data_load <- function(id) {
                "Date, Value and Symbol columns must be distinct") %then%
 
           need(!is.null(input$basin_area) && input$basin_area > 0,
-               paste0("Specify basin area under ",
-                      "Station Information")) %then%
+               paste0("If you have it, specify basin area under ",
+                      "Station Information; Otherwise, ",
+                      "click the Load Data button!")) %then%
 
           need(data_id() == input$file$name,
                "Click the Load Data button!"),
@@ -346,8 +368,6 @@ server_data_load <- function(id) {
           msgs$dates <- "Date column is not in the standard date format 'YYYY-MM-DD'"
         }
       }
-
-      if(input$basin_area == 0) msgs$basin <- "Specify basin area under Station Information"
 
       validate(need(FALSE, paste0(msgs, collapse = "\n")), errorClass = "red")
 
@@ -465,50 +485,44 @@ server_data_load <- function(id) {
     })
 
 
+    # Add dates and discharge
+    add_dates_discharge <- function(d) {
+      d <- glue::glue(
+        "{d} %>%\n",
+        "add_date_variables(water_year_start = {as.numeric(input$water_year)}) %>%",
+        "  add_daily_volume()")
+      if(input$basin_area > 0) {
+        d <- glue::glue("{d} %>% add_daily_yield(basin_area = {input$basin_area})")
+      }
+      d
+    }
+
+
     # Raw data - HYDAT ---------------
     data_raw_hydat <- reactive({
       req(input$water_year, input$load > 0, input$station_number)
-
-        d <- glue::glue(
-          "data_flow <- fill_missing_dates(",
-          "  station_number = '{input$station_number}') %>% ",
-          "  add_date_variables(water_year_start = {as.numeric(input$water_year)}) %>%",
-          "  add_daily_volume() %>%",
-          "  add_daily_yield()")
-
-        d
+      glue::glue(
+        "data_flow <- fill_missing_dates(",
+        "  station_number = '{input$station_number}')") %>%
+          add_dates_discharge()
     })
-
 
     # Raw data - File ---------
     data_raw_file <- reactive({
-      req(input$file, input$col_date, input$col_value, input$col_symbol,
-          input$basin_area != 0)
+      req(input$file, input$col_date, input$col_value, input$col_symbol)
 
       validate(need(length(unique(c(
         input$col_date, input$col_value, input$col_symbol))) == 3,
         "Date, Value and Symbol columns must be distinct"))
 
-      validate(need(!is.null(input$basin_area) && input$basin_area > 0,
-                    paste0("Must have a valid, non-zero basin area ",
-                           "(see Station Information)")))
-
-      d <- glue::glue(
-        "dplyr::rename(Date = {input$col_date}, Value = {input$col_value}, ",
-        "              Symbol = {input$col_symbol}) %>%",
-        "fill_missing_dates() %>% ",
-        "add_date_variables(water_year_start = {as.numeric(input$water_year)}) %>%",
-        "add_daily_volume() %>%",
-        "add_daily_yield(basin_area = {input$basin_area})")
-
-      # For user to reproduce locally
-      d1 <- glue::glue("data_flow <- read.csv('{input$file$name}') %>% ", d)
-
-      # Real loading
       f <- normalizePath(input$file$datapath, winslash = "/") #Otherwise parse() has issues
-      d2 <- glue::glue("data_flow <- read.csv('{f}') %>% ", d)
 
-      d2
+      glue::glue(
+        "data_flow <- read.csv('{f}') %>% ",
+        "  dplyr::rename(Date = {input$col_date}, Value = {input$col_value}, ",
+        "                Symbol = {input$col_symbol}) %>%",
+        "  fill_missing_dates()") %>%
+        add_dates_discharge()
     })
 
 
@@ -536,15 +550,14 @@ server_data_load <- function(id) {
       data_loaded(TRUE)
       eval_check(d)
     }) %>%
-      bindEvent(input$load, input$water_year,
+      bindEvent(input$load, input$water_year, input$basin_area,
                 ignoreInit = TRUE)
 
     # Plot ----------------
     output$plot <- plotly::renderPlotly({
       check_data(data_loaded())
-      req(input$daterange,
-          input$years_range,
-          input$water_year)
+      check_yield(data_settings())
+      req(input$daterange, input$years_range, input$water_year, input$discharge)
 
       data_flow <- data_raw()
 
@@ -570,7 +583,7 @@ server_data_load <- function(id) {
                    "lasso2d", "select2d",
                    "hoverCompareCartesian", "hoverClosestCartesian"))
     }) %>%
-      bindCache(data_raw())
+      bindCache(data_raw(), data_settings())
 
     # Table ----------------
     output$table <- DT::renderDT({

@@ -8,7 +8,7 @@ parameters <- dplyr::tribble(
   "add_dates",            "",                    "Choose dates to highlight on the plot",   FALSE,
   "add_mad",              "",                    "Add the calculated Mean Annual Discharge percentiles to the plot", FALSE,
 
-  "discharge",            "values",              "Discharge to use in calculations",   FALSE,
+  "discharge",            "values",              "Discharge to use in calculations<br>(Yield only available if basin area provided. See settings in Data > Loading)",   FALSE,
   "discharge2",           "use_yield",           "Discharge to use in calculations",   FALSE,
   "roll_days",            "roll_days",           "Number of days over which to roll the mean", TRUE,
   "roll_align",           "roll_align",          "Alignment of the rolling day window", TRUE,

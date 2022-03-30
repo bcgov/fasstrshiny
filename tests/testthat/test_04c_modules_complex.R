@@ -83,12 +83,33 @@ test_that("Cumulative", {
       expect_error(output$table, NA)
       expect_false(output$code == "")
 
-      session$setInputs(type = "Monthly")
+      session$setInputs(add_year = 1985)
+      expect_error(output$plot, NA)
+      expect_error(output$table, NA)
+      expect_false(output$code == "")
+
+      session$setInputs(type = "Monthly", add_year = "")
+      expect_error(output$plot, NA)
+      expect_error(output$table, NA)
+      expect_false(output$code == "")
+
+      session$setInputs(add_year = 1985)
       expect_error(output$plot, NA)
       expect_error(output$table, NA)
       expect_false(output$code == "")
 
     }) %>% suppressWarnings()
 
+    # Test no basin area
+
+    d <- dummy_data(local_file = f, basin_area = FALSE)
+
+    testServer(server_cumulative, args = list(d$s, d$d, d$l, d$c), {
+
+      session$setInputs(type = "Daily", discharge2 = TRUE, plot_log = FALSE,
+                        add_year = "", plot_title = TRUE)
+      expect_error(output$plot, "Cannot calculate yield")
+      expect_error(output$table, "Cannot calculate yield")
+    }) %>% suppressWarnings()
   }
 })
