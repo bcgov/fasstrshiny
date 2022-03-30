@@ -14,16 +14,6 @@
 
 # Functions --------------------------------------------
 
-
-# Determine the default value, if input exists and set is TRUE, returns
-# global options preset, otherwise default
-set_input <- function(type, input, set, value) {
-  if(set & !is.null(input[[glue::glue("data-{type}")]])) {
-    value <- input[[glue::glue("data-{type}")]]
-  }
-  value
-}
-
 # The following functions define inputs including tooltips
 # Some are 'fancy' from the shinyWidgets package (e.g., materialSwitch(), etc), and require an extra id to be attached to the label in order to properly display tooltips (see https://github.com/dreamRs/shinyWidgets/issues/63)
 
@@ -82,25 +72,20 @@ select_custom_months <- function(id) {
   )
 }
 
-select_discharge <- function(id, input = NULL, set = TRUE) {
-  selected <- set_input("discharge", input, set, NULL)
-
+select_discharge <- function(id) {
   tagList(
     awesomeRadio(NS(id, "discharge"),
                  label = "Discharge type",
                  choices = list("Discharge (cms)" = "Value",
                                 "Volumetric Discharge (m3)" = "Volume_m3",
                                 "Runoff Yield (mm)" = "Yield_mm"),
-                 selected = selected),
+                 selected = "Value"),
     bsTooltip(NS(id, "discharge"), tips$discharge,
               placement = "left"))
 }
 
-select_rolling <- function(id, input = NULL, name = "roll",
-                           set = TRUE, multiple = FALSE) {
+select_rolling <- function(id, name = "roll", multiple = FALSE) {
   if(multiple) d <- c(1, 3, 7, 30) else d <- 1
-  value <- set_input(glue::glue("{name}_days"), input, set, d)
-  selected <- set_input(glue::glue("{name}_align"), input, set, "right")
 
   tagList(
     fluidRow(id = NS(id, glue::glue("{name}ing")),
@@ -108,12 +93,12 @@ select_rolling <- function(id, input = NULL, name = "roll",
                     selectizeInput(NS(id, glue::glue("{name}_days")),
                                    label = "Rolling days",
                                    choices = 1:180,
-                                   selected = value,
+                                   selected = d,
                                    multiple = multiple)),
              column(6,
                     selectizeInput(NS(id, glue::glue("{name}_align")),
                                    label = "Rolling align",
-                                   selected = selected,
+                                   selected = "right",
                                    choices = list("Right" = "right",
                                                   "Left" = "left",
                                                   "Center" = "center")))
@@ -139,41 +124,34 @@ select_percentiles <- function(id, name = "percentiles", selected = c(10, 90),
     bsTooltip(NS(id, name), t, placement = "left"))
 }
 
-select_complete <- function(id, input = NULL, set = TRUE) {
-  value <- set_input("complete", input, set, FALSE)
+select_complete <- function(id) {
 
   tagList(
     div(id = NS(id, "complete_tip"),
         prettySwitch(NS(id, "complete"),
                      label = "Complete years only",
-                     value = value,
+                     value = FALSE,
                      status = "success", slim = TRUE)),
     bsTooltip(NS(id, "complete_tip"), tips$complete,
               placement = "left"))
 }
 
-select_missing <- function(id, input = NULL, set = TRUE, value = NULL) {
-  value <- set_input("missing", input, set,
-                     dplyr::if_else(is.null(value), TRUE, value))
-
+select_missing <- function(id) {
   tagList(
     div(id = NS(id, "missing_tip"),
         prettySwitch(NS(id, "missing"),
-                     value = value, status = "danger",
+                     value = TRUE, status = "danger",
                      label = "Ignore missing values",
                      slim = TRUE)),
     bsTooltip(NS(id, "missing_tip"), tips$missing,
               placement = "left"))
 }
 
-select_allowed <- function(id, input = NULL, set = TRUE, value = NULL) {
-  value <- set_input("allowed", input, set,
-                     dplyr::if_else(is.null(value), 100, value))
-
-  tagList(
+select_allowed <- function(id) {
+   tagList(
     sliderInput(NS(id, "allowed"),
                 label = "Allowed missing (%)",
-                value = value, step = 5, min = 0, max = 100),
+                value = 100, step = 5, min = 0, max = 100),
     bsTooltip(NS(id, "allowed"), tips$allowed,
               placement = "left"))
 }

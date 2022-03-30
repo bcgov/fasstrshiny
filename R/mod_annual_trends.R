@@ -63,7 +63,7 @@ ui_annual_trends <- function(id) {
                                           placement = "left")),
 
               strong("Low Flows"),
-              select_rolling(id, name = "low_roll", set = FALSE, multiple = TRUE),
+              select_rolling(id, name = "low_roll", multiple = TRUE),
 
               selectizeInput(ns("timing_percent"),
                              label = "Percents of total annual flows",

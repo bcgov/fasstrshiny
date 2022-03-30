@@ -37,7 +37,7 @@ ui_volume_freq <- function(id) {
 
           show_ui(ns("show_data"), "Data"),
           div(id = ns("data"),
-              select_rolling(id, set = FALSE, multiple = TRUE),
+              select_rolling(id, multiple = TRUE),
               select_analysis_data(id),
               select_allowed(id)
           ),

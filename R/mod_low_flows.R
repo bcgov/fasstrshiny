@@ -25,7 +25,7 @@ ui_low_flows <- function(id) {
         width = 3,
         helpText("Placeholder descriptive text to describe this section, ",
                  "what it does and how to use it"),
-        select_rolling(id, set = FALSE, multiple = TRUE),
+        select_rolling(id, multiple = TRUE),
         uiOutput(ns("ui_display")),
         ui_download(id = ns("plot"))
       ),
