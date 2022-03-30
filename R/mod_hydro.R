@@ -142,12 +142,11 @@ server_hydro <- function(id, data_settings, data_raw,
                   "Daily" = "plot_daily_stats",
                   "Long-term Monthly" = "plot_longterm_monthly_stats",
                   "Long-term Daily" = "plot_longterm_daily_stats") %>%
-        create_fun(data_name = "data_flow", input, input_data = data_settings(),
-                   end = "[[1]]")
+        create_fun(data_name = "data_flow", input, input_data = data_settings())
 
-      code_plot <- g
-      labels_plot <- glue::glue("Plot {input$type} hydrographs")
-      g <- eval_check(g)
+      code$plot <- g
+      labels$plot <- glue::glue("Plot {input$type} hydrographs")
+      g <- eval_check(g)[[1]]
 
       # Add title
       if(input$plot_title) {
@@ -190,19 +189,6 @@ server_hydro <- function(id, data_settings, data_raw,
                                                       label = .data$labs,
                                                       hjust = .data$hjust),
                              y = Inf, vjust = 2)
-
-        code_plot <- glue::glue(
-          code_plot,
-          " + geom_vline(xintercept = as.Date(c('{glue::glue_collapse(dts$Date, sep = \"', '\")}')), ",
-          "colour = 'grey20') + ",
-          "geom_text(data = data.frame(",
-          "    Date = as.Date(c('{glue::glue_collapse(dts$Date, sep = \"', '\")}')), ",
-          "    labs = c('{glue::glue_collapse(dts$labs, sep = \"', '\")}'), ",
-          "    hjust = c({glue::glue_collapse(dts$hjust, sep = \", \")})), ",
-          "aes(x = Date, label = labs, hjust = hjust), y = Inf, vjust = 2)")
-
-        labels_plot <- glue::glue(labels_plot, " (with dates)")
-
       }
 
       # Add mad
@@ -225,18 +211,6 @@ server_hydro <- function(id, data_settings, data_raw,
             ggplot2::aes(y = .data$value, label = .data$type),
             x = c(Inf, rep(-Inf, nrow(mad()) - 1)), colour = "black",
             hjust = c(1.1, rep(-0.1, nrow(mad()) -1)), vjust = -0.5)
-
-        code_plot <- glue::glue(
-          code_plot,
-          " + geom_hline(data = mad, aes(yintercept = value), ",
-          "size = c({glue::glue_collapse(c(1, rep(0.5, nrow(mad()) - 0.75)), sep = ', ')}), ",
-          "linetype = \"dashed\") + ",
-          "geom_text(data = mad, aes(y = value, label = type), ",
-          "x = c({glue::glue_collapse(c(Inf, rep(-Inf, nrow(mad()) - 1)), sep = ', ')}), ",
-          "colour = \"black\", ",
-          "hjust = c({glue::glue_collapse(c(1.1, rep(-0.1, nrow(mad()) -1)), sep = ', ')}), ",
-          "vjust = -0.5)")
-        labels_plot <- glue::glue(labels_plot, " (with MAD)")
       }
 
       # Add custom
@@ -255,18 +229,7 @@ server_hydro <- function(id, data_settings, data_raw,
                               label = input$custom_label),
             ggplot2::aes(y = .data$y, label = .data$label), x = Inf,
             colour = "black", hjust = 1.1, vjust = -0.5)
-
-        code_plot <- glue::glue(
-          code_plot,
-          " + geom_hline(aes(yintercept = {input$custom}), size = 1) + ",
-          "geom_text(data = data.frame(y = {round(input$custom, 2)}, ",
-          "label = '{input$custom_label}'), aes(y = y, label = label), ",
-          "x = Inf, colour = 'black', hjust = 1.1, vjust = -0.5)")
-        labels_plot <- glue::glue(labels_plot, " (with Custom hline)")
       }
-
-      code$plot <- code_plot
-      labels$plot <- paste0(labels_plot, "\nlibrary(ggplot2)")
 
       g
     })
