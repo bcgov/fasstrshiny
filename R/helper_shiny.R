@@ -321,7 +321,7 @@ ui_test <- function(mod) {
 
 
 dummy_data <- function(hydat_stn = "08HB048", local_file = FALSE,
-                       basin_area = TRUE) {
+                       basin_area = TRUE, symbols = TRUE) {
 
 
   if(local_file) {
@@ -350,6 +350,8 @@ dummy_data <- function(hydat_stn = "08HB048", local_file = FALSE,
     data_raw <- add_daily_volume(data_raw)
     code <- paste0(code, "%>% add_daily_yield(basin_area = 10.3)")
   }
+
+  if(!symbols) data_raw <- dplyr::select(data_raw, -Symbol)
 
 
   data_settings <- list(
