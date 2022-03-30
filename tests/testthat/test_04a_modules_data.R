@@ -6,13 +6,13 @@ test_that("Data Load - HYDAT", {
   testServer(server_data_load, {
     session$setInputs(
       # Loading
-      source = "HYDAT", station_number = "08HB048", hydat_table_rows_all = 1:1000,
+      source = "HYDAT", station_number = "08HB048", station_name = "Test",
+      hydat_table_rows_all = 1:1000,
       hydat_bc = TRUE, load = 1, plot_title = TRUE,
       # Settings
       years_range = c(1980, 2010), months = 1:12, roll_days = 1, roll_align = "right",
       water_year = 1, basin_area = 10.3, daterange = c("1980-01-01", "2010-01-01"),
-      discharge = "Value", complete = FALSE, missing = TRUE, allowed = 100,
-      station_name = "test")
+      discharge = "Value", complete = FALSE, missing = TRUE, allowed = 100)
 
     session$setInputs(load = 2) # Prompt past ignoreInit on data_raw()
 
@@ -48,14 +48,13 @@ test_that("Data Load - File", {
   testServer(server_data_load, {
     session$setInputs(
       # Loading
-      source = "CSV", load = 1, plot_title = TRUE,
+      source = "CSV", load = 1, plot_title = TRUE, station_name = "Test",
       file = f["test_data.csv", ],
       col_date = "dt", col_value = "flow", col_symbol = "sym",
       # Settings
       years_range = c(1980, 2010), months = 1:12, roll_days = 1, roll_align = "right",
       water_year = 1, basin_area = 10.3, daterange = c("1980-01-01", "2010-01-01"),
-      discharge = "Value", complete = FALSE, missing = TRUE, allowed = 100,
-      station_name = "test")
+      discharge = "Value", complete = FALSE, missing = TRUE, allowed = 100)
 
     session$setInputs(load = 2) # Prompt past ignoreInit on data_raw()
 
@@ -94,16 +93,16 @@ test_that("Data Load - File", {
     expect_error(eval_check(data_raw_file()), "At least one date")
 
     session$setInputs(file = f["test_data_dups.csv",])
-    #expect_error(eval_check(data_raw_file()), "There are duplicate dates")
+    expect_error(output$data_preview)
 
     session$setInputs(file = f["test_data_dups_dates.csv",])
     expect_error(eval_check(data_raw_file()), "At least one date")
 
-    #session$setInputs(file = f["test_data_sym.csv",])
-    ##expect_error(data_raw())
-    #session$setInputs(col_symbol = "")
-    #expect_error(d <- data_raw(), NA)
-    #expect_true(is.null(d$Symbol))
+    session$setInputs(file = f["test_data_sym.csv",])
+    expect_error(data_raw())
+    session$setInputs(col_symbol = " ")
+    expect_error(d <- eval_check(data_raw_file()), NA)
+    expect_true(is.null(d$Symbol))
 
   }) %>% suppressWarnings()
 })

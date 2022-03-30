@@ -362,7 +362,15 @@ server_data_load <- function(id) {
         paste0("\n...")
     })
     output$data_preview <- renderText({
-      req(data_source() == "CSV" & data_loaded() & data_id() == input$file$name)
+      req(data_source() == "CSV" & data_id() == input$file$name)
+      if(data_source() == "CSV" && !is.null(input$file$name) &&
+         data_id() == input$file$name) {
+        need(!any(duplicated(d$Date)),
+             paste0("There are duplicate dates in the data... ",
+                    "is this from a single station?")) %>%
+          validate(errorClass = "red")
+      }
+      req(data_loaded())
       dplyr::slice(data_raw(), 1:6) %>%
         capture.output() %>%
         paste0(collapse = "\n") %>%
@@ -541,15 +549,10 @@ server_data_load <- function(id) {
 
       if(data_source() == "CSV" && !is.null(input$file$name) &&
          data_id() == input$file$name) {
-        msgs <- c()
-        if(any(duplicated(d$Date))) {
-          msgs$dups <- paste0("There are duplicate dates in the data... ",
-                              "is this from a single station?")
-        }
-        if("try-error" %in% class(try(as.Date(d$Date), silent = TRUE))) {
-          msgs$dates <- "Date column is not in the standard date format 'YYYY-MM-DD'"
-        }
-        validate(need(length(msgs) == 0, paste0(msgs, collapse = "\n")), errorClass = "red")
+        need(!any(duplicated(d$Date)),
+             paste0("There are duplicate dates in the data... ",
+                    "is this from a single station?")) %>%
+          validate(errorClass = "red")
       }
 
       data_loaded(TRUE)
