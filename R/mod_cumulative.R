@@ -73,11 +73,14 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded, data_cod
         select_plot_title(id),
         select_plot_log(
           id, value = default("plot_daily_cumulative_stats", "log_discharge")),
+        select_add_dates(id),
         select_add_year(id, data_settings()$years_range))
     })
 
+    observe(shinyjs::toggleState("add_dates", condition = input$type == "Daily"))
+
     # Preserve dynamic UI inputs during bookmarking
-    keep <- c("plot_title", "plot_log", "add_year")
+    keep <- c("plot_title", "plot_log", "add_year", "add_dates")
     onBookmark(function(state) for(k in keep) state$values[[k]] <- input[[k]])
     onRestored(function(state) restore_inputs(session, keep, state$values))
 
@@ -123,6 +126,29 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded, data_cod
       g <- g + create_vline_interactive(
         data = g$data, stats = stats,
         size = dplyr::if_else(input$type == "Monthly", 20, 1))
+
+      # Add dates
+      if(input$type == "Daily" & !is.null(input$add_dates)){
+        dts <- data.frame(
+          Date = get_date(input$add_dates,
+                          water_year = as.numeric(data_settings()$water_year))) %>%
+          dplyr::mutate(labs = format(.data$Date, '%b-%d'),
+                        hjust = dplyr::if_else(
+                          as.numeric(data_settings()$water_year) ==
+                            as.numeric(format(.data$Date, "%m")),
+                          -0.05, 1.05))
+
+        g <- g +
+          ggiraph::geom_vline_interactive(
+            xintercept = dts$Date, colour = 'grey20', tooltip = dts$labs) +
+          ggplot2::geom_text(data = dts, ggplot2::aes(x = .data$Date,
+                                                      label = .data$labs,
+                                                      hjust = .data$hjust),
+                             y = Inf, vjust = 2)
+      }
+
+
+      g
     })
 
     dims <- c(14, 6) * opts$scale

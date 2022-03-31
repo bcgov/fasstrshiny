@@ -98,6 +98,12 @@ test_that("Cumulative", {
       expect_error(output$table, NA)
       expect_false(output$code == "")
 
+      # Add dates
+      session$setInputs(type = "Daily", add_date = "1990-01-01")
+      expect_error(output$plot, NA)
+      expect_error(output$table, NA)
+      expect_false(output$code == "")
+
     }) %>% suppressWarnings() %>% suppressMessages()
 
     # Test no basin area
