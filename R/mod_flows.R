@@ -26,10 +26,10 @@ ui_flows <- function(id) {
         width = 3,
         helpText("Placeholder descriptive text to describe this section, ",
                  "what it does and how to use it"),
-        # Update button
-        bsButton(ns("compute"), "Update", style = "primary",
+        # Compute button
+        bsButton(ns("compute"), "Compute", style = "primary",
                  class = "centreButton"),
-        helpText("Click 'Update' after making any changes to settings ",
+        helpText("Click 'Compute' after making any changes to settings ",
                  "(including plot settings)"),
         div(id = ns("longterm_tip"),
             prettySwitch(ns("longterm"),
@@ -37,9 +37,7 @@ ui_flows <- function(id) {
                          value = TRUE,
                          status = "success", slim = TRUE)),
         bsTooltip(ns("longterm_tip"), tips$longterm, placement = "left"),
-        uiOutput(ns("ui_months")),
-        bsTooltip(ns("ui_months"), "Months to include/exclude from the plot",
-                           placement = "left"),
+        uiOutput(ns("ui_months_plot")),
         select_custom_months(id),
 
         ui_download(id = ns("plot"))
@@ -79,24 +77,59 @@ server_flows <- function(id, data_settings, data_raw,
 
     # UI Elements -----------------------------------------------
 
-    output$ui_months <- renderUI({
-      checkboxGroupButtons(
-        NS(id, "months"),
-        label = "Months to plot",
-        choices = list("Jan" = 1, "Feb" = 2,
-                       "Mar" = 3, "Apr" = 4,
-                       "May" = 5, "Jun" = 6,
-                       "Jul" = 7, "Aug" = 8,
-                       "Sep" = 9, "Oct" = 10,
-                       "Nov" = 11, "Dec" = 12),
-        selected = data_settings()$months)
+    output$ui_months_plot <- renderUI({
+      tagList(
+        checkboxGroupButtons(
+          NS(id, "months_plot"),
+          label = "Months to plot",
+          choices = list("Jan" = 1, "Feb" = 2,
+                         "Mar" = 3, "Apr" = 4,
+                         "May" = 5, "Jun" = 6,
+                         "Jul" = 7, "Aug" = 8,
+                         "Sep" = 9, "Oct" = 10,
+                         "Nov" = 11, "Dec" = 12),
+          selected = data_settings()$months),
+        bsTooltip(NS(id, "months_plot"),
+                  "Months to include/exclude from the plot",
+                  placement = "left"))
     })
 
 
     # Preserve dynamic UI inputs during bookmarking
-    keep <- c("months")
+    keep <- c("months_plot")
     onBookmark(function(state) for(k in keep) state$values[[k]] <- input[[k]])
     onRestored(function(state) restore_inputs(session, keep, state$values))
+
+    # Change button status -----------------------
+
+    # Current settings
+    settings_current <- reactive({
+      s <- get_inputs(input, which = c(
+        "months_plot",
+        "plot_title", "plot_log", "custom_months", "custom_months_label",
+        "longterm"))
+      s$data_raw <- data_raw()
+      s$data_settings <- data_settings()
+      s
+    })
+
+    # Settings at last Compute
+    settings_last <- reactive(settings_current()) %>% bindEvent(input$compute)
+
+    observe({
+      settings_current()
+      # Change buttons and record status if changes
+      if(input$compute > 0) {
+        update_on_change(session, id,
+                         current = settings_current(), last = settings_last(),
+                         labels = paste0("Compute<br><small>",
+                                         c("Settings/Data have changed",
+                                           "No changes since last computation"),
+                                         "</small>"))
+      }
+    })
+
+
 
     # Titles ----------------
     titles <- reactive(title(data_settings(), "Flow Duration"))
@@ -108,8 +141,14 @@ server_flows <- function(id, data_settings, data_raw,
 
       data_flow <- data_raw()
 
+      if(is.null(input$months_plot)) {
+        mp <- "NULL"
+      } else mp <- conseq(input$months_plot)
+
       g <- create_fun(fun = "plot_flow_duration", data_name = "data_flow",
-                      input, input_data = data_settings())
+                      input, input_data = data_settings(),
+                      params_ignore = "months",
+                      extra = glue::glue("months = {mp}"))
 
       code$plot <- g
       labels$plot <- "Plot flow duration"
@@ -134,7 +173,7 @@ server_flows <- function(id, data_settings, data_raw,
             data_id = .data$Percentile),
           show.legend = FALSE, alpha = 0.01, size = 3)
     }) %>%
-      bindEvent(input$compute, ignoreNULL = FALSE)
+      bindEvent(input$compute)
 
 
     dims <- c(12, 6) * opts$scale
@@ -156,12 +195,17 @@ server_flows <- function(id, data_settings, data_raw,
     output$table <- DT::renderDT({
       check_data(data_loaded())
 
+      if(is.null(input$months_plot)) {
+        mp <- "NULL"
+      } else mp <- conseq(input$months_plot)
+
       data_flow <- data_raw()
 
       t <- create_fun(
         fun = "calc_longterm_daily_stats",
         data_name = "data_flow", input, input_data = data_settings(),
-        extra = "percentiles = 1:99",
+        params_ignore = "months",
+        extra = glue::glue("percentiles = 1:99, months = {mp}"),
         end = "%>% dplyr::select(-Mean, -Median, -Minimum, -Maximum)")
 
       code$table <- t
@@ -173,7 +217,7 @@ server_flows <- function(id, data_settings, data_raw,
         tidyr::pivot_wider(names_from = .data$Month, values_from = .data$value) %>%
         prep_DT()
     }) %>%
-      bindEvent(input$compute, ignoreNULL = FALSE)
+      bindEvent(input$compute)
 
     output$table_title <- renderText(titles())
 

@@ -5,8 +5,8 @@ test_that("Flows", {
     d <- dummy_data(local_file = f)
 
     testServer(server_flows, args = list(d$s, d$d, d$l, d$c), {
-      session$setInputs(months = 1:12, longterm = TRUE, custom_months = "",
-                        custom_months_label = "", plot_log = TRUE, update = 0,
+      session$setInputs(months_plot = 1:12, longterm = TRUE, custom_months = "",
+                        custom_months_label = "", plot_log = TRUE, compute = 0,
                         plot_title = TRUE)
 
       expect_error(output$plot, NA)
