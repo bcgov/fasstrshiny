@@ -31,9 +31,10 @@ ui_home <- function(id) {
 
           tags$ul(
             tags$li("See the '", strong("Overview"), "' tab for how to use this app"),
-            tags$li("If you would like to install ", code("fasstr"), " and ",
-                    code("fasstrshiny"), "on your own computer, see the '",
-                    strong("Getting Setup"), "' tab")),
+            tags$li("See the '", strong("Working in R"), "' tab for how to set up",
+                    code("fasstr"), " and ", code("fasstrshiny"), "on your own computer, ",
+                    "and for how to use the code output from ", code("fasstrshiny"))
+          ),
 
           hr(),
           p(),
@@ -117,19 +118,12 @@ ui_home <- function(id) {
         # Overview --------------------------------
         tabPanel(
           title = "Overview", width = 12,
-
-          "To get started, first go to the Data tab on the Navigation menu, ",
-          "choose a HYDAT station and load some data!",
-
-          br(),
-          p("Once you have loaded data you'll be able to explore the other tabs."),
-          p("Remeber that this is a work in progress so keep track of what you like,",
-            "don't like and what broke so we can make it better!"),
+          includeMarkdown(system.file("md", "overview.md", package = "fasstrshiny")),
         ),
 
         # R Workflow - Setup -------------------------------
         tabPanel(
-          title = "Getting Setup", width = 12,
+          title = "Working in R", width = 12,
           includeMarkdown(system.file("md", "setup.md", package = "fasstrshiny"))
         )
       )

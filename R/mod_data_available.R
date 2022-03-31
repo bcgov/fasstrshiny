@@ -157,7 +157,7 @@ ui_data_available <- function(id) {
 
         # Table -----------------
         tabPanel(
-          title = "Table",
+          title = "Data Summary Table",
           h4(textOutput(ns("table_title"))),
           DT::dataTableOutput(ns("table"))
         ),
