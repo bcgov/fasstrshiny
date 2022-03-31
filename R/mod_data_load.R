@@ -591,7 +591,8 @@ server_data_load <- function(id) {
                    "lasso2d", "select2d",
                    "hoverCompareCartesian", "hoverClosestCartesian"))
     }) %>%
-      bindCache(data_raw(), data_settings())
+      bindCache(data_raw(), data_settings(),
+                input$plot_title, input$plot_log, input$daterange)
 
     # Table ----------------
     output$table <- DT::renderDT({
