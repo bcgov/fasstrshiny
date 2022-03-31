@@ -76,20 +76,21 @@ ui_data_load <- function(id) {
 
         # HYDAT Map --------
         tabPanel(
-          title = "HYDAT Map", value = "tabs_hydat", width = 12,
+          title = "HYDAT", value = "tabs_hydat", width = 12,
           helpText("Click on a station marker to select the station"),
           shinycssloaders::withSpinner(
-            leaflet::leafletOutput(ns("hydat_map"), width = "100%", height = "500px")
-          )
-        ),
-
-        # HYDAT Table --------
-        tabPanel(
-          title = "HYDAT Table", width = 12,
+            leaflet::leafletOutput(ns("hydat_map"), width = "100%", height = "450px")
+          ),
           helpText(paste0("Click on a station row to select the station, ",
                           "or filter stations and browse on the HYDAT Map")),
           DT::DTOutput(ns("hydat_table"))
         ),
+
+        # # HYDAT Table --------
+        # tabPanel(
+        #   title = "HYDAT Table", width = 12,
+        #
+        # ),
 
 
         # CSV preview -------------
