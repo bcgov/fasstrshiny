@@ -15,3 +15,6 @@
 ^shiny_bookmarks$
 ^inst/shiny_app$
 ^CREATING_TESTS.R$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

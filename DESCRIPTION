@@ -53,3 +53,4 @@ Suggests:
 Remotes:
   bcgov/fasstr
 Config/testthat/edition: 3
+URL: https://bcgov.github.io/fasstrshiny
