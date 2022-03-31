@@ -116,7 +116,7 @@ fasstr_url_modal <- function(url){
 restore_inputs <- function(session, i, values, delay = 1000) {
 
   pretty_inputs <- c("plot_title", "plot_log", "plot_extremes", "add_mad")
-  selectize_inputs <- c("col_date", "col_value", "col_symbol",
+  selectize_inputs <- c("col_date", "col_value", "col_symbol", "mad",
                         "add_year", "add_dates", "years_exclude", "months")
   slider_inputs <- c("years_range", "allowed_annual", "allowed_monthly")
   text_inputs <- "station_name"

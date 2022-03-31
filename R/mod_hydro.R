@@ -39,14 +39,6 @@ ui_hydro <- function(id) {
         bsTooltip(ns("type"), "Type of statistic to calculate",
                            placement = "left"),
 
-        # MAD Percents
-        selectizeInput(ns("mad"),
-                       label = "Percent of Mean Annual Discharge (MAD)",
-                       choices = c(1:99),
-                       selected = c(5, 10, 20),
-                       multiple = TRUE),
-        bsTooltip(ns("mad"), tips$mad, placement = "left"),
-
         # Percentiles
         select_percentiles(
           id, name = "inner_percentiles", label = "Inner percentiles",
@@ -107,6 +99,12 @@ server_hydro <- function(id, data_settings, data_raw,
         select_add_year(id, data_settings()$years_range), # Dynamically created from data
         select_add_dates(id),
         select_add_mad(id),
+        selectizeInput(NS(id, "mad"),
+                       label = "Percent of Mean Annual Discharge (MAD)",
+                       choices = c(1:99),
+                       selected = c(5, 10, 20),
+                       multiple = TRUE),
+        bsTooltip(NS(id, "mad"), tips$mad, placement = "left"),
         select_custom(id, values = data_raw()[[data_settings()$discharge]])
       )
     })
@@ -114,7 +112,7 @@ server_hydro <- function(id, data_settings, data_raw,
     # Preserve dynamic UI inputs during bookmarking
     keep <- c("plot_title",
               "plot_log", "plot_extremes", "add_year",
-              "add_dates", "add_mad")
+              "add_dates", "add_mad", "mad")
     onBookmark(function(state) for(k in keep) state$values[[k]] <- input[[k]])
     onRestored(function(state) restore_inputs(session, keep, state$values))
 
@@ -122,6 +120,7 @@ server_hydro <- function(id, data_settings, data_raw,
     observe(shinyjs::toggleState("add_dates", condition = input$type == "Daily"))
     observe(shinyjs::toggleState("custom_months_all",
                                  condition = input$type != "Daily"))
+    observe(shinyjs::toggleState("mad", condition = input$add_mad))
     observe(shinyjs::toggleState("custom", condition = input$add_custom))
     observe(shinyjs::toggleState("custom_label", condition = input$add_custom))
 
