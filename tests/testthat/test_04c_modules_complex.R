@@ -98,7 +98,7 @@ test_that("Cumulative", {
       expect_error(output$table, NA)
       expect_false(output$code == "")
 
-    }) %>% suppressWarnings()
+    }) %>% suppressWarnings() %>% suppressMessages()
 
     # Test no basin area
 

@@ -38,6 +38,16 @@ test_that("conseq()", {
   expect_equal(conseq(c(1990, 1991, 1992, 1993), wrap = FALSE), "1990:1993")
 })
 
+test_that("conseq_wy()", {
+  expect_equal(conseq_wy(c(1, 4, 5, 6)), "Jan, Apr-Jun")
+  expect_equal(conseq_wy(c(1, 4, 5, 6), wy = 2), "Apr-Jun, Jan")
+  expect_equal(conseq_wy(c(1, 4, 5, 6), wy = 4), "Apr-Jun, Jan")
+  expect_equal(conseq_wy(c(1, 4, 5, 6), wy = 5), "May, Jun, Jan, Apr")
+  expect_equal(conseq_wy(c(1, 4, 5, 6), wy = 6), "Jun, Jan, Apr, May")
+  expect_equal(conseq_wy(c(1, 4, 5, 6), wy = 7), "Jan, Apr-Jun")
+})
+
+
 test_that("title()", {
   s <- list(years_range = c(1900, 2000), water_year = 1, months = 1:12,
             station_name = "Carnation Creek", station_id = "08HB048",

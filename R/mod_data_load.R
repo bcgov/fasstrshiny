@@ -621,21 +621,24 @@ server_data_load <- function(id) {
     output$info <- gt::render_gt({
 
       d <- dplyr::tibble(name = "", value = "", .rows = 0)
-      t <- "Current Data: None"
+      t <- "Current: No Data"
       s <- NULL
+      foot <- FALSE
 
-      if(!is.null(input$water_year) & !is.null(input$years_range) &
-         !is.null(input$months)) {
+      if(data_loaded() & !is.null(input$years_range)) {
 
         if(is.null(input$years_exclude)) {
           ye <- ""
         } else ye <- conseq(input$years_exclude, wrap = FALSE)
 
-        t <- glue::glue("Current Data: {data_id()}")
+        t <- glue::glue("Current: {data_id()}")
+        if(input$basin_area > 0) {
+          t <- glue::glue("{t} <small>({input$basin_area} km<sup>2</sup>)</small>")
+        }
         s <- input$station_name
 
-        m <- input$months
-        if(all(1:12 %in% m)) m <- "all" else m <- conseq(m, type = "month")
+        m <- conseq_wy(as.numeric(input$months),
+                       wy = as.numeric(input$water_year))
 
         n <- data_raw() %>%
           dplyr::filter(.data$WaterYear >= input$years_range[1],
@@ -645,21 +648,40 @@ server_data_load <- function(id) {
           unique() %>%
           length()
 
+        wy <- as.numeric(input$water_year)
+        wy <- c(wy, wy-1)
+        if(wy[2] == 0) wy[2] <- 12
+        wy <- conseq(wy, type = "month") %>% stringr::str_replace(", ", "-")
 
-        d <- list(`Water Year` = month.abb[as.numeric(input$water_year)],
-                  `Year Range` = glue::glue_collapse(input$years_range, sep = "-"),
-                  `Years Excl.` = ye,
-                  `Total Years` = glue::glue(
-                    "{n} / {input$years_range[2] - input$years_range[1] + 1}"),
-                  `Months` = m) %>%
+        yr <- glue::glue_collapse(input$years_range, sep = "-") %>%
+          glue::glue(" ({input$years_range[2] - input$years_range[1] + 1} yrs)")
+
+        units <- switch(input$discharge,
+                        "Value" = "cms",
+                        "Volume_m3" = "m<sup>3</sup>",
+                        "Yield_mm" = "mm")
+
+        if(any(is.na(data_raw()[[input$discharge]]))) foot <- TRUE
+
+        d <- list(
+          `Water Year` = wy,
+          `Year Range` = yr,
+          `Years Excl.` = ye,
+          `Total Years` = glue::glue(
+            "{n} / {input$years_range[2] - input$years_range[1] + 1}"),
+          `Months` = m,
+          `Rolling Avg. Days` = as.character(input$roll_days),
+          `Discharge Units` = units,
+          `Ignore Missing` = dplyr::if_else(input$missing, "Yes", "No"),
+          `Allowed Missing` = glue::glue("{input$allowed}%")) %>%
           tibble::enframe() %>%
           tidyr::unnest(.data$value)
       }
 
-      gt::gt(d) %>%
+      g <- gt::gt(d) %>%
         gt::cols_align("left") %>%
-        gt::cols_width(name ~ px(65)) %>%
-        gt::tab_header(title = t, subtitle = s) %>%
+        gt::cols_width(name ~ px(100)) %>%
+        gt::tab_header(title = gt::html(t), subtitle = gt::html(s)) %>%
         gt::tab_options(column_labels.hidden = TRUE,
                         heading.subtitle.font.size = 14,
                         heading.align = "left",
@@ -672,14 +694,25 @@ server_data_load <- function(id) {
                         table.font.color = "#b8c7ce",
                         table.align = "center",
                         table.width = "90%") %>%
+        gt::fmt_markdown(columns = "value") %>%
         gt::tab_style(
-          style = gt::cell_borders(
-            sides = c("top", "bottom"),
-            weight = 0),
-          locations = gt::cells_body(
-            columns = gt::everything(),
-            rows = gt::everything()
-          ))
+          style = gt::cell_borders(sides = c("top", "bottom"), weight = 0),
+          locations = gt::cells_body(columns = gt::everything(),
+                                     rows = gt::everything())) %>%
+        gt::tab_style(
+          style = gt::cell_text(size = "small"),
+          locations = gt::cells_title(groups = "subtitle"))
+
+      if(nrow(d) > 0) {
+        g <- g %>%
+          gt::tab_style(
+            style = gt::cell_borders(sides = "bottom", weight = 1, color = "#B8C7CE"),
+            locations = gt::cells_body(columns = gt::everything(), rows = 5))
+      }
+
+      if(foot) g <- gt::tab_source_note(g, "Note that there are missing data")
+
+      g
     })
 
     # Ensure that ui elements are not suspended when hidden

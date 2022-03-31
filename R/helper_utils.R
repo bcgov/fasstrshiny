@@ -252,12 +252,12 @@ lasso_svg <- function() {
 #' Create pretty consecutive text lists of numbers
 #' e.g., c(1, 2, 3, 4, 6, 7, 8, 9) ===> c(1:4, 6:9)
 #' @noRd
-conseq <- function(s, type = "num", wrap = NULL) {
+conseq <- function(s, type = "num", wrap = NULL, sort = TRUE) {
 
   if(is.null(wrap) && type == "num") wrap <- TRUE
   if(is.null(wrap) && type == "month") wrap <- FALSE
 
-  s <- sort(as.numeric(s))
+  if(sort) s <- sort(as.numeric(s))
 
   if(length(s) == 1) {
     if(type == "num") return(as.character(s))
@@ -285,6 +285,17 @@ conseq <- function(s, type = "num", wrap = NULL) {
   if(wrap) res <- paste0("c(", res, ")")
 
   res
+}
+
+conseq_wy <- function(months, wy = 1) {
+
+  wy_m <- months
+  wy_m[wy_m < wy] <- wy_m[wy_m < wy] + 12
+  wy_m <- wy_m - wy + 1
+  wy_m <- sort(wy_m) + wy - 1
+  wy_m[wy_m > 12] <- wy_m[wy_m > 12] - 12
+
+  conseq(wy_m, type = "month", sort = FALSE)
 }
 
 title <- function(settings, desc = "") {
