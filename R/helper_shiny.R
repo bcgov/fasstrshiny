@@ -58,8 +58,8 @@ download <- function(id, plot, name, settings, dims, dpi = 400) {
       },
       content = function(file) {
         if(is.reactive(dims)) dims <- dims()
-        ggsave(file, plot(), device = "png",
-               width = dims[1], height = dims[2], dpi = dpi)
+        ggplot2::ggsave(file, plot(), device = "png",
+                        width = dims[1], height = dims[2], dpi = dpi)
       }
     )
   })
@@ -351,7 +351,7 @@ dummy_data <- function(hydat_stn = "08HB048", local_file = FALSE,
     code <- paste0(code, "%>% add_daily_yield(basin_area = 10.3)")
   }
 
-  if(!symbols) data_raw <- dplyr::select(data_raw, -Symbol)
+  if(!symbols) data_raw <- dplyr::select(data_raw, -.data$Symbol)
 
 
   data_settings <- list(

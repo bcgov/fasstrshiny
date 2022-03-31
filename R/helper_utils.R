@@ -188,8 +188,7 @@ get_css <- function() {
   css
 }
 
-#' Get equation
-#' @noRd
+# Get equation
 # equation <- function(fit) {
 #
 #   if(fit$distname == "PIII") {

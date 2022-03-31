@@ -378,7 +378,7 @@ server_data_load <- function(id) {
       }
       req(data_loaded())
       dplyr::slice(data_raw(), 1:6) %>%
-        capture.output() %>%
+        utils::capture.output() %>%
         paste0(collapse = "\n") %>%
         paste0("\n...")
     })
