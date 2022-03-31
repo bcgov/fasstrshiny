@@ -31,20 +31,9 @@ ui_annual_trends <- function(id) {
           # Other options
           uiOutput(ns("ui_exclude")),
 
-          show_ui(ns("show_methods"), "Methods"),
-          fluidRow(id = ns("methods"),
-                   column(width = 6, id = ns("zyp_tip"),
-                          awesomeRadio(ns("zyp"),
-                                       label = "Prewhitening method",
-                                       choices = list("Zhang" = "zhang",
-                                                      "Yue-Pilon" = "yuepilon"),
-                                       selected = "zhang")),
-                   column(width = 6, id = ns("alpha_tip"),
-                          numericInput(ns("alpha"), label = "Trend alpha",
-                                       value = 0.05, min = 0, max = 0.3, step = 0.05)),
-                   bsTooltip(ns("zyp_tip"), tips$zyp, placement = "left"),
-                   bsTooltip(ns("alpha_tip"), tips$alpha, placement = "left")),
-          show_ui(ns("show_options"), "Data Options"),
+          h3("Options"),
+
+          show_ui(ns("show_options"), "Data"),
           div(id = ns("options"),
               fluidRow(id = ns("percentiles_tip"),
                        column(6,
@@ -76,6 +65,21 @@ ui_annual_trends <- function(id) {
                           value = c(25, 75), min = 1, max = 99, step = 1),
               bsTooltip(ns("normal_percentiles"), tips$normal_percentiles, placement = "left")
           ),
+
+          show_ui(ns("show_methods"), "Trend Method"),
+          fluidRow(id = ns("methods"),
+                   column(width = 6, id = ns("zyp_tip"),
+                          awesomeRadio(ns("zyp"),
+                                       label = "Prewhitening method",
+                                       choices = list("Zhang" = "zhang",
+                                                      "Yue-Pilon" = "yuepilon"),
+                                       selected = "zhang")),
+                   column(width = 6, id = ns("alpha_tip"),
+                          numericInput(ns("alpha"), label = "Trend alpha",
+                                       value = 0.05, min = 0, max = 0.3, step = 0.05)),
+                   bsTooltip(ns("zyp_tip"), tips$zyp, placement = "left"),
+                   bsTooltip(ns("alpha_tip"), tips$alpha, placement = "left")),
+
           show_ui(ns("show_allowed"), "Missing Dates"),
           div(id = ns("allowed"), uiOutput(ns("ui_allowed")))
       ),

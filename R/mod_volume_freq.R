@@ -35,16 +35,17 @@ ui_volume_freq <- function(id) {
           # Other
           uiOutput(ns("ui_exclude")),
 
+          h3("Options"),
           show_ui(ns("show_data"), "Data"),
           div(id = ns("data"),
               select_rolling(id, multiple = TRUE),
               select_analysis_data(id),
               select_allowed(id)
           ),
-          show_ui(ns("show_plotting"), "Plotting"),
+          show_ui(ns("show_plotting"), "Probability Plotting"),
           select_analysis_plots(id),
 
-          show_ui(ns("show_fitting"), "Fitting"),
+          show_ui(ns("show_fitting"), "Distribution Fitting"),
           select_fitting(id)
       ),
 

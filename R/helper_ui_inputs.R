@@ -278,22 +278,32 @@ select_fitting <- function(id) {
                        0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
           multiple = TRUE),
 
-        awesomeRadio(NS(id, "fit_distr"),
-                     label = "Distribution",
-                     choices = list("PIII" = "PIII",
-                                    "Weibull" = "weibull")),
-        awesomeRadio(
-          NS(id, "fit_distr_method"),
-          label = "Distribution method",
-          choices = list("Method of Moments (MOM)" = "MOM",
-                         "Maximum Likelihood Estimation (MLE)" = "MLE"))),
+          column(width = 6, id = NS(id, "fit_distr_tip"),
+                 awesomeRadio(NS(id, "fit_distr"),
+                              label = "Distribution",
+                              choices = list("PIII" = "PIII",
+                                             "Weibull" = "weibull")),
+          ),
+          column(width = 6, id = NS(id, "plot_curve_tip"),
+                 style = "padding-top: 25px; margin-bottom: 25px",
+                 prettySwitch(NS(id, "plot_curve"),
+                              label = tags$span(strong("Plot curve")),
+                              value = TRUE, status = "success", slim = TRUE)),
+          awesomeRadio(
+            NS(id, "fit_distr_method"),
+            label = "Distribution method",
+            choices = list("Method of Moments (MOM)" = "MOM",
+                           "Maximum Likelihood Estimation (MLE)" = "MLE"))),
 
     bsTooltip(NS(id, "fit_quantiles"), tips$fit_quantiles,
               placement = "left"),
-    bsTooltip(NS(id, "fit_distr"), tips$fit_distr,
+    bsTooltip(NS(id, "fit_distr_tip"), tips$fit_distr,
+              placement = "left"),
+    bsTooltip(NS(id, "plot_curve_tip"), tips$plot_curve,
               placement = "left"),
     bsTooltip(NS(id, "fit_distr_method"), tips$fit_distr_method,
               placement = "left")
+
   )
 }
 
@@ -315,12 +325,6 @@ select_analysis_plots <- function(id) {
             value = paste0("0.9999, 0.999, 0.99, 0.9, 0.5, 0.2, ",
                            "0.1, 0.02, 0.01, 0.001, 0.0001")))
       ),
-      div(id = NS(id, "plot_curve_tip"),
-          prettySwitch(NS(id, "plot_curve"),
-                       label = tags$span(strong("Plot curve")),
-                       value = TRUE, status = "success", slim = TRUE)),
-      bsTooltip(NS(id, "plot_curve_tip"), tips$plot_curve,
-                placement = "left"),
       bsTooltip(NS(id, "prob_plot_tip"), tips$prob_plot,
                 placement = "left"),
       bsTooltip(NS(id, "prob_scale_tip"), tips$prob_scale,

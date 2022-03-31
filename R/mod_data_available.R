@@ -53,18 +53,18 @@ ui_data_available <- function(id) {
                                      height = opts$plot_height))))
           ),
 
-        # Symbols Agg Plot ----------------------
+        # Symbols Summary Plot ----------------------
         tabPanel(
-          title = "Symbols Aggregate Plots",
+          title = "Symbols Summary Plots",
           fluidRow(
             column(
               width = 3,
-              div(id = ns("symbols_agg_type_tip"),
+              div(id = ns("symbols_sum_type_tip"),
                   awesomeRadio(
-                    ns("symbols_agg_type"), label = "Plot type",
+                    ns("symbols_sum_type"), label = "Plot type",
                     choices = c("Day of Year" = "dayofyear",
                                 "No. Days" = "count", "% Days" = "percent")),
-                  bsTooltip(ns("symbols_agg_type_tip"),
+                  bsTooltip(ns("symbols_sum_type_tip"),
                             paste0("Plot symbols by ",
                                    "Day of Year; by Number of Days; ",
                                    "or by Percent of Days"),
@@ -79,46 +79,13 @@ ui_data_available <- function(id) {
             ),
             column(
               width = 9,
-              uiOutput(ns("ui_plot_symbols_agg_options"), align = "right"),
+              uiOutput(ns("ui_plot_symbols_sum_options"), align = "right"),
               select_plot_options(select_plot_title(id,
-                                                    "plot_title_symbols_agg")),
+                                                    "plot_title_symbols_sum")),
 
               shinycssloaders::withSpinner(
-                ggiraph::girafeOutput(ns("plot_symbols_agg"),
+                ggiraph::girafeOutput(ns("plot_symbols_sum"),
                                       height = opts$plot_height)))
-            )),
-
-        # Summary Plot -----------------
-        tabPanel(
-          title = "Data Summary Plot",
-          fluidRow(
-            column(width = 3,
-              helpText("Placeholder descriptive text to describe this section, ",
-                       "what it does and how to use it"),
-              div(id = ns("availability_tip"),
-                  prettySwitch(ns("availability"),
-                               label = "Plot availability",
-                               value = TRUE,
-                               status = "success", slim = TRUE, inline = TRUE)),
-              bsTooltip(ns("availability_tip"), tips$availability,
-                        placement = "left"),
-              selectizeInput(
-                ns("stats"),
-                label = "Statistics to include",
-                choices = default("plot_data_screening", "include_stats"),
-                selected = default("plot_data_screening", "include_stats"),
-                multiple = TRUE, width = "100%"),
-              bsTooltip(ns("stats"), tips$stats,
-                        placement = "left"),
-
-              strong("Note"), br(),
-              "Statistics are calculated ignoring missing dates",
-
-              ),
-            column(width = 9,
-                   select_plot_options(select_plot_title(id, "plot_title_summary")),
-                   ggiraph::girafeOutput(ns("plot_summary"),
-                                         height = opts$plot_height))
             )),
 
 
@@ -154,6 +121,39 @@ ui_data_available <- function(id) {
                                          height = opts$plot_height))
           )
         ),
+
+        # Summary Plot -----------------
+        tabPanel(
+          title = "Data Summary Plot",
+          fluidRow(
+            column(width = 3,
+                   helpText("Placeholder descriptive text to describe this section, ",
+                            "what it does and how to use it"),
+                   div(id = ns("availability_tip"),
+                       prettySwitch(ns("availability"),
+                                    label = "Plot availability",
+                                    value = TRUE,
+                                    status = "success", slim = TRUE, inline = TRUE)),
+                   bsTooltip(ns("availability_tip"), tips$availability,
+                             placement = "left"),
+                   selectizeInput(
+                     ns("stats"),
+                     label = "Statistics to include",
+                     choices = default("plot_data_screening", "include_stats"),
+                     selected = default("plot_data_screening", "include_stats"),
+                     multiple = TRUE, width = "100%"),
+                   bsTooltip(ns("stats"), tips$stats,
+                             placement = "left"),
+
+                   strong("Note"), br(),
+                   "Statistics are calculated ignoring missing dates",
+
+            ),
+            column(width = 9,
+                   select_plot_options(select_plot_title(id, "plot_title_summary")),
+                   ggiraph::girafeOutput(ns("plot_summary"),
+                                         height = opts$plot_height))
+          )),
 
         # Table -----------------
         tabPanel(
@@ -229,10 +229,10 @@ server_data_available <- function(id, data_settings, data_raw,
     }) %>%
       bindCache(data_raw(), data_settings())
 
-    # Symbols Agg Plot -----------------------------
-    output$plot_symbols_agg <- ggiraph::renderGirafe({
+    # Symbols Summary Plot -----------------------------
+    output$plot_symbols_sum <- ggiraph::renderGirafe({
       check_data(data_loaded())
-      req(input$symbols_agg_type)
+      req(input$symbols_sum_type)
       validate(need("Symbol" %in% names(data_raw()),
                     "Cannot plot unless there is a 'Symbol' column in the data"))
 
@@ -240,24 +240,24 @@ server_data_available <- function(id, data_settings, data_raw,
 
       g <- create_fun("plot_annual_symbols", data_name = "data_flow", input,
                       input_data = data_settings(), params_ignore = "discharge",
-                      extra = glue::glue("plot_type = '{input$symbols_agg_type}'"))
+                      extra = glue::glue("plot_type = '{input$symbols_sum_type}'"))
 
-      code$plot_symbols_agg <- g
-      labels$plot_symbols_agg <- glue::glue("Plot aggregates of symbols")
+      code$plot_symbols_sum <- g
+      labels$plot_symbols_sum <- glue::glue("Plot summary of symbols")
 
       g <- eval_check(g)[[1]]
 
 
       # Add title
-      if(input$plot_title_symbols_agg) {
+      if(input$plot_title_symbols_sum) {
         g <- g +
           ggplot2::ggtitle(title(
-            data_settings(), glue::glue("Aggregate symbols"))) +
+            data_settings(), glue::glue("Summary of symbols"))) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
       # Add interactivity
-      if(input$symbols_agg_type == "dayofyear") {
+      if(input$symbols_sum_type == "dayofyear") {
         d <- g$data %>%
           dplyr::mutate(tooltip = glue::glue("Date: {.data$Date}"),
                         tooltip = dplyr::if_else(
@@ -293,47 +293,6 @@ server_data_available <- function(id, data_settings, data_raw,
                       options = ggiraph_opts())
 
     })
-
-    # Summary plot ------------------
-    output$plot_summary <- ggiraph::renderGirafe({
-
-      check_data(data_loaded())
-      req(!is.null(input$availability), !is.null(input$stats))
-
-      data_flow <- data_raw()
-
-      g <- create_fun("plot_data_screening", data_name = "data_flow",
-                      input, input_data = data_settings())
-
-      code$plot_summary <- g
-      labels$plot_summary <- "Plot summary statistics for data screening"
-
-      g <- eval_check(g)[[1]]
-
-      # Add title
-      if(input$plot_title_summary) {
-        g <- g +
-          ggplot2::ggtitle(title(data_settings(), "Data Availability")) +
-          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
-      }
-
-      # Add interactivity
-      stats <- names(g$data) # Get stats from plot data
-
-      # For tooltips labels...
-      names(stats)[stats == "n_missing_Q"] <- "Data Completeness"
-
-      # Add interactive vline
-      g <- g + create_vline_interactive(data = g$data, stats = stats, size = 5)
-
-
-      ggiraph::girafe(ggobj = g,
-                      width_svg = 13 * opts$scale,
-                      height_svg = 7 * opts$scale,
-                      options = ggiraph_opts())
-    })
-
-
 
     # Available Data Plot ---------------------------
     output$plot_available <- ggiraph::renderGirafe({
@@ -395,6 +354,46 @@ server_data_available <- function(id, data_settings, data_raw,
                       options = ggiraph_opts())
     })
 
+    # Summary plot ------------------
+    output$plot_summary <- ggiraph::renderGirafe({
+
+      check_data(data_loaded())
+      req(!is.null(input$availability), !is.null(input$stats))
+
+      data_flow <- data_raw()
+
+      g <- create_fun("plot_data_screening", data_name = "data_flow",
+                      input, input_data = data_settings())
+
+      code$plot_summary <- g
+      labels$plot_summary <- "Plot summary statistics for data screening"
+
+      g <- eval_check(g)[[1]]
+
+      # Add title
+      if(input$plot_title_summary) {
+        g <- g +
+          ggplot2::ggtitle(title(data_settings(), "Data Availability")) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
+
+      # Add interactivity
+      stats <- names(g$data) # Get stats from plot data
+
+      # For tooltips labels...
+      names(stats)[stats == "n_missing_Q"] <- "Data Completeness"
+
+      # Add interactive vline
+      g <- g + create_vline_interactive(data = g$data, stats = stats, size = 5)
+
+
+      ggiraph::girafe(ggobj = g,
+                      width_svg = 13 * opts$scale,
+                      height_svg = 7 * opts$scale,
+                      options = ggiraph_opts())
+    })
+
+
     # Summary table ------------------
     output$table <- DT::renderDT({
       check_data(data_loaded())
@@ -420,7 +419,7 @@ server_data_available <- function(id, data_settings, data_raw,
     labels <- reactiveValues()
     output$code <- renderText(code_format(
       code, labels, data_code,
-      order = c("data_raw", "plot_symbols_flow", "plot_symbols_agg",
+      order = c("data_raw", "plot_symbols_flow", "plot_symbols_sum",
                 "plot_summary", "plot_available", "data")))
   })
 

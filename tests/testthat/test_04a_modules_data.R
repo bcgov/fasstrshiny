@@ -116,29 +116,29 @@ test_that("Data Available", {
 
     testServer(server_data_available, args = list(d$s, d$d, d$l, d$c), {
       session$setInputs(availability = TRUE, stats = "Mean",
-                        symbols_agg_type = "dayofyear",
+                        symbols_sum_type = "dayofyear",
                         available_type = "tile",
                         plot_log = FALSE, months_inc = 1:12,
                         plot_title_summary = TRUE,
                         plot_title_symbols_flow = TRUE,
-                        plot_title_symbols_agg = TRUE,
+                        plot_title_symbols_sum = TRUE,
                         plot_title_available = TRUE)
 
       expect_error(output$plot_summary, NA)
       expect_error(output$plot_symbols_flow, NA)
-      expect_error(output$plot_symbols_agg, NA)
+      expect_error(output$plot_symbols_sum, NA)
       expect_error(output$plot_available, NA)
       expect_error(output$table, NA)
       expect_false(output$code == "")
 
-      session$setInputs(symbols_agg_type = "count")
-      if(!f) expect_error(output$plot_symbols_agg, NA)
-      if(f) expect_error(output$plot_symbols_agg)  ## FOR NOW UNTIL FIXED in fasstr
+      session$setInputs(symbols_sum_type = "count")
+      if(!f) expect_error(output$plot_symbols_sum, NA)
+      if(f) expect_error(output$plot_symbols_sum)  ## FOR NOW UNTIL FIXED in fasstr
       expect_false(output$code == "")
 
-      session$setInputs(symbols_agg_type = "percent")
-      if(!f) expect_error(output$plot_symbols_agg, NA)
-      if(f) expect_error(output$plot_symbols_agg)  ## FOR NOW UNTIL FIXED in fasstr
+      session$setInputs(symbols_sum_type = "percent")
+      if(!f) expect_error(output$plot_symbols_sum, NA)
+      if(f) expect_error(output$plot_symbols_sum)  ## FOR NOW UNTIL FIXED in fasstr
       expect_false(output$code == "")
 
       session$setInputs(available_type = "bar")
@@ -156,17 +156,17 @@ test_that("Data Available - Symbols", {
 
   testServer(server_data_available, args = list(d$s, d$d, d$l, d$c), {
     session$setInputs(availability = TRUE, stats = "Mean",
-                      symbols_agg_type = "dayofyear",
+                      symbols_sum_type = "dayofyear",
                       available_type = "tile",
                       plot_log = FALSE, months_inc = 1:12,
                       plot_title_summary = TRUE,
                       plot_title_symbols_flow = TRUE,
-                      plot_title_symbols_agg = TRUE,
+                      plot_title_symbols_sum = TRUE,
                       plot_title_available = TRUE)
 
     expect_error(output$plot_summary, NA)
     expect_error(output$plot_symbols_flow, "Cannot plot")
-    expect_error(output$plot_symbols_agg, "Cannot plot")
+    expect_error(output$plot_symbols_sum, "Cannot plot")
     expect_error(output$plot_available, NA)
     expect_error(output$table, NA)
     expect_false(output$code == "")

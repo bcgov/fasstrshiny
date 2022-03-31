@@ -41,13 +41,13 @@ ui_hydro <- function(id) {
 
         # Percentiles
         select_percentiles(
-          id, name = "inner_percentiles", label = "Inner percentiles",
+          id, name = "inner_percentiles", label = "Inner Percentiles (plot)",
           selected = default("plot_daily_stats", "inner_percentiles")),
         select_percentiles(
-          id, name = "outer_percentiles", label = "Outer percentiles",
+          id, name = "outer_percentiles", label = "Outer Percentiles (plot)",
           selected = default("plot_daily_stats", "outer_percentiles")),
         select_percentiles(
-          id, name = "extra_percentiles", label = "Additional percentiles (table)",
+          id, name = "extra_percentiles", label = "Additional Percentiles (table)",
           selected = default("calc_daily_stats", "percentiles")),
 
         ui_download(id = ns("plot"))
