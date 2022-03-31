@@ -26,15 +26,38 @@ ui_home <- function(id) {
           title = "Welcome", width = 12,
 
 
-          "This is an R Shiny app offering a user interface to the ",
-          code(a(href = "https://bcgov.github.io/fasstr", "fasstr")), "R package.",
-          p(),
+          tags$blockquote("fasstrshiny is an R Shiny app offering a user interface to the ",
+                          code(a(href = "https://bcgov.github.io/fasstr", "fasstr")), "R package."),
 
           tags$ul(
             tags$li("See the '", strong("Overview"), "' tab for how to use this app"),
             tags$li("If you would like to install ", code("fasstr"), " and ",
-               code("fasstrshiny"), "on your own computer, see the '",
-               strong("Getting Setup"), "' tab")),
+                    code("fasstrshiny"), "on your own computer, see the '",
+                    strong("Getting Setup"), "' tab")),
+
+          hr(),
+          p(),
+
+          h4("HYDAT data"),
+
+          "fasstr relies on the ", a(href = "https://bcgov.github.io/tidyhydat", "tidyhydat"),
+          "package which provides easy access to hydrometric data the Canadian ",
+          "National Water Data Archive (HYDAT).",
+
+          p(),
+          "fasstr (and therefore fasstrshiny) is a package for flow data analysis",
+          "and can be used with any type of flow data. ",
+          "However, one of it's feature collecting HYDAT data via tidyhydat for analysis.",
+          "Station information and daily flow data can be provided by HYDAT.",
+          "However fasstr performs many summaries and modifications of to this data.",
+
+          p(),
+          "Hydrometric information from HYDAT is under the ",
+          a(href = "https://open.canada.ca/en/open-government-licence-canada",
+            "Open Government Licence"),
+          " and has it's own",
+          a(href = "https://wateroffice.ec.gc.ca/disclaimer_info_e.html",
+            "disclaimer"),
 
           p(),
           hr(),
