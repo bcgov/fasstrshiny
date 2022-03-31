@@ -50,22 +50,26 @@ ui_data_load <- function(id) {
                              ".csv")),
           uiOutput(ns("ui_file_cols"))),
         bsButton(ns("load"), "Load Data", style = "primary"),
-        hr(),
+
+        uiOutput(ns("missing_data_note")),
 
         show_ui(ns("show_stn"), "Station Information"),
         div(id = ns("stn"), uiOutput(ns("ui_stn"))),
 
-        show_ui(ns("show_dates"), "Dates"),
+        show_ui(ns("show_dates"), "Date Filtering"),
         div(id = ns("dates"),
             uiOutput(ns("ui_water_year")),
             uiOutput(ns("ui_years_range")),
             uiOutput(ns("ui_years_exclude")),
             uiOutput(ns("ui_months"))),
 
-        show_ui(ns("show_types"), "Data types"),
+        show_ui(ns("show_types"), "Data Types"),
         div(id = ns("types"),
             select_rolling(id),
-            select_discharge(id),
+            select_discharge(id)),
+
+        show_ui(ns("show_missing"), "Handling Missing Dates"),
+        div(id = ns("missing"),
             select_complete(id),
             select_missing(id),
             select_allowed(id))
@@ -106,7 +110,7 @@ ui_data_load <- function(id) {
 
         # Plot --------
         tabPanel(
-          title = "Plot",
+          title = "Daily Flow Plot",
           uiOutput(ns("ui_plot_options"), align = "right"),
           ui_plotly_info(range = TRUE),
           shinycssloaders::withSpinner(
@@ -115,7 +119,7 @@ ui_data_load <- function(id) {
 
         # Table --------
         tabPanel(
-          title = "Table",
+          title = "Daily Flow Table",
           h4(textOutput(ns("table_title"))),
           DT::DTOutput(ns("table"))
         ),
@@ -173,6 +177,7 @@ server_data_load <- function(id) {
     observe(shinyjs::toggle("stn", condition = input$show_stn))
     observe(shinyjs::toggle("dates", condition = input$show_dates))
     observe(shinyjs::toggle("types", condition = input$show_types))
+    observe(shinyjs::toggle("missing", condition = input$show_missing))
 
 
     output$ui_file_cols <- renderUI({
@@ -366,7 +371,7 @@ server_data_load <- function(id) {
       req(data_source() == "CSV" & data_id() == input$file$name)
       if(data_source() == "CSV" && !is.null(input$file$name) &&
          data_id() == input$file$name) {
-        need(!any(duplicated(d$Date)),
+        need(!any(duplicated(data_raw()$Date)),
              paste0("There are duplicate dates in the data... ",
                     "is this from a single station?")) %>%
           validate(errorClass = "red")
@@ -562,6 +567,14 @@ server_data_load <- function(id) {
       bindEvent(input$load, input$water_year, input$basin_area,
                 ignoreInit = TRUE)
 
+    # Missing data note -----------------
+    output$missing_data_note <- renderUI({
+      req(any(is.na(data_raw()[[input$discharge]])))
+      tagList(h4("Missing Data:"),
+              "Note there is missing data in the range of dates selected. ",
+              "See 'Handling Missing Dates' for options.")
+    })
+
     # Plot ----------------
     output$plot <- plotly::renderPlotly({
       check_data(data_loaded())
@@ -580,7 +593,7 @@ server_data_load <- function(id) {
       # Add title
       if(input$plot_title) {
         g <- g +
-          ggplot2::ggtitle(title(data_settings(), "Flow")) +
+          ggplot2::ggtitle(title(data_settings(), "Daily Flow")) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
@@ -609,7 +622,7 @@ server_data_load <- function(id) {
     })
 
     output$table_title <- renderText({
-      title(data_settings(), "Raw flow data")
+      title(data_settings(), "Daily Flow data")
     })
 
     # R Code ----------------
