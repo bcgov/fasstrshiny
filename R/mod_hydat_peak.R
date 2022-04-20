@@ -19,27 +19,37 @@ ui_hydat_peak <- function(id) {
 
   fluidRow(
     column(
-      width = 12, h2("HYDAT Peak Volume Frequency Analysis"),
+      width = 12, h2("Instantaneous Peak Flow Frequency Analysis (from HYDAT)"),
       box(width = 3,
-
+          helpText("Explore annual high or low flow frequency analyses on instantaneous ",
+                   "peak data from HYDAT. This analysis determines probabilities of annual ",
+                   "events and fits them to a probability distribution to predict ",
+                   "events of certain probabilties (or return periods). For more ",
+                   "information on the analysis see the 'Analysis Info' tab. "),
+          helpText("Options for data types and analysis, plotting probabilities, ",
+                   "and frequency distribution fitting can be found below. ",
+                   "Additional years to exclude from the analysis (e.g. outliers) ",
+                   "can be added below or by clicking or lassoing around points on ",
+                   "the frequency plot."),
+          helpText("Click 'Compute' after making any changes to settings ",
+                   "(including plot settings)."),
           bsButton(ns("compute"), "Compute Analysis", style = "primary",
                    class = "centreButton"),
-          helpText("Placeholder descriptive text to describe this section, ",
-                   "what it does and how to use it"),
-
-
-          ui_download(id = ns("plot")),
           hr(class = "narrowHr"),
 
           h3("Options"),
-          show_ui(ns("show_data"), "Data"),
+          show_ui(ns("show_data"), "Data Types"),
           div(id = ns("data"), select_analysis_data(id)),
 
           show_ui(ns("show_plotting"), "Probability Plotting"),
           select_analysis_plots(id),
 
           show_ui(ns("show_fitting"), "Distribution Fitting"),
-          select_fitting(id)
+          select_fitting(id),
+
+          ui_download(id = ns("plot")),
+          "ADD EXCLUDE YEARS",
+          hr()
       ),
 
       tabBox(
@@ -52,11 +62,18 @@ ui_hydat_peak <- function(id) {
           shinycssloaders::withSpinner(ggiraph::girafeOutput(ns("plot")))
         ),
 
+        # Table - Plot Data ---------------------
+        tabPanel(
+          title = "Table - Plot Data",
+          h4(textOutput(ns("table_plot_title"))),
+          shinycssloaders::withSpinner(DT::DTOutput(ns("table_plot")))
+        ),
+
         # Table ---------------------
         tabPanel(
-          title = "Table",
+          title = "Table - Fitted Quantiles",
           h4(textOutput(ns("table_title"))),
-          shinycssloaders::withSpinner(DT::DTOutput(ns("table")))
+          shinycssloaders::withSpinner(DT::DTOutput(ns("table_fit")))
         ),
 
         # Fit Checks ---------------------
@@ -67,6 +84,10 @@ ui_hydat_peak <- function(id) {
             plotOutput(ns("fit_plot"), height = "550px"))
         ),
 
+        # Info ---------------------
+        tabPanel(
+          title = "Analysis Info"
+        ),
 
         # R Code ---------------------
         ui_rcode(id)
@@ -183,9 +204,23 @@ server_hydat_peak <- function(id, data_settings, data_raw,
     download(id = "plot", plot = plot, name = "hydat_peak",
              data_settings, dims)
 
+    # Titles ----------
+    titles <- reactive(title(data_settings(), glue::glue("Instantaneous Peak Data")))
+
+    # Table - Plot data -----------------------
+    output$table_plot <- DT::renderDT({
+      validate(
+        need(data_loaded(),
+             "You'll need to first load some data under Data > Loading") %then%
+          need(input$compute,
+               "Choose your settings and click 'Compute Analysis'"))
+
+      prep_DT(freqs()[["Freq_Plot_Data"]])
+    })
+    output$table_plot_title <- renderText(titles())
 
     # Table -----------------------
-    output$table <- DT::renderDT({
+    output$table_fit <- DT::renderDT({
       validate(
         need(data_loaded(),
              "You'll need to first load some data under Data > Loading") %then%

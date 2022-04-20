@@ -20,19 +20,22 @@ ui_annual_stats <- function(id) {
 
   fluidRow(
     column(
-      width = 12, h2("Annual Statistics"),
+      width = 12, h2("Annual Summary Statistics"),
       box(
         width = 3,
-        helpText("Placeholder descriptive text to describe this section, ",
-                 "what it does and how to use it"),
+        helpText("Explore annual means, minimums, maximums, and percentiles. ",
+                 "The range of percentile ribbons (for the plot), ",
+                 "additional percentiles to calculate (for the table) and the ",
+                 "months to include on the 'Monthly' plot can be modified below."),
+        hr(),
         div(align = "left",
             awesomeRadio(ns("type"),
-                         label = "Summary type",
+                         label = "Summary Type",
                          choices = list("Annual", "Monthly"),
                          selected = "Annual",
                          status = "primary")),
         bsTooltip(ns("type"), "Type of statistic to calculate", placement = "left"),
-
+        hr(),
         # Percentiles
         select_percentiles(
           id, name = "inner_percentiles", label = "Inner Percentiles (plot)",
@@ -43,11 +46,11 @@ ui_annual_stats <- function(id) {
         select_percentiles(
           id, name = "extra_percentiles", label = "Additional Percentiles (table)",
           selected = default("calc_daily_stats", "percentiles")),
-
+        hr(),
         # Months
         checkboxGroupButtons(
           ns("months_plot"),
-          label = "Months to plot",
+          label = "Months to Plot",
           choices = list("Jan" = 1, "Feb" = 2,
                          "Mar" = 3, "Apr" = 4,
                          "May" = 5, "Jun" = 6,
@@ -59,7 +62,7 @@ ui_annual_stats <- function(id) {
                   paste0("Months to include/exclude from Monthly calculations<br>",
                          "(Annual uses default months from the Data tab)"),
                   placement = "left"),
-
+        hr(),
         ui_download(id = ns("plot"))
       ),
       tabBox(
@@ -137,7 +140,7 @@ server_annual_stats <- function(id, data_settings, data_raw,
                    params_ignore = pi, extra = e)
 
       code$plot <- g
-      labels$plot <- glue::glue("Plot {input$type} hydrograph statistics")
+      labels$plot <- glue::glue("Plot {input$type} statistics")
 
       g <- eval_check(g)[[1]]
 
@@ -203,7 +206,7 @@ server_annual_stats <- function(id, data_settings, data_raw,
                    params_ignore = pi, extra = e)
 
       code$table <- t
-      labels$table <- glue::glue("Calculate {input$type} hydrograph statistics")
+      labels$table <- glue::glue("Calculate {input$type} statistics")
 
       eval_check(t) %>%
         prep_DT()

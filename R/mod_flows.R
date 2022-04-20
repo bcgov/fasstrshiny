@@ -24,22 +24,32 @@ ui_flows <- function(id) {
       ## Settings -----------------------------
       box(
         width = 3,
-        helpText("Placeholder descriptive text to describe this section, ",
-                 "what it does and how to use it"),
+        helpText("Explore flow duration curves and flow percentiles. ",
+                 "A flow duration curve is a cumulative frequency curve that ",
+                 "shows the percent of time specific flows are equaled or exceeded, ",
+                 "and may be used to predict distribution of future flows. Percentiles ",
+                 "similarly indicate the percent of a distribution that is equal ",
+                 "to or below it. The time periods to summarize ",
+                 "and adding a custom month period can be modified below."),
+        helpText("Click 'Compute' after making any changes to settings."),
         # Compute button
         bsButton(ns("compute"), "Compute", style = "primary",
                  class = "centreButton"),
-        helpText("Click 'Compute' after making any changes to settings ",
-                 "(including plot settings)"),
+        hr(),
+        h5("Select Time Periods"), #, style = "margin-left: 15px;"
+        uiOutput(ns("ui_months_plot")),
         div(id = ns("longterm_tip"),
             prettySwitch(ns("longterm"),
                          label = "Include Long-term",
                          value = TRUE,
                          status = "success", slim = TRUE)),
         bsTooltip(ns("longterm_tip"), tips$longterm, placement = "left"),
-        uiOutput(ns("ui_months_plot")),
+        hr(),
+        h5("Add Custom Month Period"), #, style = "margin-left: 15px;"
+        helpText("Select months to combine and provide a label to name ",
+                 "the time period."),
         select_custom_months(id),
-
+        hr(),
         ui_download(id = ns("plot"))
       ),
       tabBox(
@@ -81,7 +91,7 @@ server_flows <- function(id, data_settings, data_raw,
       tagList(
         checkboxGroupButtons(
           NS(id, "months_plot"),
-          label = "Months to plot",
+          label = "Months",
           choices = list("Jan" = 1, "Feb" = 2,
                          "Mar" = 3, "Apr" = 4,
                          "May" = 5, "Jun" = 6,
@@ -205,7 +215,7 @@ server_flows <- function(id, data_settings, data_raw,
         fun = "calc_longterm_daily_stats",
         data_name = "data_flow", input, input_data = data_settings(),
         params_ignore = "months",
-        extra = glue::glue("percentiles = 1:99, months = {mp}"),
+        extra = glue::glue("percentiles = 0:100, months = {mp}"),
         end = "%>% dplyr::select(-Mean, -Median, -Minimum, -Maximum)")
 
       code$table <- t

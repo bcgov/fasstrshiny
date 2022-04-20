@@ -1,6 +1,6 @@
 
-> Here we cover how to setup `fasstrshiny` on your local computer as well 
-> as how to start using the code output from `fasstrshiny`
+> Here we cover how to setup `fasstrshiny` on your local computer and 
+> how to setup and start using the code outputs from `fasstrshiny`
 
 ## Using `fasstrshiny`
 
@@ -74,6 +74,10 @@ First, you'll need to make sure you have the right packages loaded. If you've
 already installed the fasstrshiny package (as above) and have been using fasstrshiny
 locally, you're good to go. Otherwise, install fasstr and the HYDAT database
 using the instructions above.
+
+    library(fasstr) # Loads the packages
+    library(dplyr)  
+    library(tidyr)  
 
 ### Running fasstr code
 

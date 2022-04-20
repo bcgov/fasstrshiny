@@ -20,25 +20,25 @@ ui_hydro <- function(id) {
 
   fluidRow(
     column(
-      width = 12, h2("Daily and Long-term Hydrographs"),
+      width = 12, h2("Hydrographs and Long-term Statistics"),
 
       # Settings -----------------
       box(
         width = 3,
-        helpText("Placeholder descriptive text to describe this section, ",
-                 "what it does and how to use it"),
-
+        helpText("Explore annual hydrographs, summarizing statistics derived from daily means or monthly means ",
+                 "over all years of selected data. How the data is grouped, the range of percentile ribbons (for the plot), and ",
+                 "additional percentiles to calculate (for the table) can be modified below."),hr(),
         # Analysis type
         div(align = "left",
-            awesomeRadio(ns("type"), label = "Summary type",
-                         choices = list("Daily",
-                                        "Long-term Daily",
-                                        "Long-term Monthly"),
+            awesomeRadio(ns("type"), label = "Summary Type",
+                         choices = list("Daily Means by Day" = "Daily",
+                                        "Daily Means by Month" = "Long-term Daily",
+                                        "Monthly Means by Month" = "Long-term Monthly"),
                          selected = "Daily",
                          status = "primary")),
         bsTooltip(ns("type"), "Type of statistic to calculate",
                            placement = "left"),
-
+        hr(),
         # Percentiles
         select_percentiles(
           id, name = "inner_percentiles", label = "Inner Percentiles (plot)",
@@ -49,8 +49,11 @@ ui_hydro <- function(id) {
         select_percentiles(
           id, name = "extra_percentiles", label = "Additional Percentiles (table)",
           selected = default("calc_daily_stats", "percentiles")),
-
-        ui_download(id = ns("plot"))
+        hr(),
+        ui_download(id = ns("plot")),br(),
+        helpText("Note: the 'Daily Means by Day' plot summarizes daily means for each day of the year (i.e. stats of all Jan 1 daily mean). ",
+                 "The 'Daily Means by Month' plot summarizes daily means for each month (i.e. stats of all May daily means). ",
+                 "The 'Monthly Means by Month' summarizes monthly means for each month (i.e. stats of all May monthly means).")
       ),
 
       # Outputs
@@ -101,7 +104,7 @@ server_hydro <- function(id, data_settings, data_raw,
         select_add_mad(id),
         selectizeInput(NS(id, "mad"),
                        label = "Percent of Mean Annual Discharge (MAD)",
-                       choices = c(1:99),
+                       choices = c(0:100),
                        selected = c(5, 10, 20),
                        multiple = TRUE),
         bsTooltip(NS(id, "mad"), tips$mad, placement = "left"),

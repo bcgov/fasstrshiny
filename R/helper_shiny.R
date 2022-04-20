@@ -26,11 +26,12 @@ ui_plotly_info <- function(range = FALSE) {
 #' UI download button
 #' @noRd
 ui_download <- function(id) {
-  div(align = "center", id = NS(id, "download_tip"),
-      downloadBttn(NS(id, "download"), "Plot", color = "primary",
+  div(align = "left", id = NS(id, "download_tip"),
+      downloadBttn(NS(id, "download"), "Download Plot", color = "primary",
                    style = "jelly", icon = icon("download"), size = "xs"),
       bsTooltip(NS(id, "download_tip"), placement = "left",
-                "Download plot as high-quality PNG")
+                "Download plot as high-quality PNG")#,
+    #  "Download Plot"
   )
 }
 
@@ -363,8 +364,8 @@ dummy_data <- function(hydat_stn = "08HB048", local_file = FALSE,
     roll_days = 1,
     roll_align = "right",
     complete = FALSE,
-    missing = TRUE,
-    allowed = 100,
+    missing = FALSE,
+    allowed = 0,
     basin_area = dplyr::if_else(basin_area, 10.3, 0),
     station_name = "Carnation Creek At The Mouth",
     station_id = "08HB048",

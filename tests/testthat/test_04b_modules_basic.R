@@ -180,12 +180,12 @@ test_that("Outside normal", {
 })
 
 ## Peak flows --------------------
-test_that("Peak flows", {
+test_that("High flows", {
   local_hydat()
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(local_file = f)
 
-    testServer(server_peak_flows, args = list(d$s, d$d, d$l, d$c), {
+    testServer(server_high_flows, args = list(d$s, d$d, d$l, d$c), {
       session$setInputs(roll_day = 1, roll_align = "right")
 
       expect_error(output$table, NA)

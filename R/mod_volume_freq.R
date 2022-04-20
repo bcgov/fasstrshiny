@@ -21,22 +21,28 @@ ui_volume_freq <- function(id) {
 
   fluidRow(
     column(
-      width = 12, h2("High/Low Volume Frequency Analysis"),
+      width = 12, h2("High and Low Flow Volume Frequency Analysis"),
       box(width = 3,
-
+          helpText("Explore annual high or low flow volume frequency analyses on daily mean ",
+                   "flow data. This analysis determines probabilities of annual ",
+                   "events and fits them to a probability distribution to predict ",
+                   "events of certain probabilties (or return periods). For more ",
+                   "information on the analysis see the 'Analysis Info' tab. "),
+          helpText("Options for data types and analysis, plotting probabilities, ",
+                   "and frequency distribution fitting can be found below. ",
+                   "Additional years to exclude from the analysis (e.g. outliers) ",
+                   "can be added below or by clicking or lassoing around points on ",
+                   "the frequency plot."),
+          helpText("Click 'Compute' after making any changes to settings ",
+                   "(including plot settings)."),
           # Buttons
           bsButton(ns("compute"), "Compute Analysis", style = "primary",
                    class = "centreButton"),
-          helpText("Placeholder descriptive text to describe this section, ",
-                   "what it does and how to use it"),
-          ui_download(id = ns("plot")),
           hr(class = "narrowHr"),
 
-          # Other
-          uiOutput(ns("ui_exclude")),
 
           h3("Options"),
-          show_ui(ns("show_data"), "Data"),
+          show_ui(ns("show_data"), "Data Types"),
           div(id = ns("data"),
               select_rolling(id, multiple = TRUE),
               select_analysis_data(id),
@@ -46,7 +52,12 @@ ui_volume_freq <- function(id) {
           select_analysis_plots(id),
 
           show_ui(ns("show_fitting"), "Distribution Fitting"),
-          select_fitting(id)
+          select_fitting(id),
+          # Other
+          uiOutput(ns("ui_exclude")),
+          ui_download(id = ns("plot")),
+          hr()
+
       ),
 
       tabBox(
@@ -107,7 +118,7 @@ server_volume_freq <- function(id, data_settings, data_raw,
     output$ui_exclude <- renderUI({
       req(data_settings()$years_range)
       selectizeInput(NS(id, "years_exclude"),
-                     label = "Years to exclude",
+                     label = "Years to Exclude",
                      choices = seq(from = data_settings()$years_range[1],
                                    to = data_settings()$years_range[2], by = 1),
                      selected = data_settings()$years_exclude,

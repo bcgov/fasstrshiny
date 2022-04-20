@@ -80,7 +80,7 @@ plot_monthly_stats(d, percentiles = 50)[[1]] %>%
 to_girafe(pmonthly)
 
 
-plot_annual_outside_normal(d, normal_percentiles = c(1,99))
+plot_annual_normal_days(d, normal_percentiles = c(1,99))
 
 
 
@@ -124,8 +124,8 @@ plot_annual_lowflows(d)[[2]] # DOY
 
 calc_annual_peaks(d)
 
-calc_annual_outside_normal(d)
-plot_annual_outside_normal(d)
+calc_annual_normal_days(d)
+plot_annual_normal_days(d)
 
 # Annual trends
 at <- compute_annual_trends(d, zyp_method = "zhang")

@@ -18,11 +18,17 @@ ui_data_load <- function(id) {
 
   fluidRow(
     column(
-      width = 12, h2("Loading Data"),
+      width = 12, h2("Data Loading"),
       box(
         width = 3,
-        helpText("Placeholder descriptive text to describe this section, ",
-                 "what it does and how to use it"),
+        helpText("Select your source of data below by choosing a ",
+                 "hydrometric station number from HYDAT or uploading a '.csv' ",
+                 "file with your own daily mean streamflow data. Then view the ",
+                 "data in the Daily Flow Plot and Table tabs. See the options below for additional ",
+                 "station information, filtering of years/months, modifying the data type to analyze, ",
+                 "and handling missing dates. View the Data > Availability & Screening ",
+                 " tabs to review data quality and availability."),
+        hr(),
         radioGroupButtons(inputId = ns("source"),
                           label = "Source", choices = c("HYDAT", "CSV"),
                           justified = TRUE,
@@ -30,17 +36,17 @@ ui_data_load <- function(id) {
         conditionalPanel(
           "input.source == 'HYDAT'", ns = NS(id),
           div(id = ns("hydat_bc_tip"),
-              prettySwitch(ns("hydat_bc"), label = "BC stations only",
+              prettySwitch(ns("hydat_bc"), label = "BC Stations Only",
                            value = TRUE,status = "success", slim = TRUE)),
           textInput(ns("station_number"), label = "Station Number",
-                    value = "08HB048",
+                    value = "08NM116",
                     placeholder = "type station number or select from map"),
           bsTooltip(ns("hydat_bc_tip"),
                     "Whether to show stations from just BC or all over Canada",
                     placement = "left"),
           bsTooltip(ns("station_number"), "HYDAT Station Number",
                     placement = "left")
-          ),
+        ),
 
         conditionalPanel(
           "input.source != 'HYDAT'", ns = NS(id),
@@ -51,6 +57,7 @@ ui_data_load <- function(id) {
           uiOutput(ns("ui_file_cols"))),
         bsButton(ns("load"), "Load Data", style = "primary"),
 
+        hr(),
         uiOutput(ns("missing_data_note")),
 
         show_ui(ns("show_stn"), "Station Information"),
@@ -191,25 +198,25 @@ server_data_load <- function(id) {
       } else cols <- c("", "", "")
 
       tagList(
-        h4(strong("Columns names")),
+        h4(strong("Column Names")),
         fluidRow(
           column(width = 6,
                  selectizeInput(
                    NS(id, "col_date"), width = "100%",
-                   label = HTML("Date column"),
+                   label = HTML("Dates (YYYY-MM-DD)"),
                    choices = cols, selected = cols[1])),
           column(width = 6,
                  selectizeInput(
                    NS(id, "col_value"),
-                   label = HTML("Flow column"),
+                   label = HTML("Flow Values (cms)"),
                    choices = cols, selected = cols[2]))),
         fluidRow(
           column(width = 6,
                  selectizeInput(
                    NS(id, "col_symbol"),
-                   label = HTML("Symbols column"),
+                   label = HTML("Qualifier Symbols (optional)"),
                    choices = c(" ", cols), selected = NULL))
-          ))
+        ))
     })
 
     output$ui_stn <- renderUI({
@@ -227,28 +234,28 @@ server_data_load <- function(id) {
       }
 
       fluidRow(id = NS(id, "station_info"),
-        column(
-          width = 6,
-          textInput(NS(id, "station_name"),
-                    label = "Name", value = stn_name,
-                    placeholder = "ex. Mission Creek")),
-        column(
-          width = 6,
-            numericInput(NS(id, "basin_area"),
-                         label = HTML("Basin area (km<sup>2</sup>)"),
-                         value = basin,
-                         min = 0, step = 0.1)),
-        bsTooltip(NS(id, "station_info"),
-                  paste0("Station Name for context<p><p>",
-                         tips$basin_area),
-                  placement = "left"))
+               column(
+                 width = 6,
+                 textInput(NS(id, "station_name"),
+                           label = "Station Name", value = stn_name,
+                           placeholder = "ex. Mission Creek")),
+               column(
+                 width = 6,
+                 numericInput(NS(id, "basin_area"),
+                              label = HTML("Basin Area (km<sup>2</sup>)"),
+                              value = basin,
+                              min = 0, step = 0.1)),
+               bsTooltip(NS(id, "station_info"),
+                         paste0("Station Name for context<p><p>",
+                                tips$basin_area),
+                         placement = "left"))
     })
 
     output$ui_water_year <- renderUI({
       tagList(
         radioGroupButtons(
           NS(id, "water_year"),
-          label = "Water year start",
+          label = "Water Year Start Month",
           choices = stats::setNames(1:12, month.abb),
           selected = 1, size = "sm", width = "100%"),
         bsTooltip(NS("water_year", id),
@@ -258,7 +265,7 @@ server_data_load <- function(id) {
     output$ui_years_range <- renderUI({
       tagList(
         sliderInput(NS(id, "years_range"),
-                    label = "Start and end years",
+                    label = "Start and End Years",
                     min = min(data_raw()$WaterYear),
                     max = max(data_raw()$WaterYear),
                     value = c(min(data_raw()$WaterYear),
@@ -281,7 +288,7 @@ server_data_load <- function(id) {
 
       tagList(
         selectizeInput(NS(id, "years_exclude"),
-                       label = "Years to exclude",
+                       label = "Years to Exclude",
                        choices = seq(from = input$years_range[1],
                                      to = input$years_range[2], by = 1),
                        selected = s,
@@ -507,7 +514,7 @@ server_data_load <- function(id) {
       glue::glue(
         "data_flow <- fill_missing_dates(",
         "  station_number = '{input$station_number}')") %>%
-          add_dates_discharge()
+        add_dates_discharge()
     })
 
     # Raw data - File ---------
@@ -568,11 +575,29 @@ server_data_load <- function(id) {
                 ignoreInit = TRUE)
 
     # Missing data note -----------------
+
+    data_raw_missing <- reactive({
+      data_raw() %>%
+        dplyr::select(-"Month") %>%
+        dplyr::filter(.data$WaterYear >= input$years_range[1],
+                      .data$WaterYear <= input$years_range[2],
+                      !.data$WaterYear %in% input$years_exclude,
+                      .data$MonthName %in% month.abb[as.numeric(input$months)]) %>%
+        dplyr::pull(input$discharge)
+    })
+
+
     output$missing_data_note <- renderUI({
-      req(any(is.na(data_raw()[[input$discharge]])))
+
+      req(any(is.na(data_raw_missing())))
+
+      #   req(any(is.na(data_raw()[[input$discharge]])))
+
       tagList(h4("Missing Data:"),
-              "Note there is missing data in the range of dates selected. ",
-              "See 'Handling Missing Dates' for options.")
+              "Note: there is missing data in the range of dates selected. ",
+              "Some plots and tables may not show results.",
+              "See 'Handling Missing Dates' below for options on how to manage these ",
+              "missing dates.")
     })
 
     # Plot ----------------
@@ -601,9 +626,9 @@ server_data_load <- function(id) {
         plotly::ggplotly(dynamicTicks = TRUE) %>%
         plotly::rangeslider() %>%
         plotly::config(modeBarButtonsToRemove =
-                 c("pan", "autoscale", "zoomIn2d", "zoomOut2d",
-                   "lasso2d", "select2d",
-                   "hoverCompareCartesian", "hoverClosestCartesian"))
+                         c("pan", "autoscale", "zoomIn2d", "zoomOut2d",
+                           "lasso2d", "select2d",
+                           "hoverCompareCartesian", "hoverClosestCartesian"))
     }) %>%
       bindCache(data_raw(), data_settings(),
                 input$plot_title, input$plot_log, input$daterange)
@@ -676,7 +701,8 @@ server_data_load <- function(id) {
                         "Volume_m3" = "m<sup>3</sup>",
                         "Yield_mm" = "mm")
 
-        if(any(is.na(data_raw()[[input$discharge]]))) foot <- TRUE
+        #  if(any(is.na(data_raw()[[input$discharge]]))) foot <- TRUE
+        if(any(is.na(data_raw_missing())) & (!input$missing | input$allowed == 100)) foot <- TRUE
 
         d <- list(
           `Water Year` = wy,
@@ -725,7 +751,22 @@ server_data_load <- function(id) {
             locations = gt::cells_body(columns = gt::everything(), rows = 5))
       }
 
-      if(foot) g <- gt::tab_source_note(g, "Note that there are missing data")
+      if(any(is.na(data_raw_missing())) & (!input$missing | input$allowed == 100)) foot <- TRUE
+
+
+      # msg_missing <- ifelse(
+      #   any(is.na(data_raw_missing())) & (!input$missing | input$allowed == 100),
+      #   paste0("Note: there is missing flow data within the selected date range. ",
+      #          "Go to Data > Loading > Handling Missing Dates to manage missing dates."),
+      #   ifelse(any(is.na(data_raw_missing())) & (input$missing | input$allowed < 100),
+      #          paste0("Note: there is missing flow data within the selected date range. ",
+      #                 "Go to Data > Loading > Handling Missing Dates to manage missing datesssssssss."),""))
+
+      msg_missing <-  paste0(
+        "Note: there is missing flow data in the selected date range. ",
+        "Go to Data > Loading > Handling Missing Dates to manage missing dates.")
+
+      if(foot) g <- gt::tab_source_note(g, msg_missing)
 
       g
     })

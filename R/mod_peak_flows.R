@@ -23,8 +23,8 @@ ui_peak_flows <- function(id) {
       box(
         width = 3,
         helpText("Placeholder descriptive text to describe this section, ",
-                 "what it does and how to use it"),
-        select_rolling(id)
+                 "what it does and how to use it"),hr(),
+        select_rolling(id), hr()
       ),
       tabBox(
         width = 9,

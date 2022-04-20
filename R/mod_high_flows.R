@@ -12,18 +12,17 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-
-# Low flows ------------------------
-ui_low_flows <- function(id) {
+# High flows ------------------------
+ui_high_flows <- function(id) {
 
   ns <- NS(id)
 
   fluidRow(
     column(
-      width = 12, h2("Annual Low Flows and Dates of Low Flows"),
+      width = 12, h2("Annual High Flows and Dates of High Flows"),
       box(
         width = 3,
-        helpText("Explore annual low flows (minimums) and their dates' of occurrence. ",
+        helpText("Explore annual high flows (maximums) and their dates' of occurrence. ",
                  "The duration of rolling day averages (and alignment) and ",
                  "the type of plot to display can be modifed below. "),hr(),
         select_rolling(id, multiple = TRUE),
@@ -35,7 +34,7 @@ ui_low_flows <- function(id) {
                  "the first of n-days (i.e. with a 7-day average, July 7 represents the mean ",
                  "of July 7-13. If 'Center', the day is centered on n-days (i.e. with a 7-day ",
                  "average, July 7 represents the mean of July 4-10)."
-                  )
+        )
 
       ),
       tabBox(
@@ -63,8 +62,8 @@ ui_low_flows <- function(id) {
   )
 }
 
-server_low_flows <- function(id, data_settings, data_raw,
-                             data_loaded, data_code) {
+server_high_flows <- function(id, data_settings, data_raw,
+                              data_loaded, data_code) {
 
   moduleServer(id, function(input, output, session) {
 
@@ -82,11 +81,11 @@ server_low_flows <- function(id, data_settings, data_raw,
 
       data_flow <- data_raw()
 
-      g <- create_fun(fun = "plot_annual_lowflows", data_name = "data_flow",
+      g <- create_fun(fun = "plot_annual_highflows", data_name = "data_flow",
                       input, input_data = data_settings())
 
       code$plot <- g
-      labels$plot <- "Plot Annual low flows"
+      labels$plot <- "Plot Annual High Flows"
 
       g <- eval_check(g)
 
@@ -96,8 +95,8 @@ server_low_flows <- function(id, data_settings, data_raw,
                              suffix = c("", "_doy")) %>%
         dplyr::mutate(Date = yday_as_date(.data$Value_doy, .data$Year))
 
-      g[["Annual_Low_Flows"]]$data <- d1
-      g[["Annual_Low_Flows"]] <- g[["Annual_Low_Flows"]] +
+      g[["Annual_High_Flows"]]$data <- d1
+      g[["Annual_High_Flows"]] <- g[["Annual_High_Flows"]] +
         ggiraph::geom_point_interactive(
           ggplot2::aes(tooltip = glue::glue(
             "Year: {.data$Year}\n",
@@ -111,8 +110,8 @@ server_low_flows <- function(id, data_settings, data_raw,
                              suffix = c("", "_discharge")) %>%
         dplyr::mutate(Date = yday_as_date(.data$Value_doy, .data$Year))
 
-      g[["Annual_Low_Flows_Dates"]]$data <- d2
-      g[["Annual_Low_Flows_Dates"]] <- g[["Annual_Low_Flows_Dates"]] +
+      g[["Annual_High_Flows_Dates"]]$data <- d2
+      g[["Annual_High_Flows_Dates"]] <- g[["Annual_High_Flows_Dates"]] +
         ggiraph::geom_point_interactive(
           ggplot2::aes(tooltip = glue::glue(
             "Year: {.data$Year}\n",
@@ -161,7 +160,7 @@ server_low_flows <- function(id, data_settings, data_raw,
 
     # Download Plot -----------------
     download(id = "plot", plot = plot,
-             name = reactive(paste0("low_flows_", input$display)),
+             name = reactive(paste0("high_flows_", input$display)),
              data_settings, dims)
 
 
@@ -171,17 +170,17 @@ server_low_flows <- function(id, data_settings, data_raw,
 
       data_flow <- data_raw()
 
-      t <- create_fun(fun = "calc_annual_lowflows", data_name = "data_flow",
+      t <- create_fun(fun = "calc_annual_highflows", data_name = "data_flow",
                       input, input_data = data_settings())
 
       code$table <- t
-      labels$table <- "Calculate Annual Low Flows"
+      labels$table <- "Calculate Annual High flows"
 
       eval_check(t) %>%
         prep_DT()
     })
 
-    output$table_title <- renderText(title(data_settings(), "Low Flows"))
+    output$table_title <- renderText(title(data_settings(), "High Flows"))
 
     # R Code -----------------
     code <- reactiveValues()

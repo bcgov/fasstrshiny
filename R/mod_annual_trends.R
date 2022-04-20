@@ -20,49 +20,59 @@ ui_annual_trends <- function(id) {
     column(
       width = 12, h2("Annual Trends"),
       box(width = 3,
-
+          helpText("Explore trending of various annual metrics using prewhitened, ",
+                   "non-parametric Mann-Kendall tests and slopes estimated using ",
+                   "the Theil-Sen approach. For more information on the analysis ",
+                   "see the 'Analysis Info' tab. "),
+          helpText("Options for data metrics, trending methods, and handling missing ",
+                   "dates can be found below. Additional years to exclude from the analysis ",
+                   "(e.g. outliers) ",
+                   "can be added below or by clicking or lassoing around points on ",
+                   "the trending plot."),
+          helpText("Click 'Compute' after making any changes to settings ",
+                   "(including plot settings)."),
           # Compute button
           bsButton(ns("compute"), "Compute Trends", style = "primary",
                    class = "centreButton"),
-          helpText("Placeholder descriptive text to describe this section, ",
-                   "what it does and how to use it"),
-          hr(class = "narrowHr"),
 
-          # Other options
-          uiOutput(ns("ui_exclude")),
+          hr(class = "narrowHr"),
 
           h3("Options"),
 
-          show_ui(ns("show_options"), "Data"),
+          show_ui(ns("show_options"), "Data Metrics"),
           div(id = ns("options"),
+              h5("Summary Statistics"),
               fluidRow(id = ns("percentiles_tip"),
                        column(6,
                               selectizeInput(ns("annual_percentiles"),
-                                             label = "Annual perc.",
-                                             choices = c(1:99),
+                                             label = "Annual Percentiles",
+                                             choices = c(0:100),
                                              selected = c(10,90),
                                              multiple = TRUE)),
                        column(6,
                               selectizeInput(ns("monthly_percentiles"),
-                                             label = "Monthly perc.",
-                                             choices = c(1:99),
+                                             label = "Monthly Percentiles",
+                                             choices = c(0:100),
                                              selected = c(10,20),
                                              multiple = TRUE)),
                        bsTooltip(ns("percentiles_tip"), tips$percentiles,
-                                          placement = "left")),
+                                 placement = "left")),
 
-              strong("Low Flows"),
+              h5("Low Flows"),
               select_rolling(id, name = "low_roll", multiple = TRUE),
 
+             # h5("Flow Timing"),
               selectizeInput(ns("timing_percent"),
-                             label = "Percents of total annual flows",
-                             choices = c(1:99),
+                             label = "Flow Timing - % of Total Annual Flows",
+                             choices = c(0:100),
                              selected = c(25, 33, 50, 75),
                              multiple = TRUE),
               bsTooltip(ns("timing_percent"), tips$percent, placement = "left"),
 
-              sliderInput(ns("normal_percentiles"), label = "Days Outside Normal - Range",
-                          value = c(25, 75), min = 1, max = 99, step = 1),
+             # h5("Normal Days"),
+              sliderInput(ns("normal_percentiles"),
+                          label = "Normal Days - Percentiles Range",
+                          value = c(25, 75), min = 0, max = 100, step = 1),
               bsTooltip(ns("normal_percentiles"), tips$normal_percentiles, placement = "left")
           ),
 
@@ -81,7 +91,12 @@ ui_annual_trends <- function(id) {
                    bsTooltip(ns("alpha_tip"), tips$alpha, placement = "left")),
 
           show_ui(ns("show_allowed"), "Missing Dates"),
-          div(id = ns("allowed"), uiOutput(ns("ui_allowed")))
+          div(id = ns("allowed"), uiOutput(ns("ui_allowed"))),
+
+          # Other options
+          br(),
+          uiOutput(ns("ui_exclude")),
+          hr()
       ),
 
       tabBox(
@@ -104,7 +119,8 @@ ui_annual_trends <- function(id) {
 
         ### Info ---------------------
         tabPanel(
-          title = "Analysis Info"
+          title = "Analysis Info",
+          "trend alpha"
         ),
 
 
@@ -127,13 +143,13 @@ server_annual_trends <- function(id, data_settings, data_raw,
       req(data_settings()$years_range)
       tagList(
         selectizeInput(NS(id, "years_exclude"),
-                       label = "Years to exclude",
+                       label = "Years to Exclude",
                        choices = seq(from = data_settings()$years_range[1],
                                      to = data_settings()$years_range[2], by = 1),
                        selected = data_settings()$years_exclude,
                        multiple = TRUE),
         bsTooltip(id = "years_exclude", title = tips$years_exclude,
-                           placement = "left"))
+                  placement = "left"))
     })
 
     # Update years_exclude as points selected/unselected
@@ -146,10 +162,10 @@ server_annual_trends <- function(id, data_settings, data_raw,
     output$ui_allowed <- renderUI({
       tagList(
         sliderInput(NS(id, "allowed_annual"),
-                    label = "Annual - Allowed missing (%)",
+                    label = "Annual - Allowed Missing (%)",
                     value = data_settings()$allowed, step = 5, min = 0, max = 100),
         sliderInput(NS(id, "allowed_monthly"),
-                    label = "Monthly - Allowed missing (%)",
+                    label = "Monthly - Allowed Missing (%)",
                     value = data_settings()$allowed, step = 5, min = 0, max = 100),
         bsTooltip(NS(id, "allowed_annual"), tips$allowed, placement = "left"),
         bsTooltip(NS(id, "allowed_monthly"), tips$allowed, placement = "left")

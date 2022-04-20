@@ -13,34 +13,21 @@
 # the License.
 
 # Overview ---------------------------------------------------------------
-ui_overview <- function(id) {
+ui_blank <- function(id) {
 
   fluidRow(
     column(
       width = 12, h2("Overview"),
-     # box(width = 3,
-      #    helpText("Placeholder descriptive text to describe this section, ",
-     #              "what it does and how to use it")),
+      box(width = 3,
+          helpText("Placeholder descriptive text to describe this section, ",
+                   "what it does and how to use it")),
       tabBox(
         width = 9,
 
         ### Plot ---------------------
         tabPanel(
-          title = "Overview",
-          "basic month hydrograph - month means, with options for stats",
-          "ltmad and percent mads - with options",
-          "30Q2 and freq - with options",
-          "all time low, all time high")
+          title = "Overview")
       )
     )
   )
-}
-
-server_overview <- function(id, data_settings, data_raw,
-                                data_loaded, data_code) {
-
-  moduleServer(id, function(input, output, session) {
-
-  })
-
 }

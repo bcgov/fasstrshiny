@@ -10,8 +10,8 @@ parameters <- dplyr::tribble(
 
   "discharge",            "values",              "Discharge to use in calculations<br>(Yield only available if basin area provided. See settings in Data > Loading)",   FALSE,
   "discharge2",           "use_yield",           "Discharge to use in calculations",   FALSE,
-  "roll_days",            "roll_days",           "Number of days over which to roll the mean", TRUE,
-  "roll_align",           "roll_align",          "Alignment of the rolling day window", TRUE,
+  "roll_days",            "roll_days",           "Number of days which to have a rolling average", TRUE,
+  "roll_align",           "roll_align",          "Direction of rolling average window alignment (Right = last of n days, Left = first of n days, Center = middle of n days", TRUE,
   "longterm",             "include_longterm",    "Include long-term data in calculations", TRUE,
   "water_year",           "water_year_start",    "Month defining start of the water year", TRUE,
   "years_range",          "start_year",          "Years to include in calculations", TRUE,
@@ -36,7 +36,7 @@ parameters <- dplyr::tribble(
   "seasons",              "include_seasons",     "Whether or not to include seasonal calculations", TRUE,
   "mad",                  "percent_MAD",         "Percent of mean annual discharge to add to plot", TRUE,
   "flow",                 "flow_value",          "Flow value from which to determine percentile rank", TRUE,
-  "percent",              "percent_total",       "Percentiles of total annual flows for which to dermine dates", TRUE,
+  "percent",              "percent_total",       "Percentiles of total annual flows for which to determine dates", TRUE,
   "zyp",                  "zyp_method",          "Prewhitened trend method to use. zhang is recommended over yuepilon for hydrologic applications", TRUE,
   "annual_percentiles",   "annual_percentiles",  "", FALSE,  # use percentiles
   "monthly_percentiles",  "monthly_percentiles", "", FALSE,  # use percentiles
@@ -97,7 +97,7 @@ bc_maps_labs <- dplyr::tribble(
 
 mods <- c("data_load", "data_available", "hydro", "cumulative", "flows",
           "annual_stats", "annual_means", "annual_totals", "flow_timing",
-          "low_flows", "peak_flows", "outside_normal",
+          "low_flows", "high_flows", "outside_normal",
           "annual_trends", "volume_freq", "hydat_peak")
 
 usethis::use_data(parameters, tips, opts, bc_maps_layers, bc_maps_labs, mods,

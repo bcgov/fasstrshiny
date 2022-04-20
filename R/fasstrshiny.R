@@ -42,7 +42,7 @@ fasstr_shiny <- function() {
   ui <- function(request) {
     tagList(
       dashboardPage(
-        dashboardHeader(title = "fasstr Shiny"),
+        dashboardHeader(title = "fasstrshiny"),
 
         ## Sidebar ----------
         dashboardSidebar(
@@ -58,6 +58,7 @@ fasstr_shiny <- function() {
             tabItem("home", ui_home()),
             tabItem("data_load", ui_data_load("data")),
             tabItem("data_available", ui_data_available("data_available")),
+            tabItem("overview", ui_overview("overview")),
             tabItem("hydro", ui_hydro("hydro")),
             tabItem("cumulative", ui_cumulative("cumulative")),
             tabItem("flows", ui_flows("flows")),
@@ -66,7 +67,7 @@ fasstr_shiny <- function() {
             tabItem("annual_totals", ui_annual_totals("annual_totals")),
             tabItem("flow_timing", ui_flow_timing("flow_timing")),
             tabItem("low_flows", ui_low_flows("low_flows")),
-            tabItem("peak_flows", ui_peak_flows("peak_flows")),
+            tabItem("high_flows", ui_high_flows("high_flows")),
             tabItem("outside_normal", ui_outside_normal("outside_normal")),
             tabItem("annual_trends", ui_annual_trends("annual_trends")),
             tabItem("volume_freq", ui_volume_freq("volume_freq")),
@@ -82,7 +83,7 @@ fasstr_shiny <- function() {
 
 
 
- shinyApp(ui = ui, server = server_fasstr)
+  shinyApp(ui = ui, server = server_fasstr)
 }
 
 
@@ -118,27 +119,27 @@ sidebar_fasstr <- function() {
     menuItem("Home", tabName = "home", icon = icon("home")),
     menuItem("Data", tabName = "data", icon = icon("table"),
              menuSubItem("Loading", tabName = "data_load"),
-             menuSubItem("Availability", tabName = "data_available")),
+             menuSubItem("Availability & Screening", tabName = "data_available")),
     menuItem("Overview", tabName = "overview", icon = icon("binoculars")),
     menuItem("Hydrographs", icon = icon("chart-area"),
              menuSubItem("Daily and Long-term", tabName = "hydro"),
              menuSubItem("Cumulative", tabName = "cumulative")),
     menuItem("Annual Statistics", tabName = "annual",
              icon = icon("calendar"),
-             menuSubItem("Statistics", tabName = "annual_stats"),
-             menuSubItem("Means", tabName = "annual_means"),
-             menuSubItem("Totals", tabName = "annual_totals"),
-             menuSubItem("Flow timing", tabName = "flow_timing"),
+             menuSubItem("Summary Statistics", tabName = "annual_stats"),
+             menuSubItem("Mean Annual Discharge", tabName = "annual_means"),
+             menuSubItem("Total Discharge", tabName = "annual_totals"),
              menuSubItem("Low Flows", tabName = "low_flows"),
-             menuSubItem("Peak Flows", tabName = "peak_flows"),
-             menuSubItem("Days outside normal", tabName = "outside_normal")),
-    menuItem("Flow duration and percentiles", tabName = "flows",
+             menuSubItem("High Flows", tabName = "high_flows"),
+             menuSubItem("Timing of Flows", tabName = "flow_timing"),
+             menuSubItem("Normal Days", tabName = "outside_normal")),
+    menuItem("Flow Duration and Percentiles", tabName = "flows",
              icon = icon("clock")),
     menuItem("Analyses", tabName = "analyses",
              icon = icon("chart-line"),
              menuSubItem("Annual Trends", tabName = "annual_trends"),
              menuSubItem("Volume Frequency", tabName = "volume_freq"),
-             menuSubItem("HYDAT Peak", tabName = "hydat_peak"))
+             menuSubItem("HYDAT Peak Frequency", tabName = "hydat_peak"))
   )
 }
 

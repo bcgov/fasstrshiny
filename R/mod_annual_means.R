@@ -18,15 +18,21 @@ ui_annual_means <- function(id) {
 
   fluidRow(
     column(
-      width = 12, h2("Annual Means"),
+      width = 12, h2("Mean Annual Discharge"),
+      box(width = 3,
+          helpText("Explore annual mean discharge values. The x-axis is centered ",
+                   "on the long-term mean annual discharge (mean of annual means) and ",
+                   "the length of the bars from the axis indicate the annual difference ",
+                   "from the long-term mean.",
+                   "For the annual values in table format, see the Annual Summary Statistics ",
+                   "page table."),hr(),
+          ui_download(id = ns("plot"))
+      ),
       tabBox(
-        width = 12,
+        width = 9,
         ### Plot ---------------------
         tabPanel(
           title = "Plot",
-          helpText("Placeholder descriptive text to describe this section, ",
-                   "what it does and how to use it"),
-          ui_download(id = ns("plot")),
           select_plot_options(select_plot_title(id)),
           ggiraph::girafeOutput(ns("plot"), height = opts$plot_height)
         ),

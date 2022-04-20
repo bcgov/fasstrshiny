@@ -20,19 +20,26 @@ ui_annual_totals <- function(id) {
 
   fluidRow(
     column(
-      width = 12, h2("Annual Totals"),
+      width = 12, h2("Annual and Seasonal Total Discharge"),
       box(width = 3,
-          helpText("Placeholder descriptive text to describe this section, ",
-                   "what it does and how to use it"),
+          helpText("Explore annual and seasonal total discharges as total ",
+                   "volumetric (m3) or runoff yield (mm). ",
+                   "Volumetric discharge totals the daily discharge values ",
+                   "for a given time period. Total yield converts the total volume ",
+                   "to units in depth derived from the provided basin area. ",
+                   "If not all 12 months are included, seasonal data will not ",
+                   "be presented. ",
+                   "The discharge unit types and type of plot can be modified below."),hr(),
           awesomeRadio(ns("discharge2"),
-                       label = "Discharge type",
+                       label = "Discharge Type",
                        choices = list("Volumetric Discharge (m3)" = FALSE,
                                       "Runoff Yield (mm)" = TRUE),
                        selected = TRUE),
           bsTooltip(ns("discharge2"), tips$discharge2,
                              placement = "left"),
-          uiOutput(ns("ui_display")),
-          ui_download(id = ns("plot"))
+          uiOutput(ns("ui_display")),hr(),
+          ui_download(id = ns("plot")), br(),
+          helpText("Note: only years of complete data will be used for analysis.")
           ),
 
       tabBox(

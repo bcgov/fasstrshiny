@@ -48,10 +48,9 @@ select_custom <- function(id, values) {
 
 select_custom_months <- function(id) {
   fluidRow(id = NS(id, "custom_months_all"),
-           h4("Combine and summarize months", style = "margin-left: 15px;"),
            column(width = 6,
                   selectizeInput(NS(id, "custom_months"),
-                                 label = "Months to combine",
+                                 label = "Months",
                                  choices = list("Jan" = 1,  "Feb" = 2,
                                                 "Mar" = 3,  "Apr" = 4,
                                                 "May" = 5,  "Jun" = 6,
@@ -62,7 +61,7 @@ select_custom_months <- function(id) {
                                  multiple = TRUE)),
            column(width = 6,
                   textInput(NS(id, "custom_months_label"),
-                            label = "Label for group",
+                            label = "Label",
                             placeholder = "ex. Jun-Aug",
                             value = "")),
            bsTooltip(id = NS(id, "custom_months_all"),
@@ -75,7 +74,7 @@ select_custom_months <- function(id) {
 select_discharge <- function(id) {
   tagList(
     awesomeRadio(NS(id, "discharge"),
-                 label = "Discharge type",
+                 label = "Discharge Unit Type",
                  choices = list("Discharge (cms)" = "Value",
                                 "Volumetric Discharge (m3)" = "Volume_m3",
                                 "Runoff Yield (mm)" = "Yield_mm"),
@@ -91,13 +90,13 @@ select_rolling <- function(id, name = "roll", multiple = FALSE) {
     fluidRow(id = NS(id, glue::glue("{name}ing")),
              column(6,
                     selectizeInput(NS(id, glue::glue("{name}_days")),
-                                   label = "Rolling days",
+                                   label = "Rolling Average Days",
                                    choices = 1:180,
                                    selected = d,
                                    multiple = multiple)),
              column(6,
                     selectizeInput(NS(id, glue::glue("{name}_align")),
-                                   label = "Rolling align",
+                                   label = "Rolling Average Alignment",
                                    selected = "right",
                                    choices = list("Right" = "right",
                                                   "Left" = "left",
@@ -118,7 +117,7 @@ select_percentiles <- function(id, name = "percentiles", selected = c(10, 90),
   tagList(
     selectizeInput(NS(id, name),
                    label = label,
-                   choices = c(1:99),
+                   choices = c(0:100),
                    selected = selected,
                    multiple = TRUE),
     bsTooltip(NS(id, name), t, placement = "left"))
@@ -140,8 +139,8 @@ select_missing <- function(id) {
   tagList(
     div(id = NS(id, "missing_tip"),
         prettySwitch(NS(id, "missing"),
-                     value = TRUE, status = "danger",
-                     label = "Ignore missing values",
+                     value = FALSE, status = "danger",
+                     label = "Ignore Missing Values",
                      slim = TRUE)),
     bsTooltip(NS(id, "missing_tip"), tips$missing,
               placement = "left"))
@@ -150,8 +149,8 @@ select_missing <- function(id) {
 select_allowed <- function(id) {
    tagList(
     sliderInput(NS(id, "allowed"),
-                label = "Allowed missing (%)",
-                value = 100, step = 5, min = 0, max = 100),
+                label = "Allowed Missing (%)",
+                value = 0, step = 5, min = 0, max = 100),
     bsTooltip(NS(id, "allowed"), tips$allowed,
               placement = "left"))
 }
@@ -257,12 +256,10 @@ select_plot_display <- function(id, plots) {
     stats::setNames(., stringr::str_replace_all(., "_", " "))
 
   tagList(
-    selectizeInput(NS(id, "display"), "Display plot",
+    awesomeRadio(NS(id, "display"), "Display Plot",
                    choices = plot_names),
     bsTooltip(NS(id, "display"),
-              paste0("Choose plot type to display.<br>",
-                     "Seasonal plots are only available if all months ",
-                     "are included<br>(see Data tab)"),
+              paste0("Choose plot type to display."),
               placement = "left"))
 }
 
@@ -272,7 +269,7 @@ select_fitting <- function(id) {
 
         selectizeInput(
           NS(id, "fit_quantiles"),
-          label = "Quantiles to estimate",
+          label = "Quantiles to Estimate",
           choices = seq(0.01, 0.999, 0.0025),
           selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
                        0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
@@ -287,11 +284,11 @@ select_fitting <- function(id) {
           column(width = 6, id = NS(id, "plot_curve_tip"),
                  style = "padding-top: 25px; margin-bottom: 25px",
                  prettySwitch(NS(id, "plot_curve"),
-                              label = tags$span(strong("Plot curve")),
+                              label = tags$span(strong("Plot Curve")),
                               value = TRUE, status = "success", slim = TRUE)),
           awesomeRadio(
             NS(id, "fit_distr_method"),
-            label = "Distribution method",
+            label = "Distribution Method",
             choices = list("Method of Moments (MOM)" = "MOM",
                            "Maximum Likelihood Estimation (MLE)" = "MLE"))),
 
@@ -313,7 +310,7 @@ select_analysis_plots <- function(id) {
       fluidRow(
         column(6, id = NS(id, "prob_plot_tip"),
                awesomeRadio(NS(id, "prob_plot"),
-                            label = "Plotting positions",
+                            label = "Plotting Positions",
                             choices = list("Weibull" = "weibull",
                                            "Median" = "median",
                                            "Hazen" = "hazen"))),
@@ -321,7 +318,7 @@ select_analysis_plots <- function(id) {
           6, id = NS(id, "prob_scale_tip"),
           textInput(
             NS(id, "prob_scale"),
-            label = "Probabilies to plot",
+            label = "Probabilities to Plot",
             value = paste0("0.9999, 0.999, 0.99, 0.9, 0.5, 0.2, ",
                            "0.1, 0.02, 0.01, 0.001, 0.0001")))
       ),
@@ -337,15 +334,15 @@ select_analysis_data <- function(id) {
     column(
       width = 6, id = NS(id, "use_max_tip"),
       awesomeRadio(NS(id, "use_max"),
-                   label = "Flow type",
-                   choices = list("Low" = FALSE,
-                                  "High" = TRUE),
+                   label = "Analysis Type",
+                   choices = list("Low Flow" = FALSE,
+                                  "High Flow" = TRUE),
                    selected = FALSE, inline = TRUE)),
     column(
       width = 6, id = NS(id, "use_log_tip"), style = "padding-top: 25px",
       prettySwitch(
         NS(id, "use_log"),
-        label = tags$span(strong("Log trans")),
+        label = tags$span(strong("Log-transform")),
         value = FALSE, status = "success", slim = TRUE)),
     bsTooltip(NS(id, "use_max_tip"), tips$use_max,
               placement = "left"),

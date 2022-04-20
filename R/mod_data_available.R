@@ -19,17 +19,20 @@ ui_data_available <- function(id) {
 
   fluidRow(
     column(
-      width = 12, h2("Data Availability"),
+      width = 12, h2("Data Availability & Screening"),
 
       tabBox(
         width = 12,
 
-        # Symbols Flow Plot -----------------
+        # Daily Symbols Plot -----------------
         tabPanel(
-          title = "Symbols Flow Plot",
+          title = "Daily Symbols Plot",
           fluidRow(
             column(
               width = 2,
+              helpText("Plot and explore the daily flow qualifier symbols, if available. ",
+                       "HYDAT symbols indicate a condition where the daily mean flow value ",
+                       "has a larger than expected uncertainty."), hr(),
               strong("HYDAT data symbols are: "), br(),
               strong("'E'"), "Estimate", br(),
               strong("'A'"), "Partial Day", br(),
@@ -55,21 +58,27 @@ ui_data_available <- function(id) {
 
         # Symbols Summary Plot ----------------------
         tabPanel(
-          title = "Symbols Summary Plots",
+          title = "Annual Symbols Plot",
           fluidRow(
             column(
-              width = 3,
+              width = 2,
+              helpText("Plot and explore daily flow qualifier symbols, if ",
+                       "available, on an annual basis. Annual symbol and missing ",
+                       "day totals can be plotted by changing the plot type below.",
+                       "HYDAT symbols indicate a condition where the daily mean flow value ",
+                       "has a larger than expected uncertainty."), hr(),
               div(id = ns("symbols_sum_type_tip"),
                   awesomeRadio(
-                    ns("symbols_sum_type"), label = "Plot type",
-                    choices = c("Day of Year" = "dayofyear",
-                                "No. Days" = "count", "% Days" = "percent")),
+                    ns("symbols_sum_type"), label = "Plot Type",
+                    choices = c("By Day of Year" = "dayofyear",
+                                "Number of Days" = "count",
+                                "Percent of Days" = "percent")),
                   bsTooltip(ns("symbols_sum_type_tip"),
                             paste0("Plot symbols by ",
                                    "Day of Year; by Number of Days; ",
                                    "or by Percent of Days"),
                             placement = "left")
-              ),
+              ),hr(),
               strong("HYDAT data symbols are: "), br(),
               strong("'E'"), "Estimate", br(),
               strong("'A'"), "Partial Day", br(),
@@ -93,12 +102,15 @@ ui_data_available <- function(id) {
         tabPanel(
           title = "Data Availability Plot",
           fluidRow(
-            column(width = 1,
-                   awesomeRadio(ns("available_type"), label = "Plot type",
+            column(width = 2,
+                   helpText("Plot and explore the data availability, by month and year. ",
+                            "Can change the plot type and the months to include ",
+                            "on the plot below."), hr(),
+                   awesomeRadio(ns("available_type"), label = "Plot Type",
                                 choices = c("Tile" = "tile", "Bar" = "bar")),
                    checkboxGroupButtons(
                      ns("months_inc"),
-                     label = "Months",
+                     label = "Months to Plot",
                      choices = list("Jan" = 1, "Feb" = 2,
                                     "Mar" = 3, "Apr" = 4,
                                     "May" = 5, "Jun" = 6,
@@ -106,16 +118,17 @@ ui_data_available <- function(id) {
                                     "Sep" = 9, "Oct" = 10,
                                     "Nov" = 11, "Dec" = 12),
                      selected = c(1:12),
-                     direction = "vertical"),
+                     width = "100%"),
                    bsTooltip(ns("months_inc"),
                              "Months to include/exclude from the plot",
                              placement = "left"),
                    bsButton(ns("months_all"), label = "All Months",
                             size = "small"),
                    bsTooltip(ns("months_all"), "Select all months",
-                             placement = "left")
+                             placement = "left"),
+                   hr(),
             ),
-            column(width = 11,
+            column(width = 10,
                    select_plot_options(select_plot_title(id, "plot_title_available")),
                    ggiraph::girafeOutput(ns("plot_available"),
                                          height = opts$plot_height))
@@ -124,32 +137,36 @@ ui_data_available <- function(id) {
 
         # Summary Plot -----------------
         tabPanel(
-          title = "Data Summary Plot",
+          title = "Data Summary Stats Plot",
           fluidRow(
-            column(width = 3,
-                   helpText("Placeholder descriptive text to describe this section, ",
-                            "what it does and how to use it"),
+            column(width = 2,
+                   helpText("Plot and explore some basic annual summary statistics. ",
+                            "Can choose below the statistics to include on the plot and ",
+                            "whether to show if annual stats include missing values."),hr(),
                    div(id = ns("availability_tip"),
                        prettySwitch(ns("availability"),
-                                    label = "Plot availability",
+                                    label = "Plot Data Availability",
                                     value = TRUE,
                                     status = "success", slim = TRUE, inline = TRUE)),
                    bsTooltip(ns("availability_tip"), tips$availability,
                              placement = "left"),
                    selectizeInput(
                      ns("stats"),
-                     label = "Statistics to include",
+                     label = "Statistics to Include",
                      choices = default("plot_data_screening", "include_stats"),
                      selected = default("plot_data_screening", "include_stats"),
                      multiple = TRUE, width = "100%"),
                    bsTooltip(ns("stats"), tips$stats,
                              placement = "left"),
 
-                   strong("Note"), br(),
-                   "Statistics are calculated ignoring missing dates",
+                  # strong("Note"), br(),
+                  hr(),
+                   "Note: Statistics are calculated regardless of missing dates.",
+                   "More annual summary statistics and other annual metrics can be found ",
+                   "in the 'Annual Statistics' pages on the side panel."
 
             ),
-            column(width = 9,
+            column(width = 10,
                    select_plot_options(select_plot_title(id, "plot_title_summary")),
                    ggiraph::girafeOutput(ns("plot_summary"),
                                          height = opts$plot_height))
@@ -196,7 +213,7 @@ server_data_available <- function(id, data_settings, data_raw,
       eval_check(d)
     })
 
-    # Symbols Flow Plot -----------------------------
+    # Daily Symbols Plot -----------------------------
     output$plot_symbols_flow <- plotly::renderPlotly({
       check_data(data_loaded())
       validate(need("Symbol" %in% names(data_raw()),
@@ -217,7 +234,7 @@ server_data_available <- function(id, data_settings, data_raw,
       if(input$plot_title_symbols_flow) {
         g <- g +
           ggplot2::ggtitle(title(
-            data_settings(), glue::glue("Flow with symbols"))) +
+            data_settings(), glue::glue("Daily Flow with Symbol Qualifiers"))) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
@@ -252,7 +269,7 @@ server_data_available <- function(id, data_settings, data_raw,
       if(input$plot_title_symbols_sum) {
         g <- g +
           ggplot2::ggtitle(title(
-            data_settings(), glue::glue("Summary of symbols"))) +
+            data_settings(), glue::glue("Annual Symbols Summary"))) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
@@ -318,7 +335,7 @@ server_data_available <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title_available) {
         g <- g +
-          ggplot2::ggtitle(title(data_settings(), "Missing Data")) +
+          ggplot2::ggtitle(title(data_settings(), "Data Availability")) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
@@ -373,7 +390,7 @@ server_data_available <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title_summary) {
         g <- g +
-          ggplot2::ggtitle(title(data_settings(), "Data Availability")) +
+          ggplot2::ggtitle(title(data_settings(), "Data Summary Statistics and Availability")) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
@@ -411,7 +428,7 @@ server_data_available <- function(id, data_settings, data_raw,
     })
 
     output$table_title <- renderText({
-      title(data_settings(), "Screening")
+      title(data_settings(), "Data Screening and Availability")
     })
 
     # R Code -----------------
