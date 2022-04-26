@@ -237,8 +237,8 @@ get_date <- function(n, water_year) {
 
 #' Turn Day of Year into a date given a year
 #' @noRd
-yday_as_date <- function(yday, year) {
- as.Date(yday, origin = paste0(year, "-01-01")) - 1
+yday_as_date <- function(yday, year, water_year) {
+ as.Date(yday, origin = paste0(year,"-", water_year,"-01")) - 1
 }
 
 #' Get an SVG of the ggiraph lasso for use in messages

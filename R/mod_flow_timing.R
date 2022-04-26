@@ -45,16 +45,12 @@ ui_flow_timing <- function(id) {
         #                  selected = "All Annual",
         #                  status = "primary")),
         # bsTooltip(ns("plot_type"), "Type of plot to show", placement = "left"),
-        div(align = "left",
-            selectInput(ns("year_to_plot"),
-                        label = "Selected Year to Plot",
-                        choices = 1999:2010,
-                        selected = 1999)),
-        bsTooltip(ns("year_to_plot"), "Specfic year to plot", placement = "left"),
-
+        div(align = "left",uiOutput(ns("ui_year_to_plot")),
+            bsTooltip(ns("ui_year_to_plot"), "Specfic year to plot", placement = "left")),
         hr(),
         ui_download(id = ns("plot")), br(),
-        helpText("Note: only years of complete data will be used for analysis.")
+        helpText("Note: only years of complete data will be used for analysis.")#,
+        # textOutput(ns("testings"))
       ),
       tabBox(
         width = 9,
@@ -90,6 +86,15 @@ server_flow_timing <- function(id, data_settings, data_raw,
 
     # Titles -----------
     titles <- reactive(title(data_settings(), "Flow Timing"))
+    titles_year <- reactive(title(data_settings(),
+                                  paste0("Flow Timing for ",
+                                         ifelse(data_settings()$water_year ==1, "", "Water Year "),
+                                         input$year_to_plot)))
+    # UI Elements ------------
+    output$ui_year_to_plot <- renderUI({
+      req(data_settings()$years_range)
+      select_year_to_plot(id, data_settings()$years_range)
+    })
 
     # Plot --------------------
     plot <- reactive({
@@ -118,32 +123,42 @@ server_flow_timing <- function(id, data_settings, data_raw,
       g <- g +
         ggiraph::geom_point_interactive(
           ggplot2::aes(tooltip = glue::glue(
-            "Year: {.data$Year}\n",
             "{.data$Statistic}\n",
-            "Date: {yday_as_date(.data$Value, .data$Year)}"),
+            "Year: {.data$Year}\n",
+            "Day of Year: {.data$Value}\n",
+            "Date: {yday_as_date(.data$Value, .data$Year, data_settings()$water_year)}"),
             data_id = .data$Year), size = 3)
     })
 
 
-    dims <- c(13, 7) * opts$scale
+    dims <- c(12, 7) * opts$scale
 
     output$plot <- ggiraph::renderGirafe({
       ggiraph::girafe(ggobj = plot(),
                       width_svg = dims[1],
                       height_svg = dims[2],
-                      options = ggiraph_opts())
+                      options = ggiraph_opts(selection = "single"))
     })
+
+    # Observe clicking event -----------------
+    observeEvent(input$plot_selected,{
+      updateSelectInput(session = session,
+                        inputId = "year_to_plot",
+                        selected = as.numeric(input$plot_selected))
+    })
+
+
 
     # Download Plot -----------------
     download(id = "plot", plot = plot, name = "flow_timing",
              data_settings, dims)
 
-    output$plot <- ggiraph::renderGirafe({
-      ggiraph::girafe(ggobj = plot(),
-                      width_svg = dims[1],
-                      height_svg = dims[2],
-                      options = ggiraph_opts())
-    })
+    # output$plot <- ggiraph::renderGirafe({
+    #   ggiraph::girafe(ggobj = plot(),
+    #                   width_svg = dims[1],
+    #                   height_svg = dims[2],
+    #                   options = ggiraph_opts())
+    # })
 
 
     # Plot --------------------
@@ -156,7 +171,7 @@ server_flow_timing <- function(id, data_settings, data_raw,
       g <- create_fun(
         fun = "plot_annual_flow_timing_year", data_name = "data_flow",
         input, input_data = data_settings(),
-        extra = glue::glue("year_to_plot = '{input$year_to_plot}'"))
+        extra = glue::glue("year_to_plot = {input$year_to_plot}"))
 
       code$plot <- g
       labels$plot <- "Plot Annual flow timings YEAR"
@@ -166,22 +181,23 @@ server_flow_timing <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title) {
         g <- g +
-          ggplot2::ggtitle(titles()) +
+          ggplot2::ggtitle(titles_year()) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
       # Add interactivity
-      g <- g# +
-       # ggiraph::geom_vline_interactive(
-      #    xintercept = .$Date, colour = 'grey20', tooltip = .$labs) #+
-      # ggplot2::geom_text(data = dts, ggplot2::aes(x = .data$Date,
-      #                                             label = .data$labs,
-      #                                             hjust = .data$hjust),
-      #                     y = Inf, vjust = 2)
+      g <- g +
+        ggiraph::geom_point_interactive(
+          ggplot2::aes(
+            x = .data$Date, y = .data$Value2, colour = .data$Percent,
+            tooltip = glue::glue("{.data$Percent} Total Flow\n",
+                                 "Day of Year: {.data$DayofYear}\n",
+                                 "Date: {.data$Flow_Date}"),
+            data_id = .data$DayofYear),
+          size = 4, na.rm = TRUE)
     })
 
-    dims2 <- c(13, 7) * opts$scale
-
+    dims2 <- c(13, 6) * opts$scale
 
     output$plot_year <- ggiraph::renderGirafe({
       ggiraph::girafe(ggobj = plot_year(),

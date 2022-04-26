@@ -40,12 +40,8 @@ ui_outside_normal <- function(id) {
                          selected = "All Annual",
                          status = "primary")),
         bsTooltip(ns("plot_type"), "Type of plot to show", placement = "left"),
-        div(align = "left",
-            selectInput(ns("year_to_plot"),
-                        label = "Year to Plot",
-                        choices = 1999:2010,
-                        selected = 1999)),
-        bsTooltip(ns("year_to_plot"), "Type of plot to show", placement = "left"),
+        div(align = "left",uiOutput(ns("ui_year_to_plot")),
+            bsTooltip(ns("ui_year_to_plot"), "Specfic year to plot", placement = "left")),
 
         hr(),
         ui_download(id = ns("plot")), br(),
@@ -92,6 +88,12 @@ server_outside_normal <- function(id, data_settings, data_raw,
     # Titles --------------------
     titles <- reactive(title(data_settings(), "Normal Days"))
 
+    # UI Elements ------------
+    output$ui_year_to_plot <- renderUI({
+      req(data_settings()$years_range)
+      select_year_to_plot(id, data_settings()$years_range)
+    })
+
     # Plot --------------------
     plot <- reactive({
       check_data(data_loaded())
@@ -124,18 +126,25 @@ server_outside_normal <- function(id, data_settings, data_raw,
     })
 
 
-    dims <- c(12, 8) * opts$scale
+    dims <- c(12, 6) * opts$scale
 
     output$plot <- ggiraph::renderGirafe({
       ggiraph::girafe(ggobj = plot(),
                       width_svg = dims[1],
                       height_svg = dims[2],
-                      options = ggiraph_opts())
+                      options = ggiraph_opts(selection = "single"))
     })
 
 
     # Download Plot -----------------
     download(id = "plot", plot = plot, name = "outside_normal", data_settings, dims)
+
+    # Observe clicking event -----------------
+    observeEvent(input$plot_selected,{
+      updateSelectInput(session = session,
+                        inputId = "year_to_plot",
+                        selected = as.numeric(input$plot_selected))
+    })
 
 
     # Plot --------------------
@@ -148,7 +157,7 @@ server_outside_normal <- function(id, data_settings, data_raw,
       g <- create_fun(
         fun = "plot_annual_normal_days_year", data_name = "data_flow",
         input, input_data = data_settings(),
-        extra = glue::glue("year_to_plot = '{input$year_to_plot}'"))
+        extra = glue::glue("year_to_plot = {input$year_to_plot}"))
 
       code$plot <- g
       labels$plot <- "Plot Annual Normal Days YEAR"
@@ -163,16 +172,20 @@ server_outside_normal <- function(id, data_settings, data_raw,
       }
 
       # Add interactivity
-      g <- g# +
-      # ggiraph::geom_vline_interactive(
-      #    xintercept = .$Date, colour = 'grey20', tooltip = .$labs) #+
-      # ggplot2::geom_text(data = dts, ggplot2::aes(x = .data$Date,
-      #                                             label = .data$labs,
-      #                                             hjust = .data$hjust),
-      #                     y = Inf, vjust = 2)
+      g <- g +
+      ggiraph::geom_point_interactive(
+        ggplot2::aes(
+          x = .data$Date, y = .data$Value,
+          tooltip = glue::glue("{.data$Normal}\n",
+                               "Day of {ifelse(data_settings()$water_year==1,'Year', 'Water Year')}: {.data$DayofYear}\n",
+                               "Date: {.data$Flow_Date}\n",
+                               "Discharge: {round(.data$Value,4)}"),
+          data_id = .data$DayofYear),
+        size = 4,  na.rm = TRUE, alpha = 0.01)
+
     })
 
-    dims2 <- c(13, 7) * opts$scale
+    dims2 <- c(13, 6) * opts$scale
 
 
     output$plot_year <- ggiraph::renderGirafe({

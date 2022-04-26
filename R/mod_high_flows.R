@@ -26,7 +26,7 @@ ui_high_flows <- function(id) {
                  "The duration of rolling day averages (and alignment) and ",
                  "the type of plot to display can be modifed below. "),hr(),
         select_rolling(id, multiple = TRUE),
-        uiOutput(ns("ui_display")),hr(),
+        uiOutput(ns("ui_display_high")),hr(),
         ui_download(id = ns("plot")), br(),
         helpText("Note: the date of occurrence depends on the alignment of the rolling average. ",
                  "If 'Right' the day represents the last of n-days (i.e. with a 7-day average, ",
@@ -69,7 +69,7 @@ server_high_flows <- function(id, data_settings, data_raw,
 
     # UI Elements ----------------------------
     # Plot display
-    output$ui_display <- renderUI({
+    output$ui_display_high <- renderUI({
       req(plots())
       select_plot_display(id, plots())
     })
@@ -77,7 +77,6 @@ server_high_flows <- function(id, data_settings, data_raw,
     # Plots --------------------
     plots <- reactive({
       check_data(data_loaded())
-      req(input$roll_days)
 
       data_flow <- data_raw()
 
@@ -93,29 +92,31 @@ server_high_flows <- function(id, data_settings, data_raw,
       d1 <- dplyr::left_join(g[[1]]$data, g[[2]]$data,
                              by = c("Year", "Statistic"),
                              suffix = c("", "_doy")) %>%
-        dplyr::mutate(Date = yday_as_date(.data$Value_doy, .data$Year))
+        dplyr::mutate(Date = yday_as_date(.data$Value_doy, .data$Year, data_settings()$water_year))
 
       g[["Annual_High_Flows"]]$data <- d1
       g[["Annual_High_Flows"]] <- g[["Annual_High_Flows"]] +
         ggiraph::geom_point_interactive(
           ggplot2::aes(tooltip = glue::glue(
-            "Year: {.data$Year}\n",
             "{.data$Statistic}\n",
+            "Year: {.data$Year}\n",
             "Date: {.data$Date}\n",
+            "Day of {ifelse(data_settings()$water_year==1,'Year', 'Water Year')}: {.data$Value_doy}\n",
             "Discharge: {round(.data$Value, 4)}"),
             data_id = .data$Year), size = 3)
 
       d2 <- dplyr::left_join(g[[2]]$data, g[[1]]$data,
                              by = c("Year", "Statistic"),
                              suffix = c("", "_discharge")) %>%
-        dplyr::mutate(Date = yday_as_date(.data$Value_doy, .data$Year))
+        dplyr::mutate(Date = yday_as_date(.data$Value_doy, .data$Year, data_settings()$water_year))
 
       g[["Annual_High_Flows_Dates"]]$data <- d2
       g[["Annual_High_Flows_Dates"]] <- g[["Annual_High_Flows_Dates"]] +
         ggiraph::geom_point_interactive(
           ggplot2::aes(tooltip = glue::glue(
-            "Year: {.data$Year}\n",
             "{.data$Statistic}\n",
+            "Year: {.data$Year}\n",
+            "Day of {ifelse(data_settings()$water_year==1,'Year', 'Water Year')}: {.data$Value}\n",
             "Date: {.data$Date}\n",
             "Discharge: {round(.data$Value_discharge, 4)}"),
             data_id = .data$Year), size = 3)

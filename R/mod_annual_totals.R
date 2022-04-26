@@ -97,7 +97,8 @@ server_annual_totals <- function(id, data_settings, data_raw,
 
       # Add interactivity
       for(i in seq_along(g)) {
-        g[[i]] <- g[[i]] + ggiraph::geom_point_interactive(
+        g[[i]] <- g[[i]] + ggiraph::geom_bar_interactive(
+          position = "stack", stat = "identity",
           ggplot2::aes(tooltip = glue::glue(
             "Year: {.data$Year}\n",
             "{stringr::str_remove(.data$Statistic, '_$')}: {round(.data$Value, 4)}",
@@ -128,8 +129,8 @@ server_annual_totals <- function(id, data_settings, data_raw,
     dims <- reactive({
       req(!is.null(input$display))
       h <- switch(stringr::str_extract(input$display, "^[^_]+"),
-             "Two" = 8,
-             "Four" = 10,
+             "Two" = 5,
+             "Four" = 5,
              "Total" = 5)
 
       c(10, h) * opts$scale

@@ -97,7 +97,7 @@ bc_maps_labs <- dplyr::tribble(
 
 mods <- c("data_load", "data_available", "hydro", "cumulative", "flows",
           "annual_stats", "annual_means", "annual_totals", "flow_timing",
-          "low_flows", "high_flows", "outside_normal",
+          "low_flows", "high_flows", "peak_flows", "outside_normal",
           "annual_trends", "volume_freq", "hydat_peak")
 
 usethis::use_data(parameters, tips, opts, bc_maps_layers, bc_maps_labs, mods,

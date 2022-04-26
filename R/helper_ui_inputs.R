@@ -216,6 +216,18 @@ select_add_year <- function(id, years_range) {
   )
 }
 
+select_year_to_plot <- function(id, years_range) {
+  tagList(
+    selectInput(NS(id, "year_to_plot"),
+                   label = "Year to Plot",
+                   choices = c("Choose a year" = "",
+                               seq(from = years_range[1],
+                                   to = years_range[2], by = 1)),
+                   selected = years_range[1])
+  )
+}
+
+
 select_add_dates <- function(id) {
   d <- stats::setNames(1:365, format(as.Date(1:365, origin = "1899-12-31"),
                                      "%b-%d"))

@@ -324,7 +324,7 @@ server_data_available <- function(id, data_settings, data_raw,
         input, input_data = data_settings(),
         params_ignore = c("discharge", "months"),
         extra = glue::glue(
-          "months = c({glue::glue_collapse(input$months_inc, sep = ', ')}), ",
+          "months = {conseq(input$months_inc)}, ",
           "plot_type = '{input$available_type}'"))
 
       code$plot_available <- g
