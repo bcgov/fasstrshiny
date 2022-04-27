@@ -87,6 +87,10 @@ server_outside_normal <- function(id, data_settings, data_raw,
 
     # Titles --------------------
     titles <- reactive(title(data_settings(), "Normal Days"))
+    titles_year <- reactive(title(data_settings(),
+                                  paste0("Normal Days for ",
+                                         ifelse(data_settings()$water_year ==1, "", "Water Year "),
+                                         input$year_to_plot)))
 
     # UI Elements ------------
     output$ui_year_to_plot <- renderUI({
@@ -117,14 +121,21 @@ server_outside_normal <- function(id, data_settings, data_raw,
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0, size = 12))
       }
 
+      g$data <- dplyr::left_join(g$data, g$data %>%
+        dplyr::mutate(tooltip = glue::glue(
+          "{Statistic}: {Value}")) %>%
+        dplyr::group_by(.data$Year) %>%
+        dplyr::summarize(tooltip = glue::glue(
+                           "Year: {.data$Year}\n",
+                           glue::glue_collapse(.data$tooltip, "\n"))) %>%
+          dplyr::distinct(), by = "Year")
+
       # Add interactivity
-      g <- g + ggiraph::geom_point_interactive(
-        ggplot2::aes(tooltip = glue::glue("Year: {.data$Year}\n",
-                                          "{.data$Statistic}\n",
-                                          "No. Days: {round(.data$Value, 4)}"),
+      g <- g + ggiraph::geom_bar_interactive(
+        position = "stack", stat = "identity", alpha = 0.005,
+        ggplot2::aes(tooltip = tooltip,
                      data_id = .data$Year), size = 3)
     })
-
 
     dims <- c(12, 6) * opts$scale
 
@@ -167,7 +178,7 @@ server_outside_normal <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title) {
         g <- g +
-          ggplot2::ggtitle(titles()) +
+          ggplot2::ggtitle(titles_year()) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 

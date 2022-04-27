@@ -26,6 +26,13 @@ ui_annual_means <- function(id) {
                    "from the long-term mean.",
                    "For the annual values in table format, see the Annual Summary Statistics ",
                    "page table."),hr(),
+          selectizeInput(ns("mean_ptile"),
+                         label = "Percentiles of Annual Means to Plot",
+                         choices = 0:100,
+                         selected = c(10,90),
+                         multiple = TRUE,
+                         options = list(maxItems = 2)),
+          hr(),
           ui_download(id = ns("plot"))
       ),
       tabBox(
@@ -56,9 +63,13 @@ server_annual_means <- function(id, data_settings, data_raw,
 
       data_flow <- data_raw()
 
+      ptiles <- ifelse(!is.null(input$mean_ptile), conseq(input$mean_ptile), NA)
+
       g <- create_fun(fun = "plot_annual_means", data_name = "data_flow",
                       input, input_data = data_settings(),
-                      params_ignore = "discharge")
+                      params_ignore = "discharge",
+                      extra = glue::glue("percentiles_mad = {ptiles}")
+      )
 
       code$plot <- g
       labels$plot <- "Plotting annual means"
@@ -75,24 +86,37 @@ server_annual_means <- function(id, data_settings, data_raw,
 
 
       # Replace layers with interactive
-      g$layers[[1]] <- ggiraph::geom_bar_interactive(
-        ggplot2::aes(tooltip = glue::glue("Year: {.data$Year}\n",
-                                          "MAD Diff: {round(.data$MAD_diff, 4)}",
-                                          .trim = FALSE),
-                     data_id = .data$Year, colour = "Annual MAD difference"),
-        fill = "cornflowerblue", stat = "identity")
+      g <- g +
+        ggiraph::geom_bar_interactive(
+          stat = "identity", alpha = 0.005,
+          ggplot2::aes(tooltip = glue::glue("Year: {.data$Year}\n",
+                                            "MAD Diff: {round(.data$MAD_diff, 4)}",
+                                            .trim = FALSE),
+                       data_id = .data$Year)
+        )
+      if (!is.null(input$mean_ptile)) {
+        g <- g +
+          ggiraph::geom_hline_interactive(
+            ggplot2::aes(yintercept = unique(Ptile1) - unique(LTMAD),
+                         tooltip = glue::glue("MAD P{input$mean_ptile[1]}: {round(.data$Ptile1[1],4)}")),
+            alpha = 0.01, linetype = 1, size = 2)+
+          ggiraph::geom_hline_interactive(
+            ggplot2::aes(yintercept = unique(Ptile2) - unique(LTMAD),
+                         tooltip = glue::glue("MAD P{input$mean_ptile[2]}: {round(.data$Ptile2[1],4)}")),
+            alpha = 0.01, linetype = 1, size = 2)
+      }
 
-      g <- g + ggplot2::geom_hline(ggplot2::aes(yintercept = 0,
-                                                colour = "Long-term MAD"),
-                                   size = 1) +
-        ggplot2::scale_colour_manual(
-          values = c("Long-term MAD" = "black",
-                     "Annual MAD difference" = "cornflowerblue")) +
-        ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(
-          fill = c("black", "cornflowerblue")))) +
-        ggplot2::theme(legend.position = c(0.8, 0.8),
-                       legend.title = ggplot2::element_blank(),
-                       legend.key = ggplot2::element_rect(colour = NA))
+      # g <- g + ggplot2::geom_hline(ggplot2::aes(yintercept = 0,
+      #                                           colour = "Long-term MAD"),
+      #                              size = 1) +
+      #   ggplot2::scale_colour_manual(
+      #     values = c("Long-term MAD" = "black",
+      #                "Annual MAD difference" = "#2A788EFF")) +
+      #   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(
+      #     fill = c("black", "#2A788EFF")))) +
+      #   ggplot2::theme(legend.position = "right",
+      #                  legend.title = ggplot2::element_blank(),
+      #                  legend.key = ggplot2::element_rect(colour = NA))
 
       g
     })

@@ -76,7 +76,10 @@ server_peak_flows <- function(id, data_settings, data_raw,
 
     # Titles --------------------
     titles <- reactive(title(data_settings(), "Annual Peaks"))
-
+    titles_year <- reactive(title(data_settings(),
+                                  paste0("Annual Peaks for ",
+                                         ifelse(data_settings()$water_year ==1, "", "Water Year "),
+                                         input$year_to_plot)))
     # UI Elements ------------
     # Plot display
     output$ui_display <- renderUI({
@@ -200,7 +203,7 @@ server_peak_flows <- function(id, data_settings, data_raw,
             "Day of {ifelse(data_settings()$water_year==1,'Year', 'Water Year')}: {.data$Value}\n",
             "Date: {.data$Date}\n",
             "Discharge: {round(.data$Value_discharge, 4)}"),
-            data_id = .data$Year), size = 3)
+            data_id = .data$Year), size = 3, alpha = 0.005, fill = "white")
 
       # Add title
       if(input$plot_title) {
@@ -220,7 +223,7 @@ server_peak_flows <- function(id, data_settings, data_raw,
       plots()[[input$display]]
     })
 
-    dims <- c(12, 8) * opts$scale
+    dims <- c(12, 6) * opts$scale
 
     output$plot <- ggiraph::renderGirafe({
       ggiraph::girafe(ggobj = plot(),
@@ -263,18 +266,48 @@ server_peak_flows <- function(id, data_settings, data_raw,
       # Add title
       if(input$plot_title) {
         g <- g +
-          ggplot2::ggtitle(titles()) +
+          ggplot2::ggtitle(titles_year()) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
       # Add interactivity
-      g <- g# +
-      # ggiraph::geom_vline_interactive(
-      #    xintercept = .$Date, colour = 'grey20', tooltip = .$labs) #+
-      # ggplot2::geom_text(data = dts, ggplot2::aes(x = .data$Date,
-      #                                             label = .data$labs,
-      #                                             hjust = .data$hjust),
-      #                     y = Inf, vjust = 2)
+      g <- g +
+        ggiraph::geom_rect_interactive(
+          ggplot2::aes(
+            xmin = .data$Min_Start, xmax = .data$Min_End, ymax=Inf, ymin=0,
+            tooltip = glue::glue("{input$roll_days_low}-Day Minimum\n",
+                                 "Discharge: {round(.data$Min_Value,4)}\n",
+                                 "Day of {ifelse(data_settings()$water_year==1,'Year', 'Water Year')}: {.data$DayofYear}\n",
+                                 "Date: {.data$Flow_Date}"),
+            data_id = .data$DayofYear),
+          na.rm = TRUE, alpha = 0.005, fill = "white")+
+        ggiraph::geom_point_interactive(
+          ggplot2::aes(
+            x = .data$AnalysisDate, y = Min_Value,
+            tooltip = glue::glue("{input$roll_days_low}-Day Minimum\n",
+                                 "Discharge: {round(.data$Min_Value,4)}\n",
+                                 "Day of {ifelse(data_settings()$water_year==1,'Year', 'Water Year')}: {.data$DayofYear}\n",
+                                 "Date: {.data$Flow_Date}"),
+            data_id = .data$DayofYear),
+          na.rm = TRUE, alpha = 0.005, fill = "white")+
+        ggiraph::geom_rect_interactive(
+          ggplot2::aes(
+            xmin = .data$Max_Start, xmax = .data$Max_End, ymax=Inf, ymin=0,
+            tooltip = glue::glue("{input$roll_days_high}-Day Maximum\n",
+                                 "Discharge: {round(.data$Max_Value,4)}\n",
+                                 "Day of {ifelse(data_settings()$water_year==1,'Year', 'Water Year')}: {.data$DayofYear}\n",
+                                 "Date: {.data$Flow_Date}"),
+            data_id = .data$DayofYear),
+          na.rm = TRUE, alpha = 0.005, fill = "white")+
+        ggiraph::geom_point_interactive(
+          ggplot2::aes(
+            x = .data$AnalysisDate, y = Max_Value,
+            tooltip = glue::glue("{input$roll_days_high}-Day Maximum\n",
+                                 "Discharge: {round(.data$Max_Value,4)}\n",
+                                 "Day of {ifelse(data_settings()$water_year==1,'Year', 'Water Year')}: {.data$DayofYear}\n",
+                                 "Date: {.data$Flow_Date}"),
+            data_id = .data$DayofYear),
+          na.rm = TRUE, alpha = 0.005, fill = "white")
     })
 
     dims2 <- c(13, 6) * opts$scale

@@ -77,6 +77,7 @@ server_high_flows <- function(id, data_settings, data_raw,
     # Plots --------------------
     plots <- reactive({
       check_data(data_loaded())
+      req(input$roll_days)
 
       data_flow <- data_raw()
 

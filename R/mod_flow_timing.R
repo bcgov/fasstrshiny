@@ -191,7 +191,7 @@ server_flow_timing <- function(id, data_settings, data_raw,
           ggplot2::aes(
             x = .data$Date, y = .data$Value2, colour = .data$Percent,
             tooltip = glue::glue("{.data$Percent} Total Flow\n",
-                                 "Day of Year: {.data$DayofYear}\n",
+                                 "Day of {ifelse(data_settings()$water_year==1,'Year', 'Water Year')}: {.data$DayofYear}\n",
                                  "Date: {.data$Flow_Date}"),
             data_id = .data$DayofYear),
           size = 4, na.rm = TRUE)
