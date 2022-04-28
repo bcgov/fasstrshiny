@@ -88,7 +88,7 @@ server_peak_flows <- function(id, data_settings, data_raw,
     })
     output$ui_year_to_plot <- renderUI({
       req(data_settings()$years_range)
-      select_year_to_plot(id, data_settings()$years_range)
+      select_year_to_plot(id, data_settings()$years_range[1]:data_settings()$years_range[2])
     })
     # Observe clicking event -----------------
     observeEvent(input$plot_selected,{
@@ -106,11 +106,11 @@ server_peak_flows <- function(id, data_settings, data_raw,
       )
     })
     output$roll_days_high <- renderUI({
-      req(data_settings()$roll_days)
+      req(isolate(data_settings()$roll_days))
       tagList(
         numericInput(NS(id, "roll_days_high"),
                      label = "Rolling Average Days",
-                     value = data_settings()$roll_days,
+                     value = isolate(data_settings()$roll_days),
                      min = 1, max = 100)
       )
     })
@@ -164,7 +164,7 @@ server_peak_flows <- function(id, data_settings, data_raw,
       ) %>%
         glue::glue_collapse(sep = ", ")
 
-      g <- create_fun(fun = "plot_annual_peaks", data_name = "data_flow",
+      g <- create_fun(fun = "plot_annual_extremes", data_name = "data_flow",
                       input,
                       input_data = data_settings(),
                       params_ignore = c("roll_days","months"),
@@ -178,8 +178,8 @@ server_peak_flows <- function(id, data_settings, data_raw,
                              suffix = c("", "_doy")) %>%
         dplyr::mutate(Date = yday_as_date(.data$Value_doy, .data$Year, data_settings()$water_year))
 
-      g[["Annual_Peak_Flows"]]$data <- d1
-      g[["Annual_Peak_Flows"]] <- g[["Annual_Peak_Flows"]] +
+      g[["Annual_Extreme_Flows"]]$data <- d1
+      g[["Annual_Extreme_Flows"]] <- g[["Annual_Extreme_Flows"]] +
         ggiraph::geom_point_interactive(
           ggplot2::aes(tooltip = glue::glue(
             "{.data$Statistic}\n",
@@ -194,8 +194,8 @@ server_peak_flows <- function(id, data_settings, data_raw,
                              suffix = c("", "_discharge")) %>%
         dplyr::mutate(Date = yday_as_date(.data$Value_doy, .data$Year, data_settings()$water_year))
 
-      g[["Annual_Peak_Flows_Dates"]]$data <- d2
-      g[["Annual_Peak_Flows_Dates"]] <- g[["Annual_Peak_Flows_Dates"]] +
+      g[["Annual_Extreme_Flows_Dates"]]$data <- d2
+      g[["Annual_Extreme_Flows_Dates"]] <- g[["Annual_Extreme_Flows_Dates"]] +
         ggiraph::geom_point_interactive(
           ggplot2::aes(tooltip = glue::glue(
             "{.data$Statistic}\n",
@@ -252,7 +252,7 @@ server_peak_flows <- function(id, data_settings, data_raw,
       ) %>%
         glue::glue_collapse(sep = ", ")
 
-      g <- create_fun(fun = "plot_annual_peaks_year", data_name = "data_flow",
+      g <- create_fun(fun = "plot_annual_extremes_year", data_name = "data_flow",
                       input,
                       input_data = data_settings(),
                       params_ignore = c("roll_days","months"),
@@ -334,7 +334,7 @@ server_peak_flows <- function(id, data_settings, data_raw,
       ) %>%
         glue::glue_collapse(sep = ", ")
 
-      t <- create_fun(fun = "calc_annual_peaks", data_name = "data_flow",
+      t <- create_fun(fun = "calc_annual_extremes", data_name = "data_flow",
                       input,
                       input_data = data_settings(),
                       params_ignore = c("roll_days","months"),

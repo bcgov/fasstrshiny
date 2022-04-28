@@ -32,14 +32,6 @@ ui_outside_normal <- function(id) {
         sliderInput(ns("normal_percentiles"), label = "Percentiles Normal Range",
                     value = c(25, 75), min = 0, max = 100, step = 1),
         bsTooltip(ns("normal_percentiles"), tips$normal_percentiles, placement = "left"),
-
-        div(align = "left",
-            awesomeRadio(ns("plot_type"),
-                         label = "Plot Type",
-                         choices = list("All Annual Counts", "Selected Year"),
-                         selected = "All Annual",
-                         status = "primary")),
-        bsTooltip(ns("plot_type"), "Type of plot to show", placement = "left"),
         div(align = "left",uiOutput(ns("ui_year_to_plot")),
             bsTooltip(ns("ui_year_to_plot"), "Specfic year to plot", placement = "left")),
 
@@ -93,9 +85,22 @@ server_outside_normal <- function(id, data_settings, data_raw,
                                          input$year_to_plot)))
 
     # UI Elements ------------
+    complete_years <- reactive({
+      y <- get_complete_years_vars(data_raw(),
+                                   as.numeric(data_settings()$water_year),
+                                   data_settings()$months)
+      y <- y[["complete_years"]]
+      y <- y[y >= min(data_settings()$years_range)]
+      y <- y[y <= max(data_settings()$years_range)]
+      y <- y[!y %in% data_settings()$years_exclude]
+      y
+    })
+    # output$ui_year_to_plot <- renderUI({
+    #   req(data_settings()$years_range)
+    #   select_year_to_plot(id, min(data_settings()$years_range):max(data_settings()$years_range))
+    # })
     output$ui_year_to_plot <- renderUI({
-      req(data_settings()$years_range)
-      select_year_to_plot(id, data_settings()$years_range)
+      select_year_to_plot(id, complete_years())
     })
 
     # Plot --------------------
@@ -122,13 +127,13 @@ server_outside_normal <- function(id, data_settings, data_raw,
       }
 
       g$data <- dplyr::left_join(g$data, g$data %>%
-        dplyr::mutate(tooltip = glue::glue(
-          "{Statistic}: {Value}")) %>%
-        dplyr::group_by(.data$Year) %>%
-        dplyr::summarize(tooltip = glue::glue(
-                           "Year: {.data$Year}\n",
-                           glue::glue_collapse(.data$tooltip, "\n"))) %>%
-          dplyr::distinct(), by = "Year")
+                                   dplyr::mutate(tooltip = glue::glue(
+                                     "{Statistic}: {Value}")) %>%
+                                   dplyr::group_by(.data$Year) %>%
+                                   dplyr::summarize(tooltip = glue::glue(
+                                     "Year: {.data$Year}\n",
+                                     glue::glue_collapse(.data$tooltip, "\n"))) %>%
+                                   dplyr::distinct(), by = "Year")
 
       # Add interactivity
       g <- g + ggiraph::geom_bar_interactive(
@@ -161,7 +166,8 @@ server_outside_normal <- function(id, data_settings, data_raw,
     # Plot --------------------
     plot_year <- reactive({
       check_data(data_loaded())
-      req(input$normal_percentiles)
+      req(input$normal_percentiles,
+          input$year_to_plot)
 
       data_flow <- data_raw()
 
@@ -184,15 +190,15 @@ server_outside_normal <- function(id, data_settings, data_raw,
 
       # Add interactivity
       g <- g +
-      ggiraph::geom_point_interactive(
-        ggplot2::aes(
-          x = .data$Date, y = .data$Value,
-          tooltip = glue::glue("{.data$Normal}\n",
-                               "Day of {ifelse(data_settings()$water_year==1,'Year', 'Water Year')}: {.data$DayofYear}\n",
-                               "Date: {.data$Flow_Date}\n",
-                               "Discharge: {round(.data$Value,4)}"),
-          data_id = .data$DayofYear),
-        size = 4,  na.rm = TRUE, alpha = 0.01)
+        ggiraph::geom_point_interactive(
+          ggplot2::aes(
+            x = .data$Date, y = .data$Value,
+            tooltip = glue::glue("{.data$Normal}\n",
+                                 "Day of {ifelse(data_settings()$water_year==1,'Year', 'Water Year')}: {.data$DayofYear}\n",
+                                 "Date: {.data$Flow_Date}\n",
+                                 "Discharge: {round(.data$Value,4)}"),
+            data_id = .data$DayofYear),
+          size = 4,  na.rm = TRUE, alpha = 0.01)
 
     })
 

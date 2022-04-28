@@ -37,14 +37,6 @@ ui_flow_timing <- function(id) {
                            selected = c(25, 33, 50, 75),
                            multiple = TRUE),
             bsTooltip(ns("percent"), tips$percent, placement = "left")),
-
-        # div(align = "left",
-        #     awesomeRadio(ns("plot_type"),
-        #                  label = "Plot Type",
-        #                  choices = list("All Annual Values", "Selected Year"),
-        #                  selected = "All Annual",
-        #                  status = "primary")),
-        # bsTooltip(ns("plot_type"), "Type of plot to show", placement = "left"),
         div(align = "left",uiOutput(ns("ui_year_to_plot")),
             bsTooltip(ns("ui_year_to_plot"), "Specfic year to plot", placement = "left")),
         hr(),
@@ -91,9 +83,22 @@ server_flow_timing <- function(id, data_settings, data_raw,
                                          ifelse(data_settings()$water_year ==1, "", "Water Year "),
                                          input$year_to_plot)))
     # UI Elements ------------
+    complete_years <- reactive({
+      y <- get_complete_years_vars(data_raw(),
+                                   as.numeric(data_settings()$water_year),
+                                   data_settings()$months)
+      y <- y[["complete_years"]]
+      y <- y[y >= min(data_settings()$years_range)]
+      y <- y[y <= max(data_settings()$years_range)]
+      y <- y[!y %in% data_settings()$years_exclude]
+      y
+    })
+    # output$ui_year_to_plot <- renderUI({
+    #   req(data_settings()$years_range)
+    #   select_year_to_plot(id, min(data_settings()$years_range):max(data_settings()$years_range))
+    # })
     output$ui_year_to_plot <- renderUI({
-      req(data_settings()$years_range)
-      select_year_to_plot(id, data_settings()$years_range)
+      select_year_to_plot(id, complete_years())
     })
 
     # Plot --------------------
@@ -164,7 +169,8 @@ server_flow_timing <- function(id, data_settings, data_raw,
     # Plot --------------------
     plot_year <- reactive({
       check_data(data_loaded())
-      req(input$percent)
+      req(input$percent,
+          input$year_to_plot)
 
       data_flow <- data_raw()
 

@@ -26,7 +26,7 @@ ui_high_flows <- function(id) {
                  "The duration of rolling day averages (and alignment) and ",
                  "the type of plot to display can be modifed below. "),hr(),
         select_rolling(id, multiple = TRUE),
-        uiOutput(ns("ui_display_high")),hr(),
+        uiOutput(ns("ui_display")),hr(),
         ui_download(id = ns("plot")), br(),
         helpText("Note: the date of occurrence depends on the alignment of the rolling average. ",
                  "If 'Right' the day represents the last of n-days (i.e. with a 7-day average, ",
@@ -69,14 +69,18 @@ server_high_flows <- function(id, data_settings, data_raw,
 
     # UI Elements ----------------------------
     # Plot display
-    output$ui_display_high <- renderUI({
+    output$ui_display <- renderUI({
+      browser()
       req(plots())
       select_plot_display(id, plots())
+
     })
 
     # Plots --------------------
     plots <- reactive({
+      browser()
       check_data(data_loaded())
+
       req(input$roll_days)
 
       data_flow <- data_raw()
@@ -137,6 +141,7 @@ server_high_flows <- function(id, data_settings, data_raw,
 
 
     plot <- reactive({
+      browser()
       req(input$display, input$display %in% names(plots()))
       plots()[[input$display]]
     })
@@ -154,6 +159,7 @@ server_high_flows <- function(id, data_settings, data_raw,
     })
 
     output$plot <- ggiraph::renderGirafe({
+      browser()
       ggiraph::girafe(ggobj = plot(),
                       width_svg = dims()[1] ,
                       height_svg = dims()[2],

@@ -128,7 +128,7 @@ select_complete <- function(id) {
   tagList(
     div(id = NS(id, "complete_tip"),
         prettySwitch(NS(id, "complete"),
-                     label = "Complete years only",
+                     label = "Complete Years Only",
                      value = FALSE,
                      status = "success", slim = TRUE)),
     bsTooltip(NS(id, "complete_tip"), tips$complete,
@@ -220,9 +220,7 @@ select_year_to_plot <- function(id, years_range) {
   tagList(
     selectInput(NS(id, "year_to_plot"),
                    label = "Year to Plot",
-                   choices = c("Choose a year" = "",
-                               seq(from = years_range[1],
-                                   to = years_range[2], by = 1)),
+                   choices = c(years_range),
                    selected = years_range[1])
   )
 }

@@ -21,12 +21,12 @@ ui_data_load <- function(id) {
       width = 12, h2("Data Loading"),
       box(
         width = 3,
-        helpText("Select your source of data below by choosing a ",
-                 "hydrometric station number from HYDAT or uploading a '.csv' ",
-                 "file with your own daily mean streamflow data. Then view the ",
-                 "data in the Daily Flow Plot and Table tabs. See the options below for additional ",
-                 "station information, filtering of years/months, modifying the data type to analyze, ",
-                 "and handling missing dates. View the Data > Availability & Screening ",
+        helpText("Select source of data below by choosing a ",
+                 "station number from HYDAT or uploading a '.csv' ",
+                 "file with daily mean streamflow data. View the ",
+                 "data in the Daily Flow Plot and Table tabs. ",
+                 "See more data options below. ",
+                 "View the Data > Availability & Screening ",
                  " tabs to review data quality and availability."),
         hr(),
         radioGroupButtons(inputId = ns("source"),
@@ -56,21 +56,22 @@ ui_data_load <- function(id) {
                              ".csv")),
           uiOutput(ns("ui_file_cols"))),
         bsButton(ns("load"), "Load Data", style = "primary"),
+        br(),
+
 
         hr(),
-        uiOutput(ns("missing_data_note")),
-
         show_ui(ns("show_stn"), "Station Information"),
         div(id = ns("stn"), uiOutput(ns("ui_stn"))),
-
-        show_ui(ns("show_dates"), "Date Filtering"),
+        span(uiOutput(ns("missing_data_note")),style="color:red"),
+        h3("Data Options"),
+        show_ui(ns("show_dates"), "Years and Months Filtering"),
         div(id = ns("dates"),
             uiOutput(ns("ui_water_year")),
             uiOutput(ns("ui_years_range")),
             uiOutput(ns("ui_years_exclude")),
             uiOutput(ns("ui_months"))),
 
-        show_ui(ns("show_types"), "Data Types"),
+        show_ui(ns("show_types"), "Discharge Duration and Units"),
         div(id = ns("types"),
             select_rolling(id),
             select_discharge(id)),
@@ -170,6 +171,15 @@ server_data_load <- function(id) {
       }
     })
 
+    # Toggling
+    observe({
+      req(!is.null(input$missing))
+      if(!input$missing) updateSliderInput(session, "allowed", value = 0)
+      if(input$missing) updateSliderInput(session, "allowed", value = 100)
+      shinyjs::toggleState("allowed", condition = input$missing)
+    })
+
+
     # Jump to tab
     observe({
       if(input$source == "HYDAT") {
@@ -258,7 +268,7 @@ server_data_load <- function(id) {
           label = "Water Year Start Month",
           choices = stats::setNames(1:12, month.abb),
           selected = 1, size = "sm", width = "100%"),
-        bsTooltip(NS("water_year", id),
+        bsTooltip(NS(id, "water_year"),
                   title = tips$water_year, placement = "left"))
     })
 
@@ -577,13 +587,19 @@ server_data_load <- function(id) {
     # Missing data note -----------------
 
     data_raw_missing <- reactive({
-      data_raw() %>%
+      req(input$years_range,
+          input$months,
+          input$discharge)
+
+      m <- data_raw() %>%
         dplyr::select(-"Month") %>%
         dplyr::filter(.data$WaterYear >= input$years_range[1],
                       .data$WaterYear <= input$years_range[2],
-                      !.data$WaterYear %in% input$years_exclude,
-                      .data$MonthName %in% month.abb[as.numeric(input$months)]) %>%
-        dplyr::pull(input$discharge)
+                      .data$MonthName %in% month.abb[as.numeric(input$months)])
+
+      if(!is.null(input$years_exclude)) m <- dplyr::filter(m, !.data$WaterYear %in% input$years_exclude)
+
+      dplyr::pull(m, input$discharge)
     })
 
 
@@ -593,11 +609,11 @@ server_data_load <- function(id) {
 
       #   req(any(is.na(data_raw()[[input$discharge]])))
 
-      tagList(h4("Missing Data:"),
-              "Note: there is missing data in the range of dates selected. ",
+      tagList(h5("Missing Data Note:"),
+              "There is missing data in the range of dates selected. ",
               "Some plots and tables may not show results.",
-              "See 'Handling Missing Dates' below for options on how to manage these ",
-              "missing dates.")
+              "See 'Handling Missing Dates' below for options if desired.",
+              hr())
     })
 
     # Plot ----------------
@@ -671,7 +687,7 @@ server_data_load <- function(id) {
           ye <- ""
         } else ye <- conseq(input$years_exclude, wrap = FALSE)
 
-        t <- glue::glue("Current: {data_id()}")
+        t <- glue::glue("Station: {data_id()}")
         if(input$basin_area > 0) {
           t <- glue::glue("{t} <small>({input$basin_area} km<sup>2</sup>)</small>")
         }

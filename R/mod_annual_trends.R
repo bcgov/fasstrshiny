@@ -61,7 +61,7 @@ ui_annual_trends <- function(id) {
               h5("Low Flows"),
               select_rolling(id, name = "low_roll", multiple = TRUE),
 
-             # h5("Flow Timing"),
+              # h5("Flow Timing"),
               selectizeInput(ns("timing_percent"),
                              label = "Flow Timing - % of Total Annual Flows",
                              choices = c(0:100),
@@ -69,7 +69,7 @@ ui_annual_trends <- function(id) {
                              multiple = TRUE),
               bsTooltip(ns("timing_percent"), tips$percent, placement = "left"),
 
-             # h5("Normal Days"),
+              # h5("Normal Days"),
               sliderInput(ns("normal_percentiles"),
                           label = "Normal Days - Percentiles Range",
                           value = c(25, 75), min = 0, max = 100, step = 1),
@@ -241,7 +241,7 @@ server_annual_trends <- function(id, data_settings, data_raw,
 
       r <- create_fun(
         fun = "compute_annual_trends", data_name = "data_flow", input,
-        input_data = data_settings(), extra = p)
+        input_data = data_settings(), extra = p, params_ignore = "discharge")
 
       code$data <- r
       labels$data <- "Compute Annual Trends (creates all outputs as a list)"
@@ -266,12 +266,15 @@ server_annual_trends <- function(id, data_settings, data_raw,
       })
 
       trends()[["Annual_Trends_Results"]] %>%
-        DT::datatable(
-          rownames = FALSE,
-          extensions = c("Scroller"),
-          options = list(scrollX = TRUE, scrollY = 250, scroller = TRUE,
-                         deferRender = TRUE, dom = 'Brtip'),
-          selection = list(target = "row", mode = "single", selected = s))
+        dplyr::mutate(dplyr::across(where(is.numeric), ~round(., 4))) %>%
+        DT::datatable(rownames = FALSE,
+                      filter = 'top',
+                      extensions = c("Scroller", "Buttons"),
+                      options = list(scrollX = TRUE, scrollY = 300, scroller = TRUE,
+                                     deferRender = TRUE, dom = 'Brtip',
+                                     buttons = list(list(extend = 'copy', title = NULL),
+                                                    'csv', 'excel')),
+                      selection = list(target = "row", mode = "single", selected = s))
     })
 
     # Stat - to plot ---------------------
