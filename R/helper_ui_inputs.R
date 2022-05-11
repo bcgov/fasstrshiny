@@ -218,7 +218,7 @@ select_add_year <- function(id, years_range) {
 
 select_year_to_plot <- function(id, years_range) {
   tagList(
-    selectInput(NS(id, "year_to_plot"),
+    selectizeInput(NS(id, "year_to_plot"),
                    label = "Year to Plot",
                    choices = c(years_range),
                    selected = years_range[1])

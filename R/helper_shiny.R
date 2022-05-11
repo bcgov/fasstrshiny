@@ -118,10 +118,11 @@ restore_inputs <- function(session, i, values, delay = 1000) {
 
   pretty_inputs <- c("plot_title", "plot_log", "plot_extremes", "add_mad")
   selectize_inputs <- c("col_date", "col_value", "col_symbol", "mad",
-                        "add_year", "add_dates", "years_exclude", "months")
+                        "add_year", "add_dates", "years_exclude", "months",
+                        "year_to_plot", "months_low", "months_high")
   slider_inputs <- c("years_range", "allowed_annual", "allowed_monthly")
   text_inputs <- "station_name"
-  numeric_inputs <- "basin_area"
+  numeric_inputs <- c("basin_area", "roll_days_low", "roll_days_high")
   radiogroup_inputs <- "water_year"
 
   shinyjs::delay(delay, {

@@ -101,6 +101,11 @@ server_flow_timing <- function(id, data_settings, data_raw,
       select_year_to_plot(id, complete_years())
     })
 
+    # Preserve dynamic UI inputs during bookmarking
+    keep <- c("year_to_plot")
+    onBookmark(function(state) for(k in keep) state$values[[k]] <- input[[k]])
+    onRestored(function(state) restore_inputs(session, keep, state$values))
+
     # Plot --------------------
     plot <- reactive({
       check_data(data_loaded())

@@ -86,10 +86,12 @@ server_peak_flows <- function(id, data_settings, data_raw,
       req(plots())
       select_plot_display(id, plots())
     })
+
     output$ui_year_to_plot <- renderUI({
       req(data_settings()$years_range)
       select_year_to_plot(id, data_settings()$years_range[1]:data_settings()$years_range[2])
     })
+
     # Observe clicking event -----------------
     observeEvent(input$plot_selected,{
       updateSelectInput(session = session,
@@ -132,6 +134,7 @@ server_peak_flows <- function(id, data_settings, data_raw,
         # bsTooltip("months_low"), "Specfic year to plot", placement = "left")
       )
     })
+
     output$months_high <- renderUI({
       req(data_settings()$months,
           data_settings()$water_year)
@@ -150,6 +153,13 @@ server_peak_flows <- function(id, data_settings, data_raw,
         # bsTooltip("months_low"), "Specfic year to plot", placement = "left")
       )
     })
+
+    # Preserve dynamic UI inputs during bookmarking
+    keep <- c("year_to_plot", "roll_days_low", "roll_days_high", "months_low",
+              "months_high")
+    onBookmark(function(state) for(k in keep) state$values[[k]] <- input[[k]])
+    onRestored(function(state) restore_inputs(session, keep, state$values))
+
 
     # Plot --------------------
     plots <- reactive({
