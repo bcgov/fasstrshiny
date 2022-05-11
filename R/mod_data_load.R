@@ -237,7 +237,7 @@ server_data_load <- function(id) {
 
     output$ui_stn <- renderUI({
 
-      if(input$source == "HYDAT") {
+      if(input$source == "HYDAT" && input$station_number %in% stations()$STATION_NUMBER) {
         m <- dplyr::filter(stations(), .data$STATION_NUMBER == input$station_number)
         stn_name <- m$STATION_NAME
         basin <- as.numeric(m$DRAINAGE_AREA_GROSS)
