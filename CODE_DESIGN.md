@@ -51,6 +51,29 @@ under "UI elements" before they can be referenced in the ui with `uiOutput()`.
 For IDs, see the internal dataset, `parameters`. It is created in `data-raw/parameters.R` 
 and includes parameter `id`s, `tooltips` and how they correspond to fasstr arguments.
 
+## Bookmarking
+Bookmarking is URL-based on shinyapps.io and Server-based (i.e. saving a file to
+the computer) on locally-run instances of `fasstrshiny`.
+
+Bookmarking only applies to the full GUI run with `fasstr_shiny()`. It automatically
+saves the state of all inputs. However, by default, bookmarking doesn't save the
+state of *dynamically-created inputs*. These inputs must be saved by hand using
+the `onBookmark()` function and then restored by hand using the `onRestored()` function.
+The internal helper function `restore_inputs` defines how to restore the inputs.
+
+If creating a new module with dynamic inputs, 
+
+a) Make sure you have a section for saving and restoring these inputs 
+   (see `mod_annual_trends.R` at the end of the "UI Elements" section for an example); 
+
+b) Ensure the input ids *and* types exist in the `restore_inputs()` function, 
+   if they do not, you'll have to add them (see documentation for 
+   `restore_inputs()` in the `helper_shiny.R` file for details).
+   
+Note that not *every* dynamic input needs to be bookmarked. For example,
+it is probably unnecessary to bookmark which plot is currently being displayed.
+The default value is most likely sufficient.
+
 
 ## Creating fasstr functions
 
@@ -132,7 +155,10 @@ t <- switch(input$hydro_type,
     extra = glue("percentiles = c({glue_collapse(perc, sep = ', ')})"))
 ```
 
-## Adding a new section
+NOTE: If adding a new *dynamic* input, ensure that it is captured by bookmarking.
+(See Bookmarking above).
+
+## Adding a new module
 
 - Create new `mod_XXX.R` file with UI and server functions
 - In `fasstr_shiny()`, 
