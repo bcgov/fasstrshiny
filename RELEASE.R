@@ -12,6 +12,9 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
+# Check for local use (or just go online - click on README badge)
+covr::package_coverage(line_exclusions = list("R/fasstrshiny-pkg.R" = 1:1000))
+
 # Set up HYDAT data base ------------------------------------------------------
 
 # We need to include HYDAT data in the shinyapps.io, but NOT in the fasstrshiny

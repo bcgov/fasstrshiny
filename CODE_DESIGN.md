@@ -216,6 +216,11 @@ wrapped with `withSpinner()` in `ui.R`.
 - Input/output doesn't render, no message, no error
   - Check to make sure id isn't duplicated
   - Check to make sure all the ids match up (i.e. same id, no spelling mistakes)
+  
+- Data Loading only shows one station on the map
+  - Testing using only a small HYDAT stations subset, so if you are testing 
+    interactively, this is the data set you'll use.
+  - Re-load R and try again.
 
 ## Test errors
 For a testthat error like:

@@ -130,7 +130,7 @@ sidebar_fasstr <- function() {
              menuSubItem("Summary Statistics", tabName = "annual_stats"),
              menuSubItem("Mean Annual Discharge", tabName = "annual_means"),
              menuSubItem("Total Discharge", tabName = "annual_totals"),
-             menuSubItem("Low Flows", tabName = "low_flows"),
+             menuSubItem("Low Flows",  tabName = "low_flows"),
              menuSubItem("High Flows", tabName = "high_flows"),
              menuSubItem("Peak Flows", tabName = "peak_flows"),
              menuSubItem("Timing of Flows", tabName = "flow_timing"),
