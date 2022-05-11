@@ -179,6 +179,9 @@ server_peak_flows <- function(id, data_settings, data_raw,
                       params_ignore = c("roll_days","months"),
                       extra = p)
 
+      code$plot <- g
+      labels$plot <- "Plot Annual Extremes"
+
       g <- eval_check(g)
 
       # Add interactivity
@@ -267,8 +270,8 @@ server_peak_flows <- function(id, data_settings, data_raw,
                       params_ignore = c("roll_days","months"),
                       extra = p)
 
-      code$plot <- g
-      labels$plot <- "Plot Peaks YEAR"
+      code$plot_year <- g
+      labels$plot_year <- "Plot Annual Extremes by Year"
 
       g <- eval_check(g)[[1]]
 
@@ -362,6 +365,8 @@ server_peak_flows <- function(id, data_settings, data_raw,
     # R Code -----------------
     code <- reactiveValues()
     labels <- reactiveValues()
-    output$code <- renderText(code_format(code, labels, data_code))
+    output$code <- renderText(code_format(
+      code, labels, data_code,
+      order = c("data_raw", "plot", "plot_year", "table")))
   })
 }

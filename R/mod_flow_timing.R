@@ -171,7 +171,7 @@ server_flow_timing <- function(id, data_settings, data_raw,
     # })
 
 
-    # Plot --------------------
+    # Plot Year --------------------
     plot_year <- reactive({
       check_data(data_loaded())
       req(input$percent,
@@ -184,8 +184,8 @@ server_flow_timing <- function(id, data_settings, data_raw,
         input, input_data = data_settings(),
         extra = glue::glue("year_to_plot = {input$year_to_plot}"))
 
-      code$plot <- g
-      labels$plot <- "Plot Annual flow timings YEAR"
+      code$plot_year <- g
+      labels$plot_year <- "Plot Annual flow timings YEAR"
 
       g <- eval_check(g)[[1]]
 
@@ -242,7 +242,9 @@ server_flow_timing <- function(id, data_settings, data_raw,
     # R Code -----------------
     code <- reactiveValues()
     labels <- reactiveValues()
-    output$code <- renderText(code_format(code, labels, data_code))
+    output$code <- renderText(code_format(
+      code, labels, data_code,
+      order = c("data_raw", "plot", "plot_year", "table")))
 
   })
 }

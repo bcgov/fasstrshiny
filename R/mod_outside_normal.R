@@ -181,8 +181,8 @@ server_outside_normal <- function(id, data_settings, data_raw,
         input, input_data = data_settings(),
         extra = glue::glue("year_to_plot = {input$year_to_plot}"))
 
-      code$plot <- g
-      labels$plot <- "Plot Annual Normal Days YEAR"
+      code$plot_year <- g
+      labels$plot_year <- "Plot Annual Normal Days YEAR"
 
       g <- eval_check(g)[[1]]
 
@@ -240,7 +240,9 @@ server_outside_normal <- function(id, data_settings, data_raw,
     # R Code -----------------
     code <- reactiveValues()
     labels <- reactiveValues()
-    output$code <- renderText(code_format(code, labels, data_code))
+    output$code <- renderText(code_format(
+      code, labels, data_code,
+      order = c("data_raw", "plot", "plot_year", "table")))
 
   })
 }

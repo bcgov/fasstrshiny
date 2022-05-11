@@ -74,7 +74,6 @@ Note that not *every* dynamic input needs to be bookmarked. For example,
 it is probably unnecessary to bookmark which plot is currently being displayed.
 The default value is most likely sufficient.
 
-
 ## Creating fasstr functions
 
 fasstrshiny includes functions for assembling fasstr
@@ -158,6 +157,22 @@ t <- switch(input$hydro_type,
 NOTE: If adding a new *dynamic* input, ensure that it is captured by bookmarking.
 (See Bookmarking above).
 
+## Displaying Code
+
+The `create_fun()` function creates a text version of the code to run, allowing
+us to save that for displaying in the R Code tab.
+
+To catch the code, you need to assign it and a label to `code$NAME` and `labels$NAME`
+respectively. By default code named
+`data_raw` (raw flow data passed to module, never created manually), 
+`data` (any data created by module), `plot`, and `table`, are placed in the 
+R Code tab in that order. If you have other (or more) bits of code, you need
+to assign the order in the `code_format()` function used at the end of each
+`server_XXX()` function. See `mod_hydro.R` for an example.
+
+After you have captured the code, you can then use the `eval_check()` function
+to check and evaluate the code for use as an output.
+
 ## Adding a new module
 
 - Create new `mod_XXX.R` file with UI and server functions
@@ -183,6 +198,9 @@ NOTE: If adding a new *dynamic* input, ensure that it is captured by bookmarking
     (see `mod_hydro.R` for example). 
     If a compute button is required, ensure it is **NOT** bookmarked 
     (see `mod_annual_trends.R` for example)
+- Store the code created by `create_fun()` and a title for this code in 
+  `code$NAME` and `labels$NAME` respectively (adjust order as needed, see Code above)
+- Use `eval_check()` to check and evaluate (i.e. run) the code you created
 - Add tests to `test_mod.R`, make sure every input gets a starting value
 
 
