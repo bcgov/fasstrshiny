@@ -830,6 +830,8 @@ server_data_load <- function(id) {
       list("discharge" = input$discharge,
            "water_year" = input$water_year,
            "years_range" = input$years_range,
+           "years_range_orig" = c(min(data_raw()$WaterYear),
+                                  max(data_raw()$WaterYear)),
            "years_exclude" = input$years_exclude,
            "months" = input$months,
            "roll_days" = input$roll_days,

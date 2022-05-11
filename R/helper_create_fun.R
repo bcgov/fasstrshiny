@@ -90,6 +90,12 @@ create_fun <- function(fun, data_name = NULL, input, input_data = NULL,
   defaults <- remove_defaults(fun, input_values = values)
   values <- values[!defaults]
 
+  # Omit years_range if the same as the original range
+  if("years_range" %in% names(values) &&
+     all(values[["years_range"]] == input_data$years_range_orig)) {
+    values[["years_range"]] <- NULL
+  }
+
   # If we have allowed_missing (allowed), omit ignore_missing (missing)
   if("allowed" %in% names(values)) {
     values <- values[names(values) != "missing"]
