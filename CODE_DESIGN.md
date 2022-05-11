@@ -34,7 +34,7 @@ However, for server functions, we need to use `NS(id, "my_input")` directly.
 For functions that create UI inputs, the `NS(id, ...)` is inside the function, 
 so in the UI (or Server) function you would only pass the id: `select_rolling(id)`. 
 
-## Inputs
+## Inputs and IDs
 Many inputs are the same among sections in fasstrshiny because they related to
 arguments in fasstr which are common among function families.
 
@@ -47,6 +47,10 @@ For example, `select_rolling(id)` creates inputs `ID_roll_days`
 
 Interactively built inputs need to be created in the server functions
 under "UI elements" before they can be referenced in the ui with `uiOutput()`.
+
+For IDs, see the internal dataset, `parameters`. It is created in `data-raw/parameters.R` 
+and includes parameter `id`s, `tooltips` and how they correspond to fasstr arguments.
+
 
 ## Creating fasstr functions
 
@@ -128,35 +132,6 @@ t <- switch(input$hydro_type,
     extra = glue("percentiles = c({glue_collapse(perc, sep = ', ')})"))
 ```
 
-
-## Datatables
-
-- With the scroller extension, must use the scrollY attribute to set table height
-  (can't use pageLength)
-  
-## Missing vs. Allowed missing
-- If `allowed_missing` exists, use only that (it overrides `ignore_missing` anyway)
-
-
-## `ggiraph`
-- Always use `girafe`, `girafeOutput` and `renderGirafe` (not any of the ggiraph variants)
-- Always use `girafe(ggobj = PLOT)` (`ggobj` is the important argument here)
-- When using the vline tooltip (`create_vline_interactive()`) you'll need to 
-  adjust the `opts_hover()` option in the girafe output to make opacity 1. 
-
-## IDs
-See the internal dataset, `parameters`. It is created in `data-raw/parameters.R` 
-and includes parameter `id`s, `tooltips` and how they correspond to fasstr arguments.
-
-## Spinners
-Spinners are created with the `shinycssloaders` package. The global options 
-are set in `global.R`. Every output that requires a progress spinner needs to be 
-wrapped with `withSpinner()` in `ui.R`.
-
-## Troubleshooting
-- Input/output doesn't render, no message, no error
-  - Check to make sure id isn't duplicated
-
 ## Adding a new section
 
 - Create new `mod_XXX.R` file with UI and server functions
@@ -183,7 +158,65 @@ wrapped with `withSpinner()` in `ui.R`.
     If a compute button is required, ensure it is **NOT** bookmarked 
     (see `mod_annual_trends.R` for example)
 - Add tests to `test_mod.R`, make sure every input gets a starting value
+
+
+## Miscellaneous points
+
+### Datatables
+
+- With the scroller extension, must use the scrollY attribute to set table height
+  (can't use pageLength)
   
+### Missing vs. Allowed missing
+- If `allowed_missing` exists, use only that (it overrides `ignore_missing` anyway)
+
+
+### `ggiraph`
+- Always use `girafe`, `girafeOutput` and `renderGirafe` (not any of the ggiraph variants)
+- Always use `girafe(ggobj = PLOT)` (`ggobj` is the important argument here)
+- When using the vline tooltip (`create_vline_interactive()`) you'll need to 
+  adjust the `opts_hover()` option in the girafe output to make opacity 1. 
+
+### Spinners
+Spinners are created with the `shinycssloaders` package. The global options 
+are set in `global.R`. Every output that requires a progress spinner needs to be 
+wrapped with `withSpinner()` in `ui.R`.
+
+
+## Troubleshooting
+- Input/output doesn't render, no message, no error
+  - Check to make sure id isn't duplicated
+  - Check to make sure all the ids match up (i.e. same id, no spelling mistakes)
+
+## Test errors
+For a testthat error like:
+
+`Failure (test_04d_modules_analysis.R:59:3): Hydat Peak
+`output$table` threw an unexpected error.
+Message: The test referenced an output that hasn't been defined yet: output$proxy1-table`
+
+- Look at line 59 in the `test_04d_modules_analysis.R` file, this is the 
+test that is failing. 
+
+- "`output$table` threw an unexpected error" means that when testing `expect_error(output$table, NA)`
+ (which means DON'T expect an error), there was an error
+ 
+- "Message: The test referenced an output that hasn't been defined yet: output$proxy1-table`"
+  means that the error returned refers to the fact that the `table` object hasn't 
+  been rendered in the test Shiny server. This is why the test is failing.
+  (Note that `proxy1-` is simply the id assigned to the namespace by `testServer()`, 
+  the important part is the `table`, which tells you which object is causing problems).
+
+- Check the following:
+  - Is the output actually called `table`? (Was it changed? Is there a typo?)
+  - Should the output actually be rendered by this point? Or does it need 
+  another input, or a button click? If so, add that to `session$setInputs()`
+  - Remember that *every* input needs to be defined in each test.
+
+- You can add a `browser()` call inside the `testServer()` function if you need
+ to do more thorough testing (see Mastering Shiny's section on Testing reactivitity <https://mastering-shiny.org/scaling-testing.html#testing-reactivity>)
+    
+
 
 ## Tips
 - Ctrl-click on a function will jump you to the code where the function is created.

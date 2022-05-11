@@ -68,7 +68,8 @@ test_that("Hydat Peak", {
 
     expect_error(freqs(), NA)
     expect_error(output$plot, NA)
-    expect_error(output$table, NA)
+    expect_error(output$table_fit, NA)
+    expect_error(output$table_plot, NA)
     expect_error(output$fit_stats, NA)
     expect_error(output$fit_plot, NA)
     expect_false(output$code == "")

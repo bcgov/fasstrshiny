@@ -70,7 +70,6 @@ server_high_flows <- function(id, data_settings, data_raw,
     # UI Elements ----------------------------
     # Plot display
     output$ui_display <- renderUI({
-      browser()
       req(plots())
       select_plot_display(id, plots())
 
@@ -78,7 +77,6 @@ server_high_flows <- function(id, data_settings, data_raw,
 
     # Plots --------------------
     plots <- reactive({
-      browser()
       check_data(data_loaded())
 
       req(input$roll_days)
@@ -141,7 +139,6 @@ server_high_flows <- function(id, data_settings, data_raw,
 
 
     plot <- reactive({
-      browser()
       req(input$display, input$display %in% names(plots()))
       plots()[[input$display]]
     })
@@ -159,7 +156,6 @@ server_high_flows <- function(id, data_settings, data_raw,
     })
 
     output$plot <- ggiraph::renderGirafe({
-      browser()
       ggiraph::girafe(ggobj = plot(),
                       width_svg = dims()[1] ,
                       height_svg = dims()[2],
