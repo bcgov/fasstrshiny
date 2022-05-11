@@ -110,6 +110,12 @@
 <p>NOTE: If adding a new <em>dynamic</em> input, ensure that it is captured by bookmarking. (See Bookmarking above).</p>
 </div>
 <div class="section level2">
+<h2 id="displaying-code">Displaying Code<a class="anchor" aria-label="anchor" href="#displaying-code"></a></h2>
+<p>The <code>create_fun()</code> function creates a text version of the code to run, allowing us to save that for displaying in the R Code tab.</p>
+<p>To catch the code, you need to assign it and a label to <code>code$NAME</code> and <code>labels$NAME</code> respectively. By default code named <code>data_raw</code> (raw flow data passed to module, never created manually), <code>data</code> (any data created by module), <code>plot</code>, and <code>table</code>, are placed in the R Code tab in that order. If you have other (or more) bits of code, you need to assign the order in the <code>code_format()</code> function used at the end of each <code>server_XXX()</code> function. See <code>mod_hydro.R</code> for an example.</p>
+<p>After you have captured the code, you can then use the <code>eval_check()</code> function to check and evaluate the code for use as an output.</p>
+</div>
+<div class="section level2">
 <h2 id="adding-a-new-module">Adding a new module<a class="anchor" aria-label="anchor" href="#adding-a-new-module"></a></h2>
 <ul><li>Create new <code>mod_XXX.R</code> file with UI and server functions</li>
 <li>In <code><a href="reference/fasstr_shiny.html">fasstr_shiny()</a></code>,<ul><li>add <code>ui_XXX()</code> function to the UI function,</li>
@@ -128,6 +134,8 @@
 <li>
 <strong>If new inputs are created dynamically, ensure they are saved during bookmarking.</strong> Add new types of inputs to <code>restore_inputs()</code> in <code>helper_shiny.R</code> (see <code>mod_hydro.R</code> for example). If a compute button is required, ensure it is <strong>NOT</strong> bookmarked (see <code>mod_annual_trends.R</code> for example)</li>
 </ul></li>
+<li>Store the code created by <code>create_fun()</code> and a title for this code in <code>code$NAME</code> and <code>labels$NAME</code> respectively (adjust order as needed, see Code above)</li>
+<li>Use <code>eval_check()</code> to check and evaluate (i.e. run) the code you created</li>
 <li>Add tests to <code>test_mod.R</code>, make sure every input gets a starting value</li>
 </ul></div>
 <div class="section level2">
