@@ -202,6 +202,9 @@ NOTE: If adding a new *dynamic* input, ensure that it is captured by bookmarking
 - Always use `girafe(ggobj = PLOT)` (`ggobj` is the important argument here)
 - When using the vline tooltip (`create_vline_interactive()`) you'll need to 
   adjust the `opts_hover()` option in the girafe output to make opacity 1. 
+- Plot height (for most plots) is set in the UI with the option opts$plot_height.
+  This is set in the `data-raw/parameters.R` script (re-run this script after any
+  changes)
 
 ### Spinners
 Spinners are created with the `shinycssloaders` package. The global options 

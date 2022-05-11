@@ -44,12 +44,11 @@ ui_peak_flows <- function(id) {
       tabBox(
         width = 9,
 
-        ### Table ---------------------
+        ### Plot ---------------------
         tabPanel(
           title = "Plot",
           select_plot_options(select_plot_title(id)),
           ggiraph::girafeOutput(ns("plot"), height = opts$plot_height),
-          br(),
           ggiraph::girafeOutput(ns("plot_year"), height = opts$plot_height)
         ),
 
@@ -248,7 +247,7 @@ server_peak_flows <- function(id, data_settings, data_raw,
              name = reactive(paste0("peak_flows_", input$display)),
              data_settings, dims)
 
-    # Plot --------------------
+    # Plot Year --------------------
     plot_year <- reactive({
       check_data(data_loaded())
 
