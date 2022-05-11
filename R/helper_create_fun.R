@@ -80,7 +80,7 @@ create_fun <- function(fun, data_name = NULL, input, input_data = NULL,
   values <- keep_null(values, c("inner_percentiles", "outer_percentiles"))
 
   # Remove NULL/empty (except those to keep)
-  nulls <- purrr::map_lgl(values, ~is.null(.) || (is.character(.) && . == ""))
+  nulls <- purrr::map_lgl(values, ~is.null(.) || (all(is.character(.)) && all(. == "")))
   values <- values[!nulls]
 
   # Mark missing inputs as NULL
