@@ -52,11 +52,21 @@
 <p>For functions that create UI inputs, the <code>NS(id, ...)</code> is inside the function, so in the UI (or Server) function you would only pass the id: <code>select_rolling(id)</code>.</p>
 </div>
 <div class="section level2">
-<h2 id="inputs">Inputs<a class="anchor" aria-label="anchor" href="#inputs"></a></h2>
+<h2 id="inputs-and-ids">Inputs and IDs<a class="anchor" aria-label="anchor" href="#inputs-and-ids"></a></h2>
 <p>Many inputs are the same among sections in fasstrshiny because they related to arguments in fasstr which are common among function families.</p>
 <p>To ensure consistency, functions (<code>select_XXXX()</code>) are used to create inputs for each section. These functions create separate instances of the inputs, with unique ids, but which are consistent.</p>
 <p>For example, <code>select_rolling(id)</code> creates inputs <code>ID_roll_days</code> (numeric input) and <code>ID_rolling_align</code> (select input).</p>
 <p>Interactively built inputs need to be created in the server functions under “UI elements” before they can be referenced in the ui with <code>uiOutput()</code>.</p>
+<p>For IDs, see the internal dataset, <code>parameters</code>. It is created in <code>data-raw/parameters.R</code> and includes parameter <code>id</code>s, <code>tooltips</code> and how they correspond to fasstr arguments.</p>
+</div>
+<div class="section level2">
+<h2 id="bookmarking">Bookmarking<a class="anchor" aria-label="anchor" href="#bookmarking"></a></h2>
+<p>Bookmarking is URL-based on shinyapps.io and Server-based (i.e. saving a file to the computer) on locally-run instances of <code>fasstrshiny</code>.</p>
+<p>Bookmarking only applies to the full GUI run with <code><a href="reference/fasstr_shiny.html">fasstr_shiny()</a></code>. It automatically saves the state of all inputs. However, by default, bookmarking doesn’t save the state of <em>dynamically-created inputs</em>. These inputs must be saved by hand using the <code>onBookmark()</code> function and then restored by hand using the <code>onRestored()</code> function. The internal helper function <code>restore_inputs</code> defines how to restore the inputs.</p>
+<p>If creating a new module with dynamic inputs,</p>
+<ol style="list-style-type: lower-alpha"><li><p>Make sure you have a section for saving and restoring these inputs (see <code>mod_annual_trends.R</code> at the end of the “UI Elements” section for an example);</p></li>
+<li><p>Ensure the input ids <em>and</em> types exist in the <code>restore_inputs()</code> function, if they do not, you’ll have to add them (see documentation for <code>restore_inputs()</code> in the <code>helper_shiny.R</code> file for details).</p></li>
+</ol><p>Note that not <em>every</em> dynamic input needs to be bookmarked. For example, it is probably unnecessary to bookmark which plot is currently being displayed. The default value is most likely sufficient.</p>
 </div>
 <div class="section level2">
 <h2 id="creating-fasstr-functions">Creating fasstr functions<a class="anchor" aria-label="anchor" href="#creating-fasstr-functions"></a></h2>
@@ -97,32 +107,10 @@
     <span class="co"># Because input$hydro_percentiles exists, but we don't want to use it</span>
     params_ignore <span class="op">=</span> <span class="st">"percentiles"</span>,
     extra <span class="op">=</span> <span class="fu">glue</span><span class="op">(</span><span class="st">"percentiles = c({glue_collapse(perc, sep = ', ')})"</span><span class="op">)</span><span class="op">)</span></code></pre>
+<p>NOTE: If adding a new <em>dynamic</em> input, ensure that it is captured by bookmarking. (See Bookmarking above).</p>
 </div>
 <div class="section level2">
-<h2 id="datatables">Datatables<a class="anchor" aria-label="anchor" href="#datatables"></a></h2>
-<ul><li>With the scroller extension, must use the scrollY attribute to set table height (can’t use pageLength)</li></ul></div>
-<div class="section level2">
-<h2 id="missing-vs-allowed-missing">Missing vs. Allowed missing<a class="anchor" aria-label="anchor" href="#missing-vs-allowed-missing"></a></h2>
-<ul><li>If <code>allowed_missing</code> exists, use only that (it overrides <code>ignore_missing</code> anyway)</li></ul></div>
-<div class="section level2">
-<h2 id="ggiraph"><code>ggiraph</code><a class="anchor" aria-label="anchor" href="#ggiraph"></a></h2>
-<ul><li>Always use <code>girafe</code>, <code>girafeOutput</code> and <code>renderGirafe</code> (not any of the ggiraph variants)</li>
-<li>Always use <code>girafe(ggobj = PLOT)</code> (<code>ggobj</code> is the important argument here)</li>
-<li>When using the vline tooltip (<code>create_vline_interactive()</code>) you’ll need to adjust the <code>opts_hover()</code> option in the girafe output to make opacity 1.</li>
-</ul></div>
-<div class="section level2">
-<h2 id="ids">IDs<a class="anchor" aria-label="anchor" href="#ids"></a></h2>
-<p>See the internal dataset, <code>parameters</code>. It is created in <code>data-raw/parameters.R</code> and includes parameter <code>id</code>s, <code>tooltips</code> and how they correspond to fasstr arguments.</p>
-</div>
-<div class="section level2">
-<h2 id="spinners">Spinners<a class="anchor" aria-label="anchor" href="#spinners"></a></h2>
-<p>Spinners are created with the <code>shinycssloaders</code> package. The global options are set in <code>global.R</code>. Every output that requires a progress spinner needs to be wrapped with <code>withSpinner()</code> in <code>ui.R</code>.</p>
-</div>
-<div class="section level2">
-<h2 id="troubleshooting">Troubleshooting<a class="anchor" aria-label="anchor" href="#troubleshooting"></a></h2>
-<ul><li>Input/output doesn’t render, no message, no error<ul><li>Check to make sure id isn’t duplicated</li></ul></li></ul></div>
-<div class="section level2">
-<h2 id="adding-a-new-section">Adding a new section<a class="anchor" aria-label="anchor" href="#adding-a-new-section"></a></h2>
+<h2 id="adding-a-new-module">Adding a new module<a class="anchor" aria-label="anchor" href="#adding-a-new-module"></a></h2>
 <ul><li>Create new <code>mod_XXX.R</code> file with UI and server functions</li>
 <li>In <code><a href="reference/fasstr_shiny.html">fasstr_shiny()</a></code>,<ul><li>add <code>ui_XXX()</code> function to the UI function,</li>
 <li>add reference to the sidebar function,</li>
@@ -141,6 +129,51 @@
 <strong>If new inputs are created dynamically, ensure they are saved during bookmarking.</strong> Add new types of inputs to <code>restore_inputs()</code> in <code>helper_shiny.R</code> (see <code>mod_hydro.R</code> for example). If a compute button is required, ensure it is <strong>NOT</strong> bookmarked (see <code>mod_annual_trends.R</code> for example)</li>
 </ul></li>
 <li>Add tests to <code>test_mod.R</code>, make sure every input gets a starting value</li>
+</ul></div>
+<div class="section level2">
+<h2 id="miscellaneous-points">Miscellaneous points<a class="anchor" aria-label="anchor" href="#miscellaneous-points"></a></h2>
+<div class="section level3">
+<h3 id="datatables">Datatables<a class="anchor" aria-label="anchor" href="#datatables"></a></h3>
+<ul><li>With the scroller extension, must use the scrollY attribute to set table height (can’t use pageLength)</li></ul></div>
+<div class="section level3">
+<h3 id="missing-vs-allowed-missing">Missing vs. Allowed missing<a class="anchor" aria-label="anchor" href="#missing-vs-allowed-missing"></a></h3>
+<ul><li>If <code>allowed_missing</code> exists, use only that (it overrides <code>ignore_missing</code> anyway)</li></ul></div>
+<div class="section level3">
+<h3 id="ggiraph"><code>ggiraph</code><a class="anchor" aria-label="anchor" href="#ggiraph"></a></h3>
+<ul><li>Always use <code>girafe</code>, <code>girafeOutput</code> and <code>renderGirafe</code> (not any of the ggiraph variants)</li>
+<li>Always use <code>girafe(ggobj = PLOT)</code> (<code>ggobj</code> is the important argument here)</li>
+<li>When using the vline tooltip (<code>create_vline_interactive()</code>) you’ll need to adjust the <code>opts_hover()</code> option in the girafe output to make opacity 1.</li>
+<li>Plot height (for most plots) is set in the UI with the option opts$plot_height. This is set in the <code>data-raw/parameters.R</code> script (re-run this script after any changes)</li>
+</ul></div>
+<div class="section level3">
+<h3 id="spinners">Spinners<a class="anchor" aria-label="anchor" href="#spinners"></a></h3>
+<p>Spinners are created with the <code>shinycssloaders</code> package. The global options are set in <code>global.R</code>. Every output that requires a progress spinner needs to be wrapped with <code>withSpinner()</code> in <code>ui.R</code>.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="troubleshooting">Troubleshooting<a class="anchor" aria-label="anchor" href="#troubleshooting"></a></h2>
+<ul><li>Input/output doesn’t render, no message, no error<ul><li>Check to make sure id isn’t duplicated</li>
+<li>Check to make sure all the ids match up (i.e. same id, no spelling mistakes)</li>
+</ul></li>
+<li>Data Loading only shows one station on the map<ul><li>Testing using only a small HYDAT stations subset, so if you are testing interactively, this is the data set you’ll use.</li>
+<li>Re-load R and try again.</li>
+</ul></li>
+</ul></div>
+<div class="section level2">
+<h2 id="test-errors">Test errors<a class="anchor" aria-label="anchor" href="#test-errors"></a></h2>
+<p>For a testthat error like:</p>
+<p><code>Failure (test_04d_modules_analysis.R:59:3): Hydat Peak</code>output<span class="math inline">$table` threw an unexpected error. Message: The test referenced an output that hasn't been defined yet: output$</span>proxy1-table`</p>
+<ul><li><p>Look at line 59 in the <code>test_04d_modules_analysis.R</code> file, this is the test that is failing.</p></li>
+<li><p>“<code>output$table</code> threw an unexpected error” means that when testing <code>expect_error(output$table, NA)</code> (which means DON’T expect an error), there was an error</p></li>
+<li><p>"Message: The test referenced an output that hasn’t been defined yet: output$proxy1-table<code>" means that the error returned refers to the fact that the</code>table<code>object hasn't  been rendered in the test Shiny server. This is why the test is failing. (Note that</code>proxy1-<code>is simply the id assigned to the namespace by</code>testServer()<code>,  the important part is the</code>table`, which tells you which object is causing problems).</p></li>
+<li>
+<p>Check the following:</p>
+<ul><li>Is the output actually called <code>table</code>? (Was it changed? Is there a typo?)</li>
+<li>Should the output actually be rendered by this point? Or does it need another input, or a button click? If so, add that to <code>session$setInputs()</code>
+</li>
+<li>Remember that <em>every</em> input needs to be defined in each test.</li>
+</ul></li>
+<li><p>You can add a <code><a href="https://rdrr.io/r/base/browser.html" class="external-link">browser()</a></code> call inside the <code>testServer()</code> function if you need to do more thorough testing (see Mastering Shiny’s section on Testing reactivitity <a href="https://mastering-shiny.org/scaling-testing.html#testing-reactivity" class="external-link uri">https://mastering-shiny.org/scaling-testing.html#testing-reactivity</a>)</p></li>
 </ul></div>
 <div class="section level2">
 <h2 id="tips">Tips<a class="anchor" aria-label="anchor" href="#tips"></a></h2>
