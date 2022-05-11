@@ -41,11 +41,11 @@ Imports:
     tidyhydat (>= 0.5.4),
     tidyr (>= 1.1.4),
     patchwork (>= 1.1.1),
-    sf (>= 1.0.7),
     rlang (>= 1.0.2)
 Suggests: 
     covr,
     bcmaps (>= 1.0.2),
+    sf (>= 1.0.7),
     testthat (>= 3.0.0),
     tidyselect (>= 1.1.2),
     withr
