@@ -29,6 +29,7 @@ ui_data_load <- function(id) {
                  "View the Data > Availability & Screening ",
                  " tabs to review data quality and availability."),
         hr(),
+        # Inputs --------------------------------------------
         radioGroupButtons(inputId = ns("source"),
                           label = "Source", choices = c("HYDAT", "CSV"),
                           justified = TRUE,
@@ -38,6 +39,11 @@ ui_data_load <- function(id) {
           div(id = ns("hydat_bc_tip"),
               prettySwitch(ns("hydat_bc"), label = "BC Stations Only",
                            value = TRUE,status = "success", slim = TRUE)),
+          selectizeInput(ns("point_colour"), label = "Colour points by",
+                         choices = maps_points),
+          bsTooltip(ns("point_colour"), placement = "left",
+                    paste0("By which variable should station markers be coloured?<br>",
+                           "RHBN = Reference Hydrometric Basin Network")),
           textInput(ns("station_number"), label = "Station Number",
                     value = "08NM116",
                     placeholder = "type station number or select from map"),
@@ -422,27 +428,48 @@ server_data_load <- function(id) {
 
     # HYDAT Map -------------------------
 
-    pal <- leaflet::colorNumeric(c("#31688E", "red"), c(FALSE, TRUE))
+    pal <- reactive({
+      req(input$point_colour)
 
-    add_markers <- function(map, data) {
-      leaflet::addCircleMarkers(
-        map, data = data,
-        group = "points",
-        options = leaflet::pathOptions(pane = "points"),
-        lng = ~LONGITUDE, lat = ~LATITUDE,
-        layerId = ~STATION_NUMBER,
-        radius = 6, fillOpacity = 1, stroke = TRUE,
-        fillColor = ~pal(selected),
-        color = "black", opacity = 1, weight = 1,
-        label = ~purrr::map(glue::glue(
-          "<strong>{stringr::str_to_title(STATION_NAME)}</strong><br>",
-          "<strong>Station ID</strong>: {STATION_NUMBER}<br>",
-          "<strong>Status</strong>: {HYD_STATUS}<br>",
-          "<strong>Year range</strong>: {Year_from}-{Year_to}<br>",
-          "<strong>No. Years</strong>: {RECORD_LENGTH}"), HTML))
+      if(input$point_colour %in% c("DRAINAGE_AREA_GROSS", "RECORD_LENGTH")) {
+        leaflet::colorNumeric("viridis", domain = stations()[[input$point_colour]])
+      } else {
+        leaflet::colorFactor("viridis", domain = stations()[[input$point_colour]])
+      }
+    })
+
+    add_markers <- function(map, data, variable) {
+      selected <- variable == "selected"
+      if(selected) {
+        data <- data[data$selected, ]
+        fill <- "red"
+      } else {
+        data <- data[!data$selected, ]
+        fill <- pal()(data[[variable]])
+      }
+
+      if(nrow(data) > 0) {
+        map <- leaflet::addCircleMarkers(
+          map, data = data,
+          group = "points",
+          options = leaflet::pathOptions(pane = "points"),
+          lng = ~LONGITUDE, lat = ~LATITUDE,
+          layerId = ~STATION_NUMBER,
+          radius = 6, fillOpacity = 1, stroke = TRUE,
+          fillColor = fill,
+          color = "black", opacity = 1, weight = 1,
+          label = ~purrr::map(glue::glue(
+            "<strong>{stringr::str_to_title(STATION_NAME)}</strong><br>",
+            "<strong>Station ID</strong>: {STATION_NUMBER}<br>",
+            "<strong>Status</strong>: {HYD_STATUS}<br>",
+            "<strong>Year range</strong>: {Year_from}-{Year_to}<br>",
+            "<strong>No. Years</strong>: {RECORD_LENGTH}"), HTML))
+      }
+      map
     }
 
     output$hydat_map <- leaflet::renderLeaflet({
+      req(input$point_colour)
 
       l <- leaflet::leaflet() %>%
 
@@ -456,7 +483,12 @@ server_data_load <- function(id) {
         leaflet::addMapPane("polygons", zIndex = 410) %>%
 
         # Stations
-        add_markers(data = stations()) %>%
+        add_markers(data = stations(), variable = input$point_colour) %>%
+        add_markers(data = stations(), variable = "selected") %>%
+        leaflet::addLegend(
+          "bottomright", pal = pal(),
+          values = stations()[[input$point_colour]],
+          title = names(maps_points[maps_points == input$point_colour])) %>%
 
         # Controls
         leaflet::addLayersControl(
@@ -485,9 +517,11 @@ server_data_load <- function(id) {
     map_ready <- reactiveVal(FALSE)
 
     observe({
+      req(input$point_colour)
       leaflet::leafletProxy("hydat_map") %>%
         leaflet::clearGroup("points") %>%
-        add_markers(data = stations_sub())
+        add_markers(data = stations_sub(), variable = input$point_colour) %>%
+        add_markers(data = stations_sub(), variable = "selected")
     }) %>%
       bindEvent(stations_sub())
 

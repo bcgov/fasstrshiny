@@ -22,8 +22,9 @@ test_that("fasstr_shiny()", {
     expect_s3_class("shiny.appobj")
 
   i <- list(source = "HYDAT", station_number = "08HB048",
-            hydat_table_rows_all = 1:1000,
-            hydat_bc = TRUE, load = 1, years_range = c(1980, 2010),
+            hydat_table_rows_all = 1:1000, hydat_bc = TRUE,
+            point_colour = "STATUS",
+            load = 1, years_range = c(1980, 2010),
             water_year = 1, basin_area = 10.3,
             daterange = c("1980-01-01", "2010-01-01"),
             file = data.frame(
