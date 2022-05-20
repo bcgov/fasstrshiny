@@ -40,12 +40,12 @@ ui_hydro <- function(id) {
                            placement = "left"),
         hr(),
         # Percentiles
-        select_percentiles(
+        select_percentiles_slide(
           id, name = "inner_percentiles", label = "Inner Percentiles (plot)",
-          selected = default("plot_daily_stats", "inner_percentiles")),
-        select_percentiles(
+          value = default("plot_daily_stats", "inner_percentiles")),
+        select_percentiles_slide(
           id, name = "outer_percentiles", label = "Outer Percentiles (plot)",
-          selected = default("plot_daily_stats", "outer_percentiles")),
+          value = default("plot_daily_stats", "outer_percentiles")),
         select_percentiles(
           id, name = "extra_percentiles", label = "Additional Percentiles (table)",
           selected = default("calc_daily_stats", "percentiles")),
@@ -88,6 +88,11 @@ server_hydro <- function(id, data_settings, data_raw,
 
   moduleServer(id, function(input, output, session) {
 
+    output$test <- renderPrint({
+      req(input$inner_percentiles)
+      is.null(input$inner_percentiles)
+    })
+
     # UI Elements ------------------------------------------
 
     # Plot options
@@ -98,7 +103,9 @@ server_hydro <- function(id, data_settings, data_raw,
         select_plot_log(
           id, value = default("plot_longterm_daily_stats", "log_discharge")),
         select_plot_extremes(id),
-        h4("Add to plot:"),
+        select_plot_inner_percentiles(id),
+        select_plot_outer_percentiles(id),
+        h4("Add to Plot:"),
         select_add_year(id, data_settings()$years_range), # Dynamically created from data
         select_add_dates(id),
         select_add_mad(id),
@@ -115,6 +122,7 @@ server_hydro <- function(id, data_settings, data_raw,
     # Preserve dynamic UI inputs during bookmarking
     keep <- c("plot_title",
               "plot_log", "plot_extremes", "add_year",
+              "plot_inner_percentiles", "plot_outer_percentiles",
               "add_dates", "add_mad", "mad")
     onBookmark(function(state) for(k in keep) state$values[[k]] <- input[[k]])
     onRestored(function(state) restore_inputs(session, keep, state$values))

@@ -18,69 +18,78 @@ ui_data_load <- function(id) {
 
   fluidRow(
     column(
-      width = 12, h2("Data Loading"),
+      width = 12, h2("Data Loading & Options"),
       box(
         width = 3,
         helpText("Select source of data below by choosing a ",
                  "station number from HYDAT or uploading a '.csv' ",
                  "file with daily mean streamflow data. View the ",
                  "data in the Daily Flow Plot and Table tabs. ",
-                 "See more data options below. ",
+                 "See more data options below by clicking the toggles. ",
                  "View the Data > Availability & Screening ",
                  " tabs to review data quality and availability."),
         hr(),
         # Inputs --------------------------------------------
-        radioGroupButtons(inputId = ns("source"),
-                          label = "Source", choices = c("HYDAT", "CSV"),
-                          justified = TRUE,
-                          selected = "HYDAT"),
-        conditionalPanel(
-          "input.source == 'HYDAT'", ns = NS(id),
-          div(id = ns("hydat_bc_tip"),
-              prettySwitch(ns("hydat_bc"), label = "BC Stations Only",
-                           value = TRUE,status = "success", slim = TRUE)),
-          selectizeInput(ns("point_colour"), label = "Colour points by",
-                         choices = maps_points),
-          bsTooltip(ns("point_colour"), placement = "left",
-                    paste0("By which variable should station markers be coloured?<br>",
-                           "RHBN = Reference Hydrometric Basin Network")),
-          textInput(ns("station_number"), label = "Station Number",
-                    value = "08NM116",
-                    placeholder = "type station number or select from map"),
-          bsTooltip(ns("hydat_bc_tip"),
-                    "Whether to show stations from just BC or all over Canada",
-                    placement = "left"),
-          bsTooltip(ns("station_number"), "HYDAT Station Number",
-                    placement = "left")
+        show_ui(ns("show_data"), "Station Selection", value = TRUE),
+        div(id = ns("data_load"),
+
+            radioGroupButtons(inputId = ns("source"),
+                              label = "Source", choices = c("HYDAT", "CSV"),
+                              justified = TRUE,
+                              selected = "HYDAT"),
+            conditionalPanel(
+              "input.source == 'HYDAT'", ns = NS(id),
+              fluidRow(column(width = 6,
+                              selectizeInput(ns("point_colour"), label = "Station Map Colours",
+                                             choices = maps_points),
+                              bsTooltip(ns("point_colour"), placement = "left",
+                                        paste0("By which variable should station markers be coloured?<br>",
+                                               "RHBN = Reference Hydrometric Basin Network"))),
+                       column(width = 6,br(),
+                              div(id = ns("hydat_bc_tip"),
+                                  prettySwitch(ns("hydat_bc"), label = "BC Stations Only",
+                                               value = TRUE,status = "success", slim = FALSE, bigger = TRUE))
+                       )),
+              textInput(ns("station_number"), label = "Station Number",
+                        value = "08NM116",
+                        placeholder = "type station number or select from map"),
+              bsTooltip(ns("hydat_bc_tip"),
+                        "Whether to show stations from just BC or all over Canada",
+                        placement = "left"),
+              bsTooltip(ns("station_number"), "HYDAT Station Number",
+                        placement = "left")
+            ),
+
+            conditionalPanel(
+              "input.source != 'HYDAT'", ns = NS(id),
+              fileInput(ns("file"), label = "Select File",
+                        accept=c("text/csv",
+                                 "text/comma-separated-values,text/plain",
+                                 ".csv")),
+              uiOutput(ns("ui_file_cols"))),
+            bsButton(ns("load"), "Load Data", style = "primary"),
+            br(),
+            hr(),
         ),
 
-        conditionalPanel(
-          "input.source != 'HYDAT'", ns = NS(id),
-          fileInput(ns("file"), label = "Select File",
-                    accept=c("text/csv",
-                             "text/comma-separated-values,text/plain",
-                             ".csv")),
-          uiOutput(ns("ui_file_cols"))),
-        bsButton(ns("load"), "Load Data", style = "primary"),
-        br(),
 
-
-        hr(),
         show_ui(ns("show_stn"), "Station Information"),
         div(id = ns("stn"), uiOutput(ns("ui_stn"))),
         span(uiOutput(ns("missing_data_note")),style="color:red"),
+        hr(),
         h3("Data Options"),
+
+        show_ui(ns("show_types"), "Discharge Duration and Units"),
+        div(id = ns("types"),
+            select_rolling(id),
+            select_discharge(id)),
+
         show_ui(ns("show_dates"), "Years and Months Filtering"),
         div(id = ns("dates"),
             uiOutput(ns("ui_water_year")),
             uiOutput(ns("ui_years_range")),
             uiOutput(ns("ui_years_exclude")),
             uiOutput(ns("ui_months"))),
-
-        show_ui(ns("show_types"), "Discharge Duration and Units"),
-        div(id = ns("types"),
-            select_rolling(id),
-            select_discharge(id)),
 
         show_ui(ns("show_missing"), "Handling Missing Dates"),
         div(id = ns("missing"),
@@ -97,7 +106,7 @@ ui_data_load <- function(id) {
           title = "HYDAT", value = "tabs_hydat", width = 12,
           helpText("Click on a station marker to select the station"),
           shinycssloaders::withSpinner(
-            leaflet::leafletOutput(ns("hydat_map"), width = "100%", height = "450px")
+            leaflet::leafletOutput(ns("hydat_map"), width = "100%", height = "350px")
           ),
           helpText(paste0("Click on a station row to select the station, ",
                           "or filter stations and browse on the HYDAT Map")),
@@ -197,6 +206,7 @@ server_data_load <- function(id) {
       bindEvent(input$source)
 
     # Hide/Show based on toggle
+    observe(shinyjs::toggle("data_load", condition = input$show_data))
     observe(shinyjs::toggle("stn", condition = input$show_stn))
     observe(shinyjs::toggle("dates", condition = input$show_dates))
     observe(shinyjs::toggle("types", condition = input$show_types))
@@ -531,11 +541,14 @@ server_data_load <- function(id) {
     output$hydat_table <- DT::renderDT({
       stations() %>%
         DT::datatable(selection = "single", rownames = FALSE, filter = 'top',
-                      extensions = c("Scroller"),
+                      extensions = c("Scroller", "Buttons"),
                       options = list(scrollX = TRUE,
                                      scrollY = 450, deferRender = TRUE,
                                      scroller = TRUE,
-                                     dom = 'Brtip'))
+                                     dom = 'Brtip',
+                                     buttons = list(list(extend = 'copy', title = NULL),
+                                                    'csv', 'excel')),
+                      )
     })
 
 
@@ -646,8 +659,7 @@ server_data_load <- function(id) {
       tagList(h5("Missing Data Note:"),
               "There is missing data in the range of dates selected. ",
               "Some plots and tables may not show results.",
-              "See 'Handling Missing Dates' below for options if desired.",
-              hr())
+              "See 'Handling Missing Dates' below for options if desired.")
     })
 
     # Plot ----------------

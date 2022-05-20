@@ -22,7 +22,8 @@ fasstr_shiny <- function() {
   # Setup -------------------------------------
   options(
     spinner.color = "#003366", spinner.type = 5, spinner.size = 0.5, # Spinners
-    scipen=999)                                              # No sci notations
+    scipen=999,                                              # No sci notations
+    shiny.launch.browser = .rs.invokeShinyWindowExternal)
 
   # On shinyapps ----------------------------------
   on_shinyapps <- !identical(serverInfo(), list(shinyServer = FALSE))
@@ -119,7 +120,7 @@ sidebar_fasstr <- function() {
     id = "menu",
     menuItem("Home", tabName = "home", icon = icon("home")),
     menuItem("Data", tabName = "data", icon = icon("table"),
-             menuSubItem("Loading", tabName = "data_load"),
+             menuSubItem("Loading & Options", tabName = "data_load"),
              menuSubItem("Availability & Screening", tabName = "data_available")),
     menuItem("Overview", tabName = "overview", icon = icon("binoculars")),
     menuItem("Hydrographs", icon = icon("chart-area"),
@@ -129,10 +130,10 @@ sidebar_fasstr <- function() {
              icon = icon("calendar"),
              menuSubItem("Summary Statistics", tabName = "annual_stats"),
              menuSubItem("Mean Annual Discharge", tabName = "annual_means"),
+             menuSubItem("Maximums & Minimums", tabName = "peak_flows"),
              menuSubItem("Total Discharge", tabName = "annual_totals"),
-             menuSubItem("Low Flows",  tabName = "low_flows"),
-             menuSubItem("High Flows", tabName = "high_flows"),
-             menuSubItem("Peak Flows", tabName = "peak_flows"),
+             # menuSubItem("Low Flows",  tabName = "low_flows"),
+             # menuSubItem("High Flows", tabName = "high_flows"),
              menuSubItem("Timing of Flows", tabName = "flow_timing"),
              menuSubItem("Normal Days", tabName = "outside_normal")),
     menuItem("Flow Duration and Percentiles", tabName = "flows",

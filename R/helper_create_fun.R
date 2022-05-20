@@ -184,7 +184,9 @@ combine_parameters <- function(p, v) {
     "symbols_percent",     "plot_percent = {v}",
     "daterange",           "start_date = '{v[1]}', end_date = '{v[2]}'",
     "plot_log",            "log_discharge = {v}",
-    "plot_extremes",       "include_extremes = {v}",
+    "plot_extremes",       "plot_extremes = {v}",
+    "plot_inner_percentiles",       "plot_inner_percentiles = {v}",
+    "plot_outer_percentiles",       "plot_outer_percentiles = {v}",
     "add_year",            "add_year = {v}",
 
     # Analysis
@@ -205,7 +207,10 @@ combine_parameters <- function(p, v) {
     "fit_distr",           "fit_distr = '{v}'",
     "fit_quantiles",       "fit_quantiles = {conseq(v)}",
     "fit_distr_method",    "fit_distr_method = '{v}'",
-    "plot_curve",          "plot_curve = {v}") %>%
+    "plot_curve",          "plot_curve = {v}"#,
+
+ #   "plot_highflows",      "plot_highflows = {v}"
+  ) %>%
 
     dplyr::filter(.data$param == .env$p) %>%
     dplyr::pull(.data$glued) %>%

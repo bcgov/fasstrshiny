@@ -110,7 +110,7 @@ select_rolling <- function(id, name = "roll", multiple = FALSE) {
 
 
 select_percentiles <- function(id, name = "percentiles", selected = c(10, 90),
-                               label = "Percentiles to calculate") {
+                               label = "Percentiles to calculate", maxItems = 100) {
 
   if(!is.null(tips[[name]])) t <- tips[[name]] else t <- tips[["percentiles"]]
 
@@ -119,8 +119,23 @@ select_percentiles <- function(id, name = "percentiles", selected = c(10, 90),
                    label = label,
                    choices = c(0:100),
                    selected = selected,
-                   multiple = TRUE),
+                   multiple = TRUE,
+                   options = list(maxItems = maxItems)),
     bsTooltip(NS(id, name), t, placement = "left"))
+}
+
+select_percentiles_slide <- function(id, name = "percentiles", value = c(10, 90),
+                                     label = "Percentiles to calculate") {
+
+  if(!is.null(tips[[name]])) t <- tips[[name]] else t <- tips[["percentiles"]]
+
+  tagList(
+    sliderInput(NS(id, name),
+                label = label,
+                value = value,
+                min = 0, max = 100, step = 1),
+    bsTooltip(NS(id, name), t, placement = "left"))
+
 }
 
 select_complete <- function(id) {
@@ -147,7 +162,7 @@ select_missing <- function(id) {
 }
 
 select_allowed <- function(id) {
-   tagList(
+  tagList(
     sliderInput(NS(id, "allowed"),
                 label = "Allowed Missing (%)",
                 value = 0, step = 5, min = 0, max = 100),
@@ -172,7 +187,7 @@ select_plot_log <- function(id, value = TRUE) {
   tagList(
     div(id = NS(id, "plot_log_tip"),
         prettySwitch(NS(id, "plot_log"),
-                     label = "Use log scale",
+                     label = "Use Log Scale",
                      value = value,
                      status = "success", slim = TRUE)),
     bsTooltip(NS(id, "plot_log_tip"), tips$plot_log,
@@ -184,12 +199,33 @@ select_plot_extremes <- function(id, value = TRUE) {
   tagList(
     div(id = NS(id, "plot_extremes_tip"),
         prettySwitch(NS(id, "plot_extremes"),
-                     label = "Plot extreme values",
+                     label = "Plot Extreme Values",
                      value = value,
                      status = "success", slim = TRUE)),
     bsTooltip(NS(id, "plot_extremes_tip"), tips$plot_extremes,
               placement = "left"))
 }
+select_plot_inner_percentiles <- function(id, value = TRUE) {
+  tagList(
+    div(id = NS(id, "plot_inner_percentiles_tip"),
+        prettySwitch(NS(id, "plot_inner_percentiles"),
+                     label = "Plot Inner Percentiles",
+                     value = value,
+                     status = "success", slim = TRUE)),
+    bsTooltip(NS(id, "plot_inner_percentiles_tip"), tips$plot_inner_percentiles,
+              placement = "left"))
+}
+select_plot_outer_percentiles <- function(id, value = TRUE) {
+  tagList(
+    div(id = NS(id, "plot_outer_percentiles_tip"),
+        prettySwitch(NS(id, "plot_outer_percentiles"),
+                     label = "Plot Outer Percentiles",
+                     value = value,
+                     status = "success", slim = TRUE)),
+    bsTooltip(NS(id, "plot_outer_percentiles_tip"), tips$plot_outer_percentiles,
+              placement = "left"))
+}
+
 
 select_daterange <- function(id, data) {
 
@@ -205,7 +241,7 @@ select_daterange <- function(id, data) {
 select_add_year <- function(id, years_range) {
   tagList(
     selectizeInput(NS(id, "add_year"),
-                   label = "Year to add",
+                   label = "Year to Add",
                    choices = c("Choose a year" = "",
                                seq(from = years_range[1],
                                    to = years_range[2], by = 1)),
@@ -232,7 +268,7 @@ select_add_dates <- function(id) {
   tagList(
     selectizeInput(
       NS(id, "add_dates"),
-      label = "Date to show",
+      label = "Date to Show",
       choices = c("Choose date(s)" = "", d),
       selected = NULL, multiple = TRUE),
     bsTooltip(NS(id, "add_dates"), tips$add_dates,
@@ -245,7 +281,7 @@ select_add_mad <- function(id) {
   tagList(
     div(id = NS(id, "add_mad_tip"),
         prettySwitch(NS(id, "add_mad"),
-                     label = "Add MAD values",
+                     label = "Add MAD Values",
                      value = FALSE,
                      status = "success", slim = TRUE)),
     bsTooltip(NS(id, "add_mad_tip"), tips$add_mad,
@@ -255,7 +291,7 @@ select_add_mad <- function(id) {
 select_plot_title <- function(id, name = "plot_title") {
   div(id = NS(id, glue::glue("{name}_tip")),
       prettySwitch(NS(id, name),
-                   label = "Add plot title",
+                   label = "Add Plot Title",
                    value = TRUE, status = "success", slim = TRUE),
       bsTooltip(NS(id, glue::glue("{name}_tip")), "Add/remove title from plot",
                 placement = "left"))
@@ -267,7 +303,7 @@ select_plot_display <- function(id, plots) {
 
   tagList(
     awesomeRadio(NS(id, "display"), "Display Plot",
-                   choices = plot_names),
+                 choices = plot_names),
     bsTooltip(NS(id, "display"),
               paste0("Choose plot type to display."),
               placement = "left"))
@@ -285,22 +321,22 @@ select_fitting <- function(id) {
                        0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
           multiple = TRUE),
 
-          column(width = 6, id = NS(id, "fit_distr_tip"),
-                 awesomeRadio(NS(id, "fit_distr"),
-                              label = "Distribution",
-                              choices = list("PIII" = "PIII",
-                                             "Weibull" = "weibull")),
-          ),
-          column(width = 6, id = NS(id, "plot_curve_tip"),
-                 style = "padding-top: 25px; margin-bottom: 25px",
-                 prettySwitch(NS(id, "plot_curve"),
-                              label = tags$span(strong("Plot Curve")),
-                              value = TRUE, status = "success", slim = TRUE)),
-          awesomeRadio(
-            NS(id, "fit_distr_method"),
-            label = "Distribution Method",
-            choices = list("Method of Moments (MOM)" = "MOM",
-                           "Maximum Likelihood Estimation (MLE)" = "MLE"))),
+        column(width = 6, id = NS(id, "fit_distr_tip"),
+               awesomeRadio(NS(id, "fit_distr"),
+                            label = "Distribution",
+                            choices = list("PIII" = "PIII",
+                                           "Weibull" = "weibull")),
+        ),
+        column(width = 6, id = NS(id, "plot_curve_tip"),
+               style = "padding-top: 25px; margin-bottom: 25px",
+               prettySwitch(NS(id, "plot_curve"),
+                            label = tags$span(strong("Plot Curve")),
+                            value = TRUE, status = "success", slim = TRUE)),
+        awesomeRadio(
+          NS(id, "fit_distr_method"),
+          label = "Distribution Method",
+          choices = list("Method of Moments (MOM)" = "MOM",
+                         "Maximum Likelihood Estimation (MLE)" = "MLE"))),
 
     bsTooltip(NS(id, "fit_quantiles"), tips$fit_quantiles,
               placement = "left"),
@@ -367,11 +403,11 @@ select_plot_options <- function(...) {
   div(
     align = "right",
     dropdownButton(
-      tags$h3("Plot options"),
+      tags$h3("Plot Options"),
       tagList(...),
       status = "primary", icon = icon("gear", verify_fa = FALSE),
       size = "sm", width = "300px", right = TRUE,
-      tooltip = tooltipOptions(title = "Plot options", placement = "left")
+      tooltip = tooltipOptions(title = "Plot Options", placement = "left")
     )
   )
 }
@@ -396,9 +432,10 @@ select_table_options <- function(id,
   )
 }
 
-show_ui <- function(id, name) {
+show_ui <- function(id, name, value = FALSE) {
   h4(materialSwitch(inputId = id,
                     label = name,
-                    status = "primary"))
+                    status = "primary",
+                    value = value))
 }
 

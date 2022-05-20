@@ -53,6 +53,13 @@ ui_flow_timing <- function(id) {
           select_plot_options(select_plot_title(id)),
           ggiraph::girafeOutput(ns("plot"), height = opts$plot_height),
           br(),
+          select_plot_options(
+            select_plot_title(id, name = "plot_title_year"),
+            prettySwitch(ns("plot_normal_percentiles"),
+                         label = "Plot Normal Percentiles",
+                         value = TRUE, status = "success", slim = TRUE),
+            sliderInput(ns("normal_percentiles"), label = "Percentiles Normal Range",
+                        value = c(25, 75), min = 0, max = 100, step = 1)),
           ggiraph::girafeOutput(ns("plot_year"), height = opts$plot_height)
         ),
 
@@ -190,7 +197,7 @@ server_flow_timing <- function(id, data_settings, data_raw,
       g <- eval_check(g)[[1]]
 
       # Add title
-      if(input$plot_title) {
+      if(input$plot_title_year) {
         g <- g +
           ggplot2::ggtitle(titles_year()) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))

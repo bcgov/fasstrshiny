@@ -37,12 +37,12 @@ ui_annual_stats <- function(id) {
         bsTooltip(ns("type"), "Type of statistic to calculate", placement = "left"),
         hr(),
         # Percentiles
-        select_percentiles(
+        select_percentiles_slide(
           id, name = "inner_percentiles", label = "Inner Percentiles (plot)",
-          selected = default("plot_daily_stats", "inner_percentiles")),
-        select_percentiles(
+          value = default("plot_daily_stats", "inner_percentiles")),
+        select_percentiles_slide(
           id, name = "outer_percentiles", label = "Outer Percentiles (plot)",
-          selected = default("plot_daily_stats", "outer_percentiles")),
+          value = default("plot_daily_stats", "outer_percentiles")),
         select_percentiles(
           id, name = "extra_percentiles", label = "Additional Percentiles (table)",
           selected = default("calc_daily_stats", "percentiles")),
@@ -70,12 +70,24 @@ ui_annual_stats <- function(id) {
 
         ## Plot ---------------------
         tabPanel(
-          title = "Plot",
+          title = "Plot - Distribution",
           select_plot_options(
             select_plot_title(id),
             select_plot_log(id, value = default("plot_monthly_stats2",
-                                                "log_discharge"))),
+                                                "log_discharge")),
+            select_plot_extremes(id),
+            select_plot_inner_percentiles(id),
+            select_plot_outer_percentiles(id)),
           ggiraph::girafeOutput(ns("plot"), height = opts$plot_height)
+        ),
+
+        tabPanel(
+          title = "Plot - Statistics",
+          select_plot_options(
+            select_plot_title(id,name = "plot_title_line"),
+            select_plot_log(id, value = default("plot_monthly_stats",
+                                                "log_discharge"))),
+          ggiraph::girafeOutput(ns("plot_line"), height = opts$plot_height)
         ),
 
         ## Table ---------------------
@@ -175,6 +187,80 @@ server_annual_stats <- function(id, data_settings, data_raw,
     download(id = "plot", plot = plot,
              name = reactive(paste0("annual_stats_", input$type)),
              data_settings, dims)
+
+    # Plot -----------------------------
+    plot_line <- reactive({
+      check_data(data_loaded())
+
+      req(!is.null(input$plot_log), input$type,
+          input$inner_percentiles,
+          input$outer_percentiles,
+          input$extra_percentiles)
+
+      data_flow <- data_raw()
+
+      # perc <- c(input$inner_percentiles,
+      #           input$outer_percentiles,
+      #           input$extra_percentiles) %>%
+      #   unique() %>%
+      #   as.numeric() %>%
+      #   sort()
+      #
+      # pi <- "percentiles"
+      # e <- glue::glue("percentiles = c({glue::glue_collapse(perc, sep = ', ')})")
+
+      if(input$type == "Monthly") {
+        pi <- "months"
+        e <- glue::glue(
+          "months = {conseq(input$months_plot)}")
+      } else {
+        pi <- NULL
+        e <- ""
+      }
+
+      g <- switch(input$type,
+                  "Monthly" = "plot_monthly_stats",
+                  "Annual" = "plot_annual_stats") %>%
+        create_fun(data_name = "data_flow", input,
+                   input_data = data_settings(),
+                   params_ignore = pi, extra = e)
+
+      code$plot_line <- g
+      labels$plot_line <- glue::glue("Plot {input$type} statistics")
+
+      g <- eval_check(g)[[1]]
+
+      # Add title
+      if(input$plot_title_line) {
+        g <- g +
+          ggplot2::ggtitle(titles()) +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
+      }
+
+      # Add interactivity
+      date_cols <- "Year"
+      if(input$type == "Monthly") date_cols <- c(date_cols, "Month")
+      stats <- names(g$data) # Get stats from plot data
+      #stats <- stats[!stats %in% date_cols] # Omit these
+
+      # Add vline
+      g <- g + create_vline_interactive(
+        data = g$data, stats, size = dplyr::if_else(input$type == "Annual", 4, 2))
+
+      g
+    })
+
+    dims_line <- c(15, 9) * opts$scale
+
+    output$plot_line <- ggiraph::renderGirafe({
+      ggiraph::girafe(ggobj = plot_line(), width_svg = dims_line[1], height_svg = dims_line[2],
+                      options = ggiraph_opts())
+    })
+
+    # Download Plot -----------------
+    download(id = "plot_line", plot = plot,
+             name = reactive(paste0("annual_stats_", input$type)),
+             data_settings, dims_line)
 
     # Table -----------------------
     output$table <- DT::renderDT({

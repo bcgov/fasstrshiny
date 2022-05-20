@@ -8,8 +8,8 @@ ui_plot_selection <- function(id) {
   conditionalPanel(
     "output.plot", ns = NS(id),
     helpText("Click on a point or 'lasso'", lasso_svg(),
-             " a bunch to add year to ",
-             "'Years to exclude'. Remember to re-",
+             " multiple points to add year to ",
+             "'Years to exclude' and remove from analysis. Remember to re-",
              strong("Compute Trends"), "."))
 
 }
@@ -116,13 +116,14 @@ fasstr_url_modal <- function(url){
 #' @noRd
 restore_inputs <- function(session, i, values, delay = 1000) {
 
-  pretty_inputs <- c("plot_title", "plot_log", "plot_extremes", "add_mad")
+  pretty_inputs <- c("plot_title", "plot_log", "plot_extremes", "add_mad",
+                     "plot_outer_percentiles", "plot_inner_percentiles")
   selectize_inputs <- c("col_date", "col_value", "col_symbol", "mad",
                         "add_year", "add_dates", "years_exclude", "months",
-                        "year_to_plot", "months_low", "months_high")
+                        "year_to_plot", "months_min", "months_max")
   slider_inputs <- c("years_range", "allowed_annual", "allowed_monthly")
   text_inputs <- "station_name"
-  numeric_inputs <- c("basin_area", "roll_days_low", "roll_days_high")
+  numeric_inputs <- c("basin_area", "roll_days_max", "roll_days_max")
   radiogroup_inputs <- "water_year"
 
   shinyjs::delay(delay, {

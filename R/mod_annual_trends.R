@@ -105,10 +105,17 @@ ui_annual_trends <- function(id) {
         ### Plot/Table ---------------------
         tabPanel(
           title = "Exploring Trends",
+          h4(textOutput(ns("table_fit_title"))),
           shinycssloaders::withSpinner(DT::DTOutput(ns("table_fit"))),
           p(style = "margin-bottom:30px"), # A bit of space
           ui_plot_selection(id),
           ggiraph::girafeOutput(ns("plot"), height = "450px")),
+
+        ### Trends Plot ---------------------
+        tabPanel(
+          title = "Plot - Results",
+          "put the new plot here, with dropdown to select 'group' as it would be too large otherwise"
+        ),
 
         ### Table ---------------------
         tabPanel(
@@ -265,6 +272,30 @@ server_annual_trends <- function(id, data_settings, data_raw,
         if(is.null(s)) s <- 1
       })
 
+
+      trends_headerCallback <- c(
+        "function(thead, data, start, end, display){",
+        "  var tooltips = [
+        'STATION_NUMBER',
+        'Annual Statistic',
+        'the lower bound of the trend’s 95% confidence interval',
+        'the Sen’s slope (trend) per year',
+        'the Sen’s slope (trend) over the time period',
+        'the upper bound of the trend’s 95% confidence interval',
+        'Kendall’s tau statistic computed on the final detrended timeseries',
+        'Kendall’s P-value computed for the final detrended timeseries',
+        'the number of runs required to converge upon a trend',
+        'the autocorrelation of the final detrended timeseries',
+        'the fraction of the data which is valid (not NA) once autocorrelation is removed',
+        'the least squares fit trend on the same data',
+        'the intercept of the Sen’s slope (trend)'
+        ];",
+        "  for(var i=0; i<13; i++){",
+        "    $('th:eq('+i+')',thead).attr('title', tooltips[i]);",
+        "  }",
+        "}"
+      )
+
       trends()[["Annual_Trends_Results"]] %>%
         dplyr::mutate(dplyr::across(where(is.numeric), ~round(., 4))) %>%
         DT::datatable(rownames = FALSE,
@@ -273,9 +304,13 @@ server_annual_trends <- function(id, data_settings, data_raw,
                       options = list(scrollX = TRUE, scrollY = 300, scroller = TRUE,
                                      deferRender = TRUE, dom = 'Brtip',
                                      buttons = list(list(extend = 'copy', title = NULL),
-                                                    'csv', 'excel')),
+                                                    'csv', 'excel'),
+                                     headerCallback = DT::JS(trends_headerCallback)),
                       selection = list(target = "row", mode = "single", selected = s))
     })
+
+    output$table_fit_title <- renderText(title(data_settings(), "Trending Results"))
+
 
     # Stat - to plot ---------------------
     stat <- reactive({

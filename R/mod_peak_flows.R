@@ -25,21 +25,30 @@ ui_peak_flows <- function(id) {
         helpText("Placeholder descriptive text to describe this section, ",
                  "what it does and how to use it"),hr(),
         uiOutput(ns("ui_display")),
+        hr(),
+        h4("Maximum Flow Options"),
+        fluidRow(column(width = 5,
+                        div(align = "left",uiOutput(ns("roll_days_max")))),
+                 column(width = 7,
+                        div(align = "left",uiOutput(ns("months_max"))))),
+        h4("Minimum Flow Options"),
+        fluidRow(column(width = 5,
+                        div(align = "left",uiOutput(ns("roll_days_min")))),
+                 column(width = 7,
+                        div(align = "left",uiOutput(ns("months_min"))))),
+
+        # h5("Maximum Flow Options"),
+        # div(align = "left",uiOutput(ns("roll_days_max"))),
+        # div(align = "left",uiOutput(ns("months_max"))),
+        # h5("Minimum Flow Options"),
+        # div(align = "left",uiOutput(ns("roll_days_min"))),
+        # div(align = "left",uiOutput(ns("months_min"))),
+        hr(),
+        #h4("Year Plot Options"),
         div(align = "left",uiOutput(ns("ui_year_to_plot")),
             bsTooltip(ns("ui_year_to_plot"), "Specfic year to plot", placement = "left")),
         hr(),
-
-        h4("Low Flow Options"),
-        fluidRow(column(width = 5,
-                        div(align = "left",uiOutput(ns("roll_days_low")))),
-                 column(width = 7,
-                        div(align = "left",uiOutput(ns("months_low"))))),
-        h4("High Flow Options"),
-        fluidRow(column(width = 5,
-                        div(align = "left",uiOutput(ns("roll_days_high")))),
-                 column(width = 7,
-                        div(align = "left",uiOutput(ns("months_high"))))),
-        hr()
+        verbatimTextOutput(ns("test"))
       ),
       tabBox(
         width = 9,
@@ -49,6 +58,19 @@ ui_peak_flows <- function(id) {
           title = "Plot",
           select_plot_options(select_plot_title(id)),
           ggiraph::girafeOutput(ns("plot"), height = opts$plot_height),
+          select_plot_options(
+            select_plot_title(id, name = "plot_title_year"),
+            prettySwitch(ns("plot_max"),
+                         label = "Plot Maximum",
+                         value = TRUE, status = "success", slim = TRUE),
+            prettySwitch(ns("plot_min"),
+                         label = "Plot Minimum",
+                         value = TRUE, status = "success", slim = TRUE),
+            prettySwitch(ns("plot_normal_percentiles"),
+                         label = "Plot Normal Percentiles",
+                         value = TRUE, status = "success", slim = TRUE),
+            sliderInput(ns("normal_percentiles"), label = "Percentiles Normal Range",
+                        value = c(25, 75), min = 0, max = 100, step = 1)),
           ggiraph::girafeOutput(ns("plot_year"), height = opts$plot_height)
         ),
 
@@ -74,9 +96,9 @@ server_peak_flows <- function(id, data_settings, data_raw,
 
 
     # Titles --------------------
-    titles <- reactive(title(data_settings(), "Annual Peaks"))
+    titles <- reactive(title(data_settings(), "Annual Extremes"))
     titles_year <- reactive(title(data_settings(),
-                                  paste0("Annual Peaks for ",
+                                  paste0("Annual Extremes for ",
                                          ifelse(data_settings()$water_year ==1, "", "Water Year "),
                                          input$year_to_plot)))
     # UI Elements ------------
@@ -97,25 +119,25 @@ server_peak_flows <- function(id, data_settings, data_raw,
                         inputId = "year_to_plot",
                         selected = as.numeric(input$plot_selected))
     })
-    output$roll_days_low <- renderUI({
+    output$roll_days_min <- renderUI({
       req(data_settings()$roll_days)
       tagList(
-        numericInput(NS(id, "roll_days_low"),
+        numericInput(NS(id, "roll_days_min"),
                      label = "Rolling Average Days",
                      value = data_settings()$roll_days,
                      min = 1, max = 100)
       )
     })
-    output$roll_days_high <- renderUI({
+    output$roll_days_max <- renderUI({
       req(isolate(data_settings()$roll_days))
       tagList(
-        numericInput(NS(id, "roll_days_high"),
+        numericInput(NS(id, "roll_days_max"),
                      label = "Rolling Average Days",
                      value = isolate(data_settings()$roll_days),
                      min = 1, max = 100)
       )
     })
-    output$months_low <- renderUI({
+    output$months_min <- renderUI({
       req(data_settings()$months,
           data_settings()$water_year)
 
@@ -125,16 +147,16 @@ server_peak_flows <- function(id, data_settings, data_raw,
              m[m < as.numeric(data_settings()$water_year)])
 
       tagList(
-        selectizeInput(NS(id, "months_low"),
+        selectizeInput(NS(id, "months_min"),
                        label = "Months",
                        choices = m,
                        selected = as.numeric(data_settings()$months),
                        multiple = TRUE)#,
-        # bsTooltip("months_low"), "Specfic year to plot", placement = "left")
+        # bsTooltip("months_min"), "Specfic year to plot", placement = "left")
       )
     })
 
-    output$months_high <- renderUI({
+    output$months_max <- renderUI({
       req(data_settings()$months,
           data_settings()$water_year)
 
@@ -144,32 +166,36 @@ server_peak_flows <- function(id, data_settings, data_raw,
              m[m < as.numeric(data_settings()$water_year)])
 
       tagList(
-        selectizeInput(NS(id, "months_high"),
+        selectizeInput(NS(id, "months_max"),
                        label = "Months",
                        choices = m,
                        selected = as.numeric(data_settings()$months),
                        multiple = TRUE)#,
-        # bsTooltip("months_low"), "Specfic year to plot", placement = "left")
+        # bsTooltip("months_min"), "Specfic year to plot", placement = "left")
       )
     })
 
     # Preserve dynamic UI inputs during bookmarking
-    keep <- c("year_to_plot", "roll_days_low", "roll_days_high", "months_low",
-              "months_high")
+    keep <- c("year_to_plot", "roll_days_min", "roll_days_max", "months_min",
+              "months_max")
     onBookmark(function(state) for(k in keep) state$values[[k]] <- input[[k]])
     onRestored(function(state) restore_inputs(session, keep, state$values))
 
-
+    observe({
+      input$plot_normal_percentiles
+    })
     # Plot --------------------
     plots <- reactive({
       check_data(data_loaded())
+      req(input$roll_days_min,input$roll_days_max,
+          input$months_min, input$months_max)
 
       data_flow <- data_raw()
 
-      p <- c(glue::glue("roll_days_low = {input$roll_days_low}"),
-             glue::glue("roll_days_high = {input$roll_days_high}"),
-             glue::glue("months_low = {conseq(input$months_low)}"),
-             glue::glue("months_high = {conseq(input$months_high)}")
+      p <- c(glue::glue("roll_days_min = {input$roll_days_min}"),
+             glue::glue("roll_days_max = {input$roll_days_max}"),
+             glue::glue("months_min = {conseq(input$months_min)}"),
+             glue::glue("months_max = {conseq(input$months_max)}")
       ) %>%
         glue::glue_collapse(sep = ", ")
 
@@ -247,19 +273,31 @@ server_peak_flows <- function(id, data_settings, data_raw,
 
     # Download Plot -----------------
     download(id = "plot", plot = plot,
-             name = reactive(paste0("peak_flows_", input$display)),
+             name = reactive(paste0("extreme_flows_", input$display)),
              data_settings, dims)
 
+    output$test <- renderPrint({
+      req(input$plot_normal_percentiles)
+      input$plot_normal_percentiles
+    })
     # Plot Year --------------------
     plot_year <- reactive({
       check_data(data_loaded())
+      req(input$roll_days_min,input$roll_days_max,
+          input$months_min, input$months_max,
+          input$year_to_plot,
+          input$normal_percentiles,
+          !is.null(input$plot_normal_percentiles),
+          !is.null(input$plot_max),
+          !is.null(input$plot_min)
+          )
 
       data_flow <- data_raw()
 
-      p <- c(glue::glue("roll_days_low = {input$roll_days_low}"),
-             glue::glue("roll_days_high = {input$roll_days_high}"),
-             glue::glue("months_low = {conseq(input$months_low)}"),
-             glue::glue("months_high = {conseq(input$months_high)}"),
+      p <- c(glue::glue("roll_days_min = {input$roll_days_min}"),
+             glue::glue("roll_days_max = {input$roll_days_max}"),
+             glue::glue("months_min = {conseq(input$months_min)}"),
+             glue::glue("months_max = {conseq(input$months_max)}"),
              glue::glue("year_to_plot = {input$year_to_plot}")
       ) %>%
         glue::glue_collapse(sep = ", ")
@@ -276,7 +314,7 @@ server_peak_flows <- function(id, data_settings, data_raw,
       g <- eval_check(g)[[1]]
 
       # Add title
-      if(input$plot_title) {
+      if(input$plot_title_year) {
         g <- g +
           ggplot2::ggtitle(titles_year()) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
@@ -287,7 +325,7 @@ server_peak_flows <- function(id, data_settings, data_raw,
         ggiraph::geom_rect_interactive(
           ggplot2::aes(
             xmin = .data$Min_Start, xmax = .data$Min_End, ymax=Inf, ymin=0,
-            tooltip = glue::glue("{input$roll_days_low}-Day Minimum\n",
+            tooltip = glue::glue("{input$roll_days_min}-Day Minimum\n",
                                  "Discharge: {round(.data$Min_Value,4)}\n",
                                  "Day of {ifelse(data_settings()$water_year==1,'Year', 'Water Year')}: {.data$DayofYear}\n",
                                  "Date: {.data$Flow_Date}"),
@@ -296,7 +334,7 @@ server_peak_flows <- function(id, data_settings, data_raw,
         ggiraph::geom_point_interactive(
           ggplot2::aes(
             x = .data$AnalysisDate, y = Min_Value,
-            tooltip = glue::glue("{input$roll_days_low}-Day Minimum\n",
+            tooltip = glue::glue("{input$roll_days_min}-Day Minimum\n",
                                  "Discharge: {round(.data$Min_Value,4)}\n",
                                  "Day of {ifelse(data_settings()$water_year==1,'Year', 'Water Year')}: {.data$DayofYear}\n",
                                  "Date: {.data$Flow_Date}"),
@@ -305,7 +343,7 @@ server_peak_flows <- function(id, data_settings, data_raw,
         ggiraph::geom_rect_interactive(
           ggplot2::aes(
             xmin = .data$Max_Start, xmax = .data$Max_End, ymax=Inf, ymin=0,
-            tooltip = glue::glue("{input$roll_days_high}-Day Maximum\n",
+            tooltip = glue::glue("{input$roll_days_max}-Day Maximum\n",
                                  "Discharge: {round(.data$Max_Value,4)}\n",
                                  "Day of {ifelse(data_settings()$water_year==1,'Year', 'Water Year')}: {.data$DayofYear}\n",
                                  "Date: {.data$Flow_Date}"),
@@ -314,7 +352,7 @@ server_peak_flows <- function(id, data_settings, data_raw,
         ggiraph::geom_point_interactive(
           ggplot2::aes(
             x = .data$AnalysisDate, y = Max_Value,
-            tooltip = glue::glue("{input$roll_days_high}-Day Maximum\n",
+            tooltip = glue::glue("{input$roll_days_max}-Day Maximum\n",
                                  "Discharge: {round(.data$Max_Value,4)}\n",
                                  "Day of {ifelse(data_settings()$water_year==1,'Year', 'Water Year')}: {.data$DayofYear}\n",
                                  "Date: {.data$Flow_Date}"),
@@ -339,10 +377,10 @@ server_peak_flows <- function(id, data_settings, data_raw,
 
       data_flow <- data_raw()
 
-      p <- c(glue::glue("roll_days_low = {input$roll_days_low}"),
-             glue::glue("roll_days_high = {input$roll_days_high}"),
-             glue::glue("months_low = {conseq(input$months_low)}"),
-             glue::glue("months_high = {conseq(input$months_high)}")
+      p <- c(glue::glue("roll_days_min = {input$roll_days_min}"),
+             glue::glue("roll_days_max = {input$roll_days_max}"),
+             glue::glue("months_min = {conseq(input$months_min)}"),
+             glue::glue("months_max = {conseq(input$months_max)}")
       ) %>%
         glue::glue_collapse(sep = ", ")
 

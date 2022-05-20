@@ -90,10 +90,16 @@ server_annual_means <- function(id, data_settings, data_raw,
         ggiraph::geom_bar_interactive(
           stat = "identity", alpha = 0.005,
           ggplot2::aes(tooltip = glue::glue("Year: {.data$Year}\n",
-                                            "MAD Diff: {round(.data$MAD_diff, 4)}",
+                                            "MAD: {round(.data$Mean,4)}\n",
+                                            "% LTMAD: {round(.data$Mean/.data$LTMAD,3)*100}%\n",
+                                            "LTMAD Diff.: {round(.data$MAD_diff, 4)}",
                                             .trim = FALSE),
-                       data_id = .data$Year)
-        )
+                       data_id = .data$Year))+
+            ggiraph::geom_hline_interactive(
+                         ggplot2::aes(yintercept = unique(LTMAD) - unique(LTMAD),
+                                      tooltip = glue::glue("LTMAD: {round(unique(.data$LTMAD),4)}")),
+                         alpha = 0.01, linetype = 1, size = 2)
+
       if (!is.null(input$mean_ptile)) {
         g <- g +
           ggiraph::geom_hline_interactive(

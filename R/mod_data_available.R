@@ -213,6 +213,7 @@ server_data_available <- function(id, data_settings, data_raw,
       eval_check(d)
     })
 
+
     # Daily Symbols Plot -----------------------------
     output$plot_symbols_flow <- plotly::renderPlotly({
       check_data(data_loaded())
@@ -242,9 +243,12 @@ server_data_available <- function(id, data_settings, data_raw,
         plotly::config(modeBarButtonsToRemove =
                          c("pan", "autoscale", "zoomIn2d", "zoomOut2d",
                            "lasso2d", "select2d",
-                           "hoverCompareCartesian", "hoverClosestCartesian"))
+                           "hoverCompareCartesian", "hoverClosestCartesian"))# %>%
+      #  plotly::partial_bundle()
     }) %>%
-      bindCache(data_raw(), data_settings())
+      bindCache(data_raw(), data_settings(),
+                input$plot_title_symbols_flow, input$plot_log)
+
 
     # Symbols Summary Plot -----------------------------
     output$plot_symbols_sum <- ggiraph::renderGirafe({

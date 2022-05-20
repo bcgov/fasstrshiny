@@ -27,7 +27,9 @@ parameters <- dplyr::tribble(
   "outer_percentiles",    "outer_percentiles",   "Limits of outer percentile ribbon", TRUE,
   "normal_percentiles",   "normal_percentiles",  "Range of percentiles in which data are considered normal", TRUE,
   "plot_log",             "log_discharge",       "Plot data on log scale",            TRUE,
-  "plot_extremes",        "include_extremes",    "Plot extreme values as min-max ribbon",            TRUE,
+  "plot_extremes",        "plot_extremes",       "Plot extreme values as min-max ribbon",            TRUE,
+  "plot_inner_percentiles",        "plot_inner_percentiles",       "Plot the inner percentiles ribbon",            TRUE,
+  "plot_outer_percentiles",        "plot_outer_percentiles",       "Plot the outer percentiles ribbon",            TRUE,
   "custom_months",        "custom_months",       "Months to combine and summarize as an additional row in the table", TRUE,
   "custom_months_label",  "custom_months_label", "What to label this range of months in the table", TRUE,
   "missing",              "ignore_missing",      "Whether dates with missing values should be included in calculations", TRUE,
@@ -54,7 +56,12 @@ parameters <- dplyr::tribble(
   "fit_distr", "fit_distr", "Distribution used to fit annual data", TRUE,
   "fit_distr_method", "fit_distr_method", "Method used to fit the distribution.<br>Generally use MOM for PIII and MLE for Weibull", TRUE,
   "fit_quantiles", "fit_quantiles", "Quantiles to be estimated from the fitted distribution", TRUE,
-  "plot_curve", "plot_curve", "Whether to add the computed curve to the probability plot", TRUE
+  "plot_curve", "plot_curve", "Whether to add the computed curve to the probability plot", TRUE#,
+
+  # "plot_highflow", "plot_highflow", "", TRUE,
+  # "plot_lowflow", "plot_lowflow", "", TRUE,
+  # "plot_normal_percentiles", "plot_normal_percentiles", "", TRUE
+
 ) %>%
   dplyr::group_by(id) %>%
   dplyr::mutate(tooltip = dplyr::if_else(add_arg,
@@ -71,8 +78,8 @@ tips <- parameters %>%
 
 
 opts <- list(
-  plot_height = "fit-content",
-  #plot_height = "500px",
+  #plot_height = "fit-content",
+  plot_height = "500px",
   scale = 0.75
 )
 
@@ -97,6 +104,7 @@ bc_maps_labs <- dplyr::tribble(
   ~stringr::str_to_title(SUB_SUB_DRAINAGE_AREA_NAME))
 
 maps_points <- list(
+  "None" = "PROVINCE",
   "Status" = "HYD_STATUS",
   "Regulated" = "REGULATED",
   "Real Time" = "REAL_TIME",

@@ -60,11 +60,16 @@ Canada’s HYDAT database must be downloaded (this needs to be done
 
     tidyhydat::download_hydat()
 
-To the Shiny App run, in the R console, run the following (this needs to
+To open the Shiny App from the R console, run the following (this needs to
 be done **everytime**):
 
     library(fasstrshiny) # Loads the package
     fasstr_shiny()       # Launches the Shiny App
+    
+It is recommended to run the Shiny App from a browser and not a RStudio window, 
+so to make opening it in a browser by default run the following code:
+
+    options(shiny.launch.browser = .rs.invokeShinyWindowExternal)
 
 **Pros**
 
