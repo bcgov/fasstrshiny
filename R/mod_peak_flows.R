@@ -60,6 +60,7 @@ ui_peak_flows <- function(id) {
           ggiraph::girafeOutput(ns("plot"), height = opts$plot_height),
           select_plot_options(
             select_plot_title(id, name = "plot_title_year"),
+            select_plot_log(id, value = TRUE),
             prettySwitch(ns("plot_max"),
                          label = "Plot Maximum",
                          value = TRUE, status = "success", slim = TRUE),
@@ -287,6 +288,7 @@ server_peak_flows <- function(id, data_settings, data_raw,
           input$months_min, input$months_max,
           input$year_to_plot,
           input$normal_percentiles,
+          !is.null(input$plot_log),
           !is.null(input$plot_normal_percentiles),
           !is.null(input$plot_max),
           !is.null(input$plot_min)

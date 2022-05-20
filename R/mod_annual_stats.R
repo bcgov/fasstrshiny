@@ -85,8 +85,9 @@ ui_annual_stats <- function(id) {
           title = "Plot - Statistics",
           select_plot_options(
             select_plot_title(id,name = "plot_title_line"),
-            select_plot_log(id, value = default("plot_monthly_stats",
-                                                "log_discharge"))),
+            select_plot_log(id, value = default("plot_annual_stats",
+                                                "log_discharge"),
+                            name = "plot_log_line")),
           ggiraph::girafeOutput(ns("plot_line"), height = opts$plot_height)
         ),
 
@@ -192,30 +193,23 @@ server_annual_stats <- function(id, data_settings, data_raw,
     plot_line <- reactive({
       check_data(data_loaded())
 
-      req(!is.null(input$plot_log), input$type,
-          input$inner_percentiles,
-          input$outer_percentiles,
-          input$extra_percentiles)
+      req(!is.null(input$plot_log_line), input$type)
 
       data_flow <- data_raw()
 
-      # perc <- c(input$inner_percentiles,
-      #           input$outer_percentiles,
-      #           input$extra_percentiles) %>%
-      #   unique() %>%
-      #   as.numeric() %>%
-      #   sort()
-      #
-      # pi <- "percentiles"
-      # e <- glue::glue("percentiles = c({glue::glue_collapse(perc, sep = ', ')})")
+      pi <- "percentiles"
+      e <- glue::glue("percentiles = c({glue::glue_collapse(input$extra_percentiles, sep = ', ')})")
+      # pi <- c("percentiles","log_discharge")
+      # e <- glue::glue("percentiles = c({glue::glue_collapse(input$extra_percentiles, sep = ', ')}),
+      #                 log_discharge = {input$plot_log_line}")
 
       if(input$type == "Monthly") {
-        pi <- "months"
+        pi <- c(pi,"months")
         e <- glue::glue(
           "months = {conseq(input$months_plot)}")
       } else {
-        pi <- NULL
-        e <- ""
+        pi <- pi
+        e <- e
       }
 
       g <- switch(input$type,
@@ -269,8 +263,8 @@ server_annual_stats <- function(id, data_settings, data_raw,
 
       data_flow <- data_raw()
 
-      perc <- c(input$inner_percentiles,
-                input$outer_percentiles,
+      perc <- c(#input$inner_percentiles,
+                #input$outer_percentiles,
                 input$extra_percentiles) %>%
         unique() %>%
         as.numeric() %>%

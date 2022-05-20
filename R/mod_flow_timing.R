@@ -55,6 +55,7 @@ ui_flow_timing <- function(id) {
           br(),
           select_plot_options(
             select_plot_title(id, name = "plot_title_year"),
+            select_plot_log(id, value = TRUE),
             prettySwitch(ns("plot_normal_percentiles"),
                          label = "Plot Normal Percentiles",
                          value = TRUE, status = "success", slim = TRUE),
@@ -182,7 +183,8 @@ server_flow_timing <- function(id, data_settings, data_raw,
     plot_year <- reactive({
       check_data(data_loaded())
       req(input$percent,
-          input$year_to_plot)
+          input$year_to_plot,
+          !is.null(input$plot_log))
 
       data_flow <- data_raw()
 

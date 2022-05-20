@@ -27,6 +27,7 @@ parameters <- dplyr::tribble(
   "outer_percentiles",    "outer_percentiles",   "Limits of outer percentile ribbon", TRUE,
   "normal_percentiles",   "normal_percentiles",  "Range of percentiles in which data are considered normal", TRUE,
   "plot_log",             "log_discharge",       "Plot data on log scale",            TRUE,
+ # "plot_log_line",        "log_discharge",       "Plot data on log scale",            TRUE,
   "plot_extremes",        "plot_extremes",       "Plot extreme values as min-max ribbon",            TRUE,
   "plot_inner_percentiles",        "plot_inner_percentiles",       "Plot the inner percentiles ribbon",            TRUE,
   "plot_outer_percentiles",        "plot_outer_percentiles",       "Plot the outer percentiles ribbon",            TRUE,

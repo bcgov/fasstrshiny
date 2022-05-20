@@ -182,17 +182,18 @@ select_plot_stats <- function(id, stats) {
   }
 }
 
-select_plot_log <- function(id, value = TRUE) {
+select_plot_log <- function(id, value = TRUE, name = "plot_log") {
 
   tagList(
-    div(id = NS(id, "plot_log_tip"),
-        prettySwitch(NS(id, "plot_log"),
+    div(id = NS(id, glue::glue("{name}_tip")),
+        prettySwitch(NS(id, name),
                      label = "Use Log Scale",
                      value = value,
                      status = "success", slim = TRUE)),
-    bsTooltip(NS(id, "plot_log_tip"), tips$plot_log,
+    bsTooltip(NS(id, glue::glue("{name}_tip")), tips$plot_log,
               placement = "left"))
 }
+
 
 select_plot_extremes <- function(id, value = TRUE) {
 
@@ -403,7 +404,7 @@ select_plot_options <- function(...) {
   div(
     align = "right",
     dropdownButton(
-      tags$h3("Plot Options"),
+      tags$h4("Plot Options"),
       tagList(...),
       status = "primary", icon = icon("gear", verify_fa = FALSE),
       size = "sm", width = "300px", right = TRUE,
