@@ -97,9 +97,11 @@
 <span id="cb1-2"><a href="#cb1-2"></a>remotes<span class="op">::</span><span class="kw">install_github</span>(<span class="st">"bcgov/fasstrshiny"</span>)</span></code></pre></div>
 <p>To use HYDAT data in the app, the Environment and Climate Change Canada’s HYDAT database must be downloaded (this needs to be done <strong>once</strong> or as needed to update):</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>tidyhydat<span class="op">::</span><span class="kw">download_hydat</span>()</span></code></pre></div>
-<p>To the Shiny App run, in the R console, run the following (this needs to be done <strong>everytime</strong>):</p>
+<p>To open the Shiny App from the R console, run the following (this needs to be done <strong>everytime</strong>):</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">library</span>(fasstrshiny) <span class="co"># Loads the package</span></span>
 <span id="cb3-2"><a href="#cb3-2"></a><span class="kw">fasstr_shiny</span>()       <span class="co"># Launches the Shiny App</span></span></code></pre></div>
+<p>It is recommended to run the Shiny App from a browser and not a RStudio window, so to make opening it in a browser by default run the following code:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">options</span>(<span class="dt">shiny.launch.browser =</span> .rs.invokeShinyWindowExternal)</span></code></pre></div>
 <p><strong>Pros</strong></p>
 <ul>
 <li>Faster</li>
@@ -173,17 +175,17 @@
 <div class="section level3">
 <h3 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
 </h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>Copyright <span class="dv">2021</span> Province of British Columbia</span>
-<span id="cb4-2"><a href="#cb4-2"></a></span>
-<span id="cb4-3"><a href="#cb4-3"></a>Licensed under the Apache License, Version <span class="fl">2.0</span> (the <span class="op">&amp;</span>quot;License<span class="op">&amp;</span>quot;);</span>
-<span id="cb4-4"><a href="#cb4-4"></a>you may not use this file except <span class="cf">in</span> compliance with the License.</span>
-<span id="cb4-5"><a href="#cb4-5"></a>You may obtain a copy of the License at</span>
-<span id="cb4-6"><a href="#cb4-6"></a></span>
-<span id="cb4-7"><a href="#cb4-7"></a>http<span class="op">:</span><span class="er">//</span>www.apache.org<span class="op">/</span>licenses<span class="op">/</span>LICENSE<span class="fl">-2.0</span></span>
-<span id="cb4-8"><a href="#cb4-8"></a></span>
-<span id="cb4-9"><a href="#cb4-9"></a>Unless required by applicable law or agreed to <span class="cf">in</span> writing, software distributed under the License is distributed on an <span class="op">&amp;</span>quot;AS IS<span class="op">&amp;</span>quot; BASIS,</span>
-<span id="cb4-10"><a href="#cb4-10"></a>WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
-<span id="cb4-11"><a href="#cb4-11"></a>See the License <span class="cf">for</span> the specific language governing permissions and limitations under the License.</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>Copyright <span class="dv">2021</span> Province of British Columbia</span>
+<span id="cb5-2"><a href="#cb5-2"></a></span>
+<span id="cb5-3"><a href="#cb5-3"></a>Licensed under the Apache License, Version <span class="fl">2.0</span> (the <span class="op">&amp;</span>quot;License<span class="op">&amp;</span>quot;);</span>
+<span id="cb5-4"><a href="#cb5-4"></a>you may not use this file except <span class="cf">in</span> compliance with the License.</span>
+<span id="cb5-5"><a href="#cb5-5"></a>You may obtain a copy of the License at</span>
+<span id="cb5-6"><a href="#cb5-6"></a></span>
+<span id="cb5-7"><a href="#cb5-7"></a>http<span class="op">:</span><span class="er">//</span>www.apache.org<span class="op">/</span>licenses<span class="op">/</span>LICENSE<span class="fl">-2.0</span></span>
+<span id="cb5-8"><a href="#cb5-8"></a></span>
+<span id="cb5-9"><a href="#cb5-9"></a>Unless required by applicable law or agreed to <span class="cf">in</span> writing, software distributed under the License is distributed on an <span class="op">&amp;</span>quot;AS IS<span class="op">&amp;</span>quot; BASIS,</span>
+<span id="cb5-10"><a href="#cb5-10"></a>WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span id="cb5-11"><a href="#cb5-11"></a>See the License <span class="cf">for</span> the specific language governing permissions and limitations under the License.</span></code></pre></div>
 <hr>
 <p>This repository is maintained by the <a href="https://www2.gov.bc.ca/gov/content/environment/air-land-water/water" class="external-link">Water Protection and Sustainability Branch</a> of the British Columbia Ministry of Environment and Climate Change Strategy.</p>
 </div>
