@@ -95,10 +95,10 @@ server_annual_means <- function(id, data_settings, data_raw,
                                             "LTMAD Diff.: {round(.data$MAD_diff, 4)}",
                                             .trim = FALSE),
                        data_id = .data$Year))+
-            ggiraph::geom_hline_interactive(
-                         ggplot2::aes(yintercept = unique(LTMAD) - unique(LTMAD),
-                                      tooltip = glue::glue("LTMAD: {round(unique(.data$LTMAD),4)}")),
-                         alpha = 0.01, linetype = 1, size = 2)
+        ggiraph::geom_hline_interactive(
+          ggplot2::aes(yintercept = unique(LTMAD) - unique(LTMAD),
+                       tooltip = glue::glue("LTMAD: {round(unique(.data$LTMAD),4)}")),
+          alpha = 0.01, linetype = 1, size = 2)
 
       if (!is.null(input$mean_ptile)) {
         g <- g +
@@ -112,18 +112,6 @@ server_annual_means <- function(id, data_settings, data_raw,
             alpha = 0.01, linetype = 1, size = 2)
       }
 
-      # g <- g + ggplot2::geom_hline(ggplot2::aes(yintercept = 0,
-      #                                           colour = "Long-term MAD"),
-      #                              size = 1) +
-      #   ggplot2::scale_colour_manual(
-      #     values = c("Long-term MAD" = "black",
-      #                "Annual MAD difference" = "#2A788EFF")) +
-      #   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(
-      #     fill = c("black", "#2A788EFF")))) +
-      #   ggplot2::theme(legend.position = "right",
-      #                  legend.title = ggplot2::element_blank(),
-      #                  legend.key = ggplot2::element_rect(colour = NA))
-
       g
     })
 
@@ -135,7 +123,7 @@ server_annual_means <- function(id, data_settings, data_raw,
     })
 
     # Download Plot -----------------
-    download(id = "plot", plot = plot, name = "mad", data_settings, dims)
+    download(id = "plot", plot = plot, name = "annual_means", data_settings, dims)
 
 
     # R Code -----------------

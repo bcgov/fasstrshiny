@@ -46,7 +46,7 @@ ui_home <- function(id) {
             p(),
             "Flow Analysis Summary Statistics for R - Shiny",
             p(),
-            glue::glue("v{packageVersion('fasstrshiny')}"), " - 1 April 2022",
+            glue::glue("v{packageVersion('fasstrshiny')}"), " - June 2022",
             p()
           ),
           "This app is developed primarily to provide various tools to summarize, analyze, trend, and ",

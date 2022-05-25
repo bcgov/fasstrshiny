@@ -97,7 +97,12 @@ ui_annual_trends <- function(id) {
           br(),
           uiOutput(ns("ui_exclude")),
           hr(),
-          ui_download(id = ns("plot"))
+          ui_download(id = ns("plot")), br(),
+          helpText("Note: the discharge unit type provided to this analysis is always ",
+                   "in cubic metres per seconds (cms) due to unit conversions. So if ",
+                   "'Volumetric Discharge' or 'Runoff Yield' data types have been selected ",
+                   "on the Data >> Loading tab, ",
+                   "the trending analysis is still using the original Discharge (cms) data."),
       ),
 
       tabBox(

@@ -101,7 +101,7 @@ server_annual_totals <- function(id, data_settings, data_raw,
           position = "stack", stat = "identity",
           ggplot2::aes(tooltip = glue::glue(
             "Year: {.data$Year}\n",
-            "{stringr::str_remove(.data$Statistic, '_$')}: {round(.data$Value, 4)}",
+            "{stringr::str_remove(.data$Statistic, '_$')}: {round(.data$Value, 2)}",
             .trim = FALSE),
             data_id = .data$Year), size = 3)
       }

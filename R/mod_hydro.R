@@ -172,12 +172,13 @@ server_hydro <- function(id, data_settings, data_raw,
 
       # Add interactivity
       stats <- names(g$data) # Get stats from plot data
-      stats <- stats[!stats %in%  c("DayofYear", "AnalysisDate",
+      stats <- stats[!stats %in%  c("AnalysisDate",
                                     "LT_Mean", "LT_Med")] # Omit these
 
       # For tooltips labels...
       names(stats)[stats %in% c("Year_mean", "RollingValue")] <- input$add_year
       names(stats)[stats == "Date"] <- "Day"
+      names(stats)[stats == "DayofYear"] <- ifelse(data_settings()$water_year == 1, "Day of Year", "Day of Water Year")
 
       # Add interactive vline
       g <- g + create_vline_interactive(

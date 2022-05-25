@@ -21,13 +21,16 @@ ui_monthly_means <- function(id) {
       width = 12, h2("Mean Monthly Discharge"),
       box(width = 3,
           helpText("Explore long-term mean monthly discharge values. Percentages ",
-                   "of the long-term mean annual discharge (LTMAD) can also be selected ",
+                   "of the long-term mean annual discharge (LTMAD; 100%) can also be selected ",
                    "below to put monthly means in context with the long-term mean. ",
-                   "For the monthy values in table format, see the Daily and Long-term ",
-                   "page table."),hr(),
+                   "Percentages of LTMAD calculated regardless of missing data; to filter data ",
+                   "for specific years or just complete years adjust the settings in Data > Loading. ",
+                   "For the monthly values in table format, see the Daily and Long-term ",
+                   "page table."), hr(),
+          #  uiOutput(ns("mean_percent")),
           selectizeInput(ns("mean_percent"),
                          label = "Percentages of LTMAD to Plot",
-                         choices = 1:1000,
+                         choices = c(1:200,seq(205, 500,5)),
                          selected = c(100,20,90),
                          multiple = TRUE,
                          options = list(maxItems = 10)),
@@ -52,9 +55,21 @@ ui_monthly_means <- function(id) {
 }
 
 server_monthly_means <- function(id, data_settings, data_raw,
-                                data_loaded, data_code) {
+                                 data_loaded, data_code) {
 
   moduleServer(id, function(input, output, session) {
+
+
+    # output$mean_percent <- renderUI({
+    #   tagList(
+    #     selectizeInput(NS(id, "mean_percent"),
+    #                    label = "Percentages of LTMAD to Plot",
+    #                    choices = c(1:200,seq(205, 500,5)),
+    #                    selected = c(100,20,90),
+    #                    multiple = TRUE,
+    #                    options = list(maxItems = 10))
+    #   )
+    # })
 
     # Plot --------------------
     plot <- reactive({
@@ -82,46 +97,27 @@ server_monthly_means <- function(id, data_settings, data_raw,
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
-
-
       # Replace layers with interactive
-      # g <- g +
-      #   ggiraph::geom_bar_interactive(
-      #     stat = "identity", alpha = 0.005,
-      #     ggplot2::aes(tooltip = glue::glue("Year: {.data$Year}\n",
-      #                                       "MAD: {round(.data$Mean,4)}\n",
-      #                                       "% LTMAD: {round(.data$Mean/.data$LTMAD,3)*100}%\n",
-      #                                       "LTMAD Diff.: {round(.data$MAD_diff, 4)}",
-      #                                       .trim = FALSE),
-      #                  data_id = .data$Year))+
-      #       ggiraph::geom_hline_interactive(
-      #                    ggplot2::aes(yintercept = unique(LTMAD) - unique(LTMAD),
-      #                                 tooltip = glue::glue("LTMAD: {round(unique(.data$LTMAD),4)}")),
-      #                    alpha = 0.01, linetype = 1, size = 2)
+      g <- g +
+        ggiraph::geom_bar_interactive(
+          stat = "identity", alpha = 0.005, na.rm = TRUE, width = 0.8,
+          ggplot2::aes(data_id = .data$Month,
+                       y = Mean,
+                       tooltip = glue::glue("Month: {.data$Month}\n",
+                                            "Mean: {round(.data$Mean,3)}\n",
+                                            "% LTMAD: {round(.data$Mean/.data$LTMAD,3)*100}%\n",
+                                            "LTMAD Diff.: {round(.data$Mean - .data$LTMAD,3)}",
+                                            .trim = FALSE)
+          ))
 
-      # if (!is.null(input$mean_ptile)) {
-      #   g <- g +
-      #     ggiraph::geom_hline_interactive(
-      #       ggplot2::aes(yintercept = unique(Ptile1) - unique(LTMAD),
-      #                    tooltip = glue::glue("MAD P{input$mean_ptile[1]}: {round(.data$Ptile1[1],4)}")),
-      #       alpha = 0.01, linetype = 1, size = 2)+
-      #     ggiraph::geom_hline_interactive(
-      #       ggplot2::aes(yintercept = unique(Ptile2) - unique(LTMAD),
-      #                    tooltip = glue::glue("MAD P{input$mean_ptile[2]}: {round(.data$Ptile2[1],4)}")),
-      #       alpha = 0.01, linetype = 1, size = 2)
-      # }
-
-      # g <- g + ggplot2::geom_hline(ggplot2::aes(yintercept = 0,
-      #                                           colour = "Long-term MAD"),
-      #                              size = 1) +
-      #   ggplot2::scale_colour_manual(
-      #     values = c("Long-term MAD" = "black",
-      #                "Annual MAD difference" = "#2A788EFF")) +
-      #   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(
-      #     fill = c("black", "#2A788EFF")))) +
-      #   ggplot2::theme(legend.position = "right",
-      #                  legend.title = ggplot2::element_blank(),
-      #                  legend.key = ggplot2::element_rect(colour = NA))
+      if (!is.null(input$mean_percent)) {
+        g <- g +
+          ggiraph::geom_hline_interactive(
+            ggplot2::aes(yintercept = Value,
+                         tooltip = glue::glue("{.data$LTMAD_Percent}: {round(.data$Value,3)}\n",
+                                              "LTMAD Diff.: {round(.data$Value - .data$LTMAD,3)}")),
+            alpha = 0.01, linetype = 1, size = 2)
+      }
 
       g
     })
@@ -134,7 +130,7 @@ server_monthly_means <- function(id, data_settings, data_raw,
     })
 
     # Download Plot -----------------
-    download(id = "plot", plot = plot, name = "mad", data_settings, dims)
+    download(id = "plot", plot = plot, name = "monthly_means", data_settings, dims)
 
 
     # R Code -----------------

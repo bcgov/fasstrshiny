@@ -40,7 +40,7 @@ ui_volume_freq <- function(id) {
                    class = "centreButton"),
           hr(class = "narrowHr"),
 
-
+        textOutput(ns("test")),
           h3("Options"),
           show_ui(ns("show_data"), "Data Types"),
           div(id = ns("data"),
@@ -238,6 +238,7 @@ server_volume_freq <- function(id, data_settings, data_raw,
 
 
       g <- freqs()[["Freq_Plot"]] +
+    #   ggplot2::ylab(ifelse(input$discharge == "Value", paste0("Yield"), paste0("Discharge cms")))+
         ggiraph::geom_point_interactive(ggplot2::aes(
           tooltip = glue::glue("Year: {.data$Year}\n",
                                "Discharge: {round(.data$Value, 4)}\n",
@@ -259,6 +260,9 @@ server_volume_freq <- function(id, data_settings, data_raw,
       }
 
       g
+    })
+    output$test <- renderText({
+      input$discharge
     })
 
     dims <- c(10, 6) * opts$scale

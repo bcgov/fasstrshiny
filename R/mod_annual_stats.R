@@ -36,6 +36,7 @@ ui_annual_stats <- function(id) {
                          status = "primary")),
         bsTooltip(ns("type"), "Type of statistic to calculate", placement = "left"),
         hr(),
+        textOutput(ns("test")),
         # Percentiles
         select_percentiles_slide(
           id, name = "inner_percentiles", label = "Inner Percentiles (plot)",
@@ -48,21 +49,23 @@ ui_annual_stats <- function(id) {
           selected = default("calc_daily_stats", "percentiles")),
         hr(),
         # Months
-        checkboxGroupButtons(
-          ns("months_plot"),
-          label = "Months to Plot",
-          choices = list("Jan" = 1, "Feb" = 2,
-                         "Mar" = 3, "Apr" = 4,
-                         "May" = 5, "Jun" = 6,
-                         "Jul" = 7, "Aug" = 8,
-                         "Sep" = 9, "Oct" = 10,
-                         "Nov" = 11, "Dec" = 12),
-          selected = c(1:12)),
-        bsTooltip(ns("months_plot"),
-                  paste0("Months to include/exclude from Monthly calculations<br>",
-                         "(Annual uses default months from the Data tab)"),
-                  placement = "left"),
-        hr(),
+        conditionalPanel(
+          "input.type == 'Monthly'", ns = NS(id),
+          checkboxGroupButtons(
+            ns("months_plot"),
+            label = "Months to Plot",
+            choices = list("Jan" = 1, "Feb" = 2,
+                           "Mar" = 3, "Apr" = 4,
+                           "May" = 5, "Jun" = 6,
+                           "Jul" = 7, "Aug" = 8,
+                           "Sep" = 9, "Oct" = 10,
+                           "Nov" = 11, "Dec" = 12),
+            selected = c(1:12)),
+          bsTooltip(ns("months_plot"),
+                    paste0("Months to include/exclude from Monthly calculations<br>",
+                           "(Annual uses default months from the Data tab)"),
+                    placement = "left"),
+          hr()),
         fluidRow(
           column(width = 6, ui_download(id = ns("plot"), name = "Download Distribution Plot")),
           column(width = 6, ui_download(id = ns("plot_line"), name = "Download Statistics Plot"))
@@ -88,6 +91,9 @@ ui_annual_stats <- function(id) {
 
         tabPanel(
           title = "Plot - Statistics",
+          conditionalPanel(
+            "input.type == 'Monthly'", ns = NS(id),
+            uiOutput(ns("monthy_line_stat"))),
           select_plot_options(
             select_plot_title(id,name = "plot_title_line"),
             select_plot_log(id, value = default("plot_annual_stats",
@@ -120,6 +126,16 @@ server_annual_stats <- function(id, data_settings, data_raw,
     observe(shinyjs::toggleState("months_plot",
                                  condition = input$type == "Monthly"))
 
+    output$monthy_line_stat <- renderUI({
+      selectInput(NS(id, "monthy_line_stat"),
+                  label = "Month Statistic to Plot",
+                  choices = gsub("\\_.*","",names(plot_monthly_stats(data = data_raw(),
+                                                                     percentiles = as.numeric(input$extra_percentiles)))))
+    })
+
+    output$test <- renderText({
+      input$monthy_line_stat
+    })
 
     # Titles --------------
     titles <- reactive({
@@ -182,17 +198,33 @@ server_annual_stats <- function(id, data_settings, data_raw,
       g
     })
 
-    dims <- c(15, 9) * opts$scale
+    dims <- reactive({
+      if(input$type == "Monthly"){
+        c(13, 8) * opts$scale
+      } else {
+        c(12, 6) * opts$scale
+      }
+    })
 
     output$plot <- ggiraph::renderGirafe({
-      ggiraph::girafe(ggobj = plot(), width_svg = dims[1], height_svg = dims[2],
+      ggiraph::girafe(ggobj = plot(), width_svg = dims()[1], height_svg = dims()[2],
                       options = ggiraph_opts())
     })
 
     # Download Plot -----------------
     download(id = "plot", plot = plot,
              name = reactive(paste0("annual_stats_", input$type)),
-             data_settings, dims)
+             data_settings, dims())
+
+    titles_line <- reactive({
+      if(input$type == "Monthly") {
+        req(input$monthy_line_stat)
+        title(data_settings(), glue::glue("{input$type} {input$monthy_line_stat}"))
+      } else {
+        title(data_settings(), glue::glue("{input$type} Statistics"))
+
+      }
+    })
 
     # Plot -----------------------------
     plot_line <- reactive({
@@ -200,24 +232,15 @@ server_annual_stats <- function(id, data_settings, data_raw,
 
       req(!is.null(input$plot_log_line), input$type)
 
+
       data_flow <- data_raw()
-
-      #  ptiles <- ifelse(length(input$extra_percentiles) == 0, NA, input$extra_percentiles)
-
-      #  ifelse(length(input$extra_percentiles) == 0, NA, glue::glue_collapse(input$extra_percentiles, sep = ', '))
-
-      #  pi <- "percentiles"
-      # e <- glue::glue("percentiles = c({glue::glue_collapse(input$ptiles, sep = ', ')})")
-      # pi <- c("percentiles","log_discharge")
-      # e <- glue::glue("percentiles = c({glue::glue_collapse(input$extra_percentiles, sep = ', ')}),
-      #                 log_discharge = {input$plot_log_line}")
 
       if (is.null(input$extra_percentiles)) {
         pi <- c("log_discharge", "percentiles")
         e <- glue::glue("log_discharge = {input$plot_log_line}, percentiles = NA")
-    } else {
-      pi <- c("log_discharge","percentiles")
-      e <- glue::glue("log_discharge = {input$plot_log_line},
+      } else {
+        pi <- c("log_discharge","percentiles")
+        e <- glue::glue("log_discharge = {input$plot_log_line},
                         percentiles = c({glue::glue_collapse(input$extra_percentiles, sep = ', ')})")
 
       }
@@ -240,12 +263,17 @@ server_annual_stats <- function(id, data_settings, data_raw,
       code$plot_line <- g
       labels$plot_line <- glue::glue("Plot {input$type} statistics")
 
-      g <- eval_check(g)[[1]]
+      if (input$type == "Monthly"){
+        req(input$monthy_line_stat)
+        g <- eval_check(g)[[paste0(input$monthy_line_stat ,"_Monthly_Statistics")]]
+      } else {
+        g <- eval_check(g)[[1]]
+      }
 
       # Add title
       if(input$plot_title_line) {
         g <- g +
-          ggplot2::ggtitle(titles()) +
+          ggplot2::ggtitle(titles_line()) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0))
       }
 
@@ -256,23 +284,54 @@ server_annual_stats <- function(id, data_settings, data_raw,
       #stats <- stats[!stats %in% date_cols] # Omit these
 
       # Add vline
-      g <- g + create_vline_interactive(
-        data = g$data, stats, size = dplyr::if_else(input$type == "Annual", 4, 2))
+      # g <- g + create_vline_interactive(
+      #   data = g$data, stats, combine = TRUE, size = dplyr::if_else(input$type == "Annual", 4, 2),
+      #   )
+
+        # data = g$data, stats, combine = TRUE, size = dplyr::if_else(input$type == "Annual", 4, 2),
+
+
+
+      if (input$type == "Monthly"){
+        g <- g + ggiraph::geom_point_interactive(
+          mapping = ggplot2::aes(x=.data$Year, y = .data$Value,
+                                 tooltip = glue::glue(
+                                   "{.data$Month} {.data$Stat2}\n",
+                                   "Year: {.data$Year}\n",
+                                   "Discharge: {round(.data$Value, 4)}"),
+                                 data_id = .data$Year),
+          size = 3, alpha = 0.005)
+      } else {
+        g <- g + ggiraph::geom_point_interactive(
+          mapping = ggplot2::aes(x=.data$Year, y = .data$Value,
+                                 tooltip = glue::glue(
+                                   "{.data$Statistic}\n",
+                                   "Year: {.data$Year}\n",
+                                   "Discharge: {round(.data$Value, 4)}"),
+                                 data_id = .data$Year),
+          size = 3, alpha = 0.005)
+      }
 
       g
     })
 
-    dims_line <- c(15, 9) * opts$scale
+    dims_line <- reactive({
+      if(input$type == "Monthly"){
+        c(13, 8) * opts$scale
+      } else {
+        c(12, 6) * opts$scale
+      }
+    })
 
     output$plot_line <- ggiraph::renderGirafe({
-      ggiraph::girafe(ggobj = plot_line(), width_svg = dims_line[1], height_svg = dims_line[2],
+      ggiraph::girafe(ggobj = plot_line(), width_svg = dims_line()[1], height_svg = dims_line()[2],
                       options = ggiraph_opts())
     })
 
     # Download Plot -----------------
     download(id = "plot_line", plot = plot_line,
              name = reactive(paste0("annual_stats_", input$type)),
-             data_settings, dims_line)
+             data_settings, dims_line())
 
     # Table -----------------------
     output$table <- DT::renderDT({

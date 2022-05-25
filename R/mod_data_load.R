@@ -89,7 +89,10 @@ ui_data_load <- function(id) {
             uiOutput(ns("ui_water_year")),
             uiOutput(ns("ui_years_range")),
             uiOutput(ns("ui_years_exclude")),
-            uiOutput(ns("ui_months"))),
+            uiOutput(ns("ui_months")),
+            uiOutput(ns("ui_months2"))#,
+         #   verbatimTextOutput(ns("test"))
+        ),
 
         show_ui(ns("show_missing"), "Handling Missing Dates"),
         div(id = ns("missing"),
@@ -340,6 +343,35 @@ server_data_load <- function(id) {
         bsTooltip(NS(id, "months"), tips$months, placement = "left"))
     })
 
+    # output$test <- renderPrint({
+    #   #  req(input$months2)
+    #   input$months2
+    # })
+    # output$ui_months2 <- renderUI({
+    #   req(input$water_year)
+    #
+    #   # Arrange months by water year
+    #   m <- stats::setNames(1:12, month.abb)
+    #   m <- c(m[m >= as.numeric(input$water_year)],
+    #          m[m < as.numeric(input$water_year)])
+    #
+    #   tagList(
+    #     sliderTextInput(
+    #       inputId = "months2",
+    #       label = "Choose a range:",
+    #       choices = month.abb[m],
+    #       selected = c((month.abb[m])[1],(month.abb[m])[12]),
+    #       grid = TRUE, hide_min_max = TRUE
+    #     )
+    #     ,
+    #     bsTooltip(NS(id, "months2"), tips$months, placement = "left"))
+    # })
+
+
+
+
+
+
     # Add plot options as Gear in corner
     output$ui_plot_options <- renderUI({
       req(data_loaded())
@@ -548,7 +580,7 @@ server_data_load <- function(id) {
                                      dom = 'Brtip',
                                      buttons = list(list(extend = 'copy', title = NULL),
                                                     'csv', 'excel')),
-                      )
+        )
     })
 
 

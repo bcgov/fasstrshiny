@@ -132,11 +132,12 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded, data_cod
 
       # Add interactivity
       stats <- names(g$data) # Get stats from plot data
-      stats <- stats[!stats %in% c("WaterYear", "AnalysisDate", "DayofYear")] # Omit these
+      stats <- stats[!stats %in% c("WaterYear", "AnalysisDate")] # Omit these
 
       # For tooltips labels...
       names(stats)[stats == "Monthly_Total"] <- input$add_year
       names(stats)[stats == "Cumul_Flow"] <- input$add_year
+      names(stats)[stats == "DayofYear"] <- ifelse(data_settings()$water_year == 1, "Day of Year", "Day of Water Year")
 
       # Add interactive vline
       g <- g + create_vline_interactive(
