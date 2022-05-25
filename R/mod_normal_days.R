@@ -14,7 +14,7 @@
 
 
 # Normal Days ------------------------
-ui_outside_normal <- function(id) {
+ui_normal_days <- function(id) {
 
   ns <- NS(id)
 
@@ -36,7 +36,10 @@ ui_outside_normal <- function(id) {
             bsTooltip(ns("ui_year_to_plot"), "Specfic year to plot", placement = "left")),
 
         hr(),
-        ui_download(id = ns("plot")), br(),
+        fluidRow(
+          column(width = 6, ui_download(id = ns("plot"), name = "Download All Years Plot")),
+          column(width = 6, ui_download(id = ns("plot_year"), name = "Download Year Plot"))
+        ), br(),
         helpText("Note: Analysis methodology is ",
                  "based on Environment and Climate Change Canada's ",
                  a(href = paste0("https://www.canada.ca/en/environment-climate-change",
@@ -78,7 +81,7 @@ ui_outside_normal <- function(id) {
   )
 }
 
-server_outside_normal <- function(id, data_settings, data_raw,
+server_normal_days <- function(id, data_settings, data_raw,
                                   data_loaded, data_code) {
 
   moduleServer(id, function(input, output, session) {
@@ -164,7 +167,7 @@ server_outside_normal <- function(id, data_settings, data_raw,
 
 
     # Download Plot -----------------
-    download(id = "plot", plot = plot, name = "outside_normal", data_settings, dims)
+    download(id = "plot", plot = plot, name = "normal_days", data_settings, dims)
 
     # Observe clicking event -----------------
     observeEvent(input$plot_selected,{
@@ -186,7 +189,8 @@ server_outside_normal <- function(id, data_settings, data_raw,
       g <- create_fun(
         fun = "plot_annual_normal_days_year", data_name = "data_flow",
         input, input_data = data_settings(),
-        extra = glue::glue("year_to_plot = {input$year_to_plot}"))
+        extra = glue::glue("year_to_plot = {input$year_to_plot},
+                      plot_normal_percentiles = {input$plot_normal_percentiles}"))
 
       code$plot_year <- g
       labels$plot_year <- "Plot Annual Normal Days YEAR"
@@ -223,6 +227,10 @@ server_outside_normal <- function(id, data_settings, data_raw,
                       height_svg = dims2[2],
                       options = ggiraph_opts())
     })
+
+    download(id = "plot_year", plot = plot_year,
+             name = reactive(paste0("normal_days_", input$year_to_plot)),
+             data_settings, dims)
 
     # Table -----------------------
     output$table <- DT::renderDT({

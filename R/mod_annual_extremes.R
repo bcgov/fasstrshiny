@@ -13,7 +13,7 @@
 # the License.
 
 # Peak flows ------------------------
-ui_peak_flows <- function(id) {
+ui_annual_extremes <- function(id) {
 
   ns <- NS(id)
 
@@ -48,7 +48,10 @@ ui_peak_flows <- function(id) {
         div(align = "left",uiOutput(ns("ui_year_to_plot")),
             bsTooltip(ns("ui_year_to_plot"), "Specfic year to plot", placement = "left")),
         hr(),
-        verbatimTextOutput(ns("test"))
+        fluidRow(
+          column(width = 6, ui_download(id = ns("plot"), name = "Download All Years Plot")),
+          column(width = 6, ui_download(id = ns("plot_year"), name = "Download Year Plot"))
+        )
       ),
       tabBox(
         width = 9,
@@ -90,8 +93,8 @@ ui_peak_flows <- function(id) {
   )
 }
 
-server_peak_flows <- function(id, data_settings, data_raw,
-                              data_loaded, data_code) {
+server_annual_extremes <- function(id, data_settings, data_raw,
+                                   data_loaded, data_code) {
 
   moduleServer(id, function(input, output, session) {
 
@@ -182,9 +185,9 @@ server_peak_flows <- function(id, data_settings, data_raw,
     onBookmark(function(state) for(k in keep) state$values[[k]] <- input[[k]])
     onRestored(function(state) restore_inputs(session, keep, state$values))
 
-    observe({
-      input$plot_normal_percentiles
-    })
+    # observe({
+    #   input$plot_normal_percentiles
+    # })
     # Plot --------------------
     plots <- reactive({
       check_data(data_loaded())
@@ -277,32 +280,28 @@ server_peak_flows <- function(id, data_settings, data_raw,
              name = reactive(paste0("extreme_flows_", input$display)),
              data_settings, dims)
 
-    output$test <- renderPrint({
-      req(input$plot_normal_percentiles)
-      input$plot_normal_percentiles
-    })
     # Plot Year --------------------
     plot_year <- reactive({
       check_data(data_loaded())
       req(input$roll_days_min,input$roll_days_max,
           input$months_min, input$months_max,
           input$year_to_plot,
-          input$normal_percentiles,
-          !is.null(input$plot_log),
-          !is.null(input$plot_normal_percentiles),
-          !is.null(input$plot_max),
-          !is.null(input$plot_min)
-          )
+          input$normal_percentiles#,
+          #  input$plot_normal_percentiles,
+        #  input$plot_max,
+         # input$plot_min
+      )
 
       data_flow <- data_raw()
 
-      p <- c(glue::glue("roll_days_min = {input$roll_days_min}"),
-             glue::glue("roll_days_max = {input$roll_days_max}"),
-             glue::glue("months_min = {conseq(input$months_min)}"),
-             glue::glue("months_max = {conseq(input$months_max)}"),
-             glue::glue("year_to_plot = {input$year_to_plot}")
-      ) %>%
-        glue::glue_collapse(sep = ", ")
+      p <- glue::glue("roll_days_min = {input$roll_days_min},
+                      roll_days_max = {input$roll_days_max},
+                      months_min = {conseq(input$months_min)},
+                      months_max = {conseq(input$months_max)},
+                      year_to_plot = {input$year_to_plot},
+                      plot_normal_percentiles = {input$plot_normal_percentiles},
+                      plot_max = {input$plot_max},
+                      plot_min = {input$plot_min}")
 
       g <- create_fun(fun = "plot_annual_extremes_year", data_name = "data_flow",
                       input,
@@ -371,6 +370,10 @@ server_peak_flows <- function(id, data_settings, data_raw,
                       height_svg = dims2[2],
                       options = ggiraph_opts())
     })
+
+    download(id = "plot_year", plot = plot_year,
+             name = reactive(paste0("extreme_flows_", input$year_to_plot)),
+             data_settings, dims)
 
     # Table -----------------------
     output$table <- DT::renderDT({

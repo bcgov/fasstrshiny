@@ -21,7 +21,7 @@
 #   expect_pass(testApp(test_path("apps/hydat_peak"), compareImages = FALSE))
 #   expect_pass(testApp(test_path("apps/hydro"), compareImages = FALSE))
 #   expect_pass(testApp(test_path("apps/low_Flows"), compareImages = FALSE))
-#   expect_pass(testApp(test_path("apps/outside_normal"), compareImages = FALSE))
+#   expect_pass(testApp(test_path("apps/normal_days"), compareImages = FALSE))
 #   expect_pass(testApp(test_path("apps/high_flows"), compareImages = FALSE))
 #   expect_pass(testApp(test_path("apps/volume_freq"), compareImages = FALSE))
 # })

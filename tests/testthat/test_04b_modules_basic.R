@@ -163,12 +163,12 @@ test_that("Low flows", {
 })
 
 ## Outside normal --------------------
-test_that("Outside normal", {
+test_that("Normal Days", {
   local_hydat()
   for(f in c(FALSE, TRUE)) {
     d <- dummy_data(local_file = f)
 
-    testServer(server_outside_normal, args = list(d$s, d$d, d$l, d$c), {
+    testServer(server_normal_days, args = list(d$s, d$d, d$l, d$c), {
       session$setInputs(normal_percentiles = c(25, 75), plot_title = TRUE)
 
       expect_error(output$plot, NA)

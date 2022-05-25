@@ -25,9 +25,9 @@ ui_plotly_info <- function(range = FALSE) {
 
 #' UI download button
 #' @noRd
-ui_download <- function(id) {
+ui_download <- function(id, name = "Download Plot") {
   div(align = "left", id = NS(id, "download_tip"),
-      downloadBttn(NS(id, "download"), "Download Plot", color = "primary",
+      downloadBttn(NS(id, "download"), name, color = "primary",
                    style = "jelly", icon = icon("download"), size = "xs"),
       bsTooltip(NS(id, "download_tip"), placement = "left",
                 "Download plot as high-quality PNG")#,

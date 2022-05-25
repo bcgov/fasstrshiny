@@ -40,7 +40,11 @@ ui_flow_timing <- function(id) {
         div(align = "left",uiOutput(ns("ui_year_to_plot")),
             bsTooltip(ns("ui_year_to_plot"), "Specfic year to plot", placement = "left")),
         hr(),
-        ui_download(id = ns("plot")), br(),
+        fluidRow(
+          column(width = 6, ui_download(id = ns("plot"), name = "Download All Years Plot")),
+          column(width = 6, ui_download(id = ns("plot_year"), name = "Download Year Plot"))
+        ),
+        br(),
         helpText("Note: only years of complete data will be used for analysis.")#,
         # textOutput(ns("testings"))
       ),
@@ -149,12 +153,19 @@ server_flow_timing <- function(id, data_settings, data_raw,
     })
 
 
-    dims <- c(12, 7) * opts$scale
+   # dims <- c(12, 7) * opts$scale
+
+    dims <- reactive({
+      req(!is.null(input$percent))
+      ht <- ifelse(length(input$percent) >= 3, 7,
+                   ifelse(length(input$percent) == 2, 5, 3))
+      c(12, ht) * opts$scale
+    })
 
     output$plot <- ggiraph::renderGirafe({
       ggiraph::girafe(ggobj = plot(),
-                      width_svg = dims[1],
-                      height_svg = dims[2],
+                      width_svg = dims()[1],
+                      height_svg = dims()[2],
                       options = ggiraph_opts(selection = "single"))
     })
 
@@ -191,7 +202,8 @@ server_flow_timing <- function(id, data_settings, data_raw,
       g <- create_fun(
         fun = "plot_annual_flow_timing_year", data_name = "data_flow",
         input, input_data = data_settings(),
-        extra = glue::glue("year_to_plot = {input$year_to_plot}"))
+        extra = glue::glue("year_to_plot = {input$year_to_plot},
+                      plot_normal_percentiles = {input$plot_normal_percentiles}"))
 
       code$plot_year <- g
       labels$plot_year <- "Plot Annual flow timings YEAR"
@@ -225,6 +237,10 @@ server_flow_timing <- function(id, data_settings, data_raw,
                       height_svg = dims2[2],
                       options = ggiraph_opts())
     })
+
+    download(id = "plot_year", plot = plot_year,
+             name = reactive(paste0("flow_timing_", input$year_to_plot)),
+             data_settings, dims)
 
     # Table -----------------------
     output$table <- DT::renderDT({

@@ -27,7 +27,7 @@ parameters <- dplyr::tribble(
   "outer_percentiles",    "outer_percentiles",   "Limits of outer percentile ribbon", TRUE,
   "normal_percentiles",   "normal_percentiles",  "Range of percentiles in which data are considered normal", TRUE,
   "plot_log",             "log_discharge",       "Plot data on log scale",            TRUE,
- # "plot_log_line",        "log_discharge",       "Plot data on log scale",            TRUE,
+
   "plot_extremes",        "plot_extremes",       "Plot extreme values as min-max ribbon",            TRUE,
   "plot_inner_percentiles",        "plot_inner_percentiles",       "Plot the inner percentiles ribbon",            TRUE,
   "plot_outer_percentiles",        "plot_outer_percentiles",       "Plot the outer percentiles ribbon",            TRUE,
@@ -59,9 +59,9 @@ parameters <- dplyr::tribble(
   "fit_quantiles", "fit_quantiles", "Quantiles to be estimated from the fitted distribution", TRUE,
   "plot_curve", "plot_curve", "Whether to add the computed curve to the probability plot", TRUE#,
 
-  # "plot_highflow", "plot_highflow", "", TRUE,
-  # "plot_lowflow", "plot_lowflow", "", TRUE,
-  # "plot_normal_percentiles", "plot_normal_percentiles", "", TRUE
+  # "plot_max", "plot_max", "", FALSE,
+  # "plot_min", "plot_min", "", FALSE,
+  # "plot_normal_percentiles", "plot_normal_percentiles", "", FALSE
 
 ) %>%
   dplyr::group_by(id) %>%
@@ -113,9 +113,9 @@ maps_points <- list(
   "Drainage Area" = "DRAINAGE_AREA_GROSS",
   "Record Length" = "RECORD_LENGTH")
 
-mods <- c("data_load", "data_available", "hydro", "cumulative", "flows",
+mods <- c("data_load", "data_available", "hydro", "cumulative", "flows", "monthly_means",
           "annual_stats", "annual_means", "annual_totals", "flow_timing",
-          "low_flows", "high_flows", "peak_flows", "outside_normal",
+          "low_flows", "high_flows", "annual_extremes", "normal_days",
           "annual_trends", "volume_freq", "hydat_peak")
 
 usethis::use_data(parameters, tips, opts,

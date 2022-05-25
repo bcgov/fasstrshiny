@@ -178,7 +178,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded, data_cod
 
     # Download Plot -----------------
     download(id = "plot", plot = plot,
-             name = reactive(paste0("cum_hydro_", input$type)),
+             name = reactive(paste0("cumulative_", input$type)),
              data_settings, dims)
 
 

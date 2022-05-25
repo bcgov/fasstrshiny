@@ -96,7 +96,8 @@ ui_annual_trends <- function(id) {
           # Other options
           br(),
           uiOutput(ns("ui_exclude")),
-          hr()
+          hr(),
+          ui_download(id = ns("plot"))
       ),
 
       tabBox(
@@ -323,8 +324,7 @@ server_annual_trends <- function(id, data_settings, data_raw,
 
 
     # Plot --------------------
-    output$plot <- ggiraph::renderGirafe({
-
+    plot <- reactive({
       s <- stat()
       g <- trends()[[s]] +
         ggiraph::geom_point_interactive(ggplot2::aes(
@@ -332,11 +332,19 @@ server_annual_trends <- function(id, data_settings, data_raw,
                                "{.env$s}: {round(.data$Value, 4)}"),
           data_id = .data$Year), size = 4, na.rm = TRUE)
 
-      ggiraph::girafe(ggobj = g,
+    })
+    output$plot <- ggiraph::renderGirafe({
+
+      ggiraph::girafe(ggobj = plot(),
                       width_svg = 10 * opts$scale,
                       height_svg = 5 * opts$scale,
                       options = ggiraph_opts(selection = "multiple"))
     })
+
+    dims <- c(10, 5) * opts$scale
+    # Download Plot -----------------
+    download(id = "plot", plot = plot, name = paste0("trend_",stat()),
+             data_settings, dims)
 
     # Add/Remove selected points if changing the numericInput
     observe({

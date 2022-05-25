@@ -63,7 +63,11 @@ ui_annual_stats <- function(id) {
                          "(Annual uses default months from the Data tab)"),
                   placement = "left"),
         hr(),
-        ui_download(id = ns("plot"))
+        fluidRow(
+          column(width = 6, ui_download(id = ns("plot"), name = "Download Distribution Plot")),
+          column(width = 6, ui_download(id = ns("plot_line"), name = "Download Statistics Plot"))
+        )
+
       ),
       tabBox(
         width = 9,
@@ -74,7 +78,8 @@ ui_annual_stats <- function(id) {
           select_plot_options(
             select_plot_title(id),
             select_plot_log(id, value = default("plot_monthly_stats2",
-                                                "log_discharge")),
+                                                "log_discharge"),
+                            name = "plot_log_all"),
             select_plot_extremes(id),
             select_plot_inner_percentiles(id),
             select_plot_outer_percentiles(id)),
@@ -132,17 +137,17 @@ server_annual_stats <- function(id, data_settings, data_raw,
                         "(or no) values, corresponding to the limits of the ",
                         "plot ribbons")))
 
-      req(!is.null(input$plot_log), input$type)
+      req(!is.null(input$plot_log_all), input$type)
 
       data_flow <- data_raw()
 
       if(input$type == "Monthly") {
-        pi <- "months"
+        pi <- c("months","log_discharge")
         e <- glue::glue(
-          "months = {conseq(input$months_plot)}")
+          "months = {conseq(input$months_plot)}, log_discharge = {input$plot_log_all}")
       } else {
-        pi <- NULL
-        e <- ""
+        pi <- c("log_discharge")
+        e <- glue::glue("log_discharge = {input$plot_log_all}")
       }
 
       g <- switch(input$type,
@@ -197,16 +202,29 @@ server_annual_stats <- function(id, data_settings, data_raw,
 
       data_flow <- data_raw()
 
-      pi <- "percentiles"
-      e <- glue::glue("percentiles = c({glue::glue_collapse(input$extra_percentiles, sep = ', ')})")
+      #  ptiles <- ifelse(length(input$extra_percentiles) == 0, NA, input$extra_percentiles)
+
+      #  ifelse(length(input$extra_percentiles) == 0, NA, glue::glue_collapse(input$extra_percentiles, sep = ', '))
+
+      #  pi <- "percentiles"
+      # e <- glue::glue("percentiles = c({glue::glue_collapse(input$ptiles, sep = ', ')})")
       # pi <- c("percentiles","log_discharge")
       # e <- glue::glue("percentiles = c({glue::glue_collapse(input$extra_percentiles, sep = ', ')}),
       #                 log_discharge = {input$plot_log_line}")
 
+      if (is.null(input$extra_percentiles)) {
+        pi <- c("log_discharge", "percentiles")
+        e <- glue::glue("log_discharge = {input$plot_log_line}, percentiles = NA")
+    } else {
+      pi <- c("log_discharge","percentiles")
+      e <- glue::glue("log_discharge = {input$plot_log_line},
+                        percentiles = c({glue::glue_collapse(input$extra_percentiles, sep = ', ')})")
+
+      }
+
       if(input$type == "Monthly") {
-        pi <- c(pi,"months")
-        e <- glue::glue(
-          "months = {conseq(input$months_plot)}")
+        pi <- c(pi, "months")
+        e <- glue::glue(e, ", months = {conseq(input$months_plot)}")
       } else {
         pi <- pi
         e <- e
@@ -252,7 +270,7 @@ server_annual_stats <- function(id, data_settings, data_raw,
     })
 
     # Download Plot -----------------
-    download(id = "plot_line", plot = plot,
+    download(id = "plot_line", plot = plot_line,
              name = reactive(paste0("annual_stats_", input$type)),
              data_settings, dims_line)
 
@@ -264,14 +282,23 @@ server_annual_stats <- function(id, data_settings, data_raw,
       data_flow <- data_raw()
 
       perc <- c(#input$inner_percentiles,
-                #input$outer_percentiles,
-                input$extra_percentiles) %>%
+        #input$outer_percentiles,
+        input$extra_percentiles) %>%
         unique() %>%
         as.numeric() %>%
         sort()
 
-      pi <- "percentiles"
-      e <- glue::glue("percentiles = c({glue::glue_collapse(perc, sep = ', ')})")
+      #
+      # pi <- "percentiles"
+      # e <- glue::glue("percentiles = c({glue::glue_collapse(perc, sep = ', ')})")
+
+      if (is.null(input$extra_percentiles)) {
+        pi <- "percentiles"
+        e <- glue::glue("percentiles = NA")
+      } else {
+        pi <- "percentiles"
+        e <- glue::glue("percentiles = c({glue::glue_collapse(input$extra_percentiles, sep = ', ')})")
+      }
 
       if(input$type == "Monthly") {
         pi <- c(pi, "months")

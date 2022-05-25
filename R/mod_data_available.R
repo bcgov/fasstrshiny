@@ -79,6 +79,7 @@ ui_data_available <- function(id) {
                                    "or by Percent of Days"),
                             placement = "left")
               ),hr(),
+              ui_download(id = ns("plot_symbols_sum")), br(),
               strong("HYDAT data symbols are: "), br(),
               strong("'E'"), "Estimate", br(),
               strong("'A'"), "Partial Day", br(),
@@ -127,6 +128,7 @@ ui_data_available <- function(id) {
                    bsTooltip(ns("months_all"), "Select all months",
                              placement = "left"),
                    hr(),
+                   ui_download(id = ns("plot_available")),
             ),
             column(width = 10,
                    select_plot_options(select_plot_title(id, "plot_title_available")),
@@ -161,6 +163,7 @@ ui_data_available <- function(id) {
 
                   # strong("Note"), br(),
                   hr(),
+                  ui_download(id = ns("plot_summary")), br(),
                    "Note: Statistics are calculated regardless of missing dates.",
                    "More annual summary statistics and other annual metrics can be found ",
                    "in the 'Annual Statistics' pages on the side panel."
@@ -251,7 +254,7 @@ server_data_available <- function(id, data_settings, data_raw,
 
 
     # Symbols Summary Plot -----------------------------
-    output$plot_symbols_sum <- ggiraph::renderGirafe({
+    plot_symbols_sum <- reactive({
       check_data(data_loaded())
       req(input$symbols_sum_type)
       validate(need("Symbol" %in% names(data_raw()),
@@ -307,17 +310,26 @@ server_data_available <- function(id, data_settings, data_raw,
             ggplot2::aes(x = .data$Year, y = Inf,
                          tooltip = .data$tooltip, data_id = .data$Year))
       }
+    })
 
-      ggiraph::girafe(ggobj = g,
+    output$plot_symbols_sum <- ggiraph::renderGirafe({
+      ggiraph::girafe(ggobj = plot_symbols_sum(),
                       width_svg = 13 * opts$scale,
                       height_svg = 7 * opts$scale,
                       options = ggiraph_opts())
 
     })
 
-    # Available Data Plot ---------------------------
-    output$plot_available <- ggiraph::renderGirafe({
+    dims <- c(12, 7) * opts$scale
+    dims_sum <- c(12, 6) * opts$scale
 
+    # Download Plot -----------------
+    download(id = "plot_symbols_sum", plot = plot_symbols_sum,
+             name = "annual_symbols_",
+             data_settings, dims_sum)
+
+    # Available Data Plot ---------------------------
+    plot_available <- reactive({
       check_data(data_loaded())
       req(input$available_type, input$months_inc)
 
@@ -368,16 +380,24 @@ server_data_available <- function(id, data_settings, data_raw,
 
         g <- g + create_vline_interactive(data = g$data, stats = stats, size = 5)
       }
+    })
 
-      ggiraph::girafe(ggobj = g,
+
+    output$plot_available <- ggiraph::renderGirafe({
+      ggiraph::girafe(ggobj = plot_available(),
                       width_svg = 14 * opts$scale,
                       height_svg = 7 * opts$scale,
                       options = ggiraph_opts())
     })
 
-    # Summary plot ------------------
-    output$plot_summary <- ggiraph::renderGirafe({
+    dims_avail <- c(12, 5) * opts$scale
 
+    download(id = "plot_available", plot = plot_available,
+             name = "data_availability",
+             data_settings, dims_avail)
+
+    # Summary plot ------------------
+    plot_summary <- reactive({
       check_data(data_loaded())
       req(!is.null(input$availability), !is.null(input$stats))
 
@@ -407,12 +427,24 @@ server_data_available <- function(id, data_settings, data_raw,
       # Add interactive vline
       g <- g + create_vline_interactive(data = g$data, stats = stats, size = 5)
 
+    })
 
-      ggiraph::girafe(ggobj = g,
-                      width_svg = 13 * opts$scale,
-                      height_svg = 7 * opts$scale,
+    dims_screen <- reactive({
+      req(!is.null(input$stats))
+      ht <- ifelse(length(input$stats) == 5, 7,
+                   ifelse(length(input$stats) %in% 3:4, 5, 3))
+      c(13, ht) * opts$scale
+    })
+
+    output$plot_summary <- ggiraph::renderGirafe({
+      ggiraph::girafe(ggobj = plot_summary(),
+                      width_svg = dims_screen()[1],
+                      height_svg = dims_screen()[2],
                       options = ggiraph_opts())
     })
+    download(id = "plot_summary", plot = plot_summary,
+             name = "data_screening",
+             data_settings, dims_screen())
 
 
     # Summary table ------------------

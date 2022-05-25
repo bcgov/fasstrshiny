@@ -196,7 +196,7 @@ server_flows <- function(id, data_settings, data_raw,
     })
 
     # Download Plot -----------------
-    download(id = "plot", plot = plot, name = "flows",
+    download(id = "plot", plot = plot, name = "flow_duration",
              data_settings, dims)
 
 
