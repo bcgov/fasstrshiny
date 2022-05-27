@@ -28,10 +28,15 @@ ui_normal_days <- function(id) {
                  "range (typically between 25 and 75th percentiles, set below) for ",
                  "each day of the year. Upper and lower range percentiles are ",
                  "calculated for each day of the year from all years, and then ",
-                 "each daily flow value for each year is compared."),hr(),
+                 "each daily flow value for each year is compared."),
+        helpText("To view the normal category days for a specific year on the bottom plot, ",
+                 "choose the year below or click on a year in the top plot."),
+        hr(),
         sliderInput(ns("normal_percentiles"), label = "Percentiles Normal Range",
                     value = c(25, 75), min = 0, max = 100, step = 1),
         bsTooltip(ns("normal_percentiles"), tips$normal_percentiles, placement = "left"),
+        hr(),
+        h4("Year Plot Options"),
         div(align = "left",uiOutput(ns("ui_year_to_plot")),
             bsTooltip(ns("ui_year_to_plot"), "Specfic year to plot", placement = "left")),
 
@@ -82,7 +87,7 @@ ui_normal_days <- function(id) {
 }
 
 server_normal_days <- function(id, data_settings, data_raw,
-                                  data_loaded, data_code) {
+                               data_loaded, data_code) {
 
   moduleServer(id, function(input, output, session) {
 

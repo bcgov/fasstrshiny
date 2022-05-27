@@ -22,29 +22,30 @@ ui_annual_extremes <- function(id) {
       width = 12, h2("Annual Maximum and Minimum Flows"),
       box(
         width = 3,
-        helpText("Placeholder descriptive text to describe this section, ",
-                 "what it does and how to use it"),hr(),
+        helpText("Explore annual extreme (maximum and minimum) flows and their timing. ",
+                 "The duration of rolling day averages for each extreme, the months ",
+                 "to limit each extreme, and the type of plot (top plot) to display can be modifed below. "),
+        helpText("To view the values and timing for a specific year on the bottom plot, ",
+                 "choose the year below or click on a year value in the top plot. ",
+                 "Note: only years of complete data are used to compute percentile ribbons."),hr(),
         uiOutput(ns("ui_display")),
         hr(),
         h4("Maximum Flow Options"),
-        fluidRow(column(width = 5,
-                        div(align = "left",uiOutput(ns("roll_days_max")))),
-                 column(width = 7,
-                        div(align = "left",uiOutput(ns("months_max"))))),
+        # fluidRow(column(width = 5,
+        #                 div(align = "left",uiOutput(ns("roll_days_max")))),
+        #          column(width = 7,
+        #                 div(align = "left",uiOutput(ns("months_max"))))),
+        fluidRow(column(width = 6, div(align = "left",uiOutput(ns("roll_days_max"))))),
+        div(align = "left",uiOutput(ns("months_max"))),
         h4("Minimum Flow Options"),
-        fluidRow(column(width = 5,
-                        div(align = "left",uiOutput(ns("roll_days_min")))),
-                 column(width = 7,
-                        div(align = "left",uiOutput(ns("months_min"))))),
-
-        # h5("Maximum Flow Options"),
-        # div(align = "left",uiOutput(ns("roll_days_max"))),
-        # div(align = "left",uiOutput(ns("months_max"))),
-        # h5("Minimum Flow Options"),
-        # div(align = "left",uiOutput(ns("roll_days_min"))),
-        # div(align = "left",uiOutput(ns("months_min"))),
+        # fluidRow(column(width = 5,
+        #                 div(align = "left",uiOutput(ns("roll_days_min")))),
+        #          column(width = 7,
+        #                 div(align = "left",uiOutput(ns("months_min"))))),
+        fluidRow(column(width = 6, div(align = "left",uiOutput(ns("roll_days_min"))))),
+        div(align = "left",uiOutput(ns("months_min"))),
         hr(),
-        #h4("Year Plot Options"),
+        h4("Year Plot Options"),
         div(align = "left",uiOutput(ns("ui_year_to_plot")),
             bsTooltip(ns("ui_year_to_plot"), "Specfic year to plot", placement = "left")),
         hr(),
@@ -109,7 +110,7 @@ server_annual_extremes <- function(id, data_settings, data_raw,
     # Plot display
     output$ui_display <- renderUI({
       req(plots())
-      select_plot_display(id, plots())
+      select_plot_display(id, plots(), label = "All Years Display Plot")
     })
 
     output$ui_year_to_plot <- renderUI({
@@ -142,6 +143,7 @@ server_annual_extremes <- function(id, data_settings, data_raw,
       )
     })
     output$months_min <- renderUI({
+
       req(data_settings()$months,
           data_settings()$water_year)
 
@@ -150,14 +152,40 @@ server_annual_extremes <- function(id, data_settings, data_raw,
       m <- c(m[m >= as.numeric(data_settings()$water_year)],
              m[m < as.numeric(data_settings()$water_year)])
 
+      # tagList(
+      #   sliderTextInput(NS(id, "months_min"),
+      #                  label = "Months",
+      #                  choices = m,
+      #                  selected = as.numeric(data_settings()$months),
+      #                  multiple = TRUE)#,
+      #   # bsTooltip("months_min"), "Specfic year to plot", placement = "left")
+      # )
+
       tagList(
-        selectizeInput(NS(id, "months_min"),
-                       label = "Months",
-                       choices = m,
-                       selected = as.numeric(data_settings()$months),
-                       multiple = TRUE)#,
-        # bsTooltip("months_min"), "Specfic year to plot", placement = "left")
+        sliderTextInput(
+          inputId = NS(id, "months_min"),
+          label = "Months:",
+          choices = month.abb[m],
+          selected = c(month.abb[as.numeric(data_settings()$months)[1]],
+                       month.abb[as.numeric(data_settings()$months)[length(data_settings()$months)]]),
+          grid = TRUE,
+          hide_min_max = TRUE
+        )
       )
+    })
+    months_min <- reactive({
+      req(input$months_min)
+      mn <- c(stats::setNames(1:12, month.abb),stats::setNames(1:12, month.abb))
+      mn_list <- mn[which(names(mn) == input$months_min[1], mn)[1]:length(mn)]
+      mn_list <- mn_list[1:which(names(mn_list) == input$months_min[2], mn_list)[1]]
+      mn_list
+    })
+    months_max <- reactive({
+      req(input$months_max)
+      mn <- c(stats::setNames(1:12, month.abb),stats::setNames(1:12, month.abb))
+      mn_list <- mn[which(names(mn) == input$months_max[1], mn)[1]:length(mn)]
+      mn_list <- mn_list[1:which(names(mn_list) == input$months_max[2], mn_list)[1]]
+      mn_list
     })
 
     output$months_max <- renderUI({
@@ -169,13 +197,24 @@ server_annual_extremes <- function(id, data_settings, data_raw,
       m <- c(m[m >= as.numeric(data_settings()$water_year)],
              m[m < as.numeric(data_settings()$water_year)])
 
+      # tagList(
+      #   selectizeInput(NS(id, "months_max"),
+      #                  label = "Months",
+      #                  choices = m,
+      #                  selected = as.numeric(data_settings()$months),
+      #                  multiple = TRUE)#,
+      #   # bsTooltip("months_min"), "Specfic year to plot", placement = "left")
+      # )
       tagList(
-        selectizeInput(NS(id, "months_max"),
-                       label = "Months",
-                       choices = m,
-                       selected = as.numeric(data_settings()$months),
-                       multiple = TRUE)#,
-        # bsTooltip("months_min"), "Specfic year to plot", placement = "left")
+        sliderTextInput(
+          inputId = NS(id, "months_max"),
+          label = "Months:",
+          choices = month.abb[m],
+          selected = c(month.abb[as.numeric(data_settings()$months)[1]],
+                       month.abb[as.numeric(data_settings()$months)[length(data_settings()$months)]]),
+          grid = TRUE,
+          hide_min_max = TRUE
+        )
       )
     })
 
@@ -191,15 +230,14 @@ server_annual_extremes <- function(id, data_settings, data_raw,
     # Plot --------------------
     plots <- reactive({
       check_data(data_loaded())
-      req(input$roll_days_min,input$roll_days_max,
-          input$months_min, input$months_max)
+      req(input$roll_days_min,input$roll_days_max)
 
       data_flow <- data_raw()
 
       p <- c(glue::glue("roll_days_min = {input$roll_days_min}"),
              glue::glue("roll_days_max = {input$roll_days_max}"),
-             glue::glue("months_min = {conseq(input$months_min)}"),
-             glue::glue("months_max = {conseq(input$months_max)}")
+             glue::glue("months_min = {conseq(months_min())}"),
+             glue::glue("months_max = {conseq(months_max())}")
       ) %>%
         glue::glue_collapse(sep = ", ")
 
@@ -277,14 +315,13 @@ server_annual_extremes <- function(id, data_settings, data_raw,
 
     # Download Plot -----------------
     download(id = "plot", plot = plot,
-             name = reactive(paste0("extreme_flows_", input$display)),
+             name = reactive(paste0(input$display)),
              data_settings, dims)
 
     # Plot Year --------------------
     plot_year <- reactive({
       check_data(data_loaded())
       req(input$roll_days_min,input$roll_days_max,
-          input$months_min, input$months_max,
           input$year_to_plot,
           input$normal_percentiles#,
           #  input$plot_normal_percentiles,
@@ -296,8 +333,8 @@ server_annual_extremes <- function(id, data_settings, data_raw,
 
       p <- glue::glue("roll_days_min = {input$roll_days_min},
                       roll_days_max = {input$roll_days_max},
-                      months_min = {conseq(input$months_min)},
-                      months_max = {conseq(input$months_max)},
+                      months_min = {conseq(months_min())},
+                      months_max = {conseq(months_max())},
                       year_to_plot = {input$year_to_plot},
                       plot_normal_percentiles = {input$plot_normal_percentiles},
                       plot_max = {input$plot_max},
@@ -384,8 +421,8 @@ server_annual_extremes <- function(id, data_settings, data_raw,
 
       p <- c(glue::glue("roll_days_min = {input$roll_days_min}"),
              glue::glue("roll_days_max = {input$roll_days_max}"),
-             glue::glue("months_min = {conseq(input$months_min)}"),
-             glue::glue("months_max = {conseq(input$months_max)}")
+             glue::glue("months_min = {conseq(months_min())}"),
+             glue::glue("months_max = {conseq(months_max())}")
       ) %>%
         glue::glue_collapse(sep = ", ")
 

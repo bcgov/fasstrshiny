@@ -27,14 +27,14 @@ select_custom <- function(id, values) {
                    status = "success", slim = TRUE),
       column(width = 6,
              numericInput(NS(id, "custom"),
-                          label = "Discharge",
+                          label = "Discharge:",
                           min = min(values, na.rm = TRUE),
                           max = max(values, na.rm = TRUE),
                           value = round(stats::median(values, na.rm = TRUE), 2),
                           step = 0.01)),
       column(width = 6,
              textInput(NS(id, "custom_label"),
-                       label = "Label for line",
+                       label = "Label for line:",
                        placeholder = "ex. Threshold",
                        value = "My Label")),
       bsTooltip(id = NS(id, "custom_all"),
@@ -50,7 +50,7 @@ select_custom_months <- function(id) {
   fluidRow(id = NS(id, "custom_months_all"),
            column(width = 6,
                   selectizeInput(NS(id, "custom_months"),
-                                 label = "Months",
+                                 label = "Months:",
                                  choices = list("Jan" = 1,  "Feb" = 2,
                                                 "Mar" = 3,  "Apr" = 4,
                                                 "May" = 5,  "Jun" = 6,
@@ -61,7 +61,7 @@ select_custom_months <- function(id) {
                                  multiple = TRUE)),
            column(width = 6,
                   textInput(NS(id, "custom_months_label"),
-                            label = "Label",
+                            label = "Label:",
                             placeholder = "ex. Jun-Aug",
                             value = "")),
            bsTooltip(id = NS(id, "custom_months_all"),
@@ -74,7 +74,7 @@ select_custom_months <- function(id) {
 select_discharge <- function(id) {
   tagList(
     awesomeRadio(NS(id, "discharge"),
-                 label = "Discharge Unit Type",
+                 label = "Discharge Unit Type:",
                  choices = list("Discharge (cms)" = "Value",
                                 "Volumetric Discharge (m3)" = "Volume_m3",
                                 "Runoff Yield (mm)" = "Yield_mm"),
@@ -90,13 +90,13 @@ select_rolling <- function(id, name = "roll", multiple = FALSE) {
     fluidRow(id = NS(id, glue::glue("{name}ing")),
              column(6,
                     selectizeInput(NS(id, glue::glue("{name}_days")),
-                                   label = "Rolling Average Days",
+                                   label = "Rolling Average Days:",
                                    choices = 1:180,
                                    selected = d,
                                    multiple = multiple)),
              column(6,
                     selectizeInput(NS(id, glue::glue("{name}_align")),
-                                   label = "Rolling Average Alignment",
+                                   label = "Rolling Average Alignment:",
                                    selected = "right",
                                    choices = list("Right" = "right",
                                                   "Left" = "left",
@@ -110,7 +110,7 @@ select_rolling <- function(id, name = "roll", multiple = FALSE) {
 
 
 select_percentiles <- function(id, name = "percentiles", selected = c(10, 90),
-                               label = "Percentiles to calculate", maxItems = 100) {
+                               label = "Percentiles to calculate:", maxItems = 100) {
 
   if(!is.null(tips[[name]])) t <- tips[[name]] else t <- tips[["percentiles"]]
 
@@ -125,7 +125,7 @@ select_percentiles <- function(id, name = "percentiles", selected = c(10, 90),
 }
 
 select_percentiles_slide <- function(id, name = "percentiles", value = c(10, 90),
-                                     label = "Percentiles to calculate") {
+                                     label = "Percentiles to calculate:") {
 
   if(!is.null(tips[[name]])) t <- tips[[name]] else t <- tips[["percentiles"]]
 
@@ -174,7 +174,7 @@ select_plot_stats <- function(id, stats) {
   if(!is.null(stats)) {
     tagList(
       radioGroupButtons(NS(id, "stats"),
-                        label = "Statistics",
+                        label = "Statistics:",
                         choices = stats,
                         selected = stats),
       bsTooltip(NS(id, "stats"), tips$stats,
@@ -233,7 +233,7 @@ select_daterange <- function(id, data) {
   if(is.null(data)) stop("Require 'data' to create daterange UI",
                          call. = FALSE)
   dateRangeInput(NS(id, "daterange"),
-                 label = "Start/End dates of data to plot",
+                 label = "Start/End dates of data to plot:",
                  format = "yyyy-mm-dd", startview = "month",
                  start = min(data$Date), end = max(data$Date))
   # Tooltip didn't work? (even with tags$span trick)
@@ -242,7 +242,7 @@ select_daterange <- function(id, data) {
 select_add_year <- function(id, years_range) {
   tagList(
     selectizeInput(NS(id, "add_year"),
-                   label = "Year to Add",
+                   label = "Year to Add:",
                    choices = c("Choose a year" = "",
                                seq(from = years_range[1],
                                    to = years_range[2], by = 1)),
@@ -256,7 +256,7 @@ select_add_year <- function(id, years_range) {
 select_year_to_plot <- function(id, years_range) {
   tagList(
     selectizeInput(NS(id, "year_to_plot"),
-                   label = "Year to Plot",
+                   label = "Year to Plot:",
                    choices = c(years_range),
                    selected = years_range[1])
   )
@@ -269,7 +269,7 @@ select_add_dates <- function(id) {
   tagList(
     selectizeInput(
       NS(id, "add_dates"),
-      label = "Date to Show",
+      label = "Date to Show:",
       choices = c("Choose date(s)" = "", d),
       selected = NULL, multiple = TRUE),
     bsTooltip(NS(id, "add_dates"), tips$add_dates,
@@ -298,12 +298,12 @@ select_plot_title <- function(id, name = "plot_title") {
                 placement = "left"))
 }
 
-select_plot_display <- function(id, plots) {
+select_plot_display <- function(id, plots, label = "Display Plot") {
   plot_names <- names(plots) %>%
     stats::setNames(., stringr::str_replace_all(., "_", " "))
 
   tagList(
-    awesomeRadio(NS(id, "display"), "Display Plot",
+    awesomeRadio(NS(id, "display"), label,
                  choices = plot_names),
     bsTooltip(NS(id, "display"),
               paste0("Choose plot type to display."),
@@ -316,7 +316,7 @@ select_fitting <- function(id) {
 
         selectizeInput(
           NS(id, "fit_quantiles"),
-          label = "Quantiles to Estimate",
+          label = "Quantiles to Estimate:",
           choices = seq(0.01, 0.999, 0.0025),
           selected = c(0.975, 0.99, 0.98, 0.95, 0.90,
                        0.80, 0.50, 0.20, 0.10, 0.05, 0.01),
@@ -324,7 +324,7 @@ select_fitting <- function(id) {
 
         column(width = 6, id = NS(id, "fit_distr_tip"),
                awesomeRadio(NS(id, "fit_distr"),
-                            label = "Distribution",
+                            label = "Distribution:",
                             choices = list("PIII" = "PIII",
                                            "Weibull" = "weibull")),
         ),
@@ -335,7 +335,7 @@ select_fitting <- function(id) {
                             value = TRUE, status = "success", slim = TRUE)),
         awesomeRadio(
           NS(id, "fit_distr_method"),
-          label = "Distribution Method",
+          label = "Distribution Method:",
           choices = list("Method of Moments (MOM)" = "MOM",
                          "Maximum Likelihood Estimation (MLE)" = "MLE"))),
 
@@ -357,7 +357,7 @@ select_analysis_plots <- function(id) {
       fluidRow(
         column(6, id = NS(id, "prob_plot_tip"),
                awesomeRadio(NS(id, "prob_plot"),
-                            label = "Plotting Positions",
+                            label = "Plotting Positions:",
                             choices = list("Weibull" = "weibull",
                                            "Median" = "median",
                                            "Hazen" = "hazen"))),
@@ -365,7 +365,7 @@ select_analysis_plots <- function(id) {
           6, id = NS(id, "prob_scale_tip"),
           textInput(
             NS(id, "prob_scale"),
-            label = "Probabilities to Plot",
+            label = "Probabilities to Plot:",
             value = paste0("0.9999, 0.999, 0.99, 0.9, 0.5, 0.2, ",
                            "0.1, 0.02, 0.01, 0.001, 0.0001")))
       ),
@@ -381,7 +381,7 @@ select_analysis_data <- function(id) {
     column(
       width = 6, id = NS(id, "use_max_tip"),
       awesomeRadio(NS(id, "use_max"),
-                   label = "Analysis Type",
+                   label = "Analysis Type:",
                    choices = list("Low Flow" = FALSE,
                                   "High Flow" = TRUE),
                    selected = FALSE, inline = TRUE)),
