@@ -79,12 +79,12 @@ ui_data_load <- function(id) {
         hr(),
         h3("Data Options"),
 
-        show_ui(ns("show_types"), "Discharge Duration and Units"),
+        show_ui(ns("show_types"), "Flow Duration and Units"),
         div(id = ns("types"),
             select_rolling(id),
             select_discharge(id)),
 
-        show_ui(ns("show_dates"), "Years and Months Filtering"),
+        show_ui(ns("show_dates"), "Years and Months"),
         div(id = ns("dates"),
             uiOutput(ns("ui_water_year")),
             uiOutput(ns("ui_months2")),
@@ -534,10 +534,12 @@ server_data_load <- function(id) {
       req(input$station_number)
 
       if (watershed_exists()) {
-        sf::st_read(paste0("data-raw/watersheds/",
-                           substr(input$station_number,1,2),"/",input$station_number,"/",input$station_number,
-                           "_DrainageBasin_BassinDeDrainage.shp")) %>%
-          sf::st_transform(crs = 4326)
+        suppressMessages(
+          sf::st_read(paste0("data-raw/watersheds/",
+                             substr(input$station_number,1,2),"/",input$station_number,"/",input$station_number,
+                             "_DrainageBasin_BassinDeDrainage.shp")) %>%
+            sf::st_transform(crs = 4326)
+        )
       }
     })
 
@@ -769,6 +771,18 @@ server_data_load <- function(id) {
               "See 'Handling Missing Dates' below for options if desired.")
     })
 
+
+    number_of_years <- reactive({
+      data_raw() %>%
+        dplyr::filter(.data$WaterYear >= input$years_range[1],
+                      .data$WaterYear <= input$years_range[2],
+                      !.data$WaterYear %in% input$years_exclude,
+                      !.data$WaterYear %in% complete_years()$empty) %>%
+        dplyr::pull(.data$WaterYear) %>%
+        unique() %>%
+        length()
+    })
+
     # Plot ----------------
     output$plot <- plotly::renderPlotly({
       check_data(data_loaded())
@@ -964,7 +978,8 @@ server_data_load <- function(id) {
            "station_name" = input$station_name,
            "station_id" = data_id(),
            "source" = data_source(),
-           "missing_note" = ifelse(any(is.na(data_raw_missing())),TRUE,FALSE))
+           "missing_note" = ifelse(any(is.na(data_raw_missing())),TRUE,FALSE),
+           "number_of_years" = number_of_years())
     })
 
     data_code <- reactive(code$data_raw)

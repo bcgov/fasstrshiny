@@ -113,7 +113,7 @@ maps_points <- list(
   "Drainage Area" = "DRAINAGE_AREA_GROSS",
   "Record Length" = "RECORD_LENGTH")
 
-mods <- c("data_load", "data_available", "hydro", "cumulative", "flows", "monthly_means",
+mods <- c("data_load", "data_available","overview","hydro", "cumulative", "flows", "monthly_means",
           "annual_stats", "annual_means", "annual_totals", "flow_timing",
           "low_flows", "high_flows", "annual_extremes", "normal_days",
           "annual_trends", "volume_freq", "hydat_peak")

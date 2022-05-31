@@ -373,7 +373,8 @@ dummy_data <- function(hydat_stn = "08HB048", local_file = FALSE,
     basin_area = dplyr::if_else(basin_area, 10.3, 0),
     station_name = "Carnation Creek At The Mouth",
     station_id = "08HB048",
-    source = dplyr::if_else(local_file, "CSV", "HYDAT"))
+    source = dplyr::if_else(local_file, "CSV", "HYDAT"),
+    number_of_years = 66)
 
   list("d" = reactive(data_raw),
        "s" = reactive(data_settings),
