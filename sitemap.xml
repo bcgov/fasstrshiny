@@ -16,10 +16,22 @@
     <loc>https://bcgov.github.io/fasstrshiny/LICENSE-text.html</loc>
   </url>
   <url>
+    <loc>https://bcgov.github.io/fasstrshiny/articles/fasstrshiny_get_started.html</loc>
+  </url>
+  <url>
+    <loc>https://bcgov.github.io/fasstrshiny/articles/fasstrshiny_users_guide.html</loc>
+  </url>
+  <url>
+    <loc>https://bcgov.github.io/fasstrshiny/articles/index.html</loc>
+  </url>
+  <url>
     <loc>https://bcgov.github.io/fasstrshiny/authors.html</loc>
   </url>
   <url>
     <loc>https://bcgov.github.io/fasstrshiny/index.html</loc>
+  </url>
+  <url>
+    <loc>https://bcgov.github.io/fasstrshiny/news/index.html</loc>
   </url>
   <url>
     <loc>https://bcgov.github.io/fasstrshiny/reference/fasstr_shiny.html</loc>
