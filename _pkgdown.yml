@@ -9,18 +9,26 @@ development:
 
 home:
   links:
-  - text: fasstr R Package
+  - text: Browse source code
+    href: https://github.com/bcgov/fasstrshiny
+  - text: Report a bug or issue
+    href: https://github.com/bcgov/fasstrshiny/issues
+  - text: fasstr R package info
     href: https://bcgov.github.io/fasstr/
+  - text: tidyhydat R package info
+    href: https://docs.ropensci.org/tidyhydat/
+  - text: HYDAT data disclaimer
+    href: https://wateroffice.ec.gc.ca/disclaimer_info_e.html
+
+
 
 navbar:
   type: default
   left:
-  - icon: fa-home
-    href: inst/md/overview.html
   - text: Get Started
-    href: inst/md/overview.html
+    href: articles/fasstrshiny_get_started.html
   - text: User Guide
-    href: inst/md/overview2.html
+    href: articles/fasstrshiny_users_guide.html
   - text: News
     href: news/index.html
   right:

@@ -1,5 +1,5 @@
 Package: fasstrshiny
-Title: Shiny UI for fasstr
+Title: Shiny UI for fasstr R package
 Version: 0.0.0.9000
 Authors@R: 
    c(person("Steffi", "LaZerte", email = "steffi@steffi.ca", role = c("aut"), 

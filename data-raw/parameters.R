@@ -113,8 +113,7 @@ maps_points <- list(
   "Drainage Area" = "DRAINAGE_AREA_GROSS",
   "Record Length" = "RECORD_LENGTH")
 
-#map_basins_list <- utils::read.csv("data-raw/watersheds/canada_polygons_list.csv")
-map_basins_shp <-  sf::st_read("data-raw/watersheds/canada_polygons_simple.shp") %>%
+map_basins_shp <-  sf::st_read("C:/Users/jgoetz/R/hydat_watersheds/merged polygons/canada_polygons_simple.shp") %>%
   sf::st_transform(crs = 4326)
 
 mods <- c("data_load", "data_available","overview","hydro", "cumulative", "flows", "monthly_means",

@@ -26,7 +26,7 @@ ui_data_load <- function(id) {
                  "file with daily mean streamflow data. View the ",
                  "data in the Daily Flow Plot and Table tabs. ",
                  "See more data options below by clicking the toggles. ",
-                 "View the Data > Availability & Screening ",
+                 "View the Data >> Availability & Screening ",
                  " tabs to review data quality and availability."),
         hr(),
         # Inputs --------------------------------------------
@@ -77,7 +77,7 @@ ui_data_load <- function(id) {
         div(id = ns("stn"), uiOutput(ns("ui_stn"))),
         span(uiOutput(ns("missing_data_note")),style="color:red"),
         hr(),
-        h3("Data Options"),
+        h4(strong("Data Options")),
 
         show_ui(ns("show_types"), "Flow Averaging and Units"),
         div(id = ns("types"),
@@ -106,12 +106,13 @@ ui_data_load <- function(id) {
         # HYDAT Map --------
         tabPanel(
           title = "HYDAT", value = "tabs_hydat", width = 12,
-          helpText("Click on a station marker to select the station"),
+          helpText("Click on a station marker to select the station. If there is a ",
+                   "mapped basin area, click 'Load Data' on left to show."),
           shinycssloaders::withSpinner(
             leaflet::leafletOutput(ns("hydat_map"), width = "100%", height = "350px")
           ),
           helpText(paste0("Click on a station row to select the station, ",
-                          "or filter stations and browse on the HYDAT Map")),
+                          "or filter stations and browse on the HYDAT Map.")),
           DT::DTOutput(ns("hydat_table"))
          # ,verbatimTextOutput(ns("test"))
         ),
