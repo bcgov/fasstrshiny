@@ -4,18 +4,14 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="description" content="This app uses bcgov’s 
-    [fasstr](https://cran.r-project.org/package=fasstr) and
-    [tidyhydat](https://cran.r-project.org/package=tidyhydat) packages to
-    provide an interactive user-interface for creating, viewing and customizing 
-    statistics, tables, and plots for streamflow analysis.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shiny UI for fasstr • fasstrshiny</title>
-<script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.1.0/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.1.0/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="bootstrap-toc.css">
+<script src="bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
-<!-- bootstrap-toc --><script src="https://cdn.rawgit.com/afeld/bootstrap-toc/v1.0.1/dist/bootstrap-toc.min.js"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Shiny UI for fasstr">
+<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
+<script src="pkgdown.js"></script><meta property="og:title" content="Shiny UI for fasstr">
 <meta property="og:description" content="This app uses bcgov’s 
     [fasstr](https://cran.r-project.org/package=fasstr) and
     [tidyhydat](https://cran.r-project.org/package=tidyhydat) packages to
@@ -26,39 +22,64 @@
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 </head>
-<body>
-    <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
+<body data-spy="scroll" data-target="#toc">
     
 
-    <nav class="navbar fixed-top navbar-light navbar-expand-lg bg-light"><div class="container">
-    
-    <a class="navbar-brand me-2" href="index.html">fasstrshiny</a>
+    <div class="container template-home">
+      <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <span class="navbar-brand">
+        <a class="navbar-link" href="index.html">fasstrshiny</a>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.0.0.9000</span>
+      </span>
+    </div>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
-
-    
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto">
-<li class="nav-item">
-  <a class="nav-link" href="reference/index.html">Reference</a>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+<li>
+  <a href="inst/md/overview.html">
+    <span class="fa fa-home"></span>
+     
+  </a>
+</li>
+<li>
+  <a href="inst/md/overview.html">Get Started</a>
+</li>
+<li>
+  <a href="inst/md/overview2.html">User Guide</a>
+</li>
+<li>
+  <a href="news/index.html">News</a>
 </li>
       </ul>
-<form class="form-inline my-2 my-lg-0" role="search">
-        <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="search.json" id="search-input" placeholder="Search for" autocomplete="off">
-</form>
-
-      <ul class="navbar-nav"></ul>
+<ul class="nav navbar-nav navbar-right">
+<li>
+  <a href="https://github.com/bcgov/fasstrshiny" class="external-link">
+    <span class="fa fa-github fa-lg"></span>
+     
+    GitHub
+  </a>
+</li>
+      </ul>
 </div>
-
-    
+<!--/.nav-collapse -->
   </div>
-</nav><div class="container template-home">
-<div class="row">
-  <main id="main" class="col-md-9"><div class="section level1">
+<!--/.container -->
+</div>
+<!--/.navbar -->
+
+      
+
+      </header><div class="row">
+  <div class="contents col-md-9">
+<div class="section level1">
 <div class="page-header"><h1 id="fasstr-shiny-app">fasstr Shiny App<a class="anchor" aria-label="anchor" href="#fasstr-shiny-app"></a>
 </h1></div>
 <!-- badges: start -->
@@ -68,7 +89,7 @@
 <div class="section level3">
 <h3 id="working-with-fasstrshiny">Working with {fasstrshiny}<a class="anchor" aria-label="anchor" href="#working-with-fasstrshiny"></a>
 </h3>
-<blockquote><p>Here we cover how to setup <code>fasstrshiny</code> on your local computer as well as how to start using the code output from <code>fasstrshiny</code></p></blockquote>
+<blockquote><p>Here we cover how to setup <code>fasstrshiny</code> on your local computer and how to setup and start using the code outputs from <code>fasstrshiny</code></p></blockquote>
 </div>
 <div class="section level2">
 <h2 id="using-fasstrshiny">Using <code>fasstrshiny</code>
@@ -97,11 +118,9 @@
 <span id="cb1-2"><a href="#cb1-2"></a>remotes<span class="op">::</span><span class="kw">install_github</span>(<span class="st">"bcgov/fasstrshiny"</span>)</span></code></pre></div>
 <p>To use HYDAT data in the app, the Environment and Climate Change Canada’s HYDAT database must be downloaded (this needs to be done <strong>once</strong> or as needed to update):</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>tidyhydat<span class="op">::</span><span class="kw">download_hydat</span>()</span></code></pre></div>
-<p>To open the Shiny App from the R console, run the following (this needs to be done <strong>everytime</strong>):</p>
+<p>To the Shiny App run, in the R console, run the following (this needs to be done <strong>everytime</strong>):</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">library</span>(fasstrshiny) <span class="co"># Loads the package</span></span>
 <span id="cb3-2"><a href="#cb3-2"></a><span class="kw">fasstr_shiny</span>()       <span class="co"># Launches the Shiny App</span></span></code></pre></div>
-<p>It is recommended to run the Shiny App from a browser and not a RStudio window, so to make opening it in a browser by default run the following code:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">options</span>(<span class="dt">shiny.launch.browser =</span> .rs.invokeShinyWindowExternal)</span></code></pre></div>
 <p><strong>Pros</strong></p>
 <ul>
 <li>Faster</li>
@@ -116,7 +135,7 @@
 </div>
 </div>
 <div class="section level2">
-<h2 id="using-code-output-from-shiny-app">Using code output from Shiny App<a class="anchor" aria-label="anchor" href="#using-code-output-from-shiny-app"></a>
+<h2 id="using-code-output-from-the-fasstrshiny-shiny-app">Using code output from the fasstrshiny Shiny App<a class="anchor" aria-label="anchor" href="#using-code-output-from-the-fasstrshiny-shiny-app"></a>
 </h2>
 <p>Every page in this app has an “R Code” tab. This tab shows the R code used to create all the plots and figures on that particular page.</p>
 <p>Playing around with this code on your own is a great way to become more familiar with R and fasstr.</p>
@@ -126,6 +145,9 @@
 <h3 id="loading-packages">Loading packages<a class="anchor" aria-label="anchor" href="#loading-packages"></a>
 </h3>
 <p>First, you’ll need to make sure you have the right packages loaded. If you’ve already installed the fasstrshiny package (as above) and have been using fasstrshiny locally, you’re good to go. Otherwise, install fasstr and the HYDAT database using the instructions above.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">library</span>(fasstr) <span class="co"># Loads the packages</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="kw">library</span>(dplyr)  </span>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="kw">library</span>(tidyr)  </span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="running-fasstr-code">Running fasstr code<a class="anchor" aria-label="anchor" href="#running-fasstr-code"></a>
@@ -175,7 +197,7 @@
 <div class="section level3">
 <h3 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
 </h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>Copyright <span class="dv">2021</span> Province of British Columbia</span>
+<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>Copyright <span class="dv">2022</span> Province of British Columbia</span>
 <span id="cb5-2"><a href="#cb5-2"></a></span>
 <span id="cb5-3"><a href="#cb5-3"></a>Licensed under the Apache License, Version <span class="fl">2.0</span> (the <span class="op">&amp;</span>quot;License<span class="op">&amp;</span>quot;);</span>
 <span id="cb5-4"><a href="#cb5-4"></a>you may not use this file except <span class="cf">in</span> compliance with the License.</span>
@@ -187,11 +209,21 @@
 <span id="cb5-10"><a href="#cb5-10"></a>WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
 <span id="cb5-11"><a href="#cb5-11"></a>See the License <span class="cf">for</span> the specific language governing permissions and limitations under the License.</span></code></pre></div>
 <hr>
-<p>This repository is maintained by the <a href="https://www2.gov.bc.ca/gov/content/environment/air-land-water/water" class="external-link">Water Protection and Sustainability Branch</a> of the British Columbia Ministry of Environment and Climate Change Strategy.</p>
+<p>This repository is maintained by the <a href="https://www2.gov.bc.ca/gov/content/environment/air-land-water/water" class="external-link">Water Protection and Sustainability Branch</a> of the British Columbia Ministry of Land, Water and Resource Stewardship.</p>
 </div>
 </div>
 </div>
-  </main><aside class="col-md-3"><div class="license">
+  </div>
+
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <div class="links">
+<h2 data-toc-skip>Links</h2>
+<ul class="list-unstyled">
+<li><a href="https://bcgov.github.io/fasstr/" class="external-link">fasstr R Package</a></li>
+</ul>
+</div>
+
+<div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li>Apache License (== 2.0) | file <a href="LICENSE-text.html">LICENSE</a>
@@ -232,24 +264,25 @@
 </ul>
 </div>
 
-  </aside>
+  </div>
 </div>
 
 
-    <footer><div class="pkgdown-footer-left">
+      <footer><div class="copyright">
   <p></p>
 <p>Developed by Steffi LaZerte, Jon Goetz.</p>
 </div>
 
-<div class="pkgdown-footer-right">
+<div class="pkgdown">
   <p></p>
 <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
 </div>
 
-    </footer>
+      </footer>
 </div>
 
   
+
 
   
 
