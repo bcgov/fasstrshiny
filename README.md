@@ -27,8 +27,8 @@ on [GitHub](https://github.com/bcgov/FASSTX/).
 
 ### Working with {fasstrshiny}
 
-> Here we cover how to setup `fasstrshiny` on your local computer as
-> well as how to start using the code output from `fasstrshiny`
+> Here we cover how to setup `fasstrshiny` on your local computer and
+> how to setup and start using the code outputs from `fasstrshiny`
 
 ## Using `fasstrshiny`
 
@@ -60,16 +60,11 @@ Canada’s HYDAT database must be downloaded (this needs to be done
 
     tidyhydat::download_hydat()
 
-To open the Shiny App from the R console, run the following (this needs to
+To the Shiny App run, in the R console, run the following (this needs to
 be done **everytime**):
 
     library(fasstrshiny) # Loads the package
     fasstr_shiny()       # Launches the Shiny App
-    
-It is recommended to run the Shiny App from a browser and not a RStudio window, 
-so to make opening it in a browser by default run the following code:
-
-    options(shiny.launch.browser = .rs.invokeShinyWindowExternal)
 
 **Pros**
 
@@ -86,7 +81,7 @@ so to make opening it in a browser by default run the following code:
     unique problems that are tricky to trouble shoot (when in doubt,
     update all your packages: `remotes::update_packages()`)
 
-## Using code output from Shiny App
+## Using code output from the fasstrshiny Shiny App
 
 Every page in this app has an “R Code” tab. This tab shows the R code
 used to create all the plots and figures on that particular page.
@@ -107,6 +102,10 @@ First, you’ll need to make sure you have the right packages loaded. If
 you’ve already installed the fasstrshiny package (as above) and have
 been using fasstrshiny locally, you’re good to go. Otherwise, install
 fasstr and the HYDAT database using the instructions above.
+
+    library(fasstr) # Loads the packages
+    library(dplyr)  
+    library(tidyr)  
 
 ### Running fasstr code
 
@@ -181,7 +180,7 @@ to abide by its terms.
 
 ### License
 
-    Copyright 2021 Province of British Columbia
+    Copyright 2022 Province of British Columbia
 
     Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
     you may not use this file except in compliance with the License.
@@ -198,5 +197,5 @@ to abide by its terms.
 This repository is maintained by the [Water Protection and
 Sustainability
 Branch](https://www2.gov.bc.ca/gov/content/environment/air-land-water/water)
-of the British Columbia Ministry of Environment and Climate Change
-Strategy.
+of the British Columbia Ministry of Land, Water and Resource
+Stewardship.

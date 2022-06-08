@@ -30,7 +30,7 @@ ui_annual_stats <- function(id) {
         hr(),
         div(align = "left",
             awesomeRadio(ns("type"),
-                         label = "Summary Type",
+                         label = "Summary Type:",
                          choices = list("Annual", "Monthly"),
                          selected = "Annual",
                          status = "primary")),

@@ -29,7 +29,7 @@ ui_monthly_means <- function(id) {
                    "page table."), hr(),
           #  uiOutput(ns("mean_percent")),
           selectizeInput(ns("mean_percent"),
-                         label = "Percentages of LTMAD to Plot",
+                         label = "Percentages of LTMAD to Plot:",
                          choices = c(1:200, seq(205, 500, 5)),
                          selected = c(100,20,10, 5),
                          multiple = TRUE,

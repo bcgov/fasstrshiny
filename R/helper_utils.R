@@ -380,6 +380,11 @@ prep_hydat <- function(bc_only = TRUE) {
         dplyr::select("STATION_NUMBER", "Year_from", "Year_to", "RECORD_LENGTH"),
       by = "STATION_NUMBER")
 
+  stns_basin_map <- map_basins_shp %>%
+    sf::st_drop_geometry() %>%
+    dplyr::select(STATION_NUMBER = StationNum) %>%
+    dplyr::mutate(BASIN_MAP = "Yes")
+
   dplyr::left_join(stations_raw,
                    station_parameters,
                    by = "STATION_NUMBER") %>%
@@ -389,7 +394,9 @@ prep_hydat <- function(bc_only = TRUE) {
                   "HYD_STATUS", "REGULATED", "REAL_TIME", "RHBN",
                   "DRAINAGE_AREA_GROSS", "Year_from", "Year_to",
                   "RECORD_LENGTH", "WSC_SUBSUB_DRAINAGE",
-                  "LATITUDE", "LONGITUDE")
+                  "LATITUDE", "LONGITUDE") %>%
+    dplyr::left_join(stns_basin_map,
+                     by = "STATION_NUMBER")
 }
 
 ## Complete years functions

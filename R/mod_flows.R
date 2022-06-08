@@ -57,7 +57,7 @@ ui_flows <- function(id) {
 
         ## Plot ---------------------
         tabPanel(
-          title = "Plot - Flow duration",
+          title = "Plot - Flow Duration",
           select_plot_options(
             select_plot_title(id),
             select_plot_log(id, value = default("plot_flow_duration",
@@ -91,7 +91,7 @@ server_flows <- function(id, data_settings, data_raw,
       tagList(
         checkboxGroupButtons(
           NS(id, "months_plot"),
-          label = "Months",
+          label = "Months:",
           choices = list("Jan" = 1, "Feb" = 2,
                          "Mar" = 3, "Apr" = 4,
                          "May" = 5, "Jun" = 6,

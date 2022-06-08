@@ -1,4 +1,29 @@
-url: https://bcgov.github.io/fasstrshiny
 template:
-  bootstrap: 5
+  params:
+    bootswatch: flatly
 
+url: https://bcgov.github.io/fasstrshiny
+
+development:
+  mode: auto
+
+home:
+  links:
+  - text: fasstr R Package
+    href: https://bcgov.github.io/fasstr/
+
+navbar:
+  type: default
+  left:
+  - icon: fa-home
+    href: inst/md/overview.html
+  - text: Get Started
+    href: inst/md/overview.html
+  - text: User Guide
+    href: inst/md/overview2.html
+  - text: News
+    href: news/index.html
+  right:
+    - icon: fa-github fa-lg
+      text: GitHub
+      href: https://github.com/bcgov/fasstrshiny

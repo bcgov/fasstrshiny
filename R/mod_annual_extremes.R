@@ -74,7 +74,7 @@ ui_annual_extremes <- function(id) {
             prettySwitch(ns("plot_normal_percentiles"),
                          label = "Plot Normal Percentiles",
                          value = TRUE, status = "success", slim = TRUE),
-            sliderInput(ns("normal_percentiles"), label = "Percentiles Normal Range",
+            sliderInput(ns("normal_percentiles"), label = "Percentiles Normal Range:",
                         value = c(25, 75), min = 0, max = 100, step = 1)),
           ggiraph::girafeOutput(ns("plot_year"), height = opts$plot_height)
         ),
@@ -110,7 +110,7 @@ server_annual_extremes <- function(id, data_settings, data_raw,
     # Plot display
     output$ui_display <- renderUI({
       req(plots())
-      select_plot_display(id, plots(), label = "All Years Display Plot")
+      select_plot_display(id, plots(), label = "All Years Display Plot:")
     })
 
     output$ui_year_to_plot <- renderUI({
@@ -128,7 +128,7 @@ server_annual_extremes <- function(id, data_settings, data_raw,
       req(data_settings()$roll_days)
       tagList(
         numericInput(NS(id, "roll_days_min"),
-                     label = "Rolling Average Days",
+                     label = "Rolling Average Days:",
                      value = data_settings()$roll_days,
                      min = 1, max = 100)
       )
@@ -137,7 +137,7 @@ server_annual_extremes <- function(id, data_settings, data_raw,
       req(isolate(data_settings()$roll_days))
       tagList(
         numericInput(NS(id, "roll_days_max"),
-                     label = "Rolling Average Days",
+                     label = "Rolling Average Days:",
                      value = isolate(data_settings()$roll_days),
                      min = 1, max = 100)
       )

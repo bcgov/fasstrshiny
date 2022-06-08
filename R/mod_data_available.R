@@ -69,7 +69,7 @@ ui_data_available <- function(id) {
                        "has a larger than expected uncertainty."), hr(),
               div(id = ns("symbols_sum_type_tip"),
                   awesomeRadio(
-                    ns("symbols_sum_type"), label = "Plot Type",
+                    ns("symbols_sum_type"), label = "Plot Type:",
                     choices = c("By Day of Year" = "dayofyear",
                                 "Number of Days" = "count",
                                 "Percent of Days" = "percent")),
@@ -107,11 +107,11 @@ ui_data_available <- function(id) {
                    helpText("Plot and explore the data availability, by month and year. ",
                             "Can change the plot type and the months to include ",
                             "on the plot below."), hr(),
-                   awesomeRadio(ns("available_type"), label = "Plot Type",
+                   awesomeRadio(ns("available_type"), label = "Plot Type:",
                                 choices = c("Tile" = "tile", "Bar" = "bar")),
                    checkboxGroupButtons(
                      ns("months_inc"),
-                     label = "Months to Plot",
+                     label = "Months to Plot:",
                      choices = list("Jan" = 1, "Feb" = 2,
                                     "Mar" = 3, "Apr" = 4,
                                     "May" = 5, "Jun" = 6,
@@ -154,7 +154,7 @@ ui_data_available <- function(id) {
                              placement = "left"),
                    selectizeInput(
                      ns("stats"),
-                     label = "Statistics to Include",
+                     label = "Statistics to Include:",
                      choices = default("plot_data_screening", "include_stats"),
                      selected = default("plot_data_screening", "include_stats"),
                      multiple = TRUE, width = "100%"),

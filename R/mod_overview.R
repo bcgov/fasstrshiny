@@ -20,7 +20,7 @@ ui_overview <- function(id) {
   fluidRow(
     column(
       width = 12,
-      h2("Overview"),
+      h2("Data Overview"),
       # verbatimTextOutput(ns("test")),
       # box(width = 2,
       #     helpText("Explore..."),
@@ -97,10 +97,10 @@ ui_overview <- function(id) {
                                      numericInput(ns("ret_per"), label = "Return Period:",value = 20,min = 1, max = 1000,step = 1))),
                      uiOutput(ns("ui_freq_months"))
                    )
-                 #  h3("Statistics Options"),
+                   #  h3("Statistics Options"),
 
 
-                   ),
+            ),
             column(width = 8,
 
                    # h3("Monthly Means"),
@@ -111,7 +111,7 @@ ui_overview <- function(id) {
                    #select_plot_options(),
                    ggiraph::girafeOutput(ns("plot_annual"), height = "350px"),
                    br(),
-                  # select_plot_options( ),
+                   # select_plot_options( ),
                    ggiraph::girafeOutput(ns("plot_quant"), height = "350px"))
           )
         ),
@@ -292,7 +292,7 @@ server_overview <- function(id, data_settings, data_raw,
 
       # Replace layers with interactive
       g <- g +
-       # ggplot2::theme(legend.position = "top")+
+        # ggplot2::theme(legend.position = "top")+
         ggiraph::geom_bar_interactive(
           stat = "identity", alpha = 0.005,
           ggplot2::aes(tooltip = glue::glue("Year: {.data$Year}\n",
@@ -556,29 +556,29 @@ server_overview <- function(id, data_settings, data_raw,
       conseq(months_all())
     })
 
-    # Station Map -------------------------
-    watershed_exists <- reactive({
-
-      if (dir.exists(paste0("data-raw/watersheds/",
-                            substr(data_settings()$station_id,1,2),"/",data_settings()$station_id))) {
-        t <- TRUE
-      } else {
-        t <- FALSE
-      }
-      t
-    })
-
-    watershed <- reactive({
-
-      if (watershed_exists()) {
-        suppressMessages(
-          sf::st_read(paste0("data-raw/watersheds/",
-                             substr(data_settings()$station_id,1,2),"/",data_settings()$station_id,"/",data_settings()$station_id,
-                             "_DrainageBasin_BassinDeDrainage.shp")) %>%
-            sf::st_transform(crs = 4326)
-        )
-      }
-    })
+    # # Station Map -------------------------
+    # watershed_exists <- reactive({
+    #
+    #   if (dir.exists(paste0("data-raw/watersheds/",
+    #                         substr(data_settings()$station_id,1,2),"/",data_settings()$station_id))) {
+    #     t <- TRUE
+    #   } else {
+    #     t <- FALSE
+    #   }
+    #   t
+    # })
+    #
+    # watershed <- reactive({
+    #
+    #   if (watershed_exists()) {
+    #     suppressMessages(
+    #       sf::st_read(paste0("data-raw/watersheds/",
+    #                          substr(data_settings()$station_id,1,2),"/",data_settings()$station_id,"/",data_settings()$station_id,
+    #                          "_DrainageBasin_BassinDeDrainage.shp")) %>%
+    #         sf::st_transform(crs = 4326)
+    #     )
+    #   }
+    # })
 
     output$station_map <- leaflet::renderLeaflet({
 
@@ -619,9 +619,19 @@ server_overview <- function(id, data_settings, data_raw,
           options = leaflet::layersControlOptions(collapsed = FALSE)
         )
 
-      if (watershed_exists()) {
-        l <- l %>% leaflet::addPolygons(data = watershed())
+      #  if (watershed_exists()) {
+      #    l <- l %>% leaflet::addPolygons(data = watershed())
+      #   }
+      #   observeEvent(input$load, {
+      if (data_settings()$station_id %in% map_basins_shp$StationNum) {
+        watershed_shp <- map_basins_shp %>%
+          dplyr::filter(StationNum == data_settings()$station_id)
+
+        l <- l %>%
+          leaflet::addPolygons(data = watershed_shp, layerId = "basin_map")
       }
+
+      # })
 
       map_ready(TRUE)
       l

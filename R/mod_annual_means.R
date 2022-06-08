@@ -27,7 +27,7 @@ ui_annual_means <- function(id) {
                    "For the annual values in table format, see the Annual Summary Statistics ",
                    "page table."),hr(),
           selectizeInput(ns("mean_ptile"),
-                         label = "Percentiles of Annual Means to Plot",
+                         label = "Percentiles of Annual Means to Plot:",
                          choices = 0:100,
                          selected = c(10,90),
                          multiple = TRUE,

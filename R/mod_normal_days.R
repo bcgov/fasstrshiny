@@ -32,13 +32,13 @@ ui_normal_days <- function(id) {
         helpText("To view the normal category days for a specific year on the bottom plot, ",
                  "choose the year below or click on a year in the top plot."),
         hr(),
-        sliderInput(ns("normal_percentiles"), label = "Percentiles Normal Range",
+        sliderInput(ns("normal_percentiles"), label = "Percentiles Normal Range:",
                     value = c(25, 75), min = 0, max = 100, step = 1),
         bsTooltip(ns("normal_percentiles"), tips$normal_percentiles, placement = "left"),
         hr(),
         h4("Year Plot Options"),
         div(align = "left",uiOutput(ns("ui_year_to_plot")),
-            bsTooltip(ns("ui_year_to_plot"), "Specfic year to plot", placement = "left")),
+            bsTooltip(ns("ui_year_to_plot"), "Specfic year to plot:", placement = "left")),
 
         hr(),
         fluidRow(

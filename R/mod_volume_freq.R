@@ -118,7 +118,7 @@ server_volume_freq <- function(id, data_settings, data_raw,
     output$ui_exclude <- renderUI({
       req(data_settings()$years_range)
       selectizeInput(NS(id, "years_exclude"),
-                     label = "Years to Exclude",
+                     label = "Years to Exclude:",
                      choices = seq(from = data_settings()$years_range[1],
                                    to = data_settings()$years_range[2], by = 1),
                      selected = data_settings()$years_exclude,

@@ -30,7 +30,7 @@ ui_hydro <- function(id) {
                  "additional percentiles to calculate (for the table) can be modified below."),hr(),
         # Analysis type
         div(align = "left",
-            awesomeRadio(ns("type"), label = "Summary Type",
+            awesomeRadio(ns("type"), label = "Summary Type:",
                          choices = list("Daily Means by Day" = "Daily",
                                         "Daily Means by Month" = "Long-term Daily",
                                         "Monthly Means by Month" = "Long-term Monthly"),
@@ -41,13 +41,13 @@ ui_hydro <- function(id) {
         hr(),
         # Percentiles
         select_percentiles_slide(
-          id, name = "inner_percentiles", label = "Inner Percentiles (plot)",
+          id, name = "inner_percentiles", label = "Inner Percentiles (plot):",
           value = default("plot_daily_stats", "inner_percentiles")),
         select_percentiles_slide(
-          id, name = "outer_percentiles", label = "Outer Percentiles (plot)",
+          id, name = "outer_percentiles", label = "Outer Percentiles (plot):",
           value = default("plot_daily_stats", "outer_percentiles")),
         select_percentiles(
-          id, name = "extra_percentiles", label = "Additional Percentiles (table)",
+          id, name = "extra_percentiles", label = "Additional Percentiles (table):",
           selected = default("calc_daily_stats", "percentiles")),
         hr(),
         ui_download(id = ns("plot")),br(),
@@ -110,7 +110,7 @@ server_hydro <- function(id, data_settings, data_raw,
         select_add_dates(id),
         select_add_mad(id),
         selectizeInput(NS(id, "mad"),
-                       label = "Percent of Mean Annual Discharge (MAD)",
+                       label = "Percent of Mean Annual Discharge (MAD):",
                        choices = c(0:100),
                        selected = c(5, 10, 20),
                        multiple = TRUE),

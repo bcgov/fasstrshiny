@@ -56,7 +56,7 @@ to abide by its terms.
 
 ### License
 
-    Copyright 2021 Province of British Columbia
+    Copyright 2022 Province of British Columbia
 
     Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
     you may not use this file except in compliance with the License.
@@ -73,5 +73,4 @@ to abide by its terms.
 This repository is maintained by the [Water Protection and
 Sustainability
 Branch](https://www2.gov.bc.ca/gov/content/environment/air-land-water/water)
-of the British Columbia Ministry of Environment and Climate Change
-Strategy.
+of the British Columbia Ministry of Land, Water and Resource Stewardship.

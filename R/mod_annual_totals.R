@@ -31,7 +31,7 @@ ui_annual_totals <- function(id) {
                    "be presented. ",
                    "The discharge unit types and type of plot can be modified below."),hr(),
           awesomeRadio(ns("discharge2"),
-                       label = "Discharge Type",
+                       label = "Discharge Type:",
                        choices = list("Volumetric Discharge (m3)" = FALSE,
                                       "Runoff Yield (mm)" = TRUE),
                        selected = TRUE),

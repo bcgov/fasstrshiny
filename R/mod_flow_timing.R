@@ -34,7 +34,7 @@ ui_flow_timing <- function(id) {
         hr(),
         div(style = "max-width: 300px;",
             selectizeInput(ns("percent"),
-                           label = "% of Total Annual Flows",
+                           label = "% of Total Annual Flows:",
                            choices = c(0:100),
                            selected = c(25, 33, 50, 75),
                            multiple = TRUE),
@@ -42,7 +42,7 @@ ui_flow_timing <- function(id) {
         hr(),
         h4("Year Plot Options"),
         div(align = "left",uiOutput(ns("ui_year_to_plot")),
-            bsTooltip(ns("ui_year_to_plot"), "Specfic year to plot", placement = "left")),
+            bsTooltip(ns("ui_year_to_plot"), "Specfic year to plot:", placement = "left")),
         hr(),
         fluidRow(
           column(width = 6, ui_download(id = ns("plot"), name = "Download All Years Plot")),

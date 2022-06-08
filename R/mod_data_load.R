@@ -30,7 +30,7 @@ ui_data_load <- function(id) {
                  " tabs to review data quality and availability."),
         hr(),
         # Inputs --------------------------------------------
-        show_ui(ns("show_data"), "Station Selection", value = TRUE),
+        show_ui(ns("show_data"), "Load Station Data", value = TRUE),
         div(id = ns("data_load"),
 
             radioGroupButtons(inputId = ns("source"),
@@ -79,7 +79,7 @@ ui_data_load <- function(id) {
         hr(),
         h3("Data Options"),
 
-        show_ui(ns("show_types"), "Flow Duration and Units"),
+        show_ui(ns("show_types"), "Flow Averaging and Units"),
         div(id = ns("types"),
             select_rolling(id),
             select_discharge(id)),
@@ -113,7 +113,7 @@ ui_data_load <- function(id) {
           helpText(paste0("Click on a station row to select the station, ",
                           "or filter stations and browse on the HYDAT Map")),
           DT::DTOutput(ns("hydat_table"))
-          ,verbatimTextOutput(ns("test"))
+         # ,verbatimTextOutput(ns("test"))
         ),
 
         # # HYDAT Table --------
@@ -518,30 +518,43 @@ server_data_load <- function(id) {
       #  req(!is.null(input$months2))
       watershed_exists()
     })
-    watershed_exists <- reactive({
-      req(input$station_number)
+    # watershed_exists <- reactive({
+    #   req(input$station_number, input$load)
+    #
+    #   if (input$station_number %in% map_basins_shp$StationNum) {
+    #     t <- TRUE
+    #   } else {
+    #     t <- FALSE
+    #   }
+    #   t
+    #
+    #   # if (dir.exists(paste0("data-raw/watersheds/",
+    #   #                       substr(input$station_number,1,2),"/",input$station_number))) {
+    #   #   t <- TRUE
+    #   # } else {
+    #   #   t <- FALSE
+    #   # }
+    #   # t
+    # })
 
-      if (dir.exists(paste0("data-raw/watersheds/",
-                            substr(input$station_number,1,2),"/",input$station_number))) {
-        t <- TRUE
-      } else {
-        t <- FALSE
-      }
-      t
-    })
+    # watershed <- reactive({
+    #   req(input$station_number, input$load)
+    #
+    #   if (watershed_exists()) {
+    #     map_basins_shp %>%
+    #       dplyr::filter(StationNum == input$station_number)
+    #   }
+    #
+    #   # if (watershed_exists()) {
+    #   #   suppressMessages(
+    #   #     sf::st_read(paste0("data-raw/watersheds/",
+    #   #                        substr(input$station_number,1,2),"/",input$station_number,"/",input$station_number,
+    #   #                        "_DrainageBasin_BassinDeDrainage.shp")) %>%
+    #   #       sf::st_transform(crs = 4326)
+    #   #   )
+    #   # }
+    # })
 
-    watershed <- reactive({
-      req(input$station_number)
-
-      if (watershed_exists()) {
-        suppressMessages(
-          sf::st_read(paste0("data-raw/watersheds/",
-                             substr(input$station_number,1,2),"/",input$station_number,"/",input$station_number,
-                             "_DrainageBasin_BassinDeDrainage.shp")) %>%
-            sf::st_transform(crs = 4326)
-        )
-      }
-    })
 
     pal <- reactive({
       req(input$point_colour)
@@ -612,9 +625,6 @@ server_data_load <- function(id) {
           options = leaflet::layersControlOptions(collapsed = FALSE)
         )
 
-      if (watershed_exists()) {
-        l <- l %>% leaflet::addPolygons(data = watershed())
-      }
 
       # Hide all polygons
       for(i in bc_maps_labs$group) l <- leaflet::hideGroup(l, i)
@@ -629,6 +639,9 @@ server_data_load <- function(id) {
             label = bc_maps_labs$label[[i]])
       }
 
+      # if (watershed_exists()) {
+      #   l <- l %>% leaflet::addPolygons(data = watershed())
+      # }
       map_ready(TRUE)
       l
     })
@@ -643,6 +656,28 @@ server_data_load <- function(id) {
         add_markers(data = stations_sub(), variable = "selected")
     }) %>%
       bindEvent(stations_sub())
+
+    observeEvent(input$load, {
+      if (input$station_number %in% map_basins_shp$StationNum) {
+        watershed_shp <- map_basins_shp %>%
+          dplyr::filter(StationNum == input$station_number)
+
+        leaflet::leafletProxy("hydat_map") %>%
+          leaflet::addPolygons(data = watershed_shp, layerId = "basin_map")
+      }
+
+    })
+    # observe({
+    #   req(input$load)
+    #   if (watershed_exists()) {
+    #     watershed_shp <- map_basins_shp %>%
+    #       dplyr::filter(StationNum == input$station_number)
+    #
+    #     leaflet::leafletProxy("hydat_map") %>%
+    #       leaflet::addPolygons(data = watershed_shp)
+    #   }
+    # }) %>%
+    #   bindEvent(watershed_exists())
 
 
 
