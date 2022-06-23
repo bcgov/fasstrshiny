@@ -118,7 +118,8 @@ map_basins_shp <-  sf::st_read("C:/Users/jgoetz/R/hydat_watersheds/merged polygo
 
 mods <- c("data_load", "data_available","overview","hydro", "cumulative", "flows", "monthly_means",
           "annual_stats", "annual_means", "annual_totals", "flow_timing",
-          "low_flows", "high_flows", "annual_extremes", "normal_days",
+         # "low_flows", "high_flows",
+          "annual_extremes", "normal_days",
           "annual_trends", "volume_freq", "hydat_peak")
 
 usethis::use_data(parameters, tips, opts,

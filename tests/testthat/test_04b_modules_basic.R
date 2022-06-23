@@ -40,10 +40,13 @@ test_that("Annual stats", {
     d <- dummy_data(local_file = f)
 
     testServer(server_annual_stats, args = list(d$s, d$d, d$l, d$c), {
-      session$setInputs(plot_log = TRUE, type = "Monthly", months_plot = 1:12,
+      session$setInputs(plot_log_all = TRUE, type = "Monthly", months_plot = 1:12,
                         inner_percentiles = c(27, 75),
                         outer_percentiles = c(5, 95),
-                        extra_percentiles = c(10, 90), plot_title = TRUE)
+                        extra_percentiles = c(10, 90), plot_title = TRUE,
+                        monthly_line_stat = "Mean",
+                        plot_log_line = FALSE,
+                        plot_title_line = TRUE)
       expect_error(output$plot, NA)
       expect_error(output$table, NA)
       expect_false(output$code == "")

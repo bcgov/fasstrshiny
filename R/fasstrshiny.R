@@ -22,8 +22,9 @@ fasstr_shiny <- function() {
   # Setup -------------------------------------
   options(
     spinner.color = "#003366", spinner.type = 5, spinner.size = 0.5, # Spinners
-    scipen=999,                                              # No sci notations
-    shiny.launch.browser = .rs.invokeShinyWindowExternal)
+    scipen=999#,                                              # No sci notations
+   # shiny.launch.browser = .rs.invokeShinyWindowExternal
+    )
 
   # On shinyapps ----------------------------------
   on_shinyapps <- !identical(serverInfo(), list(shinyServer = FALSE))

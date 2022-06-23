@@ -133,9 +133,9 @@ server_annual_stats <- function(id, data_settings, data_raw,
                                                                      percentiles = as.numeric(input$extra_percentiles)))))
     })
 
-    output$test <- renderText({
-      input$monthy_line_stat
-    })
+    # output$test <- renderText({
+    #   input$monthy_line_stat
+    # })
 
     # Titles --------------
     titles <- reactive({
