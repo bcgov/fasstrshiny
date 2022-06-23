@@ -1,10 +1,10 @@
 pandoc: 2.7.3
-pkgdown: 2.0.3
+pkgdown: 2.0.5
 pkgdown_sha: ~
 articles:
   fasstrshiny_get_started: fasstrshiny_get_started.html
   fasstrshiny_users_guide: fasstrshiny_users_guide.html
-last_built: 2022-06-08T20:33Z
+last_built: 2022-06-23T17:57Z
 urls:
   reference: https://bcgov.github.io/fasstrshiny/reference
   article: https://bcgov.github.io/fasstrshiny/articles
