@@ -853,7 +853,7 @@ server_data_load <- function(id) {
                 input$plot_title, input$plot_log, input$daterange)
 
     # Table ----------------
-    output$table <- DT::renderDT({
+    output$table <- DT::renderDT({#server = FALSE,
       check_data(data_loaded())
       req(input$years_range)
       data_raw() %>%

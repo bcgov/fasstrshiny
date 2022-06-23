@@ -77,10 +77,20 @@ For most pages, will be a sidebar with data options for entire page (some except
 
 ### Tables
 
+- Tables to view data, statistics, and results.
+- Usually in the 'Table' tab for specific analysis pages, but dispersed throughout where appropriate.
+- Most will have a 'Copy' button that will copy the entire table to the clipboard for you to paste in another spreadsheet or document. The table can also be saved as a .csv or .xlsx file with the 'CSV' and 'Excel' buttons.
+- Can sort rows by clicking on the column header and filter rows for selected variables or values in the boxes below the headers.
+- Some tables may have a gear-box above and to the right for more options.
+- Tables built using the DT package.
 
 ### Plots
 
-- most ggiraph
+- Plots to view, explore data, statistics and results.
+- Usually in the 'Plot' tab for specific analysis pages, but dispersed throughout where appropriate.
+- 2 different plot types for exploring data. 
+- One type is for the daily flow data on the Data >> Loading and Data >> Screening tabs to be able to zoom in and out and explore the data. Can zoom by clicking and dragging horizontally to zoom between dates, vertically to zoom between flow levels, or diagonally to create and box and zoom in around data. Double click within the plot to reset the scale (or click the button in the top right). Cave save using the button in the top right Using plotly.
+- The other type, most graphs, most ggiraph
 - plotly - can zoom, others
 
 ### R Code

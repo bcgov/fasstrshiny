@@ -26,6 +26,12 @@ prep_DT <- function(data, digits = 4) {
                                  buttons = list(list(extend = 'copy', title = NULL),
                                                 'csv', 'excel')))
 }
+# buttons = list(list(extend = 'copy', title = NULL,
+#                     exportOptions = list(modifier = list(page = "all"))),
+#                list('csv',
+#                     exportOptions = list(modifier = list(page = "all"))),
+#                list('excel',
+#                     exportOptions = list(modifier = list(page = "all"))))))
 
 #' Set ggiraph options
 #'
