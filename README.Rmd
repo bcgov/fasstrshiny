@@ -1,64 +1,76 @@
 ---
-output:
-  github_document:
-    html_preview: true
+output: github_document
 ---
-
-```{r, echo = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "README-"
-)
-```
 
 # fasstr Shiny App
 
-[![img](https://img.shields.io/badge/Lifecycle-Experimental-339999)](https://github.com/bcgov/repomountie/blob/master/doc/lifecycle-badges.md) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) 
+<!-- badges: start -->
+
+[![img](https://img.shields.io/badge/Lifecycle-Experimental-339999)](https://github.com/bcgov/repomountie/blob/master/doc/lifecycle-badges.md)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Codecov test
+coverage](https://codecov.io/gh/bcgov/fasstrshiny/branch/steffi-dev/graph/badge.svg)](https://app.codecov.io/gh/bcgov/fasstrshiny?branch=steffi-dev)
+[![R-CMD-check](https://github.com/bcgov/fasstrshiny/workflows/R-CMD-check/badge.svg)](https://github.com/bcgov/fasstrshiny/actions)
+<!-- badges: end -->
+
+A Shiny app to analyze, summarize, and visualize daily streamflow data
+💧.
+
+This app takes advantage of bcgov’s
+[{fasstr}](https://cran.r-project.org/package=fasstr) and
+[{tidyhydat}](https://cran.r-project.org/package=tidyhydat) packages to
+allow for an interactive way to view and customize the statistics,
+tables, and plots created from {fasstr}’s streamflow analysis functions.
+More information on {fasstr} and its functions can be found on its
+[GitHub Page](https://bcgov.github.io/fasstr/) and [GitHub
+repository](https://github.com/bcgov/fasstr).
+
+Also see the Excel version, [FASSTX](https://github.com/bcgov/FASSTX/),
+on [GitHub](https://github.com/bcgov/FASSTX/).
 
 
-A Shiny app to analyze, summarize, and visualize daily streamflow data 💧.
+### Working with {fasstrshiny}
 
-This app takes advantage of bcgov's [{fasstr}](https://cran.r-project.org/package=fasstr) and [{tidyhydat}](https://cran.r-project.org/package=tidyhydat) packages to allow for an interactive way to view and customize the statistics, tables, and plots created from {fasstr}'s streamflow analysis functions. More information on {fasstr} and its functions can be found on its [GitHub Page](https://bcgov.github.io/fasstr/) and [GitHub repository](https://github.com/bcgov/fasstr).
-
-Also see the Excel version, [FASSTX](https://github.com/bcgov/FASSTX/), on [GitHub](https://github.com/bcgov/FASSTX/).
-
-To use the app, a Environment and Climate Change Canada's HYDAT database must be downloaded using the following code:
-
-```{r, eval=FALSE}
-tidyhydat::download_hydat()
+```{r child = "inst/md/setup.md"}
 ```
+
 
 ### Project Status
 
-This project is under development and many of the widgets and outputs of the app do not currently work appropriately or at all.
+This project is under development. While many features are in place, testing is 
+still proceeding.
 
 ### Getting Help or Reporting an Issue
 
-To report bugs/issues/feature requests, please file an [issue](https://github.com/bcgov/fasstr_shiny/issues/).
+To report bugs/issues/feature requests, please file an
+[issue](https://github.com/bcgov/fasstr_shiny/issues/).
 
 ### How to Contribute
 
-If you would like to contribute, please see our [CONTRIBUTING](CONTRIBUTING.md) guidelines.
+If you would like to contribute, please see our
+[CONTRIBUTING](CONTRIBUTING.md) guidelines.
 
-Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.
+Please note that this project is released with a [Contributor Code of
+Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree
+to abide by its terms.
 
 ### License
 
-```
-Copyright 2021 Province of British Columbia
+    Copyright 2022 Province of British Columbia
 
-Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and limitations under the License.
-```
+    Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and limitations under the License.
 
----
+------------------------------------------------------------------------
 
-This repository is maintained by the [Water Protection and Sustainability Branch](https://www2.gov.bc.ca/gov/content/environment/air-land-water/water) of the British Columbia Ministry of Environment and Climate Change Strategy.
+This repository is maintained by the [Water Protection and
+Sustainability
+Branch](https://www2.gov.bc.ca/gov/content/environment/air-land-water/water)
+of the British Columbia Ministry of Land, Water and Resource Stewardship.

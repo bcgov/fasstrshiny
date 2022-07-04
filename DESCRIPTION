@@ -1,0 +1,59 @@
+Package: fasstrshiny
+Title: Shiny UI for fasstr R package
+Version: 0.0.0.9000
+Authors@R: 
+   c(person("Steffi", "LaZerte", email = "steffi@steffi.ca", role = c("aut"), 
+             comment = c(ORCID = "0000-0002-7690-8360")),
+     person("Jon", "Goetz", email = "jon.goetz@gov.bc.ca", role = c("aut", "cre"),
+            comment = c(ORCID = "0000-0002-4993-1119")))
+Description: This app uses bcgov’s 
+    [fasstr](https://cran.r-project.org/package=fasstr) and
+    [tidyhydat](https://cran.r-project.org/package=tidyhydat) packages to
+    provide an interactive user-interface for creating, viewing and customizing 
+    statistics, tables, and plots for streamflow analysis.
+License: Apache License (== 2.0) | file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.0
+VignetteBuilder: knitr
+Depends: 
+    R (>= 2.10),
+    fasstr (>= 0.5.0),
+    shiny (>= 1.7.1),
+    shinyBS (>= 0.61),
+    shinydashboard (>= 0.7.2),
+    shinyWidgets (>= 0.6.2)
+Imports: 
+    dplyr (>= 1.0.7),
+    DT (>= 0.20),
+    fitdistrplus (>= 1.1.8),
+    glue (>= 1.6.1),
+    ggiraph (>= 0.8.2),
+    ggplot2 (>= 3.3.5),
+    gt (>= 0.3.1),
+    leaflet (>= 2.0.4.1),
+    plotly (>= 4.10.0),
+    purrr (>= 0.3.4),
+    scales,
+    shinycssloaders (>= 1.0.0),
+    shinyjs (>= 2.0.0),
+    stringr (>= 1.4.0),
+    styler (>= 1.6.2),
+    tibble (>= 3.1.6),
+    tidyhydat (>= 0.5.4),
+    tidyr (>= 1.1.4),
+    patchwork (>= 1.1.1),
+    rlang (>= 1.0.2)
+Suggests: 
+    covr,
+    bcmaps (>= 1.0.2),
+    sf (>= 1.0.7),
+    testthat (>= 3.0.0),
+    tidyselect (>= 1.1.2),
+    withr,
+    rmarkdown,
+    knitr
+Remotes:
+  bcgov/fasstr
+Config/testthat/edition: 3
+URL: https://bcgov.github.io/fasstrshiny

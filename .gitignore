@@ -38,3 +38,8 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 .Rproj.user
+inst/shiny_app/Hydat.sqlite3
+
+inst/shiny_app/rsconnect
+shiny_bookmarks
+docs
