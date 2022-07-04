@@ -89,39 +89,39 @@
 <p>One of the main ideas in fasstrshiny is to share the code used to create the output with the user. To ensure that the output is always consistent with the code used in the app, all main fasstr functions are assembled as a text object and then evaluated. The text version can be used in the R Code panels, and the evaluated version used to create the shiny app outputs.</p>
 <p>For example, <code>create_fun()</code> takes the name of the fasstr function, the name of the dataset, the shiny <code>input</code> object, and data settings. It then matches inputs in that module against parameters in the fasstr function, omits those that have default values, and creates a <em>text</em> version of the fasstr function with arguments.</p>
 <p>Example from hydrograph figure:</p>
-<pre><code><span class="va">data_flow</span> <span class="op">&lt;-</span> <span class="fu">data_raw</span><span class="op">(</span><span class="op">)</span>
-
-<span class="va">g</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/switch.html" class="external-link">switch</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">type</span>,
-            <span class="st">"Daily"</span> <span class="op">=</span> <span class="st">"plot_daily_stats"</span>,
-            <span class="st">"Long-term Monthly"</span> <span class="op">=</span> <span class="st">"plot_longterm_monthly_stats"</span>,
-            <span class="st">"Long-term Daily"</span> <span class="op">=</span> <span class="st">"plot_longterm_daily_stats"</span><span class="op">)</span> <span class="op">%&gt;%</span>
-  <span class="fu">create_fun</span><span class="op">(</span>data_name <span class="op">=</span> <span class="st">"data_flow"</span>, <span class="va">input</span>, input_data <span class="op">=</span> <span class="fu">data_settings</span><span class="op">(</span><span class="op">)</span>,
-             extra <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span>
-               <span class="va">input</span><span class="op">$</span><span class="va">add_year</span> <span class="op">!=</span> <span class="st">""</span>,
-               <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"add_year = {input$add_year}"</span><span class="op">)</span>,
-               <span class="st">""</span><span class="op">)</span><span class="op">)</span></code></pre>
+<pre><code><span><span class="va">data_flow</span> <span class="op">&lt;-</span> <span class="fu">data_raw</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">g</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/switch.html" class="external-link">switch</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">type</span>,</span>
+<span>            <span class="st">"Daily"</span> <span class="op">=</span> <span class="st">"plot_daily_stats"</span>,</span>
+<span>            <span class="st">"Long-term Monthly"</span> <span class="op">=</span> <span class="st">"plot_longterm_monthly_stats"</span>,</span>
+<span>            <span class="st">"Long-term Daily"</span> <span class="op">=</span> <span class="st">"plot_longterm_daily_stats"</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">create_fun</span><span class="op">(</span>data_name <span class="op">=</span> <span class="st">"data_flow"</span>, <span class="va">input</span>, input_data <span class="op">=</span> <span class="fu">data_settings</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>             extra <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span></span>
+<span>               <span class="va">input</span><span class="op">$</span><span class="va">add_year</span> <span class="op">!=</span> <span class="st">""</span>,</span>
+<span>               <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"add_year = {input$add_year}"</span><span class="op">)</span>,</span>
+<span>               <span class="st">""</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <p>Example <em>text</em> output:</p>
-<pre><code><span class="fu">plot_daily_stats</span><span class="op">(</span><span class="va">data_flow</span>,
-  values <span class="op">=</span> <span class="st">"Value"</span>,
-  start_year <span class="op">=</span> <span class="fl">1972</span>,
-  end_year <span class="op">=</span> <span class="fl">2019</span>,
-  ignore_missing <span class="op">=</span> <span class="cn">TRUE</span>,
-  add_year <span class="op">=</span> <span class="fl">2013</span>
-<span class="op">)</span></code></pre>
+<pre><code><span><span class="fu">plot_daily_stats</span><span class="op">(</span><span class="va">data_flow</span>,</span>
+<span>  values <span class="op">=</span> <span class="st">"Value"</span>,</span>
+<span>  start_year <span class="op">=</span> <span class="fl">1972</span>,</span>
+<span>  end_year <span class="op">=</span> <span class="fl">2019</span>,</span>
+<span>  ignore_missing <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  add_year <span class="op">=</span> <span class="fl">2013</span></span>
+<span><span class="op">)</span></span></code></pre>
 <p>This can be saved for sharing with the user through the R Code panel, and can then be parsed and evaluated with <code>eval_check(t)</code>, a function which evaluates the text code and checks for errors.</p>
 <p><strong>Adding new arguments</strong></p>
 <p>New arguments can be added in one of two ways. If an argument is used in a standard way, it’s name/id can be added to the <code>parameters</code> data frame created in <code>data-raw/parameters.R</code> and then how to use it in a function can be added to the workflow in the <code>combine_parameters()</code> function. As long as the input id is called <code>param</code>, id of the parameter in this shiny app, it will be automatically used by <code>create_fun()</code>, unless added to the <code>params_ignore</code> list.</p>
 <p>Alternatively if an argument is used in a non-standard way, it can be added with the <code>extra</code> argument. You’ll also need to add it to <code>params_ignore</code> so as not to have two arguments in the final function.</p>
 <p>For example, in the Hydrographs table, we use percentiles from several inputs (previously combined into <code>perc</code> in this example), so override the default usage of the percentiles argument.</p>
-<pre><code><span class="va">t</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/switch.html" class="external-link">switch</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">hydro_type</span>,
-            <span class="st">"Long-term Daily"</span> <span class="op">=</span> <span class="st">"calc_longterm_daily_stats"</span>,
-            <span class="st">"Long-term Monthly"</span> <span class="op">=</span> <span class="st">"calc_longterm_monthly_stats"</span>,
-            <span class="st">"Daily"</span> <span class="op">=</span> <span class="st">"calc_daily_stats"</span><span class="op">)</span> <span class="op">%&gt;%</span>
-  <span class="fu">create_fun</span><span class="op">(</span>
-    <span class="st">"data_flow"</span>, id <span class="op">=</span> <span class="st">"hydro"</span>, <span class="va">input</span>,
-    <span class="co"># Because input$hydro_percentiles exists, but we don't want to use it</span>
-    params_ignore <span class="op">=</span> <span class="st">"percentiles"</span>,
-    extra <span class="op">=</span> <span class="fu">glue</span><span class="op">(</span><span class="st">"percentiles = c({glue_collapse(perc, sep = ', ')})"</span><span class="op">)</span><span class="op">)</span></code></pre>
+<pre><code><span><span class="va">t</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/switch.html" class="external-link">switch</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">hydro_type</span>,</span>
+<span>            <span class="st">"Long-term Daily"</span> <span class="op">=</span> <span class="st">"calc_longterm_daily_stats"</span>,</span>
+<span>            <span class="st">"Long-term Monthly"</span> <span class="op">=</span> <span class="st">"calc_longterm_monthly_stats"</span>,</span>
+<span>            <span class="st">"Daily"</span> <span class="op">=</span> <span class="st">"calc_daily_stats"</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">create_fun</span><span class="op">(</span></span>
+<span>    <span class="st">"data_flow"</span>, id <span class="op">=</span> <span class="st">"hydro"</span>, <span class="va">input</span>,</span>
+<span>    <span class="co"># Because input$hydro_percentiles exists, but we don't want to use it</span></span>
+<span>    params_ignore <span class="op">=</span> <span class="st">"percentiles"</span>,</span>
+<span>    extra <span class="op">=</span> <span class="fu">glue</span><span class="op">(</span><span class="st">"percentiles = c({glue_collapse(perc, sep = ', ')})"</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <p>NOTE: If adding a new <em>dynamic</em> input, ensure that it is captured by bookmarking. (See Bookmarking above).</p>
 </div>
 <div class="section level2">

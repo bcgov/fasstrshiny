@@ -106,13 +106,13 @@
 <h3 id="loading-locally">Loading Locally<a class="anchor" aria-label="anchor" href="#loading-locally"></a>
 </h3>
 <p>To install, in the R console run the following (this needs to be done <strong>once</strong>)</p>
-<pre><code><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span>
-<span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"bcgov/fasstrshiny"</span><span class="op">)</span></code></pre>
+<pre><code><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"bcgov/fasstrshiny"</span><span class="op">)</span></span></code></pre>
 <p>To use HYDAT data in the app, the Environment and Climate Change Canada’s HYDAT database must be downloaded (this needs to be done <strong>once</strong> or as needed to update):</p>
-<pre><code><span class="fu">tidyhydat</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/tidyhydat/reference/download_hydat.html" class="external-link">download_hydat</a></span><span class="op">(</span><span class="op">)</span></code></pre>
+<pre><code><span><span class="fu">tidyhydat</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/tidyhydat/reference/download_hydat.html" class="external-link">download_hydat</a></span><span class="op">(</span><span class="op">)</span></span></code></pre>
 <p>To the Shiny App run, in the R console, run the following (this needs to be done <strong>everytime</strong>):</p>
-<pre><code><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bcgov.github.io/fasstrshiny">fasstrshiny</a></span><span class="op">)</span> <span class="co"># Loads the package</span>
-<span class="fu"><a href="../reference/fasstr_shiny.html">fasstr_shiny</a></span><span class="op">(</span><span class="op">)</span>       <span class="co"># Launches the Shiny App</span></code></pre>
+<pre><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bcgov.github.io/fasstrshiny">fasstrshiny</a></span><span class="op">)</span> <span class="co"># Loads the package</span></span>
+<span><span class="fu"><a href="../reference/fasstr_shiny.html">fasstr_shiny</a></span><span class="op">(</span><span class="op">)</span>       <span class="co"># Launches the Shiny App</span></span></code></pre>
 <p><strong>Pros</strong></p>
 <ul>
 <li>Faster</li>
@@ -141,7 +141,7 @@
 <ul>
 <li>Tables to view data, statistics, and results.</li>
 <li>Usually in the ‘Table’ tab for specific analysis pages, but dispersed throughout where appropriate.</li>
-<li>Most will have a ‘Copy’ button that will copy the entire table to the clipboard for you to paste in another spreadsheet or document. The table can also be saved as a .csv or .xlsx file with the ‘CSV’ and ‘Excel’ buttons.</li>
+<li>Most will have a ‘Copy’ button that will copy the entire table to the clipboard for you to paste in another spreadsheet or document. The table can also be saved as a .csv or .xlsx file with the ‘CSV’ and ‘Excel’ buttons. Very large tables (like Daily Flows Table from the Data Loading and Options tab) may take a few seconds to load.</li>
 <li>Can sort rows by clicking on the column header and filter rows for selected variables or values in the boxes below the headers.</li>
 <li>Some tables may have a gear-box above and to the right for more options.</li>
 <li>Tables built using the DT package.</li>
@@ -460,9 +460,9 @@
 <h3 id="loading-packages">Loading packages<a class="anchor" aria-label="anchor" href="#loading-packages"></a>
 </h3>
 <p>First, you’ll need to make sure you have the right packages loaded. If you’ve already installed the fasstrshiny package (as above) and have been using fasstrshiny locally, you’re good to go. Otherwise, install fasstr and the HYDAT database using the instructions above.</p>
-<pre><code><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bcgov.github.io/fasstr/" class="external-link">fasstr</a></span><span class="op">)</span> <span class="co"># Loads the packages</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span>  
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></code></pre>
+<pre><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bcgov.github.io/fasstr/" class="external-link">fasstr</a></span><span class="op">)</span> <span class="co"># Loads the packages</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span>  </span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span>  </span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="running-fasstr-code">Running fasstr code<a class="anchor" aria-label="anchor" href="#running-fasstr-code"></a>
