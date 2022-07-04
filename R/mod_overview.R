@@ -490,7 +490,7 @@ server_overview <- function(id, data_settings, data_raw,
       dplyr::left_join(ltmad_table(), freq_table(), by = "stn") %>%
         dplyr::left_join(stats(), by = "stn") %>%
         dplyr::select(-stn) %>%
-        dplyr::mutate(dplyr::across(where(is.numeric), round, 4),
+        dplyr::mutate(dplyr::across(tidyselect::vars_select_helpers$where(is.numeric), round, 4),
                       dplyr::across(dplyr::everything(), as.character)) %>%
         dplyr::select(STATION_NUMBER, `Number of Years`, dplyr::everything()) %>%
         tidyr::pivot_longer(cols = 1:ncol(.)) %>%
@@ -506,7 +506,7 @@ server_overview <- function(id, data_settings, data_raw,
         dplyr::left_join(stats(), by = "stn") %>%
         dplyr::select(-stn) %>%
         dplyr::mutate("Number of Years" = data_settings()$number_of_years) %>%
-        dplyr::mutate(dplyr::across(where(is.numeric), round, 4),
+        dplyr::mutate(dplyr::across(tidyselect::vars_select_helpers$where(is.numeric), round, 4),
                       dplyr::across(dplyr::everything(), as.character)) %>%
         dplyr::select(STATION_NUMBER, 'Number of Years', dplyr::everything()) %>%
         tidyr::pivot_longer(cols = 1:ncol(.)) %>%
@@ -542,7 +542,7 @@ server_overview <- function(id, data_settings, data_raw,
       station()  %>%
         dplyr::mutate(LATITUDE = round(LATITUDE, 6),
                       LONGITUDE = round(LONGITUDE, 6),
-                      across(everything(), as.character)) %>%
+                      dplyr::across(dplyr::everything(), as.character)) %>%
         tidyr::pivot_longer(cols = 1:ncol(.)) %>%
         DT::datatable(rownames = FALSE, colnames = c("", ""),
                       #filter = 'top',

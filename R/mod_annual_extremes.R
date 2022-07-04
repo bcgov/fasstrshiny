@@ -413,7 +413,7 @@ server_annual_extremes <- function(id, data_settings, data_raw,
              data_settings, dims)
 
     # Table -----------------------
-    output$table <- DT::renderDT({
+    output$table <- DT::renderDT(server = FALSE, {
 
       check_data(data_loaded())
 

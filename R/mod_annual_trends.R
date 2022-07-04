@@ -63,7 +63,7 @@ ui_annual_trends <- function(id) {
 
               # h5("Flow Timing"),
               selectizeInput(ns("timing_percent"),
-                             label = "Flow Timing - % of Total Annual Flows:",
+                             label = "Flow Timing - Percent of Total Annual Flows:",
                              choices = c(0:100),
                              selected = c(25, 33, 50, 75),
                              multiple = TRUE),
@@ -175,10 +175,10 @@ server_annual_trends <- function(id, data_settings, data_raw,
     output$ui_allowed <- renderUI({
       tagList(
         sliderInput(NS(id, "allowed_annual"),
-                    label = "Annual - Allowed Missing (%):",
+                    label = "Annual - Percent Allowed Missing:",
                     value = data_settings()$allowed, step = 5, min = 0, max = 100),
         sliderInput(NS(id, "allowed_monthly"),
-                    label = "Monthly - Allowed Missing (%):",
+                    label = "Monthly - Percent Allowed Missing:",
                     value = data_settings()$allowed, step = 5, min = 0, max = 100),
         bsTooltip(NS(id, "allowed_annual"), tips$allowed, placement = "left"),
         bsTooltip(NS(id, "allowed_monthly"), tips$allowed, placement = "left")
@@ -284,17 +284,17 @@ server_annual_trends <- function(id, data_settings, data_raw,
         "  var tooltips = [
         'STATION_NUMBER',
         'Annual Statistic',
-        'the lower bound of the trend’s 95% confidence interval',
-        'the Sen’s slope (trend) per year',
-        'the Sen’s slope (trend) over the time period',
-        'the upper bound of the trend’s 95% confidence interval',
-        'Kendall’s tau statistic computed on the final detrended timeseries',
-        'Kendall’s P-value computed for the final detrended timeseries',
+        'the lower bound of the trends 95 percent confidence interval',
+        'the Sens slope (trend) per year',
+        'the Sens slope (trend) over the time period',
+        'the upper bound of the trends 95 percent confidence interval',
+        'Kendalls tau statistic computed on the final detrended timeseries',
+        'Kendalls P-value computed for the final detrended timeseries',
         'the number of runs required to converge upon a trend',
         'the autocorrelation of the final detrended timeseries',
         'the fraction of the data which is valid (not NA) once autocorrelation is removed',
         'the least squares fit trend on the same data',
-        'the intercept of the Sen’s slope (trend)'
+        'the intercept of the Sens slope (trend)'
         ];",
         "  for(var i=0; i<13; i++){",
         "    $('th:eq('+i+')',thead).attr('title', tooltips[i]);",
@@ -303,7 +303,7 @@ server_annual_trends <- function(id, data_settings, data_raw,
       )
 
       trends()[["Annual_Trends_Results"]] %>%
-        dplyr::mutate(dplyr::across(where(is.numeric), ~round(., 4))) %>%
+        dplyr::mutate(dplyr::across(tidyselect::vars_select_helpers$where(is.numeric), ~round(., 4))) %>%
         DT::datatable(rownames = FALSE,
                       filter = 'top',
                       extensions = c("Scroller", "Buttons"),
@@ -366,11 +366,11 @@ server_annual_trends <- function(id, data_settings, data_raw,
 
 
     # Table - years -----------------------
-    output$table_years <- DT::renderDT({
+    output$table_years <- DT::renderDT(server = FALSE, {
 
       validate(
         need(data_loaded(),
-             "You'll need to first load some data under Data > Loading") %then%
+             "You'll need to first load some data under Data >> Loading") %then%
           need(input$compute,
                "Choose your settings and click 'Compute Trends'"))
 

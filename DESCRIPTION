@@ -14,7 +14,8 @@ Description: This app uses bcgov’s
 License: Apache License (== 2.0) | file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
+VignetteBuilder: knitr
 Depends: 
     R (>= 2.10),
     fasstr (>= 0.5.0),
@@ -33,6 +34,7 @@ Imports:
     leaflet (>= 2.0.4.1),
     plotly (>= 4.10.0),
     purrr (>= 0.3.4),
+    scales,
     shinycssloaders (>= 1.0.0),
     shinyjs (>= 2.0.0),
     stringr (>= 1.4.0),
@@ -48,7 +50,9 @@ Suggests:
     sf (>= 1.0.7),
     testthat (>= 3.0.0),
     tidyselect (>= 1.1.2),
-    withr
+    withr,
+    rmarkdown,
+    knitr
 Remotes:
   bcgov/fasstr
 Config/testthat/edition: 3

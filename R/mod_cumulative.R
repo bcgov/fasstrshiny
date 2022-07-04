@@ -184,7 +184,7 @@ server_cumulative <- function(id, data_settings, data_raw, data_loaded, data_cod
 
 
     # Table -----------------------
-    output$table <- DT::renderDT({
+    output$table <- DT::renderDT(server = FALSE, {
       check_data(data_loaded())
       req(input$discharge2)
       check_yield(data_settings(), input$discharge2)

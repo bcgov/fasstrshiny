@@ -152,7 +152,7 @@ server_annual_totals <- function(id, data_settings, data_raw,
 
 
     # Table -----------------------
-    output$table <- DT::renderDT({
+    output$table <- DT::renderDT(server = FALSE, {
       check_data(data_loaded())
       check_yield(data_settings(), input$discharge2)
 

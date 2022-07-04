@@ -16,7 +16,7 @@
 
 prep_DT <- function(data, digits = 4) {
   data %>%
-    dplyr::mutate(dplyr::across(where(is.numeric), ~round(., .env$digits))) %>%
+    dplyr::mutate(dplyr::across(tidyselect::vars_select_helpers$where(is.numeric), ~round(., .env$digits))) %>%
     DT::datatable(rownames = FALSE,
                   filter = 'top',
                   extensions = c("Scroller", "Buttons"),

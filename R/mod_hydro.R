@@ -281,7 +281,7 @@ server_hydro <- function(id, data_settings, data_raw,
     })
 
     # Table -----------------------
-    output$table <- DT::renderDT({
+    output$table <- DT::renderDT(server = FALSE, {
       check_data(data_loaded())
       req(input$type)
 

@@ -79,7 +79,7 @@ For most pages, will be a sidebar with data options for entire page (some except
 
 - Tables to view data, statistics, and results.
 - Usually in the 'Table' tab for specific analysis pages, but dispersed throughout where appropriate.
-- Most will have a 'Copy' button that will copy the entire table to the clipboard for you to paste in another spreadsheet or document. The table can also be saved as a .csv or .xlsx file with the 'CSV' and 'Excel' buttons.
+- Most will have a 'Copy' button that will copy the entire table to the clipboard for you to paste in another spreadsheet or document. The table can also be saved as a .csv or .xlsx file with the 'CSV' and 'Excel' buttons. Very large tables (like Daily Flows Table from the Data Loading and Options tab) may take a few seconds to load.
 - Can sort rows by clicking on the column header and filter rows for selected variables or values in the boxes below the headers.
 - Some tables may have a gear-box above and to the right for more options.
 - Tables built using the DT package.

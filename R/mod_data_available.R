@@ -448,7 +448,7 @@ server_data_available <- function(id, data_settings, data_raw,
 
 
     # Summary table ------------------
-    output$table <- DT::renderDT({
+    output$table <- DT::renderDT(server = FALSE, {
       check_data(data_loaded())
 
       available_raw() %>%

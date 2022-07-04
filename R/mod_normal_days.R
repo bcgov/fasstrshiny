@@ -238,7 +238,7 @@ server_normal_days <- function(id, data_settings, data_raw,
              data_settings, dims)
 
     # Table -----------------------
-    output$table <- DT::renderDT({
+    output$table <- DT::renderDT(server = FALSE, {
       req(input$normal_percentiles)
 
       data_flow <- data_raw()
