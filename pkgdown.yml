@@ -4,7 +4,7 @@ pkgdown_sha: ~
 articles:
   fasstrshiny_get_started: fasstrshiny_get_started.html
   fasstrshiny_users_guide: fasstrshiny_users_guide.html
-last_built: 2022-09-07T18:31Z
+last_built: 2022-09-07T18:37Z
 urls:
   reference: https://bcgov.github.io/fasstrshiny/reference
   article: https://bcgov.github.io/fasstrshiny/articles
