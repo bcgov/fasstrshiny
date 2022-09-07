@@ -32,21 +32,7 @@ on [GitHub](https://github.com/bcgov/FASSTX/).
 
 ## Using `fasstrshiny`
 
-There are several ways to use `fasstrshiny`
-
-#### **1. Online <https://bcgov-env.shinyapps.io/fasstrshiny/>**
-
-**Pros**
-
--   No need to install R or `fasstrshiny`!
-
-**Cons**
-
--   Slower
--   Bookmarking uses urls which can be very long
--   Won’t be learning any new R :(
-
-#### **2. Locally**
+#### **Locally**
 
 To install, in the R console run the following (this needs to be done
 **once**)
@@ -68,18 +54,26 @@ be done **everytime**):
 
 **Pros**
 
--   Faster
--   Bookmarking uses local files so urls are simpler
--   As you’re working in R already, it’s easier to start using the
-    `fasstr` code output by the Shiny App to learn more!
+- Faster
+- Bookmarking uses local files so urls are simpler
+- As you’re working in R already, it’s easier to start using the
+  `fasstr` code output by the Shiny App to learn more!
 
 **Cons**
 
--   You need to install R, RStudio (optional but recommended), and the
-    `fasstrshiny` package
--   Working locally means that your system setup may occasionally create
-    unique problems that are tricky to trouble shoot (when in doubt,
-    update all your packages: `remotes::update_packages()`)
+- You need to install R, RStudio (optional but recommended), and the
+  `fasstrshiny` package
+
+- Working locally means that your system setup may occasionally create
+  unique problems that are tricky to trouble shoot (when in doubt,
+  update all your packages: `remotes::update_packages()`)
+
+  There are several ways to use `fasstrshiny`
+
+#### **Online <https://bcgov-env.shinyapps.io/fasstrshiny/>**
+
+Online version only for testing at this time. Stable and reviewed
+version of app will be made public when possible.
 
 ## Using code output from the fasstrshiny Shiny App
 
