@@ -188,8 +188,6 @@ to abide by its terms.
 
 ------------------------------------------------------------------------
 
-This repository is maintained by the [Water Protection and
-Sustainability
+This repository is maintained by the [Water Management
 Branch](https://www2.gov.bc.ca/gov/content/environment/air-land-water/water)
-of the British Columbia Ministry of Land, Water and Resource
-Stewardship.
+of the British Columbia Ministry of Forests.
