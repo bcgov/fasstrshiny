@@ -348,10 +348,10 @@ find_hydat <- function() {
 }
 
 prep_hydat <- function(bc_only = TRUE) {
-  if(!requireNamespace("sf", quietly = TRUE)) {
-    stop("'sf' required to work with HYDAT stations data, install with:",
-         "  install.packages('sf')", call. = FALSE)
-  }
+  # if(!requireNamespace("sf", quietly = TRUE)) {
+  #   stop("'sf' required to work with HYDAT stations data, install with:",
+  #        "  install.packages('sf')", call. = FALSE)
+  # }
 
   if(bc_only) prov <- "BC" else prov <- NULL
   stations_list <- tidyhydat::hy_stn_data_range(prov_terr_state_loc = prov) %>%
