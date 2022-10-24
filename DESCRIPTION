@@ -24,6 +24,7 @@ Depends:
     shinydashboard (>= 0.7.2),
     shinyWidgets (>= 0.6.2)
 Imports: 
+    bcmaps (>= 1.0.2),
     dplyr (>= 1.0.7),
     DT (>= 0.20),
     fitdistrplus (>= 1.1.8),
@@ -35,7 +36,7 @@ Imports:
     plotly (>= 4.10.0),
     purrr (>= 0.3.4),
     scales,
-    shinycssloaders (>= 1.0.0),
+    sf (>= 1.0.7),shinycssloaders (>= 1.0.0),
     shinyjs (>= 2.0.0),
     stringr (>= 1.4.0),
     styler (>= 1.6.2),
@@ -46,8 +47,6 @@ Imports:
     rlang (>= 1.0.2)
 Suggests: 
     covr,
-    bcmaps (>= 1.0.2),
-    sf (>= 1.0.7),
     testthat (>= 3.0.0),
     tidyselect (>= 1.1.2),
     withr,
