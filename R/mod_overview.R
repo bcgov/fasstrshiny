@@ -619,17 +619,17 @@ server_overview <- function(id, data_settings, data_raw,
           options = leaflet::layersControlOptions(collapsed = FALSE)
         )
 
-      #  if (watershed_exists()) {
-      #    l <- l %>% leaflet::addPolygons(data = watershed())
-      #   }
-      #   observeEvent(input$load, {
-      if (data_settings()$station_id %in% map_basins_shp$StationNum) {
-        watershed_shp <- map_basins_shp %>%
-          dplyr::filter(StationNum == data_settings()$station_id)
-
-        l <- l %>%
-          leaflet::addPolygons(data = watershed_shp, layerId = "basin_map")
-      }
+      # #  if (watershed_exists()) {
+      # #    l <- l %>% leaflet::addPolygons(data = watershed())
+      # #   }
+      # #   observeEvent(input$load, {
+      # if (data_settings()$station_id %in% map_basins_shp$StationNum) {
+      #   watershed_shp <- map_basins_shp %>%
+      #     dplyr::filter(StationNum == data_settings()$station_id)
+      #
+      #   l <- l %>%
+      #     leaflet::addPolygons(data = watershed_shp, layerId = "basin_map")
+      # }
 
       # })
 

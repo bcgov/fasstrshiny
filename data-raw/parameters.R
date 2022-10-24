@@ -113,8 +113,8 @@ maps_points <- list(
   "Drainage Area" = "DRAINAGE_AREA_GROSS",
   "Record Length" = "RECORD_LENGTH")
 
-map_basins_shp <-  sf::st_read("C:/Users/jgoetz/R/hydat_watersheds/merged polygons/canada_polygons_simple.shp") %>%
-  sf::st_transform(crs = 4326)
+# map_basins_shp <-  sf::st_read("C:/Users/jgoetz/R/hydat_watersheds/merged polygons/canada_polygons_simple.shp") %>%
+#   sf::st_transform(crs = 4326)
 
 mods <- c("data_load", "data_available","overview","hydro", "cumulative", "flows", "monthly_means",
           "annual_stats", "annual_means", "annual_totals", "flow_timing",
@@ -123,7 +123,7 @@ mods <- c("data_load", "data_available","overview","hydro", "cumulative", "flows
           "annual_trends", "volume_freq", "hydat_peak")
 
 usethis::use_data(parameters, tips, opts,
-                  bc_maps_layers, bc_maps_labs, maps_points, map_basins_shp,
+                  bc_maps_layers, bc_maps_labs, maps_points, #map_basins_shp,
                   mods,
                   internal = TRUE, overwrite = TRUE)
 

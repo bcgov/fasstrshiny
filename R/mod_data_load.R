@@ -658,27 +658,27 @@ server_data_load <- function(id) {
     }) %>%
       bindEvent(stations_sub())
 
-    observeEvent(input$load, {
-      if (input$station_number %in% map_basins_shp$StationNum) {
-        watershed_shp <- map_basins_shp %>%
-          dplyr::filter(StationNum == input$station_number)
-
-        leaflet::leafletProxy("hydat_map") %>%
-          leaflet::addPolygons(data = watershed_shp, layerId = "basin_map")
-      }
-
-    })
-    # observe({
-    #   req(input$load)
-    #   if (watershed_exists()) {
+    # observeEvent(input$load, {
+    #   if (input$station_number %in% map_basins_shp$StationNum) {
     #     watershed_shp <- map_basins_shp %>%
     #       dplyr::filter(StationNum == input$station_number)
     #
     #     leaflet::leafletProxy("hydat_map") %>%
-    #       leaflet::addPolygons(data = watershed_shp)
+    #       leaflet::addPolygons(data = watershed_shp, layerId = "basin_map")
     #   }
-    # }) %>%
-    #   bindEvent(watershed_exists())
+    #
+    # })
+    # # observe({
+    # #   req(input$load)
+    # #   if (watershed_exists()) {
+    # #     watershed_shp <- map_basins_shp %>%
+    # #       dplyr::filter(StationNum == input$station_number)
+    # #
+    # #     leaflet::leafletProxy("hydat_map") %>%
+    # #       leaflet::addPolygons(data = watershed_shp)
+    # #   }
+    # # }) %>%
+    # #   bindEvent(watershed_exists())
 
 
 

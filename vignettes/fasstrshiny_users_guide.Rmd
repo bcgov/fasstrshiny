@@ -298,7 +298,9 @@ fasstr functions
 
 ## Hydrographs
 
-Annual hydrographs summarizing flow information across the year to show patterns
+These
+
+Annual hydrographs summarizing flow statistics (means, maximums, mininums, percentiles).
 
 ### Daily and Long-term
 
