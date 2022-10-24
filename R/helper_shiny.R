@@ -330,7 +330,7 @@ dummy_data <- function(hydat_stn = "08HB048", local_file = FALSE,
   if(local_file) {
     data_raw <- utils::read.csv(system.file("extdata", "test_data.csv",
                                             package = "fasstrshiny")) %>%
-      dplyr::rename(Date = .data$dt, Value = .data$flow, Symbol = .data$sym) %>%
+      dplyr::rename(Date = dt, Value = flow, Symbol = sym) %>%
       fill_missing_dates()
 
     code <- paste0("data_flow <- read.csv('test_data.csv') %>%",
@@ -354,7 +354,7 @@ dummy_data <- function(hydat_stn = "08HB048", local_file = FALSE,
     code <- paste0(code, "%>% add_daily_yield(basin_area = 10.3)")
   }
 
-  if(!symbols) data_raw <- dplyr::select(data_raw, -.data$Symbol)
+  if(!symbols) data_raw <- dplyr::select(data_raw, -Symbol)
 
 
   data_settings <- list(
